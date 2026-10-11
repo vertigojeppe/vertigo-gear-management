@@ -19,6 +19,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   if (!item) return new NextResponse("Not found", { status: 404 });
   const svg = await QRCode.toString(assetTagUrl(item.assetTag, requestOrigin(req)), { type: "svg", margin: 1, errorCorrectionLevel: "M" });
   return new NextResponse(svg, {
-    headers: { "Content-Type": "image/svg+xml", "Cache-Control": "private, max-age=3600" },
+    // Not cached: the encoded URL depends on where the page was opened from.
+    headers: { "Content-Type": "image/svg+xml", "Cache-Control": "no-store" },
   });
 }
