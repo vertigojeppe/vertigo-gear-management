@@ -1,0 +1,76 @@
+{
+  "common": {
+    "appName": "Vertigo Gear",
+    "save": "Gem",
+    "cancel": "Annuller",
+    "delete": "Slet",
+    "edit": "Rediger",
+    "search": "Søg",
+    "loading": "Indlæser…",
+    "signOut": "Log ud",
+    "signedInAs": "Logget ind som {name}"
+  },
+  "nav": {
+    "dashboard": "Oversigt",
+    "inventory": "Lager",
+    "projects": "Projekter",
+    "rentals": "Udlejning",
+    "settings": "Indstillinger",
+    "calendar": "Kalender",
+    "scan": "Scan",
+    "more": "Mere",
+    "tools": "Værktøjer"
+  },
+  "auth": {
+    "title": "Log ind",
+    "subtitle": "Lager, pakkelister og produktionsplaner.",
+    "email": "E-mail",
+    "password": "Adgangskode",
+    "submit": "Log ind",
+    "invalid": "Forkert e-mail eller adgangskode.",
+    "error": "Noget gik galt. Prøv igen."
+  },
+  "dashboard": {
+    "title": "Oversigt",
+    "welcome": "Velkommen, {name}.",
+    "emptyTitle": "Her er ikke noget endnu",
+    "emptyBody": "Fase 0 er skelettet: login, roller, database og deployment. Lageret kommer i fase 1."
+  },
+  "roles": {
+    "admin": "Administrator",
+    "member": "Medlem",
+    "viewer": "Læser"
+  },
+  "itemStatus": {
+    "in_house": "På lager",
+    "on_project": "På projekt",
+    "rented_out": "Udlejet",
+    "in_repair": "Til reparation",
+    "missing": "Mangler",
+    "retired": "Udfaset"
+  },
+  "projectStatus": {
+    "quote": "Tilbud",
+    "confirmed": "Bekræftet",
+    "in_progress": "I gang",
+    "done": "Afsluttet",
+    "cancelled": "Aflyst"
+  },
+  "phase": {
+    "prep": "Forberedelse",
+    "load_in": "Load-in",
+    "show": "Show",
+    "load_out": "Load-out",
+    "return": "Retur"
+  },
+  "rentalStatus": {
+    "reserved": "Reserveret",
+    "out": "Ude",
+    "returned": "Returneret",
+    "overdue": "Forsinket"
+  },
+  "comingSoon": {
+    "title": "Kommer i fase {phase}",
+    "body": "Denne sektion er planlagt, men ikke bygget endnu. Navigationen er her, så layoutet er stabilt."
+  }
+}

@@ -1,0 +1,12 @@
+// Main schema file: holds only the generator and datasource blocks.
+// Models live in prisma/models/<module>.prisma, one file per domain module.
+// The connection URL is configured in prisma.config.ts.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

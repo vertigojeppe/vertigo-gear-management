@@ -1,0 +1,18 @@
+// users module
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String?
+  /// One of the role keys in config/app.config.ts (admin | member | viewer).
+  role         String   @default("member")
+  phone        String?
+  /// Google account email used when adding the user as a calendar attendee.
+  googleEmail  String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([role])
+}
