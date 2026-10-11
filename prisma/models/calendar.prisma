@@ -1,0 +1,45 @@
+// calendar + integrations
+
+/// Secret-token iCal feed URLs. userId null = team-wide feed.
+model CalendarFeedToken {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// "projects" | "rentals" | "mine"
+  scope     String
+  token     String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// Outgoing webhook subscription.
+model Webhook {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  /// Shared secret used for the X-Signature header (HMAC-SHA256 of the body).
+  secret    String
+  /// Event keys from WEBHOOK_EVENTS; empty = all events.
+  events    String[] @default([])
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Background work: webhook deliveries, calendar sync. Polled in-process.
+model Outbox {
+  id        String    @id @default(cuid())
+  /// "webhook.deliver" | "calendar.sync_project" | "calendar.sync_rental"
+  type      String
+  payload   Json
+  /// "pending" | "processing" | "done" | "failed"
+  status    String    @default("pending")
+  attempts  Int       @default(0)
+  nextRunAt DateTime  @default(now())
+  lastError String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status, nextRunAt])
+}

@@ -134,6 +134,15 @@ export const PROJECT_PHASES = [
 
 export type ProjectPhase = (typeof PROJECT_PHASES)[number]["key"];
 
+/** Which project date fields make up each phase (for calendar events). */
+export const PHASE_DATES: Record<ProjectPhase, { start: string; end?: string }> = {
+  prep: { start: "prepStart", end: "loadIn" },
+  load_in: { start: "loadIn" },
+  show: { start: "showStart", end: "showEnd" },
+  load_out: { start: "loadOut" },
+  return: { start: "returnDate" },
+};
+
 export const RENTAL_STATUSES = [
   { key: "reserved", label: "rentalStatus.reserved", color: "gray" },
   { key: "out", label: "rentalStatus.out", color: "purple" },
@@ -142,6 +151,34 @@ export const RENTAL_STATUSES = [
 ] as const;
 
 export type RentalStatus = (typeof RENTAL_STATUSES)[number]["key"];
+
+/* ---------------------------------------------------------------------- */
+/* Integrations                                                           */
+/* ---------------------------------------------------------------------- */
+
+/** Events that outgoing webhooks can subscribe to. */
+export const WEBHOOK_EVENTS = [
+  "item.status_changed",
+  "project.created",
+  "project.confirmed",
+  "project.updated",
+  "project.cancelled",
+  "rental.created",
+  "rental.out",
+  "rental.returned",
+  "packing.checked_out",
+  "packing.checked_in",
+] as const;
+export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
+
+export const outboxConfig = {
+  /** Poll interval of the in-process worker (ms). */
+  pollMs: 15_000,
+  /** Give up after this many failed attempts. */
+  maxAttempts: 8,
+  /** Backoff base: attempt n waits base * 2^n seconds. */
+  backoffBaseSeconds: 30,
+} as const;
 
 /* ---------------------------------------------------------------------- */
 /* Labels                                                                 */

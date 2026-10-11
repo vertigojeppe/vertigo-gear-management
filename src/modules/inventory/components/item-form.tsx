@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Field, FormError } from "@/components/form/field";
@@ -49,7 +50,7 @@ export function ItemForm({
   const currency = appConfig.currency;
 
   return (
-    <form action={action} className="flex max-w-2xl flex-col gap-6">
+    <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
       {item && <input type="hidden" name="id" value={item.id} />}
       <FormError message={state.error} />
 
@@ -163,6 +164,6 @@ export function ItemForm({
           {tc("cancel")}
         </Link>
       </div>
-    </form>
+    </ActionForm>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ export function LoginForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<LoginState, FormData>(login, {});
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <ActionForm action={action} className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next ?? ""} />
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">{t("email")}</Label>
@@ -30,6 +31,6 @@ export function LoginForm({ next }: { next?: string }) {
       <Button type="submit" disabled={pending} className="w-full">
         {t("submit")}
       </Button>
-    </form>
+    </ActionForm>
   );
 }

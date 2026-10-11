@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { ActionForm } from "@/components/form/action-form";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Field, FormError, FormSuccess } from "@/components/form/field";
@@ -23,7 +24,7 @@ export function UserForm({ user, isSelf }: { user?: PublicUser; isSelf?: boolean
   const active = state.values ? state.values.active === "on" : (user?.active ?? true);
 
   return (
-    <form action={action} className="flex max-w-lg flex-col gap-4">
+    <ActionForm action={action} className="flex max-w-lg flex-col gap-4">
       {user && <input type="hidden" name="id" value={user.id} />}
       <FormError message={state.error} />
       <FormSuccess message={state.ok && user ? tc("saved") : undefined} />
@@ -66,7 +67,7 @@ export function UserForm({ user, isSelf }: { user?: PublicUser; isSelf?: boolean
           {tc("cancel")}
         </Link>
       </div>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -75,7 +76,7 @@ export function ResetPasswordForm({ userId }: { userId: string }) {
   const tc = useTranslations("common");
   const [state, action] = useActionState<FormState, FormData>(resetUserPassword, {});
   return (
-    <form action={action} className="flex max-w-lg flex-col gap-3">
+    <ActionForm action={action} className="flex max-w-lg flex-col gap-3">
       <input type="hidden" name="id" value={userId} />
       <FormError message={state.error} />
       <FormSuccess message={state.ok ? t("passwordReset") : undefined} />
@@ -87,6 +88,6 @@ export function ResetPasswordForm({ userId }: { userId: string }) {
           {t("resetPassword")}
         </SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }

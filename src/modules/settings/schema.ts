@@ -13,3 +13,13 @@ export const customFieldDefinitionInput = z.object({
   sortOrder: optionalNumber.transform((v) => v ?? 0),
 });
 export type CustomFieldDefinitionInput = z.infer<typeof customFieldDefinitionInput>;
+
+export const webhookInput = z.object({
+  name: z.string().trim().min(1, "Name is required.").max(80),
+  url: z.string().trim().url("Enter a full URL including https://."),
+  secret: z.string().trim().min(8, "At least 8 characters.").max(200),
+  /** Event keys; empty = all. */
+  events: z.preprocess((v) => (Array.isArray(v) ? v : v ? [v] : []), z.array(z.string())),
+  active: checkbox,
+});
+export type WebhookInput = z.infer<typeof webhookInput>;

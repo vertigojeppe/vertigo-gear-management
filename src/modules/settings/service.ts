@@ -4,7 +4,8 @@ import { logActivity } from "@/lib/activity";
 import { assertCan } from "@/lib/auth/permissions";
 import type { Actor } from "@/lib/auth/session";
 import type { CustomFieldDef, CustomFieldEntity } from "@/lib/custom-fields";
-import type { CustomFieldDefinitionInput } from "./schema";
+import { WEBHOOK_EVENTS } from "../../../config/app.config";
+import type { CustomFieldDefinitionInput, WebhookInput } from "./schema";
 
 export class SettingsError extends Error {
   constructor(
@@ -80,3 +81,46 @@ function toData(input: CustomFieldDefinitionInput) {
     sortOrder: input.sortOrder,
   };
 }
+
+/* ------------------------------------------------------------------------ */
+/* Webhooks + outbox                                                        */
+/* ------------------------------------------------------------------------ */
+
+export const webhooks = {
+  async list() {
+    return prisma.webhook.findMany({ orderBy: { name: "asc" } });
+  },
+  async create(actor: Actor, input: WebhookInput) {
+    assertCan(actor, "settings.manage");
+    const events = input.events.filter((e) => (WEBHOOK_EVENTS as readonly string[]).includes(e));
+    const row = await prisma.webhook.create({ data: { name: input.name, url: input.url, secret: input.secret, events, active: input.active } });
+    await logActivity(actor, { entityType: "settings", entityId: row.id, action: "webhook_created", summary: `Added webhook "${row.name}"` });
+    return row;
+  },
+  async update(actor: Actor, id: string, input: WebhookInput) {
+    assertCan(actor, "settings.manage");
+    const events = input.events.filter((e) => (WEBHOOK_EVENTS as readonly string[]).includes(e));
+    const row = await prisma.webhook.update({ where: { id }, data: { name: input.name, url: input.url, secret: input.secret, events, active: input.active } });
+    await logActivity(actor, { entityType: "settings", entityId: row.id, action: "webhook_updated", summary: `Updated webhook "${row.name}"` });
+    return row;
+  },
+  async remove(actor: Actor, id: string) {
+    assertCan(actor, "settings.manage");
+    const row = await prisma.webhook.delete({ where: { id } });
+    await logActivity(actor, { entityType: "settings", entityId: id, action: "webhook_deleted", summary: `Deleted webhook "${row.name}"` });
+  },
+};
+
+export const outboxAdmin = {
+  async recent(limit = 30) {
+    return prisma.outbox.findMany({ orderBy: { createdAt: "desc" }, take: limit });
+  },
+  async counts() {
+    const rows = await prisma.outbox.groupBy({ by: ["status"], _count: { _all: true } });
+    return Object.fromEntries(rows.map((r) => [r.status, r._count._all])) as Record<string, number>;
+  },
+  async retry(actor: Actor, id: string) {
+    assertCan(actor, "settings.manage");
+    await prisma.outbox.update({ where: { id }, data: { status: "pending", nextRunAt: new Date(), attempts: 0 } });
+  },
+};

@@ -19,7 +19,13 @@ async function main() {
       OR: [{ entityId: { in: [...ids, ...items.map((i) => i.id)] } }, { summary: { contains: "test-" } }, { summary: { contains: '"e2e ' } }],
     },
   });
-  console.log(`Removed ${tokens.count} tokens, ${ids.length} models, ${items.length} items, ${logs.count} activity rows.`);
+  // Projects and rentals created by the browser tests (names/dates only they use).
+  const testProjects = await prisma.project.findMany({ where: { name: { startsWith: "E2E show " } }, select: { id: true } });
+  await prisma.location.deleteMany({ where: { projectId: { in: testProjects.map((p) => p.id) } } });
+  const projects = await prisma.project.deleteMany({ where: { id: { in: testProjects.map((p) => p.id) } } });
+  const rentals = await prisma.rental.deleteMany({ where: { startDate: { gte: new Date("2032-01-01T00:00:00Z") }, notes: null } });
+  await prisma.outbox.deleteMany({ where: { status: { in: ["done", "failed"] } } });
+  console.log(`Removed ${tokens.count} tokens, ${ids.length} models, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals.`);
   await prisma.$disconnect();
 }
 

@@ -9,6 +9,10 @@ import { recentActivity } from "@/lib/activity";
 import { requireActor } from "@/lib/auth/session";
 import { formatDate } from "@/lib/format";
 import { dashboardStats } from "@/modules/inventory";
+import { upcomingProjects } from "@/modules/projects";
+import { overdueRentals } from "@/modules/rentals";
+import { StatusPill } from "@/components/status-pill";
+import { PROJECT_STATUSES } from "../../../../config/app.config";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -16,7 +20,8 @@ export default async function DashboardPage() {
   const actor = await requireActor();
   const t = await getTranslations("dashboard");
   const tl = await getTranslations("locationType");
-  const [stats, activity] = await Promise.all([dashboardStats(), recentActivity(15)]);
+  const [stats, activity, upcoming, overdue] = await Promise.all([dashboardStats(), recentActivity(15), upcomingProjects(6), overdueRentals()]);
+  const tp = await getTranslations("projectStatus");
   const inHouse = stats.statusTotals.in_house?.units ?? 0;
   const out = (stats.statusTotals.on_project?.units ?? 0) + (stats.statusTotals.rented_out?.units ?? 0);
   const attention = (stats.statusTotals.in_repair?.units ?? 0) + (stats.statusTotals.missing?.units ?? 0);
@@ -132,6 +137,50 @@ export default async function DashboardPage() {
           </div>
         </>
       )}
+
+      <div className="grid gap-8 lg:grid-cols-2">
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium">{t("upcoming")}</h2>
+            <Link href="/projects" className="text-sm underline">
+              {t("viewAll")}
+            </Link>
+          </div>
+          {upcoming.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("upcomingEmpty")}</p>
+          ) : (
+            <ul className="divide-y rounded-md border text-sm">
+              {upcoming.map((p) => (
+                <li key={p.id}>
+                  <Link href={`/projects/${p.id}`} className="flex items-center gap-3 px-3 py-1.5 hover:bg-muted/50">
+                    <span className="w-24 shrink-0 text-xs text-muted-foreground">{p.reserveFrom ? formatDate(p.reserveFrom) : "—"}</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {p.name}
+                      {p.clientName ? <span className="text-muted-foreground"> · {p.clientName}</span> : null}
+                    </span>
+                    <StatusPill color={PROJECT_STATUSES.find((s) => s.key === p.status)?.color ?? "gray"}>{tp(p.status)}</StatusPill>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        {overdue.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <h2 className="text-lg font-medium">{t("overdueRentals")}</h2>
+            <ul className="divide-y rounded-md border text-sm">
+              {overdue.map((r) => (
+                <li key={r.id}>
+                  <Link href={`/rentals/${r.id}`} className="flex items-center gap-3 px-3 py-1.5 hover:bg-muted/50">
+                    <span className="min-w-0 flex-1 truncate">{r.clientName}</span>
+                    <StatusPill color="red">{formatDate(r.endDate)}</StatusPill>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-medium">{t("recentActivity")}</h2>

@@ -1,0 +1,110 @@
+"use client";
+
+import { useActionState } from "react";
+import { ActionForm } from "@/components/form/action-form";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Field, FormError } from "@/components/form/field";
+import { CustomFieldInputs } from "@/components/form/custom-field-inputs";
+import { NativeSelect } from "@/components/form/native-select";
+import { SubmitButton } from "@/components/form/submit-button";
+import { buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import type { CustomFieldDef } from "@/lib/custom-fields";
+import { dateToZonedInput } from "@/lib/dates";
+import type { FormState } from "@/lib/forms";
+import { PROJECT_STATUSES } from "../../../../config/app.config";
+import { saveProject } from "../actions";
+import { linksToText } from "../schema";
+import type { ProjectDto } from "../service";
+
+type ClientOption = { id: string; name: string };
+
+export function ProjectForm({ project, clients, defs }: { project?: ProjectDto; clients: ClientOption[]; defs: CustomFieldDef[] }) {
+  const t = useTranslations("projects");
+  const ts = useTranslations("projectStatus");
+  const tc = useTranslations("common");
+  const [state, action] = useActionState<FormState, FormData>(saveProject, {});
+  const v = (name: string, fallback: string | null | undefined) => (state.values && name in state.values ? state.values[name] : (fallback ?? ""));
+  const err = state.fieldErrors ?? {};
+
+  return (
+    <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
+      {project && <input type="hidden" name="id" value={project.id} />}
+      <FormError message={state.error} />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="name" label={tc("name")} error={err.name} className="sm:col-span-2">
+          <Input id="name" name="name" defaultValue={v("name", project?.name)} required autoFocus={!project} />
+        </Field>
+        <Field id="clientId" label={t("client")} optional error={err.clientId}>
+          <NativeSelect id="clientId" name="clientId" defaultValue={v("clientId", project?.clientId)}>
+            <option value="">{t("noClient")}</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </NativeSelect>
+        </Field>
+        <Field id="status" label={t("status")} error={err.status}>
+          <NativeSelect id="status" name="status" defaultValue={v("status", project?.status ?? "quote")}>
+            {PROJECT_STATUSES.map((s) => (
+              <option key={s.key} value={s.key}>
+                {ts(s.key)}
+              </option>
+            ))}
+          </NativeSelect>
+        </Field>
+        <Field id="venueName" label={t("venueName")} optional error={err.venueName}>
+          <Input id="venueName" name="venueName" defaultValue={v("venueName", project?.venueName)} />
+        </Field>
+        <Field id="venueAddress" label={t("venueAddress")} optional error={err.venueAddress}>
+          <Input id="venueAddress" name="venueAddress" defaultValue={v("venueAddress", project?.venueAddress)} />
+        </Field>
+      </div>
+
+      <fieldset className="flex flex-col gap-4">
+        <legend className="mb-1 text-sm font-medium">{t("dates")}</legend>
+        <p className="text-xs text-muted-foreground">{t("datesHelp")}</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field id="prepStart" label={t("prepStart")} optional error={err.prepStart}>
+            <Input id="prepStart" name="prepStart" type="date" defaultValue={v("prepStart", project?.prepStart)} />
+          </Field>
+          <Field id="loadIn" label={t("loadIn")} optional error={err.loadIn}>
+            <Input id="loadIn" name="loadIn" type="datetime-local" defaultValue={v("loadIn", dateToZonedInput(project?.loadIn))} />
+          </Field>
+          <Field id="showStart" label={t("showStart")} optional error={err.showStart}>
+            <Input id="showStart" name="showStart" type="datetime-local" defaultValue={v("showStart", dateToZonedInput(project?.showStart))} />
+          </Field>
+          <Field id="showEnd" label={t("showEnd")} optional error={err.showEnd}>
+            <Input id="showEnd" name="showEnd" type="datetime-local" defaultValue={v("showEnd", dateToZonedInput(project?.showEnd))} />
+          </Field>
+          <Field id="loadOut" label={t("loadOut")} optional error={err.loadOut}>
+            <Input id="loadOut" name="loadOut" type="datetime-local" defaultValue={v("loadOut", dateToZonedInput(project?.loadOut))} />
+          </Field>
+          <Field id="returnDate" label={t("returnDate")} optional error={err.returnDate}>
+            <Input id="returnDate" name="returnDate" type="date" defaultValue={v("returnDate", project?.returnDate)} />
+          </Field>
+        </div>
+      </fieldset>
+
+      <Field id="linksText" label={t("links")} optional help={t("linksHelp")} error={err.linksText}>
+        <Textarea id="linksText" name="linksText" rows={3} defaultValue={v("linksText", project ? linksToText(project.externalLinks) : "")} />
+      </Field>
+      <Field id="notes" label={t("notes")} optional error={err.notes}>
+        <Textarea id="notes" name="notes" rows={4} defaultValue={v("notes", project?.notes)} />
+      </Field>
+
+      <CustomFieldInputs defs={defs} values={project?.customFields} echoed={state.values} errors={err} title={t("customFields")} />
+
+      <div className="flex gap-2">
+        <SubmitButton pendingText={tc("loading")}>{project ? tc("save") : tc("create")}</SubmitButton>
+        <Link href={project ? `/projects/${project.id}` : "/projects"} className={buttonVariants({ variant: "outline" })}>
+          {tc("cancel")}
+        </Link>
+      </div>
+    </ActionForm>
+  );
+}

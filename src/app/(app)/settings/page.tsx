@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { KeyRound, ListPlus, Users } from "lucide-react";
+import { CalendarDays, KeyRound, ListPlus, Users, Webhook } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
 
@@ -14,6 +14,8 @@ export default async function SettingsPage() {
     { href: "/settings/account", icon: KeyRound, title: t("account"), body: t("accountHelp"), show: true },
     { href: "/settings/users", icon: Users, title: t("users"), body: t("usersHelp"), show: can(actor.role, "users.manage") },
     { href: "/settings/custom-fields", icon: ListPlus, title: t("customFields"), body: t("customFieldsHelp"), show: can(actor.role, "settings.manage") },
+    { href: "/settings/calendar", icon: CalendarDays, title: t("calendar"), body: t("calendarHelp"), show: can(actor.role, "settings.manage") },
+    { href: "/settings/webhooks", icon: Webhook, title: t("webhooks"), body: t("webhooksHelp"), show: can(actor.role, "settings.manage") },
   ].filter((c) => c.show);
   return (
     <div className="flex flex-col gap-6">

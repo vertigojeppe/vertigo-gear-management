@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import { Field, FormError, FormSuccess } from "@/components/form/field";
 import { SubmitButton } from "@/components/form/submit-button";
@@ -15,7 +16,7 @@ export function ChangePasswordForm() {
   const [state, action] = useActionState<FormState, FormData>(changeOwnPassword, {});
   const err = state.fieldErrors ?? {};
   return (
-    <form action={action} className="flex max-w-sm flex-col gap-3">
+    <ActionForm action={action} className="flex max-w-sm flex-col gap-3">
       <FormError message={state.error} />
       <FormSuccess message={state.ok ? t("passwordChanged") : undefined} />
       <Field id="current" label={t("currentPassword")} error={err.current}>
@@ -30,7 +31,7 @@ export function ChangePasswordForm() {
       <div>
         <SubmitButton pendingText={tc("loading")}>{t("changePassword")}</SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -39,7 +40,7 @@ export function ApiTokenForm() {
   const tc = useTranslations("common");
   const [state, action] = useActionState<FormState<{ token: string }>, FormData>(createApiToken, {});
   return (
-    <form action={action} className="flex max-w-lg flex-col gap-3">
+    <ActionForm action={action} className="flex max-w-lg flex-col gap-3">
       <FormError message={state.error} />
       {state.ok && state.data?.token && (
         <div className="rounded-md border border-green-600/30 bg-green-600/10 p-3 text-sm">
@@ -55,7 +56,7 @@ export function ApiTokenForm() {
           {t("createToken")}
         </SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }
 

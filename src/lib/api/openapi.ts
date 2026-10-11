@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { appConfig } from "../../../config/app.config";
 import { categoryInput, itemBatchInput, itemFilters, itemInput, locationInput, modelFilters, modelInput, statusChangeInput, moveInput } from "@/modules/inventory";
+import { allocationInput, availabilityQuery, projectFilters, projectInput } from "@/modules/projects";
+import { rentalFilters, rentalInput } from "@/modules/rentals";
 
 /**
  * Declarative description of the REST API, rendered as OpenAPI at
@@ -49,6 +51,17 @@ export const operations: Op[] = [
   { method: "post", path: "/items/{id}/status", tag: "Items", summary: "Change status (cascades to kit contents)", params: idParam, body: statusChangeInput },
   { method: "post", path: "/items/{id}/move", tag: "Items", summary: "Move to a location (cascades to kit contents)", params: idParam, body: moveInput },
   { method: "get", path: "/items/by-tag/{tag}", tag: "Items", summary: "Look up an item by asset tag (e.g. VG-0042)", params: ["tag"] },
+
+  { method: "get", path: "/models/{id}/availability", tag: "Availability", summary: "Owned / unavailable / allocated / available for a model in a date range", params: idParam, query: availabilityQuery },
+
+  { method: "get", path: "/projects", tag: "Projects", summary: "List projects", query: projectFilters },
+  { method: "post", path: "/projects", tag: "Projects", summary: "Create a project", body: projectInput.extend({ customFields: z.record(z.string(), z.unknown()).optional() }) },
+  { method: "get", path: "/projects/{id}", tag: "Projects", summary: "Project with client, crew, contacts and reservations (incl. availability)", params: idParam },
+  { method: "post", path: "/projects/{id}/reservations", tag: "Projects", summary: "Reserve a model for the project; 409 with conflict details unless force", params: idParam, body: allocationInput, responses: { 409: "Not enough available; body has { available, requested, shortfall, conflicts }" } },
+
+  { method: "get", path: "/rentals", tag: "Rentals", summary: "List rentals", query: rentalFilters },
+  { method: "post", path: "/rentals", tag: "Rentals", summary: "Create a rental", body: rentalInput },
+  { method: "get", path: "/rentals/{id}", tag: "Rentals", summary: "Rental with lines and totals", params: idParam },
 ];
 
 function schemaJson(schema: z.ZodTypeAny) {

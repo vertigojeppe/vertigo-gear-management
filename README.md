@@ -3,11 +3,11 @@
 Gear inventory, packing lists and production plans for Vertigo. Self-hosted,
 multi-user, works on a phone in the warehouse and a laptop in the office.
 
-Status: **Phase 1 (inventory core)**. Login and roles, categories, models,
-items (serialized and bulk), kits, locations, status log, attachments, QR
-tags and phone scanning, search and filters, dashboard, custom fields,
-user management, REST API with docs. Projects and availability arrive in
-Phase 2. See `PLAN.md` for the roadmap.
+Status: **Phase 2 (projects, availability, rentals, calendar)**. Everything
+from Phase 1 plus clients, projects with phases and crew, gear reservations
+with conflict warnings, a calendar timeline, external rentals with
+agreement PDFs, iCal feeds, optional Google Calendar push, and webhooks.
+Packing lists arrive in Phase 3. See `PLAN.md` for the roadmap.
 
 ## Quick start (development)
 
@@ -50,6 +50,19 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 - **Settings › Users**: invite colleagues as admin, member or viewer.
 - **Settings › Your account › API tokens**: call the REST API from other
   tools. Docs at `/api/docs`.
+- **Projects**: a project has a client, venue, phase dates (prep, load-in,
+  show, load-out, return), crew and contacts. **Reserve gear** per model for
+  the project's dates; the app warns when not enough is available and shows
+  who holds the rest. You can reserve anyway.
+- **Calendar**: a timeline of projects and rentals; days where a model is
+  over-booked are marked red, with the models listed below.
+- **Rentals**: reserve gear for an external client with daily/weekly prices,
+  assign the exact units, hand out and take back, print the agreement PDF.
+- **Calendar feeds**: Settings › Calendar gives subscribe links for all
+  projects, all rentals and "my jobs". Paste them into Google or Apple
+  Calendar.
+- **Webhooks**: Settings › Webhooks posts signed JSON to your URL on events
+  such as a status change or a confirmed project.
 
 ## Scripts
 
@@ -98,6 +111,51 @@ Works with limitations: set `DATABASE_URL` to a managed Postgres (Neon,
 Supabase, …), `STORAGE_DRIVER=s3` with R2/MinIO credentials, and run
 `npx prisma migrate deploy` as a build step. PDF thumbnails are unavailable
 there (no poppler). Detailed steps follow in Phase 5.
+
+## Google Calendar push (optional)
+
+The app can create one event per project phase on a shared Google
+Calendar, and one event per rental on a second calendar. Sync is one-way:
+the app is the source of truth and never reads edits back from Google.
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create a
+   project (or use an existing one) and enable the **Google Calendar API**
+   (APIs & Services › Library).
+2. Create a **service account** (IAM & Admin › Service Accounts › Create).
+   No roles are needed. Open it, go to **Keys › Add key › JSON** and
+   download the key file.
+3. In Google Calendar, create a calendar "Vertigo projects" (and optionally
+   "Vertigo rentals"). Open its settings › **Share with specific people**
+   and add the service account's email (`...@...iam.gserviceaccount.com`)
+   with **Make changes to events**.
+4. Still in the calendar settings, copy the **Calendar ID** from
+   "Integrate calendar".
+5. Put the key file next to the app (it is git-ignored) and set in `.env`:
+
+   ```
+   GOOGLE_SERVICE_ACCOUNT_JSON=./google-service-account.json
+   GOOGLE_CALENDAR_ID_PROJECTS=<calendar id>
+   GOOGLE_CALENDAR_ID_RENTALS=<calendar id>   # optional
+   ```
+
+   With Docker, mount the file into the container and point the variable at
+   the mounted path, or paste the JSON itself as the value.
+6. Restart the app. Settings › Calendar shows "Configured". Confirming a
+   project, changing its dates or venue, or cancelling it queues a sync;
+   the delivery queue is visible under Settings › Webhooks.
+
+Crew members with a Google email on their user profile are added as
+attendees. Service accounts can only invite attendees when the Workspace
+admin grants domain-wide delegation; without it, events are created
+without attendees and the sync still succeeds.
+
+## Background work
+
+Webhook deliveries and calendar pushes go through an outbox table processed
+by a worker inside the app process every 15 seconds. On a host without a
+long-running process (Vercel), set `CRON_SECRET` and have a scheduler call
+`POST /api/cron/outbox` with `Authorization: Bearer <secret>` every
+minute.
 
 ## Backup
 

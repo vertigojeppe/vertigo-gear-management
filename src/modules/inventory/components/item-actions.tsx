@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import { Field, FormError } from "@/components/form/field";
 import { useActionDialog } from "@/components/form/use-action-dialog";
@@ -37,7 +38,7 @@ export function StatusDialog({ itemId, current, isKit, locations }: { itemId: st
             <DialogTitle>{t("changeStatus")}</DialogTitle>
             {isKit && <DialogDescription>{t("cascadeNote")}</DialogDescription>}
           </DialogHeader>
-          <form action={action} className="flex flex-col gap-4">
+          <ActionForm action={action} className="flex flex-col gap-4">
             <input type="hidden" name="id" value={itemId} />
             <FormError message={state.error} />
             <Field id="status" label={t("newStatus")} error={state.fieldErrors?.status}>
@@ -70,7 +71,7 @@ export function StatusDialog({ itemId, current, isKit, locations }: { itemId: st
               </Button>
               <SubmitButton pendingText={tc("loading")}>{tc("save")}</SubmitButton>
             </div>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
     </>
@@ -96,7 +97,7 @@ export function MoveDialog({ itemId, current, isKit, locations }: { itemId: stri
             <DialogTitle>{t("moveTo")}</DialogTitle>
             {isKit && <DialogDescription>{t("cascadeNote")}</DialogDescription>}
           </DialogHeader>
-          <form action={action} className="flex flex-col gap-4">
+          <ActionForm action={action} className="flex flex-col gap-4">
             <input type="hidden" name="id" value={itemId} />
             <FormError message={state.error} />
             <Field id="move-locationId" label={t("location")} error={state.fieldErrors?.locationId}>
@@ -116,7 +117,7 @@ export function MoveDialog({ itemId, current, isKit, locations }: { itemId: stri
               </Button>
               <SubmitButton pendingText={tc("loading")}>{t("move")}</SubmitButton>
             </div>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
     </>
