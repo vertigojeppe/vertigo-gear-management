@@ -6,6 +6,7 @@ import { ActivityList } from "@/components/activity-list";
 import { CustomFieldValuesList } from "@/components/form/custom-field-inputs";
 import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/page-header";
+import { QrImage } from "@/components/qr-image";
 import { StatusBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
@@ -114,8 +115,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
           <CustomFieldValuesList defs={defs} values={item.customFields} />
         </div>
         <div className="flex flex-col items-center gap-2 rounded-md border p-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`/api/items/${item.id}/qr.svg`} alt={`QR ${item.assetTag}`} width={160} height={160} className="size-40" />
+          <QrImage itemId={item.id} assetTag={item.assetTag} className="size-40" />
           <p className="font-mono text-sm">{item.assetTag}</p>
           <p className="text-center text-xs text-muted-foreground">{t("qrHelp")}</p>
           <a href={`/t/${encodeURIComponent(item.assetTag)}`} className="text-xs underline">

@@ -4,10 +4,18 @@ import { assetTagUrl } from "@/lib/asset-tag";
 import { getActor } from "@/lib/auth/session";
 import { items } from "@/modules/inventory";
 
-/** Origin as seen by the client, honouring a reverse proxy's forwarded headers. */
-function requestOrigin(req: NextRequest): string {
-  const proto = req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "");
-  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
+/**
+ * Origin to encode while APP_URL is not set to a public address.
+ * Preferred: the `origin` query parameter the page adds from
+ * window.location (the only reliable source in development, where the
+ * server reports its own hostname). Fallback: forwarded/host headers.
+ */
+function requestOrigin(req: NextRequest): string | undefined {
+  const fromPage = req.nextUrl.searchParams.get("origin");
+  if (fromPage && /^https?:\/\/[^/]+$/.test(fromPage)) return fromPage;
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+  if (!host) return undefined;
+  const proto = req.headers.get("x-forwarded-proto") ?? (req.url.startsWith("https") ? "https" : "http");
   return `${proto}://${host}`;
 }
 
