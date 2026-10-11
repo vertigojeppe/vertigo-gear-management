@@ -8,7 +8,6 @@ import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
-import { assetTagUrl } from "@/lib/asset-tag";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
@@ -119,7 +118,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
           <img src={`/api/items/${item.id}/qr.svg`} alt={`QR ${item.assetTag}`} width={160} height={160} className="size-40" />
           <p className="font-mono text-sm">{item.assetTag}</p>
           <p className="text-center text-xs text-muted-foreground">{t("qrHelp")}</p>
-          <a href={assetTagUrl(item.assetTag)} className="text-xs underline">
+          <a href={`/t/${encodeURIComponent(item.assetTag)}`} className="text-xs underline">
             {t("openTag")}
           </a>
           {detail.photoUrl && (
