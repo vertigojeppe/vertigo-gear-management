@@ -8,11 +8,11 @@ import { auth } from "@/lib/auth";
  */
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-  const isPublic =
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/share/") ||
-    pathname.startsWith("/api/docs");
+  // API routes authenticate themselves (Bearer token or session) and must
+  // answer 401 instead of redirecting to the login page.
+  if (pathname.startsWith("/api/")) return NextResponse.next();
+
+  const isPublic = pathname.startsWith("/login") || pathname.startsWith("/share/");
 
   if (!req.auth && !isPublic) {
     const loginUrl = new URL("/login", req.nextUrl.origin);

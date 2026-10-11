@@ -1,0 +1,40 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { requirePermission } from "@/lib/auth/session";
+import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
+import { customFieldDefinitionInput } from "./schema";
+import { customFieldDefinitions } from "./service";
+
+export async function createCustomField(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("settings.manage");
+  const parsed = parseForm(customFieldDefinitionInput, formData);
+  if (!parsed.ok) return parsed.state;
+  try {
+    await customFieldDefinitions.create(actor, parsed.data);
+  } catch (err) {
+    return errorState(err, echoValues(formData));
+  }
+  revalidatePath("/settings/custom-fields");
+  return { ok: true };
+}
+
+export async function updateCustomField(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("settings.manage");
+  const id = String(formData.get("id") ?? "");
+  const parsed = parseForm(customFieldDefinitionInput, formData);
+  if (!parsed.ok) return parsed.state;
+  try {
+    await customFieldDefinitions.update(actor, id, parsed.data);
+  } catch (err) {
+    return errorState(err, echoValues(formData));
+  }
+  revalidatePath("/settings/custom-fields");
+  return { ok: true };
+}
+
+export async function deleteCustomField(formData: FormData): Promise<void> {
+  const actor = await requirePermission("settings.manage");
+  await customFieldDefinitions.remove(actor, String(formData.get("id")));
+  revalidatePath("/settings/custom-fields");
+}

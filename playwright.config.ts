@@ -6,6 +6,9 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
   fullyParallel: false,
+  // The dev server compiles routes on first hit; too many parallel first
+  // requests make Turbopack race on its manifests. CI runs a built app.
+  workers: process.env.CI ? 2 : 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {

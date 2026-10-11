@@ -3,8 +3,11 @@
 Gear inventory, packing lists and production plans for Vertigo. Self-hosted,
 multi-user, works on a phone in the warehouse and a laptop in the office.
 
-Status: **Phase 0 (skeleton)**. Login, roles, database, tests, CI and Docker
-work. Inventory arrives in Phase 1. See `PLAN.md` for the roadmap.
+Status: **Phase 1 (inventory core)**. Login and roles, categories, models,
+items (serialized and bulk), kits, locations, status log, attachments, QR
+tags and phone scanning, search and filters, dashboard, custom fields,
+user management, REST API with docs. Projects and availability arrive in
+Phase 2. See `PLAN.md` for the roadmap.
 
 ## Quick start (development)
 
@@ -28,6 +31,23 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 | admin@vertigo.test | admin |
 | member@vertigo.test | member |
 | viewer@vertigo.test | viewer |
+
+## What you can do today
+
+- **Inventory › Categories / Locations**: build your category tree and
+  warehouse zones.
+- **Inventory › Models**: one entry per product (manufacturer, model,
+  specs, links, photo). Choose *serialized* (one record per unit) or *bulk*
+  (tracked by quantity).
+- **Models › Add items**: create units in one go with serial numbers;
+  every unit gets an asset tag like `VG-0042` and a QR code.
+- **Item page**: change status (reason required for repair/missing/retired),
+  move, put into a kit, attach photos/invoices/manuals, see history.
+- **Scan** (phone): point the camera at a tag, or type it.
+- **Settings › Extra fields**: add your own fields to models and items.
+- **Settings › Users**: invite colleagues as admin, member or viewer.
+- **Settings › Your account › API tokens**: call the REST API from other
+  tools. Docs at `/api/docs`.
 
 ## Scripts
 

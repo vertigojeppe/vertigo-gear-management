@@ -8,62 +8,127 @@ Browser (phone / laptop)
    ▼                                   ▼
 Next.js 16 app (one Node process) ──── module services ──── Prisma 7 ──── PostgreSQL 16
    │                                   │
-   │  StorageAdapter (local disk | S3) │  Outbox poller (webhooks, calendar push, thumbnails)
+   │  StorageAdapter (local disk | S3) │  Outbox poller (webhooks, calendar push) — Phase 2
    ▼                                   ▼
 uploads volume / R2 / MinIO         Google Calendar API (optional)
 ```
 
 - One container, one database, one uploads volume. No queue, no cache
-  server. Background work goes through an `Outbox` table polled in-process.
+  server. Background work will go through an `Outbox` table polled
+  in-process (Phase 2).
 - The UI calls module services through server actions. External tools call
   the same services through REST with per-user API tokens.
 
 ## Modules
 
-| Module | Owns | Public interface (planned) |
+| Module | Owns | Public interface |
 |---|---|---|
-| users | User, ApiToken, ShareLink | `users.*`, `can()` |
-| inventory | Category, Model, Item, Location, StatusLog, Attachment, CustomFieldDefinition | `inventory.*` |
-| projects | Client, Project, ProjectContact, ProjectCrew, Allocation | `projects.*`, `availability.*` |
-| rentals | Rental, RentalLine | `rentals.*` |
-| packing | PackingList, PackingLine, PackingCheck, PackingTemplate | `packing.*` |
-| plans | ProductionPlan, ScheduleEntry, Task, LogisticsEntry, PlanTemplate | `plans.*` |
-| files | File, FileVersion, FileLink, Markup | `files.*`, storage adapter |
-| calendar | CalendarFeedToken, Google sync | `calendar.*` |
+| users | User, ApiToken | `users.*`, `apiTokens.*`, user/account actions |
+| settings | CustomFieldDefinition | `customFieldDefinitions.*` |
+| inventory | Category, Model, Item, Location, StatusLog | `categories`, `locations`, `models`, `items`, list/detail queries, forms |
+| files | File, Attachment | `files.*`, `AttachmentsSection` |
+| projects | Client, Project, ProjectContact, ProjectCrew, Allocation (Phase 2) | |
+| rentals | Rental, RentalLine (Phase 2) | |
+| packing | PackingList, PackingLine, PackingCheck, PackingTemplate (Phase 3) | |
+| plans | ProductionPlan, ScheduleEntry, Task, LogisticsEntry, PlanTemplate (Phase 4) | |
+| calendar | CalendarFeedToken, Google sync (Phase 2) | |
 
-Cross-cutting: `ActivityLog`, `Outbox`, `Webhook` live in `src/lib/`.
+Cross-cutting in `src/lib/`: `activity.ts` (ActivityLog), `asset-tag.ts`
+(Counter-backed tag sequence), `custom-fields.ts` (pure validation),
+`forms.ts` (FormData → zod → FormState), `storage/` (adapter),
+`api/` (REST auth, error mapping, OpenAPI), `auth/` (Auth.js, permissions).
 
-## Data model (current)
-
-Phase 0 contains only `User`. The full target model is in `PLAN.md` §3;
-this diagram grows with each phase.
+## Data model (Phase 1)
 
 ```mermaid
 erDiagram
-  User {
-    string id PK
-    string email UK
-    string name
-    string passwordHash
-    string role "admin | member | viewer (config)"
-    string phone
-    string googleEmail
-    boolean active
+  User ||--o{ ApiToken : owns
+  User ||--o{ ActivityLog : wrote
+  User ||--o{ StatusLog : changed
+  User ||--o{ File : uploaded
+  Category ||--o{ Category : parent
+  Category ||--o{ Model : groups
+  Model ||--o{ Item : "has units/bins"
+  Model o|--o| File : "default photo"
+  Location ||--o{ Location : parent
+  Location ||--o{ Item : holds
+  Item ||--o{ Item : "kit contains"
+  Item ||--o{ StatusLog : history
+  File ||--o{ Attachment : "attached as"
+  CustomFieldDefinition }o--|| Model : "values in customFields JSON"
+  CustomFieldDefinition }o--|| Item : "values in customFields JSON"
+
+  Model {
+    string trackingType "serialized | bulk"
+    decimal weightKg
+    int powerDrawW
+    json links
+    json customFields
+    boolean archived
+  }
+  Item {
+    string assetTag UK "VG-0042, QR payload"
+    string serialNumber
+    int quantity "1 for serialized, bin size for bulk"
+    string status "config ITEM_STATUSES"
+    boolean isKit
+    string name "kit/case name"
+    decimal purchasePrice
+    decimal insuredValue
+    decimal replacementValue
+    json customFields
+  }
+  Location {
+    string type "warehouse | project | renter | repair"
+  }
+  Attachment {
+    string entityType
+    string entityId
+    string kind "photo | invoice | manual | other"
+  }
+  ActivityLog {
+    string entityType
+    string entityId
+    string action
+    string summary
+    json details
+  }
+  Counter {
+    string key PK
+    int value
   }
 ```
+
+Rules encoded in services (not the database):
+
+- A **kit** is a serialized item with `isKit`. Contents have `parentItemId`.
+  Status changes and moves cascade to contents; a kit cannot contain itself.
+- **Bulk bins**: one `Item` row per bin; the kit seed moves 3 cables from
+  the wall bin into a kit bin.
+- **Status changes** go through `items.changeStatus`, which validates with
+  `validateStatusChange` (reason required for repair/missing/retired) and
+  writes `StatusLog` + `ActivityLog`.
+- **Finance fields** are stripped by `redactFinance` for actors without
+  `inventory.finance`.
+- **Custom fields** are validated against `CustomFieldDefinition` rows with
+  a zod schema built at request time; values live in `customFields` JSONB.
 
 ## Request lifecycle
 
 1. `src/proxy.ts` decodes the session cookie; anonymous → `/login`.
+   `/api/*` is skipped: API handlers authenticate (Bearer or session) and
+   answer 401.
 2. Layout `(app)/layout.tsx` calls `requireActor()`.
 3. Page reads data through a module's `queries.ts`.
 4. A form posts to a server action in the module's `actions.ts`, which calls
-   `requirePermission(...)`, then `service.ts`, then `revalidatePath`.
-5. Services write `ActivityLog` rows and enqueue `Outbox` events for
-   webhooks and calendar sync (from Phase 1/2).
+   `requirePermission(...)`, parses with zod (`parseForm`), calls
+   `service.ts`, then `revalidatePath`.
+5. Services call `assertCan`, write `ActivityLog` rows, and (Phase 2)
+   enqueue `Outbox` events.
 
 ## Configuration
 
-`config/app.config.ts` is the single place for statuses, phases, roles,
-permissions, label sizes, currency, timezone and locale. Environment
-variables (`.env.example`) hold secrets and deployment-specific values.
+`config/app.config.ts` is the single place for statuses (with
+`available`, `reasonRequired`, `manual` flags), phases, roles,
+permissions, label sizes, asset tag prefix, currency, timezone and locale.
+Environment variables (`.env.example`) hold secrets and deployment values.

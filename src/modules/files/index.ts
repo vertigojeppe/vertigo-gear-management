@@ -1,3 +1,5 @@
-// Public interface of the files module. Filled in during its phase (see PLAN.md).
-// Other modules and app routes import only from here.
-export {};
+// Public interface of the files module.
+export { files, FileError } from "./service";
+export type { AttachmentDto } from "./service";
+export { uploadAttachment, deleteAttachment } from "./actions";
+export { AttachmentsSection } from "./components/attachments";

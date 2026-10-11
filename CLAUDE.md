@@ -11,7 +11,7 @@ external rentals. Full spec: `vertigo-gear-system-prompt.md`. Plan and data
 model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **0 (skeleton) done**. Next: Phase 1 (inventory core).
+Current phase: **1 (inventory core) done**. Next: Phase 2 (projects, availability, rentals, calendar).
 
 ## Stack
 
@@ -36,7 +36,8 @@ npm run db:migrate               # apply migrations (dev)
 npm run db:seed                  # demo users: admin|member|viewer@vertigo.test / vertigo123
 npm run dev                      # http://localhost:3000
 npm run lint && npm run typecheck && npm run test
-npm run test:e2e                 # Playwright; starts dev server itself
+npm run test:e2e                 # Playwright; reuses a running dev server or starts one
+npm run db:clean-tests           # remove Testlight models / e2e tokens the browser tests leave behind
 npm run build
 ```
 
@@ -52,7 +53,7 @@ prisma/seed/           re-runnable seeders (upsert on stable keys)
 messages/{en,da}.json  every UI string; keys namespaced by feature
 src/app/               routes only; thin; (auth) and (app) route groups
 src/components/        shared UI (ui/ = shadcn, rest = ours); navigation.ts is the nav source of truth
-src/lib/               db, auth, i18n, later: storage, pdf, qr, outbox
+src/lib/               db, auth, activity, asset-tag, custom-fields, forms, format, storage/, api/
 src/modules/<name>/    index.ts | schema.ts | service.ts | actions.ts | queries.ts | components/ | __tests__/
 src/generated/prisma   generated client (gitignored)
 e2e/                   Playwright specs
@@ -77,6 +78,28 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
 - `src/proxy.ts` only does an optimistic cookie check; it is not the
   authorisation layer.
 - Session is a JWT with `id` and `role`. Role changes apply at next login.
+
+## Inventory conventions
+
+- Services live on namespaced objects (`items.create`, `models.update`) and
+  take `(actor, input, extra)`. They call `assertCan` first and write
+  `ActivityLog` rows; use the transaction client for both when inside
+  `$transaction`.
+- Forms: client component with `useActionState` → `"use server"` action →
+  `parseForm(zodSchema, formData)` → service → `revalidatePath` / `redirect`.
+  Errors come back as `FormState { error, fieldErrors, values }`; `errorState()`
+  maps domain errors (which carry `.field`). `redirect()` must stay outside
+  try/catch.
+- Custom fields: inputs are named `cf.<key>`; `customFieldsFromForm` +
+  `validateCustomFields` in the action; definitions via
+  `customFieldDefinitions.forEntity()` (settings module).
+- Dialog forms close on success with `useActionDialog(state)` (no effects).
+- Native `<select>` (`NativeSelect`) in forms so FormData posts without JS.
+- REST: handlers under `src/app/api/v1/**` use `handler(permission, fn)`
+  from `src/lib/api/respond.ts` and the module zod schemas. Add new
+  endpoints to `src/lib/api/openapi.ts` so `/api/docs` stays complete.
+- Asset tags come from `nextAssetTag(tx)` inside the creating transaction.
+  The seed sets the counter past its highest tag.
 
 ## Adding a new entity end-to-end
 
@@ -107,3 +130,8 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
   (CI builds first). Seed must have run for the login test.
 - Shell scripts and the Dockerfile must stay LF (`.gitattributes`).
 - Windows dev machine: prefer `npm run` scripts over raw commands.
+- After `prisma generate` the running `next dev` keeps the old client in
+  memory (global singleton). Restart the dev server after schema changes.
+- Multi-file bash heredocs fail in the Windows shell; write files with the
+  editor tools instead.
+- `items.db.test.ts` hits the real dev database and cleans up after itself.

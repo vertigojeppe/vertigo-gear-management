@@ -18,6 +18,9 @@ Rules:
 - Pages in `src/app/` compose modules. They contain no business logic.
 - Modules never import another module's internals. Import from
   `@/modules/<name>` (its `index.ts`) only. ESLint enforces this.
+- Client components (`"use client"`) import server actions from
+  `@/modules/<name>/actions`, never from the barrel: the barrel also exports
+  services that touch the database and the browser bundle cannot load them.
 - Prisma models for a module live in `prisma/models/<name>.prisma`.
 - Every mutation goes through a service function that receives the actor,
   so permission checks and activity logging happen in one place.

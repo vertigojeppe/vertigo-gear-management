@@ -17,7 +17,7 @@ export function MobileTopBar({ appName }: { appName: string }) {
   const t = useTranslations();
   const current = NAV_ITEMS.find((i) => isActive(pathname, i.href));
   return (
-    <header className="sticky top-0 z-20 flex h-12 items-center border-b bg-card px-4 md:hidden">
+    <header className="flex h-12 shrink-0 items-center border-b bg-card px-4 md:hidden">
       <span className="font-semibold">{current ? t(`nav.${current.key}`) : appName}</span>
     </header>
   );
@@ -33,7 +33,7 @@ export function MobileTabBar({ actor }: { actor: Actor }) {
   return (
     <>
       <nav
-        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="grid shrink-0 grid-cols-5 border-t bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
         aria-label="Main"
       >
         {TAB_ITEMS.map((item) => (

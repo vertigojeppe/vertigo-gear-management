@@ -1,6 +1,9 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 
+// Server-only: never import from a client component (the bundler fails on
+// pg's Node imports). Client components use @/modules/<name>/actions.
+//
 // Prisma 7 requires a driver adapter. One client per process; the global
 // cache keeps `next dev` hot reloads from opening a new pool each time.
 //

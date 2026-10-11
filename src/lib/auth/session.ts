@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import type { Permission, Role } from "../../../config/app.config";
 import { auth } from "./index";
-import { can } from "./permissions";
+import { can, ForbiddenError } from "./permissions";
 
-export { can };
+export { can, ForbiddenError };
 
 export type Actor = {
   id: string;
@@ -30,13 +30,6 @@ export async function requireActor(): Promise<Actor> {
   const actor = await getActor();
   if (!actor) redirect("/login");
   return actor;
-}
-
-export class ForbiddenError extends Error {
-  constructor(permission: Permission) {
-    super(`Missing permission: ${permission}`);
-    this.name = "ForbiddenError";
-  }
 }
 
 /** Use in server actions and services: throws when the actor lacks the permission. */

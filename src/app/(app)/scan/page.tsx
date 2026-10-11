@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { ComingSoon } from "@/components/coming-soon";
+import { PageHeader } from "@/components/page-header";
+import { requireActor } from "@/lib/auth/session";
+import { Scanner } from "./scanner";
 
 export const metadata: Metadata = { title: "Scan" };
 
-export default async function Page() {
-  const t = await getTranslations("nav");
-  return <ComingSoon section={t("scan")} phase={1} />;
+export default async function ScanPage() {
+  await requireActor();
+  const t = await getTranslations("scan");
+  return (
+    <div className="flex flex-col gap-5">
+      <PageHeader title={t("title")} subtitle={t("hint")} />
+      <Scanner />
+    </div>
+  );
 }
