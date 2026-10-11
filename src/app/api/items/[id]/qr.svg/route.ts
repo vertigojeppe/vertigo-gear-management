@@ -2,18 +2,20 @@ import { NextResponse, type NextRequest } from "next/server";
 import QRCode from "qrcode";
 import { assetTagUrl } from "@/lib/asset-tag";
 import { getActor } from "@/lib/auth/session";
-import { requestOrigin } from "@/lib/request-origin";
+import { requestOrigin, shareableOrigin } from "@/lib/request-origin";
 import { items } from "@/modules/inventory";
 
 /**
  * Origin to encode while APP_URL is not set to a public address.
  * Preferred: the `origin` query parameter the page adds from
  * window.location (what the browser is really on). Fallback: Host header.
+ * A localhost origin is swapped for this machine's LAN address so a QR shown
+ * on the PC screen can be followed by a phone.
  */
 function originFor(req: NextRequest): string {
   const fromPage = req.nextUrl.searchParams.get("origin");
-  if (fromPage && /^https?:\/\/[^/]+$/.test(fromPage)) return fromPage;
-  return requestOrigin(req);
+  const origin = fromPage && /^https?:\/\/[^/]+$/.test(fromPage) ? fromPage : requestOrigin(req);
+  return shareableOrigin(origin);
 }
 
 /** QR code for an item's asset tag, as SVG. */
