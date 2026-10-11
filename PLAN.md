@@ -204,12 +204,12 @@ docs/ARCHITECTURE.md, DECISIONS.md, BACKLOG.md, CLAUDE.md (root)
 Each phase ends with: migrations applied, seed updated, tests green in CI,
 `CLAUDE.md` updated, a commit, and a short "what to click" note.
 
-### Phase 0 — Skeleton
+### Phase 0 — Skeleton ✅ (2026-10-11)
 Repo, Next.js, Prisma + Postgres via compose, Auth.js, shadcn, next-intl,
 config file, module scaffold, Vitest + Playwright + GitHub Actions, Dockerfile,
 `CLAUDE.md` / `DECISIONS.md` / `BACKLOG.md` / `ARCHITECTURE.md` stubs.
 
-### Phase 1 — Inventory core
+### Phase 1 — Inventory core ✅ (2026-10-11)
 Users + roles + login, categories (tree editor), models, items (serialized +
 bulk), kits, locations, status log with reason, attachments (photos, invoices,
 manuals through the storage adapter), QR tag generation and item page by

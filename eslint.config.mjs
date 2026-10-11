@@ -13,8 +13,9 @@ const eslintConfig = defineConfig([
         {
           patterns: [
             {
-              group: ["@/modules/*/*", "!@/modules/*/index"],
-              message: "Import from the module's public interface (@/modules/<name>) instead of its internals.",
+              group: ["@/modules/*/*", "!@/modules/*/index", "!@/modules/*/actions"],
+              message:
+                "Import from the module's public interface (@/modules/<name>). Client components import server actions from @/modules/<name>/actions.",
             },
           ],
         },

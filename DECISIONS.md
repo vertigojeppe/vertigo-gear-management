@@ -69,3 +69,51 @@ owned at all.
 ## 2026-10-11 — Sub-hiring gear in is backlog
 
 No "external item" hook in the model yet. See BACKLOG.md.
+
+## 2026-10-12 — Asset tags from a counter row, not the id
+
+`VG-0042` style tags come from a `Counter` row incremented inside the
+creating transaction, so tags are short, printable, sequential and never
+duplicated under concurrency. The seed sets the counter past its highest tag.
+
+## 2026-10-12 — Bulk items are bins
+
+A bulk model (cables, clamps) has one `Item` row per *bin* with a quantity,
+not one row per cable. Putting 3 cables into a kit creates a bin of 3 inside
+the kit and reduces the wall bin. Each bin has its own tag.
+
+## 2026-10-12 — Status changes: reason flags in config
+
+Which statuses require a reason, count as available, or may be set by hand
+is data in `ITEM_STATUSES` (config), not code. The pure
+`validateStatusChange` is unit-tested; check-out/check-in (Phase 3) reuse it
+with `viaFlow`.
+
+## 2026-10-12 — Client components import actions from `@/modules/<name>/actions`
+
+Importing a server action through the module barrel pulled the Prisma/pg
+stack into the browser bundle (Turbopack: "Can't resolve 'net'"). The
+ESLint import rule now allows `@/modules/<name>/actions` as a second public
+entry; the barrel stays for server code. `server-only` was tried and
+dropped because it also throws in Vitest and the seed script.
+
+## 2026-10-12 — App shell scrolls inside, not the window
+
+The frame is `h-dvh`; only the content area scrolls. Sidebar and bottom
+tabs never move, mobile browser chrome cannot cover the tabs, and
+Playwright's phone emulation stops mis-hitting a fixed bar. Route changes
+reset the scroll position (`ScrollContainer`).
+
+## 2026-10-12 — OpenAPI from a hand-written operation list
+
+`src/lib/api/openapi.ts` lists endpoints and reuses the zod schemas via
+`z.toJSONSchema`. No code-generation dependency; the handlers and the
+document share the same schemas, so request shapes cannot drift. Docs UI is
+Scalar loaded from a CDN at `/api/docs`.
+
+## 2026-10-12 — Custom field values live in a JSONB column
+
+`customFields` on Model/Item (later Project/Rental) with definitions in
+`CustomFieldDefinition`. Validation builds a zod schema per request from the
+definitions. Filtering uses Prisma JSON path equality; full-text search over
+custom values is backlog.

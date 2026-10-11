@@ -1,0 +1,27 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import { PageHeader } from "@/components/page-header";
+import { requirePermission } from "@/lib/auth/session";
+import { ModelForm, categoryOptions, modelDetail } from "@/modules/inventory";
+import { customFieldDefinitions } from "@/modules/settings";
+
+export const metadata: Metadata = { title: "Edit model" };
+
+export default async function EditModelPage(props: { params: Promise<{ id: string }> }) {
+  await requirePermission("inventory.write");
+  const { id } = await props.params;
+  const t = await getTranslations("inventory");
+  const [detail, cats, defs] = await Promise.all([modelDetail(id), categoryOptions(), customFieldDefinitions.forEntity("model")]);
+  if (!detail) notFound();
+  const label = `${detail.model.manufacturer} ${detail.model.name}`;
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={t("editModel")}
+        crumbs={[{ label: t("title"), href: "/inventory" }, { label, href: `/inventory/models/${id}` }, { label: t("editModel") }]}
+      />
+      <ModelForm model={detail.model} categories={cats} defs={defs} hasItems={detail.items.length > 0} />
+    </div>
+  );
+}

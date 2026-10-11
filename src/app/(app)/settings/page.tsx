@@ -1,10 +1,34 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { ComingSoon } from "@/components/coming-soon";
+import { KeyRound, ListPlus, Users } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { can, requireActor } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Settings" };
 
-export default async function Page() {
-  const t = await getTranslations("nav");
-  return <ComingSoon section={t("settings")} phase={1} />;
+export default async function SettingsPage() {
+  const actor = await requireActor();
+  const t = await getTranslations("settings");
+  const cards = [
+    { href: "/settings/account", icon: KeyRound, title: t("account"), body: t("accountHelp"), show: true },
+    { href: "/settings/users", icon: Users, title: t("users"), body: t("usersHelp"), show: can(actor.role, "users.manage") },
+    { href: "/settings/custom-fields", icon: ListPlus, title: t("customFields"), body: t("customFieldsHelp"), show: can(actor.role, "settings.manage") },
+  ].filter((c) => c.show);
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader title={t("title")} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((c) => (
+          <Link key={c.href} href={c.href} className="flex gap-3 rounded-md border p-4 hover:bg-muted/50">
+            <c.icon className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+            <span>
+              <span className="block font-medium">{c.title}</span>
+              <span className="block text-sm text-muted-foreground">{c.body}</span>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }

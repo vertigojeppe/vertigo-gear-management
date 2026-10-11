@@ -19,7 +19,7 @@ export function Sidebar({ actor, appName }: { actor: Actor; appName: string }) {
   ];
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-card md:flex">
+    <aside className="hidden h-full w-60 shrink-0 flex-col border-r bg-card md:flex">
       <div className="px-5 py-4">
         <Link href="/dashboard" className="text-base font-semibold tracking-tight">
           {appName}

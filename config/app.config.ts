@@ -20,6 +20,10 @@ export const appConfig = {
   vatRate: 0.25,
   dateFormat: "dd.MM.yyyy",
   timeFormat: "HH:mm",
+  /** Prefix for generated asset tags: VG-0001, VG-0002, ... */
+  assetTagPrefix: "VG",
+  /** Rows per page in list views. */
+  pageSize: 50,
 } as const;
 
 export type Locale = (typeof appConfig.locales)[number];
@@ -77,14 +81,28 @@ export function isRole(value: unknown): value is Role {
 /* Inventory                                                              */
 /* ---------------------------------------------------------------------- */
 
+/**
+ * Item statuses. `available` = counts towards availability for projects.
+ * `reasonRequired` = a reason must be given when moving an item here.
+ * `manual` = can be chosen by hand; false means only flows (check-out,
+ * rental) set it.
+ */
 export const ITEM_STATUSES = [
-  { key: "in_house", label: "itemStatus.in_house", color: "green", available: true },
-  { key: "on_project", label: "itemStatus.on_project", color: "blue", available: true },
-  { key: "rented_out", label: "itemStatus.rented_out", color: "purple", available: true },
-  { key: "in_repair", label: "itemStatus.in_repair", color: "amber", available: false },
-  { key: "missing", label: "itemStatus.missing", color: "red", available: false },
-  { key: "retired", label: "itemStatus.retired", color: "gray", available: false },
+  { key: "in_house", label: "itemStatus.in_house", color: "green", available: true, reasonRequired: false, manual: true },
+  { key: "on_project", label: "itemStatus.on_project", color: "blue", available: true, reasonRequired: false, manual: true },
+  { key: "rented_out", label: "itemStatus.rented_out", color: "purple", available: true, reasonRequired: false, manual: true },
+  { key: "in_repair", label: "itemStatus.in_repair", color: "amber", available: false, reasonRequired: true, manual: true },
+  { key: "missing", label: "itemStatus.missing", color: "red", available: false, reasonRequired: true, manual: true },
+  { key: "retired", label: "itemStatus.retired", color: "gray", available: false, reasonRequired: true, manual: true },
 ] as const;
+
+export const ITEM_STATUS_KEYS = ITEM_STATUSES.map((s) => s.key);
+export function itemStatus(key: string) {
+  return ITEM_STATUSES.find((s) => s.key === key);
+}
+
+export const ATTACHMENT_KINDS = ["photo", "invoice", "manual", "other"] as const;
+export type AttachmentKind = (typeof ATTACHMENT_KINDS)[number];
 
 export type ItemStatus = (typeof ITEM_STATUSES)[number]["key"];
 

@@ -1,0 +1,142 @@
+// inventory module
+
+/// User-editable category tree (Video → Projectors → Laser projectors).
+model Category {
+  id        String     @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children  Category[] @relation("CategoryTree")
+  sortOrder Int        @default(0)
+  models    Model[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([parentId])
+}
+
+/// Catalogue entry: manufacturer + model + specs, entered once.
+model Model {
+  id           String   @id @default(cuid())
+  categoryId   String
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  manufacturer String
+  name         String
+  /// "serialized" (one Item per physical unit) or "bulk" (Item = bin with quantity).
+  trackingType String   @default("serialized")
+  description  String?
+  weightKg     Decimal? @db.Decimal(10, 3)
+  widthCm      Decimal? @db.Decimal(10, 1)
+  heightCm     Decimal? @db.Decimal(10, 1)
+  depthCm      Decimal? @db.Decimal(10, 1)
+  powerDrawW   Int?
+  notes        String?
+  /// [{ label, url }] manuals, product pages
+  links        Json     @default("[]")
+  defaultPhotoId String?
+  defaultPhoto File?    @relation("ModelDefaultPhoto", fields: [defaultPhotoId], references: [id], onDelete: SetNull)
+  customFields Json     @default("{}")
+  archived     Boolean  @default(false)
+  items        Item[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([manufacturer, name])
+}
+
+/// A physical unit (serialized) or a bin of a bulk model with a quantity.
+/// A kit is a serialized item with isKit = true; its contents point at it
+/// through parentItemId.
+model Item {
+  id               String    @id @default(cuid())
+  modelId          String
+  model            Model     @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  /// Short printable code, also the QR payload (e.g. VG-0042).
+  assetTag         String    @unique
+  serialNumber     String?
+  /// 1 for serialized items; bin quantity for bulk items.
+  quantity         Int       @default(1)
+  /// Key from ITEM_STATUSES in config/app.config.ts.
+  status           String    @default("in_house")
+  locationId       String?
+  location         Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  parentItemId     String?
+  parentItem       Item?     @relation("KitContents", fields: [parentItemId], references: [id], onDelete: SetNull)
+  contents         Item[]    @relation("KitContents")
+  isKit            Boolean   @default(false)
+  /// Display name for kits/cases ("Laser case 1").
+  name             String?
+  purchaseDate     DateTime? @db.Date
+  purchasePrice    Decimal?  @db.Decimal(12, 2)
+  supplier         String?
+  insuredValue     Decimal?  @db.Decimal(12, 2)
+  replacementValue Decimal?  @db.Decimal(12, 2)
+  conditionNotes   String?
+  notes            String?
+  customFields     Json      @default("{}")
+  statusLogs       StatusLog[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([modelId])
+  @@index([status])
+  @@index([locationId])
+  @@index([parentItemId])
+  @@index([serialNumber])
+}
+
+/// Where things are: warehouse zone/shelf, a project, a renter, a repair shop.
+model Location {
+  id        String     @id @default(cuid())
+  name      String
+  /// Key from LOCATION_TYPES in config/app.config.ts.
+  type      String     @default("warehouse")
+  parentId  String?
+  parent    Location?  @relation("LocationTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children  Location[] @relation("LocationTree")
+  /// Set when the location represents a project or renter (Phase 2).
+  projectId String?
+  renterId  String?
+  notes     String?
+  items     Item[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([type])
+  @@index([parentId])
+}
+
+model StatusLog {
+  id         String   @id @default(cuid())
+  itemId     String
+  item       Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  fromStatus String?
+  toStatus   String
+  reason     String?
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+
+  @@index([itemId, createdAt])
+}
+
+/// Admin-defined extra fields on models, items, projects, rentals.
+model CustomFieldDefinition {
+  id        String   @id @default(cuid())
+  /// "model" | "item" | "project" | "rental"
+  entity    String
+  /// Stable key used in the customFields JSON column.
+  key       String
+  label     String
+  /// "text" | "number" | "date" | "select" | "checkbox" | "url"
+  type      String
+  /// Options for type = select.
+  options   Json     @default("[]")
+  required  Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([entity, key])
+}

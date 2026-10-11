@@ -14,5 +14,50 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  apiTokens   ApiToken[]
+  statusLogs  StatusLog[]
+  activity    ActivityLog[]
+  files       File[]
+
   @@index([role])
+}
+
+/// Per-user bearer tokens for the REST API. Only the hash is stored.
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  tokenHash  String    @unique
+  /// First characters of the token, shown in the UI to identify it.
+  prefix     String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/// Who changed what. Written by every mutating service.
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  entityType String
+  entityId   String
+  /// "created" | "updated" | "deleted" | "status_changed" | ...
+  action     String
+  /// Human-readable one-liner.
+  summary    String
+  /// Optional structured details (changed fields, before/after).
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([createdAt])
+}
+
+/// Named counters (asset tag sequence etc.).
+model Counter {
+  key   String @id
+  value Int    @default(0)
 }

@@ -50,3 +50,7 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /blob-report/
+
+certificates
+# keep the template even though .env* is ignored
+!.env.example
