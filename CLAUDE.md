@@ -135,3 +135,6 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
 - Multi-file bash heredocs fail in the Windows shell; write files with the
   editor tools instead.
 - `items.db.test.ts` hits the real dev database and cleans up after itself.
+- Do not use the build-generated global types (`RouteContext`, `PageProps`,
+  `LayoutProps`) in source: CI runs `tsc` before `next build`, so they do not
+  exist there. Type `params` explicitly: `{ params: Promise<{ id: string }> }`.
