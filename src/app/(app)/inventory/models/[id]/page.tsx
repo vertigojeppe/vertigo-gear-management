@@ -14,14 +14,19 @@ import { formatNumber } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
 import { inventoryActions, modelDetail } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
+import { modelAvailabilityView } from "@/modules/projects";
+import { StatusPill } from "@/components/status-pill";
 import { ITEM_STATUSES } from "../../../../../../config/app.config";
 
 export const metadata: Metadata = { title: "Model" };
 
-export default async function ModelPage(props: { params: Promise<{ id: string }> }) {
+export default async function ModelPage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string; to?: string }> }) {
   const actor = await requireActor();
   const { id } = await props.params;
-  const [detail, defs] = await Promise.all([modelDetail(id), customFieldDefinitions.forEntity("model")]);
+  const sp = await props.searchParams;
+  const ok = (s?: string) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : undefined);
+  const [detail, defs, availability] = await Promise.all([modelDetail(id), customFieldDefinitions.forEntity("model"), modelAvailabilityView(id, ok(sp.from), ok(sp.to))]);
+  const tp = await getTranslations("projects");
   if (!detail) notFound();
   const { model, items } = detail;
   const t = await getTranslations("inventory");
@@ -155,6 +160,51 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">{tp("reservations")}</h2>
+        <form method="get" className="flex flex-wrap items-end gap-2 text-sm">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">{tp("from")}</span>
+            <input type="date" name="from" defaultValue={availability.window.from} className="h-8 rounded-md border bg-background px-2" />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">{tp("to")}</span>
+            <input type="date" name="to" defaultValue={availability.window.to} className="h-8 rounded-md border bg-background px-2" />
+          </label>
+          <Button type="submit" variant="outline" size="sm">
+            {tc("filter")}
+          </Button>
+          <StatusPill color={availability.available > 0 ? "green" : "red"} className="ml-2 text-sm">
+            {tp("available", { count: availability.available })}
+          </StatusPill>
+          <span className="text-xs text-muted-foreground">
+            {t("owned")} {availability.owned} · {ts("in_repair")}/{ts("missing")} {availability.unavailable} · {tp("reservations").toLowerCase()} {availability.allocated}
+          </span>
+        </form>
+        {availability.upcoming.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{tp("noReservations")}</p>
+        ) : (
+          <ul className="divide-y rounded-md border text-sm">
+            {availability.upcoming.map((a) => (
+              <li key={a.id} className="flex items-center gap-3 px-3 py-1.5">
+                <span className="w-10 font-medium">{a.quantity}×</span>
+                <Link href={a.holderType === "project" ? `/projects/${a.holderId}` : `/rentals/${a.holderId}`} className="min-w-0 flex-1 truncate hover:underline">
+                  {a.holderName}
+                </Link>
+                <span className="text-xs text-muted-foreground">
+                  {a.startDate} – {a.endDate}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {availability.overbooked.length > 0 && (
+          <p className="text-sm text-red-700 dark:text-red-300">
+            {tp("overbooked")}: {availability.overbooked.map((d) => `${d.day} (−${d.shortfall})`).join(", ")}
+          </p>
         )}
       </section>
 

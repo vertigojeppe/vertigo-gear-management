@@ -1,3 +1,13 @@
-// Public interface of the rentals module. Filled in during its phase (see PLAN.md).
-// Other modules and app routes import only from here.
-export {};
+// Public interface of the rentals module.
+export { rentals, rentalLines, rentalTotals, RentalError } from "./service";
+export type { RentalDto, RentalLineDto } from "./service";
+export { lineTotal, totals, unitPriceForDays } from "./pricing";
+export { renderAgreement } from "./agreement-pdf";
+export { listRentals, rentalDetail, assignableUnits, overdueRentals } from "./queries";
+export type { RentalListRow } from "./queries";
+export { rentalInput, rentalLineInput, assignItemInput, rentalFilters } from "./schema";
+export type { RentalInput, RentalLineInput, RentalFilters } from "./schema";
+export * as rentalActions from "./actions";
+export { RentalForm } from "./components/rental-form";
+export { RentalLineDialog, AssignUnitForm, RemoveLineButton } from "./components/rental-line-dialog";
+export { RentalStatusButtons, DeleteRentalButton } from "./components/rental-buttons";

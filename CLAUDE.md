@@ -11,7 +11,7 @@ external rentals. Full spec: `vertigo-gear-system-prompt.md`. Plan and data
 model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **1 (inventory core) done**. Next: Phase 2 (projects, availability, rentals, calendar).
+Current phase: **2 (projects, availability, rentals, calendar) done**. Next: Phase 3 (packing lists, check-out/check-in).
 
 ## Stack
 
@@ -95,12 +95,54 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
   `validateCustomFields` in the action; definitions via
   `customFieldDefinitions.forEntity()` (settings module).
 - Dialog forms close on success with `useActionDialog(state)` (no effects).
+- Client forms that use `useActionState` render `<ActionForm action={action}>`
+  (`src/components/form/action-form.tsx`), not `<form action>`: React 19
+  resets all fields after a `<form action>` server action, which wipes the
+  user's input when the action returns an error. `SubmitButton` reads the
+  pending flag from it. Plain `<form action={serverFn}>` is fine for buttons
+  (delete, status) and for the upload form, where a reset is wanted.
 - Native `<select>` (`NativeSelect`) in forms so FormData posts without JS.
 - REST: handlers under `src/app/api/v1/**` use `handler(permission, fn)`
   from `src/lib/api/respond.ts` and the module zod schemas. Add new
   endpoints to `src/lib/api/openapi.ts` so `/api/docs` stays complete.
 - Asset tags come from `nextAssetTag(tx)` inside the creating transaction.
   The seed sets the counter past its highest tag.
+
+## Availability, projects, rentals
+
+- **One allocation table.** `Allocation` rows (project or rental line,
+  model, quantity, optional unit, inclusive dates) are the only source for
+  availability. `computeAvailability` / `checkRequest` in
+  `src/modules/projects/availability.ts` are pure and unit-tested; services
+  load items + allocations with `itemsForModel` / `allocationsFor`.
+- A reservation that does not fit throws `ConflictError` with the check;
+  actions return it as `state.data.conflict` and the dialog offers
+  "reserve anyway" (`force`). Rentals use the same engine.
+- Project phase dates live on the project; the reservation window
+  (`reserveFrom/To`) is derived in `deriveWindow`. Allocations that still
+  match the old window move with the project when dates change.
+- Items have a `homeLocationId` (warehouse shelf). Flows that return gear
+  (rental return, Phase 3 check-in) put items back there.
+- Dates: `src/lib/dates.ts`. Date-only values are YYYY-MM-DD strings
+  (Copenhagen days, stored as UTC midnight); datetimes come from
+  `datetime-local` via `zonedInputToDate`.
+
+## Events, outbox, integrations
+
+- Services call `emitEvent(type, data, { calendar })` (`src/lib/events.ts`)
+  after a change. It writes `Outbox` rows: one `webhook.deliver` per
+  subscribed webhook and a de-duplicated `calendar.sync_*` job.
+- `src/lib/outbox.ts` is the worker (claim → handler → done/retry with
+  backoff). Handlers register by type; calendar handlers are in
+  `src/modules/calendar/handlers.ts`, started from `src/instrumentation.ts`.
+  `POST /api/cron/outbox` processes the queue for serverless hosts.
+- Google push (`src/modules/calendar/sync.ts`) is idempotent via
+  `googleEventIds` on the row; the REST client is `google.ts` (service
+  account JWT, no SDK). Tests inject a fake client.
+- iCal feeds: `src/modules/calendar/feeds.ts`, served at
+  `/api/calendar/<token>.ics`.
+- Set `OUTBOX_DISABLED=1` when running one-off scripts or tests that must
+  not deliver anything.
 
 ## Adding a new entity end-to-end
 
@@ -136,6 +178,10 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
 - Multi-file bash heredocs fail in the Windows shell; write files with the
   editor tools instead.
 - `items.db.test.ts` hits the real dev database and cleans up after itself.
+- Multi-line text replacements in bash `node -e` break on quoting; write a
+  patch script to the scratchpad and run it with `node file.js`.
+- Only one `next dev` per project (lock in `.next/dev`). For checks while a
+  dev server is already running, `npm run build` + `PORT=3001 npx next start`.
 - Do not use the build-generated global types (`RouteContext`, `PageProps`,
   `LayoutProps`) in source: CI runs `tsc` before `next build`, so they do not
   exist there. Type `params` explicitly: `{ params: Promise<{ id: string }> }`.

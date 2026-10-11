@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import { Field, FormError } from "@/components/form/field";
 import { useActionDialog } from "@/components/form/use-action-dialog";
@@ -43,7 +44,7 @@ export function CategoryDialog({
           <DialogHeader>
             <DialogTitle>{category ? t("editCategory") : t("newCategory")}</DialogTitle>
           </DialogHeader>
-          <form action={action} className="flex flex-col gap-4">
+          <ActionForm action={action} className="flex flex-col gap-4">
             {category && <input type="hidden" name="id" value={category.id} />}
             <FormError message={state.error} />
             <Field id="cat-name" label={tc("name")} error={err.name}>
@@ -71,7 +72,7 @@ export function CategoryDialog({
               </Button>
               <SubmitButton pendingText={tc("loading")}>{tc("save")}</SubmitButton>
             </div>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
     </>
@@ -83,13 +84,13 @@ export function DeleteCategoryButton({ id }: { id: string }) {
   const tc = useTranslations("common");
   const [state, action] = useActionState<FormState, FormData>(async (_p, fd) => deleteCategory(fd), {});
   return (
-    <form action={action} className="flex items-center gap-2">
+    <ActionForm action={action} className="flex items-center gap-2">
       <input type="hidden" name="id" value={id} />
       {state.error && <span className="text-xs text-destructive">{state.error}</span>}
       <ConfirmButton confirm={t("deleteCategoryConfirm")} variant="ghost" size="xs" className="text-destructive">
         {tc("delete")}
       </ConfirmButton>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -120,7 +121,7 @@ export function LocationDialog({
           <DialogHeader>
             <DialogTitle>{location ? t("editLocation") : t("newLocation")}</DialogTitle>
           </DialogHeader>
-          <form action={action} className="flex flex-col gap-4">
+          <ActionForm action={action} className="flex flex-col gap-4">
             {location && <input type="hidden" name="id" value={location.id} />}
             <FormError message={state.error} />
             <Field id="loc-name" label={tc("name")} error={err.name}>
@@ -157,7 +158,7 @@ export function LocationDialog({
               </Button>
               <SubmitButton pendingText={tc("loading")}>{tc("save")}</SubmitButton>
             </div>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
     </>
@@ -169,12 +170,12 @@ export function DeleteLocationButton({ id }: { id: string }) {
   const tc = useTranslations("common");
   const [state, action] = useActionState<FormState, FormData>(async (_p, fd) => deleteLocation(fd), {});
   return (
-    <form action={action} className="flex items-center gap-2">
+    <ActionForm action={action} className="flex items-center gap-2">
       <input type="hidden" name="id" value={id} />
       {state.error && <span className="text-xs text-destructive">{state.error}</span>}
       <ConfirmButton confirm={t("deleteLocationConfirm")} variant="ghost" size="xs" className="text-destructive">
         {tc("delete")}
       </ConfirmButton>
-    </form>
+    </ActionForm>
   );
 }

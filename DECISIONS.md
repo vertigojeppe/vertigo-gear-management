@@ -117,3 +117,49 @@ Scalar loaded from a CDN at `/api/docs`.
 `CustomFieldDefinition`. Validation builds a zod schema per request from the
 definitions. Filtering uses Prisma JSON path equality; full-text search over
 custom values is backlog.
+
+## 2026-10-12 — Allocations are explicit rows, created by the user
+
+A project reserves gear by adding "N × model" lines (allocations) rather
+than deriving demand from a packing list. Rentals create one allocation per
+line automatically. Specific units are attached later (rental assign,
+Phase 3 packing). Allocation dates default to the project window and move
+with it only while they still match it.
+
+## 2026-10-12 — Conflicts warn, they do not block
+
+"Reserve anyway" is always available after the warning. Festival work
+needs the override (gear comes back a day early, a unit gets sub-hired).
+The over-booking stays visible on the project, the model page and the
+calendar until it is resolved.
+
+## 2026-10-12 — Google Calendar via a hand-rolled REST client
+
+`googleapis` is ~100 MB of dependencies for three endpoints. A service
+account JWT (Node crypto) and plain `fetch` do the job, and tests inject a
+fake client. One-way sync only; event ids stored per phase make it idempotent.
+
+## 2026-10-12 — Outbox + in-process poller instead of a queue
+
+One container, no Redis. The `Outbox` table with status/attempts/backoff
+plus a 15-second poller from `instrumentation.ts` is enough for webhooks and
+calendar pushes. `POST /api/cron/outbox` exists for serverless hosts.
+
+## 2026-10-12 — Rental "overdue" is derived
+
+A rental that is out past its end date shows as overdue; nothing flips the
+stored status, so returning it later needs no special case.
+
+## 2026-10-12 — Home location on items
+
+`homeLocationId` is set when an item is created on or moved to a warehouse
+location. Rental return (and Phase 3 check-in) sends items home. Avoids a
+second "previous location" field.
+
+## 2026-10-12 — Forms submit through a transition, not `<form action>`
+
+React 19 resets every field of a `<form action>` once the server action
+resolves. With validation and conflict responses that is exactly when the
+user needs their input kept (and native selects were not restored at all).
+`ActionForm` submits via `startTransition(() => action(formData))`, so
+nothing resets; `SubmitButton` gets the pending flag from context.

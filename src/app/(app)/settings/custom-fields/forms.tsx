@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import { Field, FormError } from "@/components/form/field";
 import { useActionDialog } from "@/components/form/use-action-dialog";
@@ -37,7 +38,7 @@ export function CustomFieldDialog({ field, trigger }: { field?: FieldRow; trigge
           <DialogHeader>
             <DialogTitle>{field ? t("editField") : t("addField")}</DialogTitle>
           </DialogHeader>
-          <form action={action} className="flex flex-col gap-4">
+          <ActionForm action={action} className="flex flex-col gap-4">
             {field && <input type="hidden" name="id" value={field.id} />}
             <FormError message={state.error} />
             <div className="grid gap-4 sm:grid-cols-2">
@@ -88,7 +89,7 @@ export function CustomFieldDialog({ field, trigger }: { field?: FieldRow; trigge
               </Button>
               <SubmitButton pendingText={tc("loading")}>{tc("save")}</SubmitButton>
             </div>
-          </form>
+          </ActionForm>
         </DialogContent>
       </Dialog>
     </>

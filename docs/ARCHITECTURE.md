@@ -27,16 +27,66 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | settings | CustomFieldDefinition | `customFieldDefinitions.*` |
 | inventory | Category, Model, Item, Location, StatusLog | `categories`, `locations`, `models`, `items`, list/detail queries, forms |
 | files | File, Attachment | `files.*`, `AttachmentsSection` |
-| projects | Client, Project, ProjectContact, ProjectCrew, Allocation (Phase 2) | |
-| rentals | Rental, RentalLine (Phase 2) | |
+| projects | Client, Project, ProjectContact, ProjectCrew, Allocation | `clients`, `projects`, `allocations`, availability engine, timeline |
+| rentals | Rental, RentalLine | `rentals`, `rentalLines`, pricing, agreement PDF |
 | packing | PackingList, PackingLine, PackingCheck, PackingTemplate (Phase 3) | |
 | plans | ProductionPlan, ScheduleEntry, Task, LogisticsEntry, PlanTemplate (Phase 4) | |
-| calendar | CalendarFeedToken, Google sync (Phase 2) | |
+| calendar | CalendarFeedToken, Google sync, outbox handlers | `feedTokens`, `buildFeed`, `syncProject`, `syncRental` |
+| settings | CustomFieldDefinition, Webhook, Outbox admin | `customFieldDefinitions`, `webhooks`, `outboxAdmin` |
 
 Cross-cutting in `src/lib/`: `activity.ts` (ActivityLog), `asset-tag.ts`
 (Counter-backed tag sequence), `custom-fields.ts` (pure validation),
 `forms.ts` (FormData → zod → FormState), `storage/` (adapter),
 `api/` (REST auth, error mapping, OpenAPI), `auth/` (Auth.js, permissions).
+
+## Data model (Phase 2 additions)
+
+```mermaid
+erDiagram
+  Client ||--o{ Project : orders
+  Client ||--o{ Rental : rents
+  Project ||--o{ ProjectCrew : crew
+  User ||--o{ ProjectCrew : assigned
+  Project ||--o{ ProjectContact : contacts
+  Project ||--o{ Allocation : reserves
+  Rental ||--o{ RentalLine : lines
+  RentalLine ||--o| Allocation : mirrors
+  Model ||--o{ Allocation : "of model"
+  Item o|--o{ Allocation : "assigned unit"
+  Location o|--|| Project : "type=project"
+  Location o|--|| Client : "type=renter"
+  User ||--o{ CalendarFeedToken : feeds
+  Webhook ||--o{ Outbox : "deliveries (by id in payload)"
+
+  Project {
+    string status "quote | confirmed | in_progress | done | cancelled"
+    datetime prepStart
+    datetime loadIn
+    datetime showStart
+    datetime showEnd
+    datetime loadOut
+    datetime returnDate
+    date reserveFrom "derived"
+    date reserveTo "derived"
+    json googleEventIds "phase -> event id"
+  }
+  Allocation {
+    string holderType "project | rental"
+    int quantity
+    date startDate
+    date endDate
+  }
+  Rental {
+    string status "reserved | out | returned (overdue derived)"
+    decimal deposit
+  }
+  Outbox {
+    string type "webhook.deliver | calendar.sync_*"
+    string status "pending | processing | done | failed"
+    int attempts
+    datetime nextRunAt
+  }
+```
 
 ## Data model (Phase 1)
 

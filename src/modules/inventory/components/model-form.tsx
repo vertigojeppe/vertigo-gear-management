@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Field, FormError } from "@/components/form/field";
@@ -39,7 +40,7 @@ export function ModelForm({
   const err = state.fieldErrors ?? {};
 
   return (
-    <form action={action} className="flex max-w-2xl flex-col gap-6">
+    <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
       {model && <input type="hidden" name="id" value={model.id} />}
       <FormError message={state.error} />
 
@@ -114,6 +115,6 @@ export function ModelForm({
           {tc("cancel")}
         </Link>
       </div>
-    </form>
+    </ActionForm>
   );
 }

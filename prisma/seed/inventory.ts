@@ -287,7 +287,11 @@ export async function seedInventory(prisma: PrismaClient) {
       itemCount++;
     }
   }
-  await prisma.counter.upsert({ where: { key: "asset_tag" }, create: { key: "asset_tag", value: tagNo }, update: { value: { set: tagNo } } });
+  // The counter must sit past the highest tag in the database, including
+  // tags created by earlier seed runs or by users since.
+  const allTags = await prisma.item.findMany({ select: { assetTag: true } });
+  const highest = allTags.reduce((max, { assetTag }) => Math.max(max, Number(assetTag.split("-").pop()) || 0), tagNo);
+  await prisma.counter.upsert({ where: { key: "asset_tag" }, create: { key: "asset_tag", value: highest }, update: { value: { set: highest } } });
 
   // A few items in other statuses so the dashboard has something to show.
   const admin = await prisma.user.findFirst({ where: { role: "admin" } });

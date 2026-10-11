@@ -54,3 +54,6 @@ next-env.d.ts
 certificates
 # keep the template even though .env* is ignored
 !.env.example
+
+# Google service account key
+google-service-account*.json

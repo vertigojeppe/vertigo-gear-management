@@ -73,7 +73,7 @@ test.describe("inventory", () => {
     await page.goto("/settings/account");
     await page.getByLabel("Token name").fill(`e2e ${stamp}`);
     await page.getByRole("button", { name: "Create token" }).click();
-    const token = (await page.locator("code").first().textContent())?.trim();
+    const token = (await page.locator("code", { hasText: /^vg_/ }).first().textContent())?.trim();
     expect(token).toMatch(/^vg_/);
 
     const res = await request.get("/api/v1/items?q=VG-0001", { headers: { Authorization: `Bearer ${token}` } });

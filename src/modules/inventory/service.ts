@@ -3,6 +3,7 @@ import { logActivity, diffFields } from "@/lib/activity";
 import { assertCan } from "@/lib/auth/permissions";
 import type { Actor } from "@/lib/auth/session";
 import { nextAssetTag, normaliseAssetTag } from "@/lib/asset-tag";
+import { emitEvent } from "@/lib/events";
 import type { CustomFieldValues } from "@/lib/custom-fields";
 import { itemStatus, type ItemStatus } from "../../../config/app.config";
 import type { CategoryInput, ItemInput, LocationInput, ModelInput, StatusChangeInput } from "./schema";
@@ -367,9 +368,11 @@ export const items = {
     const count = tracking === "bulk" ? 1 : Math.max(1, opts.count ?? 1);
     if (tracking === "bulk" && input.isKit) throw new InventoryError("Only serialized items can be kits.", "isKit");
     if (input.isKit && !input.name) throw new InventoryError("Give the kit a name.", "name");
+    let homeLocationId: string | null = null;
     if (input.locationId) {
       const loc = await prisma.location.findUnique({ where: { id: input.locationId } });
       if (!loc) throw new InventoryError("Location not found.", "locationId");
+      if (loc.type === "warehouse") homeLocationId = loc.id;
     }
 
     const created = await prisma.$transaction(async (tx) => {
@@ -382,6 +385,7 @@ export const items = {
             modelId: model.id,
             assetTag,
             ...itemData(input, tracking, opts.customFields ?? {}),
+            homeLocationId,
             serialNumber: tracking === "serialized" ? serial : null,
             status: "in_house",
           },
@@ -481,6 +485,15 @@ export const items = {
         );
       }
     });
+    await emitEvent("item.status_changed", {
+      itemId: id,
+      assetTag: item.assetTag,
+      from: item.status,
+      to: input.status,
+      reason: input.reason ?? null,
+      cascadedTo: targets.slice(1).map((t) => t.assetTag),
+      by: actor.name,
+    });
     return (await items.get(id))!;
   },
 
@@ -494,9 +507,11 @@ export const items = {
     }
     const targets = [item, ...(item.isKit ? await prisma.item.findMany({ where: { parentItemId: id } }) : [])];
     const locName = locationId ? (await prisma.location.findUnique({ where: { id: locationId } }))?.name : "no location";
+    const destination = locationId ? await prisma.location.findUnique({ where: { id: locationId } }) : null;
+    const homeUpdate = destination?.type === "warehouse" ? { homeLocationId: destination.id } : {};
     await prisma.$transaction(async (tx) => {
       for (const t of targets) {
-        await tx.item.update({ where: { id: t.id }, data: { locationId } });
+        await tx.item.update({ where: { id: t.id }, data: { locationId, ...homeUpdate } });
         await logActivity(
           actor,
           { entityType: "item", entityId: t.id, action: "moved", summary: `Moved ${itemLabel(t)} to ${locName}` },

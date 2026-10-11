@@ -1,0 +1,108 @@
+// projects module
+
+/// A customer: for projects (our own productions) and external rentals.
+model Client {
+  id          String    @id @default(cuid())
+  name        String
+  contactName String?
+  email       String?
+  phone       String?
+  address     String?
+  notes       String?
+  projects    Project[]
+  rentals     Rental[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([name])
+}
+
+model Project {
+  id           String    @id @default(cuid())
+  name         String
+  clientId     String?
+  client       Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  venueName    String?
+  venueAddress String?
+  /// Key from PROJECT_STATUSES in config/app.config.ts.
+  status       String    @default("quote")
+  /// Phase dates. Times are Europe/Copenhagen wall-clock stored as UTC.
+  prepStart    DateTime?
+  loadIn       DateTime?
+  showStart    DateTime?
+  showEnd      DateTime?
+  loadOut      DateTime?
+  returnDate   DateTime?
+  /// Derived reservation window (dates, inclusive): earliest..latest phase date.
+  reserveFrom  DateTime? @db.Date
+  reserveTo    DateTime? @db.Date
+  notes        String?
+  /// [{ label, url }] Google Drive, Notion, ...
+  externalLinks Json     @default("[]")
+  /// { phaseKey: googleEventId } for idempotent calendar push.
+  googleEventIds Json    @default("{}")
+  customFields Json      @default("{}")
+  contacts     ProjectContact[]
+  crew         ProjectCrew[]
+  allocations  Allocation[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status])
+  @@index([reserveFrom, reserveTo])
+}
+
+model ProjectContact {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  role      String?
+  phone     String?
+  email     String?
+  notes     String?
+
+  @@index([projectId])
+}
+
+model ProjectCrew {
+  id        String    @id @default(cuid())
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String?
+  callTime  DateTime?
+  notes     String?
+
+  @@unique([projectId, userId])
+}
+
+/// THE availability table. A project or a rental line reserves `quantity`
+/// of a model (optionally a specific unit) for an inclusive date range.
+model Allocation {
+  id           String      @id @default(cuid())
+  /// "project" | "rental"
+  holderType   String
+  projectId    String?
+  project      Project?    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  rentalId     String?
+  rental       Rental?     @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  rentalLineId String?     @unique
+  rentalLine   RentalLine? @relation(fields: [rentalLineId], references: [id], onDelete: Cascade)
+  modelId      String
+  model        Model       @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  quantity     Int         @default(1)
+  itemId       String?
+  item         Item?       @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  startDate    DateTime    @db.Date
+  endDate      DateTime    @db.Date
+  note         String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([modelId, startDate, endDate])
+  @@index([projectId])
+  @@index([rentalId])
+  @@index([itemId])
+}

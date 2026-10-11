@@ -1,0 +1,43 @@
+// rentals module
+
+model Rental {
+  id             String       @id @default(cuid())
+  clientId       String
+  client         Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  /// Key from RENTAL_STATUSES: reserved | out | returned (overdue is derived).
+  status         String       @default("reserved")
+  startDate      DateTime     @db.Date
+  endDate        DateTime     @db.Date
+  outAt          DateTime?
+  returnedAt     DateTime?
+  deposit        Decimal?     @db.Decimal(12, 2)
+  notes          String?
+  googleEventIds Json         @default("{}")
+  customFields   Json         @default("{}")
+  lines          RentalLine[]
+  allocations    Allocation[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+model RentalLine {
+  id           String      @id @default(cuid())
+  rentalId     String
+  rental       Rental      @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  modelId      String
+  model        Model       @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  quantity     Int         @default(1)
+  pricePerDay  Decimal?    @db.Decimal(12, 2)
+  pricePerWeek Decimal?    @db.Decimal(12, 2)
+  /// Assigned unit (serialized models), set when handing out.
+  itemId       String?
+  item         Item?       @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  note         String?
+  allocation   Allocation?
+  createdAt    DateTime    @default(now())
+
+  @@index([rentalId])
+}

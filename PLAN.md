@@ -218,7 +218,7 @@ repair / missing", activity log, custom field definitions + values, REST
 `/api/v1/{categories,models,items,locations}` with OpenAPI docs.
 **Tests:** permissions matrix, status transitions, custom field validation.
 
-### Phase 2 — Projects, availability, rentals, calendar
+### Phase 2 — Projects, availability, rentals, calendar ✅ (2026-10-12)
 Clients, projects with phases and crew, allocations, availability engine and
 conflict warnings, per-model availability view, timeline/calendar view,
 rentals with lines and totals, rental agreement PDF, iCal feeds, optional
