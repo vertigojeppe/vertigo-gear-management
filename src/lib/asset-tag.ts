@@ -28,9 +28,16 @@ export function normaliseAssetTag(input: string): string | null {
   return `${m[1]}-${m[2].padStart(4, "0")}`;
 }
 
-/** Full URL encoded in the QR code; opens the item page after login. */
-export function assetTagUrl(tag: string): string {
-  const base = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+/**
+ * Full URL encoded in the QR code; opens the item page after login.
+ * Uses APP_URL (the public address, set in production). When APP_URL is
+ * unset or points at localhost, falls back to the origin the request came
+ * from, so a phone on the local network gets a URL it can open.
+ */
+export function assetTagUrl(tag: string, requestOrigin?: string): string {
+  const configured = (process.env.APP_URL ?? "").replace(/\/$/, "");
+  const isLocal = !configured || /^https?:\/\/(localhost|127\.0\.0\.1)(:|$)/.test(configured);
+  const base = isLocal && requestOrigin ? requestOrigin.replace(/\/$/, "") : configured || "http://localhost:3000";
   return `${base}/t/${encodeURIComponent(tag)}`;
 }
 

@@ -52,3 +52,5 @@ next-env.d.ts
 /blob-report/
 
 certificates
+# keep the template even though .env* is ignored
+!.env.example
