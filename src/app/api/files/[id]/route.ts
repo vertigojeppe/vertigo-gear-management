@@ -3,7 +3,7 @@ import { getActor } from "@/lib/auth/session";
 import { files } from "@/modules/files";
 
 /** Serves an uploaded file (or its thumbnail with ?thumb=1) to signed-in users. */
-export async function GET(req: NextRequest, ctx: RouteContext<"/api/files/[id]">) {
+export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (!(await getActor())) return new NextResponse("Unauthorized", { status: 401 });
   const { id } = await ctx.params;
   const thumb = req.nextUrl.searchParams.get("thumb") === "1";

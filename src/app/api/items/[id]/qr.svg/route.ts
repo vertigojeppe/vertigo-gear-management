@@ -5,7 +5,7 @@ import { getActor } from "@/lib/auth/session";
 import { items } from "@/modules/inventory";
 
 /** QR code for an item's asset tag, as SVG. */
-export async function GET(_req: NextRequest, ctx: RouteContext<"/api/items/[id]/qr.svg">) {
+export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (!(await getActor())) return new NextResponse("Unauthorized", { status: 401 });
   const { id } = await ctx.params;
   const item = await items.get(id);
