@@ -1,13 +1,20 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const password = process.env.SEED_PASSWORD ?? "vertigo123";
+
+async function signOut(page: Page) {
+  // Desktop: icon button in the sidebar. Phone: inside the "More" sheet.
+  const more = page.getByRole("button", { name: "More" });
+  if (await more.isVisible()) await more.click();
+  await page.getByRole("button", { name: "Sign out" }).click();
+}
 
 test("anonymous visitor is sent to login", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/login/);
 });
 
-test("seeded admin can sign in and out", async ({ page }) => {
+test("seeded admin can sign in, navigate and sign out", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@vertigo.test");
   await page.getByLabel("Password").fill(password);
@@ -15,7 +22,12 @@ test("seeded admin can sign in and out", async ({ page }) => {
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Sign out" }).click();
+  // Every nav destination resolves (no 404s) and marks itself active.
+  await page.getByRole("link", { name: "Inventory" }).first().click();
+  await expect(page).toHaveURL(/\/inventory/);
+  await expect(page.getByRole("heading", { name: "Inventory" })).toBeVisible();
+
+  await signOut(page);
   await expect(page).toHaveURL(/\/login/);
 });
 

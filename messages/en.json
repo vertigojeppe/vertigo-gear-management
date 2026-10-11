@@ -15,7 +15,11 @@
     "inventory": "Inventory",
     "projects": "Projects",
     "rentals": "Rentals",
-    "settings": "Settings"
+    "settings": "Settings",
+    "calendar": "Calendar",
+    "scan": "Scan",
+    "more": "More",
+    "tools": "Tools"
   },
   "auth": {
     "title": "Sign in",
@@ -64,5 +68,9 @@
     "out": "Out",
     "returned": "Returned",
     "overdue": "Overdue"
+  },
+  "comingSoon": {
+    "title": "Coming in Phase {phase}",
+    "body": "This section is planned but not built yet. The navigation is here so the layout stays stable."
   }
 }

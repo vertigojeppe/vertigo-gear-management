@@ -15,7 +15,11 @@
     "inventory": "Lager",
     "projects": "Projekter",
     "rentals": "Udlejning",
-    "settings": "Indstillinger"
+    "settings": "Indstillinger",
+    "calendar": "Kalender",
+    "scan": "Scan",
+    "more": "Mere",
+    "tools": "Værktøjer"
   },
   "auth": {
     "title": "Log ind",
@@ -64,5 +68,9 @@
     "out": "Ude",
     "returned": "Returneret",
     "overdue": "Forsinket"
+  },
+  "comingSoon": {
+    "title": "Kommer i fase {phase}",
+    "body": "Denne sektion er planlagt, men ikke bygget endnu. Navigationen er her, så layoutet er stabilt."
   }
 }

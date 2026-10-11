@@ -51,7 +51,7 @@ prisma/models/*.prisma one file per module
 prisma/seed/           re-runnable seeders (upsert on stable keys)
 messages/{en,da}.json  every UI string; keys namespaced by feature
 src/app/               routes only; thin; (auth) and (app) route groups
-src/components/        shared UI (ui/ = shadcn, rest = ours)
+src/components/        shared UI (ui/ = shadcn, rest = ours); navigation.ts is the nav source of truth
 src/lib/               db, auth, i18n, later: storage, pdf, qr, outbox
 src/modules/<name>/    index.ts | schema.ts | service.ts | actions.ts | queries.ts | components/ | __tests__/
 src/generated/prisma   generated client (gitignored)
@@ -59,6 +59,14 @@ e2e/                   Playwright specs
 ```
 
 Modules import each other only via `@/modules/<name>` (ESLint-enforced).
+
+## Navigation
+
+- Desktop (md+): left sidebar (`sidebar.tsx`). Phone: top bar + bottom tab bar
+  with a "More" sheet (`mobile-nav.tsx`). Both read `NAV_ITEMS` in
+  `src/components/navigation.ts`; add a section there, not in the components.
+- Every nav item has a route. Unbuilt sections render `ComingSoon`.
+- Page headings are `<h1>` so the e2e tests and screen readers can find them.
 
 ## Auth and permissions
 
