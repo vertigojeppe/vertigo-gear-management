@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { requestOrigin } from "@/lib/request-origin";
 
 /**
  * Optimistic auth check: redirects anonymous visitors to /login.
  * This only decodes the session cookie. Real authorisation happens in
  * requireActor / requirePermission inside pages, actions and API routes.
  *
- * Redirects are relative so they work from any hostname the app is
- * reached on (localhost, a LAN address, the public domain).
+ * Redirect targets are built from the request's Host header (not
+ * req.nextUrl.origin) so they work from any hostname the app is reached on:
+ * localhost, a LAN address during phone testing, or the public domain.
  */
-function redirectTo(path: string) {
-  return new NextResponse(null, { status: 307, headers: { Location: path } });
-}
-
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   // API routes authenticate themselves (Bearer token or session) and must
@@ -20,13 +18,14 @@ export default auth((req) => {
   if (pathname.startsWith("/api/")) return NextResponse.next();
 
   const isPublic = pathname.startsWith("/login") || pathname.startsWith("/share/");
+  const origin = requestOrigin(req);
 
   if (!req.auth && !isPublic) {
     const next = pathname !== "/" ? `?next=${encodeURIComponent(pathname)}` : "";
-    return redirectTo(`/login${next}`);
+    return NextResponse.redirect(`${origin}/login${next}`);
   }
   if (req.auth && pathname.startsWith("/login")) {
-    return redirectTo("/dashboard");
+    return NextResponse.redirect(`${origin}/dashboard`);
   }
   return NextResponse.next();
 });
