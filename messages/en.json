@@ -1,0 +1,68 @@
+{
+  "common": {
+    "appName": "Vertigo Gear",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "loading": "Loading…",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as {name}"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "inventory": "Inventory",
+    "projects": "Projects",
+    "rentals": "Rentals",
+    "settings": "Settings"
+  },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Gear inventory, packing lists and production plans.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "invalid": "Wrong email or password.",
+    "error": "Something went wrong. Try again."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {name}.",
+    "emptyTitle": "Nothing here yet",
+    "emptyBody": "Phase 0 is the skeleton: login, roles, database and deployment. Inventory arrives in Phase 1."
+  },
+  "roles": {
+    "admin": "Admin",
+    "member": "Member",
+    "viewer": "Viewer"
+  },
+  "itemStatus": {
+    "in_house": "In house",
+    "on_project": "On project",
+    "rented_out": "Rented out",
+    "in_repair": "In repair",
+    "missing": "Missing",
+    "retired": "Retired"
+  },
+  "projectStatus": {
+    "quote": "Quote",
+    "confirmed": "Confirmed",
+    "in_progress": "In progress",
+    "done": "Done",
+    "cancelled": "Cancelled"
+  },
+  "phase": {
+    "prep": "Prep",
+    "load_in": "Load-in",
+    "show": "Show",
+    "load_out": "Load-out",
+    "return": "Return"
+  },
+  "rentalStatus": {
+    "reserved": "Reserved",
+    "out": "Out",
+    "returned": "Returned",
+    "overdue": "Overdue"
+  }
+}
