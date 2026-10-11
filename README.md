@@ -43,7 +43,9 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
   every unit gets an asset tag like `VG-0042` and a QR code.
 - **Item page**: change status (reason required for repair/missing/retired),
   move, put into a kit, attach photos/invoices/manuals, see history.
-- **Scan** (phone): point the camera at a tag, or type it.
+- **Scan** (phone): point the camera at a tag, or type it. Browsers only
+  allow the camera over HTTPS (or localhost), so in production put the app
+  behind HTTPS and in development use `npm run dev:https`.
 - **Settings › Extra fields**: add your own fields to models and items.
 - **Settings › Users**: invite colleagues as admin, member or viewer.
 - **Settings › Your account › API tokens**: call the REST API from other
@@ -54,6 +56,7 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 | Command | What it does |
 |---|---|
 | `npm run dev` | Dev server with hot reload |
+| `npm run dev:https` | Dev server over HTTPS (self-signed). Needed to test the camera scanner from a phone: open `https://<your-pc-ip>:3000` and accept the certificate warning |
 | `npm run build` / `npm start` | Production build / server |
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript |
 | `npm run test` | Unit and integration tests (Vitest) |

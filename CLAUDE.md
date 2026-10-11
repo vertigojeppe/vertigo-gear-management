@@ -35,6 +35,7 @@ npm install                      # also runs prisma generate
 npm run db:migrate               # apply migrations (dev)
 npm run db:seed                  # demo users: admin|member|viewer@vertigo.test / vertigo123
 npm run dev                      # http://localhost:3000
+npm run dev:https                # https for phone camera testing (self-signed cert)
 npm run lint && npm run typecheck && npm run test
 npm run test:e2e                 # Playwright; reuses a running dev server or starts one
 npm run db:clean-tests           # remove Testlight models / e2e tokens the browser tests leave behind

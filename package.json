@@ -18,7 +18,8 @@
     "db:reset": "prisma migrate reset --force",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
-    "db:clean-tests": "tsx scripts/clean-test-data.ts"
+    "db:clean-tests": "tsx scripts/clean-test-data.ts",
+    "dev:https": "next dev --experimental-https"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

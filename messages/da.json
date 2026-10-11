@@ -227,8 +227,14 @@
     "go": "Åbn",
     "start": "Start kamera",
     "stop": "Stop kamera",
-    "cameraError": "Kameraet er ikke tilgængeligt. Skriv tagget i stedet.",
-    "notOurs": "Koden er ikke et Vertigo Gear-tag."
+    "cameraError": "Kameraet kunne ikke startes.",
+    "notOurs": "Koden er ikke et Vertigo Gear-tag.",
+    "insecure": "Kameraet virker kun over HTTPS (eller på localhost).",
+    "insecureHelp": "Åbn appen via dens https://-adresse. Til lokal test på en telefon: start udviklingsserveren med npm run dev:https.",
+    "unsupported": "Denne browser understøtter ikke kameraadgang.",
+    "denied": "Kameratilladelse blev afvist. Tillad kameraet for dette site i browserens indstillinger og prøv igen.",
+    "noCamera": "Ingen kamera fundet på denne enhed.",
+    "inUse": "Kameraet bruges af en anden app eller fane."
   },
   "settings": {
     "title": "Indstillinger",

@@ -227,8 +227,14 @@
     "go": "Open",
     "start": "Start camera",
     "stop": "Stop camera",
-    "cameraError": "Camera not available. Type the tag instead.",
-    "notOurs": "That code is not a Vertigo Gear tag."
+    "cameraError": "The camera could not be started.",
+    "notOurs": "That code is not a Vertigo Gear tag.",
+    "insecure": "The camera only works over HTTPS (or on localhost).",
+    "insecureHelp": "Open the app through its https:// address. For local testing on a phone, start the dev server with npm run dev:https.",
+    "unsupported": "This browser does not support camera access.",
+    "denied": "Camera permission was denied. Allow the camera for this site in the browser settings and try again.",
+    "noCamera": "No camera found on this device.",
+    "inUse": "The camera is in use by another app or tab."
   },
   "settings": {
     "title": "Settings",
