@@ -348,7 +348,9 @@
     "contactsHelp": "Personer og firmaer som ikke er brugere: lånere, leverandører, partnere, nøglebrik-holdere.",
     "cfCategory": "Kategori",
     "cfCategoryHelp": "Kun modeller eller enheder i denne kategori (og underkategorier) får feltet. Tom = alle.",
-    "allCategories": "Alle kategorier"
+    "allCategories": "Alle kategorier",
+    "import": "Importér regneark",
+    "importHelp": "Indlæs udstyrslisten: se hvad der oprettes, afgør tvivlsrækkerne, og bekræft."
   },
   "roles": {
     "admin": "Administrator",
@@ -823,5 +825,38 @@
     "viewerFailed": "Visningen fejlede. Selve filen fejler intet; download den herunder.",
     "fileUnits": "Filens enhed",
     "unitsHint": "STL- og OBJ-filer har ingen enhed; vælg hvad filen er eksporteret i. glTF er i meter per definition."
+  },
+  "importer": {
+    "title": "Importér regneark",
+    "subtitle": "Vertigos udstyrsliste (.xlsx). Intet skrives, før du bekræfter forhåndsvisningen.",
+    "file": "Regneark",
+    "fileHelp": "Vertigo Gearliste _ Status.xlsx eller en nyere eksport med samme faner.",
+    "preview": "Læs og vis",
+    "reading": "Læser…",
+    "howTitle": "Sådan virker det",
+    "how1": "Alle faner læses: kabler, LED, controllere, projektorer, computere, truss, stativer, rør, udlån, nøglebrikker.",
+    "how2": "Forhåndsvisningen deler rækkerne op i: importeres, importeres med antagelse (vist), kræver beslutning (du vælger), og parkeret (priser, ønskeliste, sub-hire og indkøb kommer senere).",
+    "how3": "Rækker for modeller eller tags, der allerede findes, springes over, medmindre du vælger andet, så en ny eksport kan køres igen.",
+    "how4": "Hver importeret model, enhed, kontakt og lokation husker sin celle (Fane!A1).",
+    "previewTitle": "Forhåndsvisning af import",
+    "previewSubtitle": "{rows} rækker læst. Tjek beslutninger og antagelser, og bekræft.",
+    "bucket_import": "Importeres",
+    "bucket_import_help": "læst som de står",
+    "bucket_assumption": "Importeres med antagelse",
+    "bucket_assumption_help": "skrives, med gættet vist",
+    "bucket_decision": "Kræver beslutning",
+    "bucket_decision_help": "vælg en mulighed for hver",
+    "bucket_parked": "Parkeret",
+    "bucket_parked_help": "hører til en funktion, der ikke er bygget endnu; vises, skrives ikke",
+    "explain": "Åbn grupperne for at se, hvad hver række skriver. Parkerede rækker beholdes her til reference og skrives aldrig.",
+    "writes": "Skriver",
+    "nothing": "intet",
+    "confirm": "Importér {count} rækker",
+    "importing": "Importerer…",
+    "done": "Import gennemført.",
+    "doneCounts": "{categories} kategorier, {models} modeller, {units} enheder, {bins} bulk-beholdere, {kits} kasser, {contacts} kontakter, {locations} lokationer, {rentals} udlejninger oprettet.",
+    "skipped": "Sprunget over",
+    "openInventory": "Åbn lageret",
+    "another": "Importér et andet regneark"
   }
 }

@@ -9,7 +9,7 @@ when something ships or stops mattering.
 - Phase 2: projects, availability engine, rentals, calendar
 - Phase 4b: documents with versions, resumable upload, image / PDF / 3D
   viewers, markup layer, files pinned to schedule entries and tasks
-- Phase 5: import/export, labels, polish, deployment docs
+- Phase 5b: export, labels, polish, deployment docs (the importer shipped as 5a)
 
 ## After Phase 4 (from the October 2026 spec update, see SPEC.md and MIGRATION.md)
 
@@ -32,11 +32,13 @@ fields) is done; the rest waits until production plans have shipped.
   a real model when bought; includes the Dirverse castor references.
 - **Purchase records** per model: supplier (a contact), date, quote/order
   number, list price, discount %, net price, attachment (the Urs quotes).
-- **Spreadsheet importer** for `import/source/Vertigo_Gearliste___Status.xlsx`
-  with the three-bucket preview (will import / imported with assumption /
-  needs decision) and `source: sheet!cell` on every record; then the seed
-  loads the real inventory (`--demo-only` keeps the synthetic data for CI).
-  Blocked until the spreadsheet is in the repo.
+- **Importer follow-ups** (the importer itself shipped as Phase 5a):
+  rate tables from `lejefaktor`, the Urs truss quotes, the GearGuys and
+  wish-list projector rows and the Dirverse castor references are shown as
+  *parked* in the preview; import them when their features exist. Computer
+  parts are serialized units without serials; the two media servers'
+  component prices are a model note. A CSV/XLSX import for arbitrary lists
+  (not this spreadsheet) is still open.
 - Exclude not-for-rental units from rental availability counts (today the
   flag refuses the line or unit, but the availability number still counts
   them).

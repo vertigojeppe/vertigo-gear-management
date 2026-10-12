@@ -240,7 +240,7 @@ retired reason (sold / scrapped / lost), not-for-rental flag on models and
 items, person locations (user or contact), contacts, category-scoped custom
 fields with the seeded field sets. Deferred to after Phase 4 (see
 `BACKLOG.md`): pricing engine and rate tables, quote PDF, sub-hire catalog,
-wish list, purchase records. The spreadsheet importer waits for the file.
+wish list, purchase records. The spreadsheet importer is Phase 5a.
 
 ### Phase 4 — Production plans ✅ (2026-10-12)
 One plan per project: day-by-day schedule (time, duration, place, who),
@@ -262,12 +262,29 @@ share page.
 **Tests:** chunk assembly, file versioning, markup authorship, PDF export
 with markup, browser upload/version/markup flow.
 
-### Phase 5 — Import / export, labels, polish
-CSV/XLSX import with preview and commit, CSV export of any list, JSON
-backup/restore, Avery label sheets and single thermal labels, Danish
-translation hooks, empty states and inline help, deployment docs (Compose,
-Hetzner, Vercel), README complete.
-**Tests:** import preview vs commit, backup round-trip.
+### Phase 5a — Spreadsheet importer ✅ (2026-10-12)
+Settings › Import: upload `Vertigo Gearliste _ Status.xlsx` (kept out of
+git), read every sheet (cables / LED / boxes, QLED recount, controllers by
+ID, projectors, computers, truss, stands, rods, loans, key fobs, rate
+tables), and show a plan in four buckets: will import, imported with an
+assumption (the guess is shown), needs a decision (a select per row), and
+parked (pricing, wish list, sub-hire, purchase records: shown, never
+written). Nothing is written until the plan is confirmed. Models, bulk
+bins and serialized units with the sheet's own IDs as asset tags, kits
+for flightcases, contacts and person locations for lent gear, open loans
+as rentals. Every row remembers its cell (`importSource`), the activity
+row lists every id created, and re-importing the same file writes
+nothing. Models carry `rentalDayPrice` from the sheet for the pricing
+engine later.
+**Tests:** parse helpers and readers on a synthetic workbook, plan
+buckets and decisions, commit against the database (idempotent re-run,
+add-to-existing), browser upload → preview → decide → import.
+
+### Phase 5b — Export, labels, polish
+CSV export of any list, JSON backup/restore, Avery label sheets and single
+thermal labels, Danish translation hooks, empty states and inline help,
+deployment docs (Compose, Hetzner, Vercel), README complete.
+**Tests:** backup round-trip.
 
 ## 6. Decisions I will make unless you object
 

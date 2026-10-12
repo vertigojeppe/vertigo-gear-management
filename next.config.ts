@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   // deliberately off: every page here is behind login and reads live data.
   // See DECISIONS.md.
   output: "standalone",
+  // Settings › Import posts the whole spreadsheet through a server action
+  // (the real gear list is about 0.5 MB; Next's default limit is 1 MB).
+  experimental: { serverActions: { bodySizeLimit: "25mb" } },
   // Dev only: let phones and other machines on the local network load the
   // dev server (HMR, scripts) when testing via http(s)://<pc-ip>:3000.
   // Add more hostnames with DEV_ORIGINS="name.local,other.host".

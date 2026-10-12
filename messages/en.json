@@ -348,7 +348,9 @@
     "contactsHelp": "People and companies who are not users: borrowers, suppliers, partners, key-fob holders.",
     "cfCategory": "Category",
     "cfCategoryHelp": "Only models or items in this category (and its sub-categories) get the field. Leave empty for all.",
-    "allCategories": "All categories"
+    "allCategories": "All categories",
+    "import": "Import spreadsheet",
+    "importHelp": "Load the gear spreadsheet: preview what will be created, decide the doubtful rows, then confirm."
   },
   "roles": {
     "admin": "Admin",
@@ -823,5 +825,38 @@
     "viewerFailed": "The viewer hit an error. The file itself is fine; download it below.",
     "fileUnits": "File units",
     "unitsHint": "STL and OBJ files carry no unit; choose what the file was exported in. glTF is metres by definition."
+  },
+  "importer": {
+    "title": "Import spreadsheet",
+    "subtitle": "The Vertigo gear list (.xlsx). Nothing is written until you confirm the preview.",
+    "file": "Spreadsheet",
+    "fileHelp": "Vertigo Gearliste _ Status.xlsx or a newer export with the same sheets.",
+    "preview": "Read and preview",
+    "reading": "Reading…",
+    "howTitle": "How it works",
+    "how1": "Every sheet is read: cables, LED, controllers, projectors, computers, truss, stands, rods, loans, key fobs.",
+    "how2": "The preview sorts rows into: will import, imported with an assumption (shown), needs a decision (you choose), and parked (pricing, wish list, sub-hire, purchase records come later).",
+    "how3": "Rows for models or tags that already exist are skipped unless you say otherwise, so re-running an export is safe.",
+    "how4": "Every imported model, unit, contact and location remembers its cell (Sheet!A1).",
+    "previewTitle": "Import preview",
+    "previewSubtitle": "{rows} rows read. Check the decisions and assumptions, then confirm.",
+    "bucket_import": "Will import",
+    "bucket_import_help": "read as is",
+    "bucket_assumption": "Imported with assumption",
+    "bucket_assumption_help": "written, with the guess shown",
+    "bucket_decision": "Needs decision",
+    "bucket_decision_help": "pick an option for each",
+    "bucket_parked": "Parked",
+    "bucket_parked_help": "belongs to a feature that is not built yet; shown, not written",
+    "explain": "Open the groups to see what each row will write. Parked rows are kept here for reference and are never written.",
+    "writes": "Writes",
+    "nothing": "nothing",
+    "confirm": "Import {count} rows",
+    "importing": "Importing…",
+    "done": "Import finished.",
+    "doneCounts": "{categories} categories, {models} models, {units} units, {bins} bulk bins, {kits} cases, {contacts} contacts, {locations} locations, {rentals} rentals created.",
+    "skipped": "Skipped",
+    "openInventory": "Open inventory",
+    "another": "Import another spreadsheet"
   }
 }

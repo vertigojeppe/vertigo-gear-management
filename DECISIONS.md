@@ -289,26 +289,32 @@ react-pdf cannot embed a PDF page as such. Where `pdftoppm` exists
 developer machine without it the document is listed by name instead of
 failing the export.
 
-## 2026-10-12 — Markup is a layer, keyed by document version and page
+## 2026-10-12 — The spreadsheet is imported through the app, not the seed
 
-Shapes are stored in normalised coordinates (0..1) in a `Markup` row per
-version and page, never drawn into the file. The server stamps the author
-on new shapes, so a layer edited by several people keeps who drew what.
-A new version of a document starts with an empty layer: the drawing was
-about that version of the plot.
+The plan had the seed load `import/source/*.xlsx`. The file is not the
+full inventory, must stay out of git, and the people who know what a
+doubtful row means are the ones clicking, not a build step. So Settings ›
+Import takes an upload, keeps it in storage under `imports/<id>.xlsx`
+between the preview and the confirmation, and deletes it afterwards. The
+preview is the contract: three buckets plus *parked*, and nothing is
+written until confirmed. `*.xlsx` and `/import/` are gitignored; tests use
+a synthetic workbook with the same sheet layouts.
 
-## 2026-10-12 — Chunked uploads with a server-side session
+## 2026-10-12 — Imported rows keep their cell, not a batch table
 
-Large 3D files from a phone on venue wifi fail with one big POST. The
-client slices the file, retries each chunk, and asks the server where it
-got to after a drop (`UploadSession.received`). Only a completed upload
-becomes a `File`, so half-uploads never show up as documents and expire
-on their own. Local storage appends to a part file and renames it into
-place; an S3 driver would map this onto multipart upload.
+Every model, item, contact, location and rental created by the importer
+has `importSource = "Sheet!A1"`, and the import's ActivityLog row lists
+every id it created. That is enough to trace a number back to the sheet
+and to undo a test import, without an `ImportBatch` table. Re-running the
+same workbook is safe because models are matched by manufacturer + name
+and units by asset tag; the sheet's own IDs (W6-01, P1, U00825, "Pink
+FREDDY") are used as asset tags, so `normaliseAssetTag` now accepts any
+short label and only canonicalises our own `VG-0042` form.
 
-## 2026-10-12 — PDF documents in the plan export depend on poppler
+## 2026-10-12 — Case is not a location type
 
-react-pdf cannot embed a PDF page as such. Where `pdftoppm` exists
-(Docker image) the pages with markup are rasterised and overlaid; on a
-developer machine without it the document is listed by name instead of
-failing the export.
+MIGRATION.md lists "case" as a location type. A flightcase is already an
+item (a kit) whose contents travel with it through the packing flow and
+the status cascade, so a second way of saying "it is in case 3" would
+drift. Kits stay the model; the importer creates the SplitLED flightcases
+and Manfrotto bags as empty kits.

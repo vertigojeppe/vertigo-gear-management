@@ -12,6 +12,7 @@ model Contact {
   phone        String?
   address      String?
   notes        String?
+  importSource String?
   locations    Location[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

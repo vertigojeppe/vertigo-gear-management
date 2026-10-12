@@ -10,7 +10,11 @@ describe("asset tags", () => {
   it("normalises sloppy input", () => {
     expect(normaliseAssetTag(" vg-42 ")).toBe("VG-0042");
     expect(normaliseAssetTag("VG0042")).toBe("VG-0042");
-    expect(normaliseAssetTag("hello")).toBeNull();
+    // Imported sheet IDs are tags too, kept as typed; only garbage is refused.
+    expect(normaliseAssetTag("W6-01")).toBe("W6-01");
+    expect(normaliseAssetTag(" Pink FREDDY ")).toBe("Pink FREDDY");
+    expect(normaliseAssetTag("")).toBeNull();
+    expect(normaliseAssetTag("<script>")).toBeNull();
   });
 
   it("parses scanned URLs and bare tags", () => {

@@ -1,0 +1,91 @@
+import ExcelJS from "exceljs";
+
+/**
+ * A small synthetic workbook with the same sheet names and column layouts
+ * as "Vertigo Gearliste _ Status.xlsx" (which stays out of git). `marker`
+ * goes into the names the tests look up, so parallel runs and leftovers
+ * never collide. Row numbers below are referenced by the tests.
+ */
+export function buildFixtureWorkbook(marker: string): ExcelJS.Workbook {
+  const wb = new ExcelJS.Workbook();
+  const put = (ws: ExcelJS.Worksheet, row: number, cells: Record<string, string | number>) => {
+    for (const [col, v] of Object.entries(cells)) ws.getCell(`${col}${row}`).value = v;
+  };
+
+  // Main inventory sheet: A category, B system, C variant, D price, E weight, F total,
+  // G minus, H loan name, I loan qty, J repair, K missing, L under construction, M note.
+  const main = wb.addWorksheet("LED - SCROLLER - BOX");
+  put(main, 1, { A: "Vertigo gear" });
+  put(main, 3, { A: "Hvad", B: "Type", C: "Str.", D: "Pris", E: "Vægt", F: "I alt", G: "Minus rep/missing", H: "Udlån", I: "Antal", J: "Rep", K: "Missing", L: "Under opbygning", M: "Note" });
+  put(main, 4, { A: "Kabler" });
+  put(main, 5, { B: `True1 ${marker} kabler` });
+  put(main, 6, { C: "5 m", D: "25", E: "0,5 kg", F: "10", J: "1" });
+  put(main, 7, { C: "10 m", F: "19(old)+ 9 (new)", H: "ukirke", I: "2" });
+  put(main, 8, { A: "LED" });
+  put(main, 9, { B: `SplitLED ${marker}` });
+  put(main, 10, { B: "[5 A pr. fixtur]", C: "60cm", E: "2 kg", F: "8", M: "Fordelt til 2 stk flightcase" });
+  put(main, 11, { A: "Bokse" });
+  put(main, 12, { B: "BlackLED controller" });
+  put(main, 13, { C: "4 udgange (200w)", E: "2 kg", F: "3", L: "1" });
+  put(main, 14, { A: "Stativer" });
+  put(main, 15, { B: `KITO ${marker}`, C: "500 kg", F: "2" });
+  put(main, 16, { A: "Lamper" });
+  put(main, 17, { B: "EclGalleryProfile FC 60W RGBW", F: "4" });
+
+  // Controllers: B id, C ip, D board, E status, F firmware, M note with a corrected id.
+  const ctl = wb.addWorksheet("LEDController Optælling");
+  put(ctl, 1, { B: "ID", C: "IP", D: "Board", E: "Status", F: "Firmware" });
+  put(ctl, 2, { B: "W6-01", C: "192.168.1.10", D: "Teensy 4.0", E: "OK", F: "v2.1" });
+  put(ctl, 3, { B: "N4-01", C: "192.168.1.20", D: "Teensy 3.2", E: "ERROR no output" });
+  put(ctl, 4, { B: "W6-02", C: "192.168.1.11", D: "Teensy 4.0", M: "ID: N4-01" });
+  put(ctl, 5, { B: "N6-01" });
+
+  // Projectors: rows 1–5 are headings; A id, B model, C lumen, D throw, E lens shift,
+  // F resolution, G day price or "ikke til udleje", H–L notes (J serial, I location).
+  const proj = wb.addWorksheet("PROJEKTORE");
+  put(proj, 1, { A: "Projektorer" });
+  put(proj, 6, { A: "ID", B: "Model", C: "Lumen", D: "Throw", E: "Lens shift", F: "Res", G: "Pris/dag" });
+  put(proj, 7, { A: "P1", B: `Panasonic PT-VZ ${marker}`, C: "4500 Lumen", D: "1.2:1", E: "V +50%", F: "WUXGA", G: "900", H: "Lånt til LASSE", J: "ABCDEFGHIJ12" });
+  put(proj, 8, { A: "P2", B: `Panasonic PT-VZ ${marker}`, C: "4500 Lumen", G: "ikke til udleje", H: "Solgt 2023" });
+  put(proj, 9, { A: "GearGuys" });
+  put(proj, 10, { B: "Barco UDX-4K32", D: "0.8:1", F: "4K" });
+  put(proj, 11, { B: "Ønsker" });
+  put(proj, 12, { B: "Epson EB-L1755U", G: "1200" });
+
+  // Key fobs: A id or group heading, B holder.
+  const fobs = wb.addWorksheet("Nøglebrikker");
+  put(fobs, 1, { A: "Hovedindgang" });
+  put(fobs, 2, { A: "U00001", B: "Alex" });
+  put(fobs, 3, { A: "U00002", B: "MANGLER" });
+  put(fobs, 4, { A: "U00003", B: `Bil ${marker}` });
+  put(fobs, 5, { B: "Brikker programmeres hos viceværten" });
+
+  // Loans: a title line, "n x what" lines, a price line.
+  const loans = wb.addWorksheet("IGANGVÆRENDE UDLEJE");
+  put(loans, 1, { A: `Lånt af Testperson ${marker} 12.10.21` });
+  put(loans, 2, { A: "4 x EclGalleryProfile" });
+  put(loans, 3, { A: "2 x True1 5m" });
+  put(loans, 4, { A: "5500,- + moms" });
+
+  // Stands: A category, B system, C variant, D weight, E total (no price column).
+  const stands = wb.addWorksheet("Stativer & Support");
+  put(stands, 3, { A: "Hvad", B: "Type", C: "Str.", D: "Vægt", E: "I alt" });
+  put(stands, 4, { A: "Stativer" });
+  put(stands, 5, { B: `16mm rustfri rods ${marker}` });
+  put(stands, 6, { C: "150cm", E: "30" });
+  put(stands, 7, { C: "200cm", E: "8" });
+
+  // Rods recount: A label, D count, heading rows without a count.
+  const rods = wb.addWorksheet("16mm rods");
+  put(rods, 1, { A: "16mm", B: "rustfri rods" });
+  put(rods, 2, { A: "150cm", D: "31" });
+  put(rods, 3, { A: "200cm", D: "8" });
+  put(rods, 4, { A: "250cm", D: "2" });
+
+  return wb;
+}
+
+export async function fixtureBytes(marker: string): Promise<Buffer> {
+  const buf = await buildFixtureWorkbook(marker).xlsx.writeBuffer();
+  return Buffer.from(buf as ArrayBuffer);
+}

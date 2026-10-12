@@ -11,7 +11,7 @@ external rentals. Full spec: `SPEC.md`; the spreadsheet we migrate from and
 what it implies: `MIGRATION.md`. Plan and data model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **4b (plan documents, viewers, markup) done**. Next: Phase 5 (import/export, labels, polish, deployment).
+Current phase: **5a (spreadsheet importer) done**. Next: Phase 5b (export, labels, polish, deployment).
 
 ## Stack
 
@@ -230,6 +230,26 @@ a second entry that exports components only and never a service.
   rasterised with `pdftoppm` when poppler is installed (the Docker image
   has it), otherwise listed by name. Day sheets include documents pinned
   to that day's entries.
+
+## Spreadsheet import (Phase 5a)
+
+- `src/modules/importer`: `parse.ts` (exceljs → plain rows per sheet, every
+  value keeps its `Sheet!A1`), `plan.ts` (pure: rows → `PlanRow`s in buckets
+  `import | assumption | decision | parked` with `Op`s), `commit.ts`
+  (`applyOps` in one transaction), `service.ts` (`importer.stash/plan/commit`;
+  the upload waits in storage as `imports/<id>.xlsx` until confirmed).
+  Pages: `/settings/import` (upload) and `/settings/import/[importId]`
+  (preview, decision selects named `decision.<rowKey>`, confirm).
+- Nothing is written before confirm. Models match by manufacturer + name,
+  units by asset tag, contacts/locations by name, so re-running a file is
+  safe. Sheet IDs become asset tags; `normaliseAssetTag` accepts them.
+- Every imported row has `importSource`; the ActivityLog row
+  (`spreadsheet_imported`) lists every created id, which is how
+  `db:clean-tests` removes browser-test imports.
+- The real workbook stays out of git (`*.xlsx`, `/import/` (root only: the pattern must not catch `settings/import`) ignored). Tests
+  build a synthetic workbook in `__tests__/fixture.ts` with the same sheet
+  names and column layouts; extend it when a reader changes.
+- Server actions accept 25 MB bodies (`next.config.ts`) for the upload.
 
 ## Events, outbox, integrations
 

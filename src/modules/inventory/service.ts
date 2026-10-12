@@ -364,7 +364,7 @@ export const items = {
   async findByAssetTag(tag: string): Promise<ItemDto | null> {
     const normalised = normaliseAssetTag(tag);
     if (!normalised) return null;
-    const i = await prisma.item.findUnique({ where: { assetTag: normalised } });
+    const i = await prisma.item.findFirst({ where: { assetTag: { equals: normalised, mode: "insensitive" } } });
     return i ? toItemDto(i) : null;
   },
 

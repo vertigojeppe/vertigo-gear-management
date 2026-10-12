@@ -34,6 +34,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | plans | ProductionPlan, ScheduleEntry, PlanTask, LogisticsEntry, PlanTemplate, PlanTemplateEntry | `plans`, `schedule`, `tasks`, `logistics`, `planTemplates`, template maths, plan + day-sheet PDF, share page |
 | calendar | CalendarFeedToken, Google sync, outbox handlers | `feedTokens`, `buildFeed`, `syncProject`, `syncRental` |
 | settings | CustomFieldDefinition, Webhook, Outbox admin | `customFieldDefinitions`, `webhooks`, `outboxAdmin` |
+| importer | nothing of its own (writes inventory, contacts, rentals) | `readWorkbook` (sheets → rows), `buildPlan` / `resolveOps` (pure plan with buckets and decisions), `applyOps` (one transaction), `importer.stash/plan/commit`, upload form + preview |
 
 Cross-cutting in `src/lib/`: `activity.ts` (ActivityLog), `asset-tag.ts`
 (Counter-backed tag sequence), `custom-fields.ts` (pure validation),
@@ -98,16 +99,20 @@ erDiagram
   }
   Model {
     boolean notForRental
+    decimal rentalDayPrice "from the sheet; pricing engine later"
+    string importSource "Sheet!A1 when imported"
   }
   Item {
     string status "+ under_construction"
     boolean notForRental
     string retiredReason "sold | scrapped | lost"
+    string importSource
   }
   Location {
     string type "warehouse | person | project | renter | repair"
     string userId
     string contactId
+    string importSource
   }
   CustomFieldDefinition {
     string categoryId "null = all categories"
