@@ -55,7 +55,7 @@ test.describe("projects and rentals", () => {
       await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
       await expect(page.getByRole("dialog")).toBeHidden();
     });
-    await expect(page.getByRole("link", { name: "Panasonic PT-RZ21K" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Panasonic PT-RZ21K" }).first()).toBeVisible(); // reservation list and quote table
 
     // Reserve 3 more of the same model in the same window: conflict.
     await page.getByRole("button", { name: "Reserve gear" }).click();
@@ -95,7 +95,7 @@ test.describe("projects and rentals", () => {
     await page.getByLabel(/Per day/).fill("400");
     await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("dialog")).toBeHidden();
-    await expect(page.getByRole("cell", { name: "2.400,00 kr." }).first()).toBeVisible(); // 2 × 3 days × 400 (line and subtotal)
+    await expect(page.getByRole("cell", { name: "1.600,00 kr." }).first()).toBeVisible(); // 2 × 400 × factor 2.0 (Standard, 3 days)
 
     page.once("dialog", (d) => d.accept());
     await page.getByRole("button", { name: "Hand out" }).click();

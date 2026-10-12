@@ -343,6 +343,7 @@ export const allocations = {
     const [items, allocs] = await Promise.all([itemsForModel(input.modelId), allocationsFor(input.modelId)]);
     const check = checkRequest(items, allocs, { from: input.startDate, to: input.endDate }, input.quantity);
     if (!check.ok && !input.force) throw new ConflictError(check);
+    const listPrice = (await prisma.model.findUnique({ where: { id: input.modelId }, select: { rentalDayPrice: true } }))?.rentalDayPrice ?? null;
     const row = await prisma.allocation.create({
       data: {
         holderType: "project",
@@ -352,6 +353,8 @@ export const allocations = {
         startDate: dateFromString(input.startDate),
         endDate: dateFromString(input.endDate),
         note: input.note ?? null,
+        pricePerDay: input.pricePerDay ?? listPrice,
+        discountPct: input.discountPct ?? null,
       },
       include: { model: true },
     });
@@ -379,6 +382,8 @@ export const allocations = {
         startDate: dateFromString(input.startDate),
         endDate: dateFromString(input.endDate),
         note: input.note ?? null,
+        pricePerDay: input.pricePerDay ?? null,
+        discountPct: input.discountPct ?? null,
       },
       include: { model: true },
     });

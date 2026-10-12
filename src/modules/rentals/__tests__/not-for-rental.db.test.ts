@@ -37,7 +37,7 @@ afterAll(async () => {
 });
 
 describe("not for rental", () => {
-  const line = { quantity: 1, pricePerDay: undefined, pricePerWeek: undefined, note: undefined, force: false };
+  const line = { quantity: 1, pricePerDay: undefined, discountPct: undefined, note: undefined, force: false };
 
   it("refuses a model flagged not for rental", async () => {
     await expect(rentalLines.add(admin, rentalId, { ...line, modelId: ownOnlyModelId })).rejects.toBeInstanceOf(RentalError);

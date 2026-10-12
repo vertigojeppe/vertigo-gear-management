@@ -55,7 +55,8 @@ export type ContactOp = { type: "contact"; name: string; kind: "person" | "compa
 export type LocationOp = { type: "location"; name: string; kind: "warehouse" | "person"; contactName?: string; importSource: Src };
 export type RentalOp = { type: "rental"; clientName: string; startDate: string; endDate: string; notes: string; lines: { modelKey: string | null; quantity: number; text: string }[]; importSource: Src };
 export type NoteOp = { type: "modelNote"; modelKey: string; note: string };
-export type Op = ModelOp | BinOp | UnitOp | KitOp | ContactOp | LocationOp | RentalOp | NoteOp;
+export type RateTableOp = { type: "rateTable"; name: string; isDefault: boolean; extraRule: "none" | "per_day" | "per_10_days"; extraFactor: number; notes: string | null; tiers: { days: number; factor: number }[]; importSource: Src };
+export type Op = ModelOp | BinOp | UnitOp | KitOp | ContactOp | LocationOp | RentalOp | NoteOp | RateTableOp;
 
 export type Decision = { question: string; options: { key: string; label: string; ops: Op[] }[]; defaultKey: string };
 
@@ -601,7 +602,25 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
 
   const rates = sheet("lejefaktor");
   if (rates) {
-    for (const t of readRateTables(rates)) rows.push({ key: `rate:${t.name}`, sheet: "lejefaktor", src: "lejefaktor!A1", bucket: "parked", summary: `Rate table "${t.name}": ${t.tiers.map((x) => `${x.days}d=${x.factor}`).join(", ")}${t.rules.length ? ` · ${t.rules.join("; ")}` : ""}`, ops: [], parked: { feature: "Pricing engine / rate tables", detail: "Imported into editable rate tables when the pricing engine is built (backlog)." } });
+    // "+10% of the day-1 price per further day" / "+0.5 per 10 days": the rule beyond the last tier, by table.
+    const RULES: Record<string, { extraRule: "per_day" | "per_10_days"; extraFactor: number; why: string }> = {
+      Standard: { extraRule: "per_day", extraFactor: 0.1, why: '"efterfølgende dage +10% af 1. dags leje" read as +0.1 per further day' },
+      Theatre: { extraRule: "per_10_days", extraFactor: 0.5, why: '"10 dage = + 0.5 Faktor" read as +0.5 per started 10 days; the 1-day factor 0.5 is a base, not for single days' },
+      Revised: { extraRule: "per_10_days", extraFactor: 0.5, why: "the J/K column continues +0.5 per 10 days; the second copy's 3.4 at 30 days is not used" },
+    };
+    for (const t of readRateTables(rates)) {
+      const rule = RULES[t.name];
+      const tiers = t.tiers.filter((x, i, arr) => arr.findIndex((y) => y.days === x.days) === i);
+      rows.push({
+        key: `rate:${t.name}`,
+        sheet: "lejefaktor",
+        src: "lejefaktor!A1",
+        bucket: "assumption",
+        summary: `Rate table "${t.name}": ${tiers.map((x) => `${x.days}d=${x.factor}`).join(", ")}`,
+        assumption: `${rule ? rule.why : "no rule beyond the last tier"}. Skipped if a table with this name exists.`,
+        ops: [{ type: "rateTable", name: t.name, isDefault: t.name === "Standard", extraRule: rule?.extraRule ?? "none", extraFactor: rule?.extraFactor ?? 0, notes: t.rules.length ? t.rules.join("; ") : null, tiers, importSource: "lejefaktor!A1" }],
+      });
+    }
   }
   const div = sheet("Dirverse");
   if (div) rows.push({ key: "div:tente", sheet: "Dirverse", src: "Dirverse!A8", bucket: "parked", summary: "TENTE castor reference (Alpha 3477UFR100P62 100 mm, 3477UFR125P62 125 mm)", ops: [], parked: { feature: "Wish list / reference", detail: "Reference material, not inventory; goes into the wish list when that feature is built (backlog)." } });

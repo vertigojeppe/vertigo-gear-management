@@ -54,6 +54,12 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 - **Not for rental**: flag a model or a unit as own-projects-only; the
   rentals screens refuse it. Retiring an item asks whether it was sold,
   scrapped or lost; own-built fixtures can sit as *under construction*.
+- **Pricing and quotes**: every model has a rental day price. Settings ›
+  Pricing holds the rate tables (days → factor; Standard, Theatre and
+  Revised from the old sheet). A project or rental picks a table, can
+  override the charged days, add freight / insurance / crew lines and a
+  discount, and prints a quote (projects) or rental agreement (rentals)
+  with totals excl. and incl. VAT.
 - **Settings › Import**: upload the old gear spreadsheet. You get a
   preview first: what imports as is, what imports with a stated guess,
   what needs your decision, and what is parked for later features. Nothing

@@ -35,18 +35,18 @@ export function buildFixtureWorkbook(marker: string): ExcelJS.Workbook {
   // Controllers: B id, C ip, D board, E status, F firmware, M note with a corrected id.
   const ctl = wb.addWorksheet("LEDController Optælling");
   put(ctl, 1, { B: "ID", C: "IP", D: "Board", E: "Status", F: "Firmware" });
-  put(ctl, 2, { B: "W6-01", C: "192.168.1.10", D: "Teensy 4.0", E: "OK", F: "v2.1" });
-  put(ctl, 3, { B: "N4-01", C: "192.168.1.20", D: "Teensy 3.2", E: "ERROR no output" });
-  put(ctl, 4, { B: "W6-02", C: "192.168.1.11", D: "Teensy 4.0", M: "ID: N4-01" });
-  put(ctl, 5, { B: "N6-01" });
+  put(ctl, 2, { B: "W6-91", C: "192.168.1.10", D: "Teensy 4.0", E: "OK", F: "v2.1" });
+  put(ctl, 3, { B: "N4-91", C: "192.168.1.20", D: "Teensy 3.2", E: "ERROR no output" });
+  put(ctl, 4, { B: "W6-92", C: "192.168.1.11", D: "Teensy 4.0", M: "ID: N4-91" });
+  put(ctl, 5, { B: "N6-91" });
 
   // Projectors: rows 1–5 are headings; A id, B model, C lumen, D throw, E lens shift,
   // F resolution, G day price or "ikke til udleje", H–L notes (J serial, I location).
   const proj = wb.addWorksheet("PROJEKTORE");
   put(proj, 1, { A: "Projektorer" });
   put(proj, 6, { A: "ID", B: "Model", C: "Lumen", D: "Throw", E: "Lens shift", F: "Res", G: "Pris/dag" });
-  put(proj, 7, { A: "P1", B: `Panasonic PT-VZ ${marker}`, C: "4500 Lumen", D: "1.2:1", E: "V +50%", F: "WUXGA", G: "900", H: "Lånt til LASSE", J: "ABCDEFGHIJ12" });
-  put(proj, 8, { A: "P2", B: `Panasonic PT-VZ ${marker}`, C: "4500 Lumen", G: "ikke til udleje", H: "Solgt 2023" });
+  put(proj, 7, { A: "ZP1", B: `Panasonic PT-VZ ${marker}`, C: "4500 Lumen", D: "1.2:1", E: "V +50%", F: "WUXGA", G: "900", H: "Lånt til LASSE", J: "ABCDEFGHIJ12" });
+  put(proj, 8, { A: "ZP2", B: `Panasonic PT-VZ ${marker}`, C: "4500 Lumen", G: "ikke til udleje", H: "Solgt 2023" });
   put(proj, 9, { A: "GearGuys" });
   put(proj, 10, { B: "Barco UDX-4K32", D: "0.8:1", F: "4K" });
   put(proj, 11, { B: "Ønsker" });
@@ -55,9 +55,9 @@ export function buildFixtureWorkbook(marker: string): ExcelJS.Workbook {
   // Key fobs: A id or group heading, B holder.
   const fobs = wb.addWorksheet("Nøglebrikker");
   put(fobs, 1, { A: "Hovedindgang" });
-  put(fobs, 2, { A: "U00001", B: "Alex" });
-  put(fobs, 3, { A: "U00002", B: "MANGLER" });
-  put(fobs, 4, { A: "U00003", B: `Bil ${marker}` });
+  put(fobs, 2, { A: "U99901", B: "Alex" });
+  put(fobs, 3, { A: "U99902", B: "MANGLER" });
+  put(fobs, 4, { A: "U99903", B: `Bil ${marker}` });
   put(fobs, 5, { B: "Brikker programmeres hos viceværten" });
 
   // Loans: a title line, "n x what" lines, a price line.
@@ -74,6 +74,17 @@ export function buildFixtureWorkbook(marker: string): ExcelJS.Workbook {
   put(stands, 5, { B: `16mm rustfri rods ${marker}` });
   put(stands, 6, { C: "150cm", E: "30" });
   put(stands, 7, { C: "200cm", E: "8" });
+
+  // Rate tables: Standard in A/B (rows 5+), Theatre in E/F, Revised in J/K.
+  const rates = wb.addWorksheet("lejefaktor");
+  put(rates, 1, { A: "Vertigo Lejefaktor standart", E: "———— NY teater lejefaktor ————" });
+  put(rates, 4, { A: "Antal dage", B: "Faktor", E: "Antal dageFaktor", J: "dage", K: "faktor" });
+  put(rates, 5, { A: "1 dag", B: "1", E: "1 dag", F: "0.5", J: "1", K: "1" });
+  put(rates, 6, { A: "2 dage", B: "1.5", E: "14 dage", F: "2.1", J: "2", K: "1,5" });
+  put(rates, 7, { A: "5-7 dage", B: "2.7", E: "30 dage", F: "3.3", J: "10", K: "2,3" });
+  put(rates, 10, { E: "efterfølgende dage +10% af 1. dags leje" });
+  put(rates, 16, { A: "efterfølgende dage +10% af 1. dags leje" });
+  put(rates, 17, { A: "Alle priser er excl. moms, fragt og forsikring" });
 
   // Rods recount: A label, D count, heading rows without a count.
   const rods = wb.addWorksheet("16mm rods");

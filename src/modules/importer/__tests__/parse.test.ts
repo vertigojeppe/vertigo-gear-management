@@ -53,14 +53,14 @@ describe("sheet readers", () => {
   it("reads controllers, projectors, fobs, loans and rods", async () => {
     const wb = await load();
     const ctl = readControllers(wb.sheets.get("LEDController Optælling")!);
-    expect(ctl.map((c) => c.id)).toEqual(["W6-01", "N4-01", "W6-02", "N6-01"]);
+    expect(ctl.map((c) => c.id)).toEqual(["W6-91", "N4-91", "W6-92", "N6-91"]);
     expect(ctl[0]).toMatchObject({ ip: "192.168.1.10", board: "Teensy 4.0", firmware: "v2.1", correctedId: null });
-    expect(ctl[2].correctedId).toBe("N4-01");
+    expect(ctl[2].correctedId).toBe("N4-91");
 
     const proj = readProjectors(wb.sheets.get("PROJEKTORE")!);
     expect(proj.map((p) => [p.id, p.section])).toEqual([
-      ["P1", "own"],
-      ["P2", "own"],
+      ["ZP1", "own"],
+      ["ZP2", "own"],
       [null, "gearguys"],
       [null, "wish"],
     ]);
@@ -70,9 +70,9 @@ describe("sheet readers", () => {
 
     const fobs = readFobs(wb.sheets.get("Nøglebrikker")!);
     expect(fobs.fobs.map((f) => [f.id, f.holder, f.group])).toEqual([
-      ["U00001", "Alex", "Hovedindgang"],
-      ["U00002", "MANGLER", "Hovedindgang"],
-      ["U00003", `Bil ${M}`, "Hovedindgang"],
+      ["U99901", "Alex", "Hovedindgang"],
+      ["U99902", "MANGLER", "Hovedindgang"],
+      ["U99903", `Bil ${M}`, "Hovedindgang"],
     ]);
     expect(fobs.notes).toEqual(["Brikker programmeres hos viceværten"]);
 

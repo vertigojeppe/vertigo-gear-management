@@ -280,6 +280,23 @@ engine later.
 buckets and decisions, commit against the database (idempotent re-run,
 add-to-existing), browser upload → preview → decide → import.
 
+### Phase 6 — Pricing engine, rate tables, quote PDF ✅ (2026-10-12)
+Every model has a rental day price (imported from the sheet, editable on
+the model). Settings › Pricing holds named rate tables (days → factor,
+step function to the nearest lower tier, and a rule beyond the last tier:
++factor per further day or per started 10 days); Standard, Theatre and
+Revised come from the `lejefaktor` sheet via seed or importer. A project
+or rental picks a table (the default unless chosen), can override the
+charge days and set a document discount and terms. Gear lines are the
+reservations (projects) or rental lines, with a day-price snapshot and a
+line discount; extra lines (freight, insurance, crew) are fixed amounts.
+Totals excl. and incl. 25% VAT; quote PDF for projects, rental agreement
+PDF for rentals (same renderer, signature boxes on the agreement).
+**Tests:** engine (tiers, rules, discounts, rounding) against the real
+tables, rate table CRUD + rental and project quotes (DB), browser: rate
+table editor with live factor preview, project quote with discount, extra
+line and PDF.
+
 ### Phase 5b — Export, labels, polish
 CSV export of any list, JSON backup/restore, Avery label sheets and single
 thermal labels, Danish translation hooks, empty states and inline help,

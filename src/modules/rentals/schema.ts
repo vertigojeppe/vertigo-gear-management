@@ -17,8 +17,9 @@ export type RentalInput = z.infer<typeof rentalInput>;
 export const rentalLineInput = z.object({
   modelId: z.string().min(1, "Choose a model."),
   quantity: optionalNumber.transform((v) => Math.max(1, Math.round(v ?? 1))),
+  /** Day price snapshot (defaults to the model's list price when left empty on a new line) and line discount. */
   pricePerDay: optionalNumber,
-  pricePerWeek: optionalNumber,
+  discountPct: optionalNumber.pipe(z.number().min(0, "0–100 %").max(100, "0–100 %").optional()),
   note: optionalText,
   force: checkbox,
 });

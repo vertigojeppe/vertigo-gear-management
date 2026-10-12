@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { buttonVariants } from "@/components/ui/button";
 import { applicableDefs, type CustomFieldDef } from "@/lib/custom-fields";
 import type { FormState } from "@/lib/forms";
+import { appConfig } from "../../../../config/app.config";
 import { saveModel } from "../actions";
 import { linksToText, TRACKING_TYPES } from "../schema";
 import type { ModelDto } from "../service";
@@ -98,6 +99,9 @@ export function ModelForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field id="powerDrawW" label={t("powerDrawW")} optional error={err.powerDrawW}>
             <Input id="powerDrawW" name="powerDrawW" type="number" step="1" min="0" defaultValue={v("powerDrawW", model?.powerDrawW)} />
+          </Field>
+          <Field id="rentalDayPrice" label={t("rentalDayPrice", { currency: appConfig.currency })} help={t("rentalDayPriceHelp")} optional error={err.rentalDayPrice}>
+            <Input id="rentalDayPrice" name="rentalDayPrice" type="number" step="0.01" min="0" defaultValue={v("rentalDayPrice", model?.rentalDayPrice)} />
           </Field>
         </div>
         <Field id="linksText" label={t("links")} optional help={t("linksHelp")} error={err.linksText}>

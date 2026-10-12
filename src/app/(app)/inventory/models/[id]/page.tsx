@@ -11,7 +11,7 @@ import { applicableDefs } from "@/lib/custom-fields";
 import { StatusBadge } from "@/components/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, formatMoney } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
 import { inventoryActions, modelDetail } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
@@ -42,6 +42,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
     specs.push([t("dimensions"), [model.widthCm, model.heightCm, model.depthCm].map((v) => (v === null ? "–" : formatNumber(v, 1))).join(" × ")]);
   }
   if (model.powerDrawW !== null) specs.push([t("powerDrawW"), String(model.powerDrawW)]);
+  if (model.rentalDayPrice !== null) specs.push([t("rentalDayPrice", { currency: "" }).replace(" ()", ""), formatMoney(model.rentalDayPrice)]);
 
   return (
     <div className="flex flex-col gap-8">

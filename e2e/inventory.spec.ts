@@ -53,8 +53,9 @@ test.describe("inventory", () => {
     await page.goto("/inventory");
     await expect(page.getByRole("heading", { name: "Inventory" })).toBeVisible();
     await expect(page.getByRole("link", { name: "New model" })).toHaveCount(0);
-    await page.goto("/inventory/items");
-    await page.getByRole("link", { name: /VG-0001/ }).click();
+    // Search for the unit: a database with the real inventory imported has many pages.
+    await page.goto("/inventory/items?q=VG-0001");
+    await page.getByRole("link", { name: /VG-0001/ }).first().click();
     await expect(page.getByRole("button", { name: "Change status" })).toHaveCount(0);
     await expect(page.getByText("Purchase and value")).toHaveCount(0);
   });

@@ -68,6 +68,9 @@ export const allocationInput = z
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a start date."),
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose an end date."),
     note: optionalText,
+    /** Day price for the quote (defaults to the model's list price when left empty on a new reservation) and line discount. */
+    pricePerDay: optionalNumber,
+    discountPct: optionalNumber.pipe(z.number().min(0, "0–100 %").max(100, "0–100 %").optional()),
     /** "Reserve anyway" after a conflict warning. */
     force: checkbox,
   })

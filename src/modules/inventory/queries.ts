@@ -40,9 +40,9 @@ export async function modelOptions() {
   const rows = await prisma.model.findMany({
     where: { archived: false },
     orderBy: [{ manufacturer: "asc" }, { name: "asc" }],
-    select: { id: true, manufacturer: true, name: true, trackingType: true, categoryId: true, notForRental: true },
+    select: { id: true, manufacturer: true, name: true, trackingType: true, categoryId: true, notForRental: true, rentalDayPrice: true },
   });
-  return rows;
+  return rows.map((r) => ({ ...r, rentalDayPrice: r.rentalDayPrice === null ? null : r.rentalDayPrice.toNumber() }));
 }
 
 /* Models list */

@@ -147,6 +147,7 @@ export type ModelDto = {
   customFields: CustomFieldValues;
   archived: boolean;
   notForRental: boolean;
+  rentalDayPrice: number | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -172,6 +173,7 @@ export function toModelDto(m: ModelRow): ModelDto {
     customFields: (m.customFields ?? {}) as CustomFieldValues,
     archived: m.archived,
     notForRental: m.notForRental,
+    rentalDayPrice: num(m.rentalDayPrice),
     createdAt: m.createdAt,
     updatedAt: m.updatedAt,
   };
@@ -192,6 +194,7 @@ function modelData(input: ModelInput, customFields: CustomFieldValues) {
     notes: input.notes ?? null,
     links: parseLinksText(input.linksText),
     notForRental: input.notForRental,
+    rentalDayPrice: input.rentalDayPrice ?? null,
     customFields,
   };
 }

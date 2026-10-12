@@ -1,0 +1,52 @@
+// pricing module
+
+/// A named days → factor table (Standard, Theatre, Revised, ...). The
+/// factor multiplies a model's rental day price; days between tiers use
+/// the nearest lower tier, days beyond the last tier add `extraFactor`
+/// per day or per started 10 days (`extraRule`, keys in app.config).
+model RateTable {
+  id           String     @id @default(cuid())
+  name         String
+  isDefault    Boolean    @default(false)
+  /// "none" | "per_day" | "per_10_days"
+  extraRule    String     @default("none")
+  extraFactor  Decimal    @default(0) @db.Decimal(8, 3)
+  notes        String?
+  importSource String?
+  tiers        RateTier[]
+  projects     Project[]
+  rentals      Rental[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([name])
+}
+
+model RateTier {
+  id          String    @id @default(cuid())
+  rateTableId String
+  rateTable   RateTable @relation(fields: [rateTableId], references: [id], onDelete: Cascade)
+  days        Int
+  factor      Decimal   @db.Decimal(8, 3)
+
+  @@unique([rateTableId, days])
+}
+
+/// A free-text line on a quote (freight, insurance, crew): a fixed amount,
+/// not multiplied by the rate factor. Belongs to a project or a rental.
+model ExtraLine {
+  id          String   @id @default(cuid())
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  rentalId    String?
+  rental      Rental?  @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  discountPct Decimal? @db.Decimal(5, 2)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([projectId])
+  @@index([rentalId])
+}

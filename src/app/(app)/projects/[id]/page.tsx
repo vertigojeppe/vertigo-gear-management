@@ -25,6 +25,7 @@ import {
 import { customFieldDefinitions } from "@/modules/settings";
 import { listsForProject } from "@/modules/packing";
 import { CreatePlanDialog, defaultAnchor, planSummary, planTemplateOptions } from "@/modules/plans";
+import { QuoteSection, quoteFor, rateTableOptions } from "@/modules/pricing";
 import { today } from "@/lib/dates";
 import { PACKING_STATUSES, PROJECT_STATUSES } from "../../../../../config/app.config";
 
@@ -33,7 +34,7 @@ export const metadata: Metadata = { title: "Project" };
 export default async function ProjectPage(props: { params: Promise<{ id: string }> }) {
   const actor = await requireActor();
   const { id } = await props.params;
-  const [detail, defs, models, users, packingLists, plan, planTemplates] = await Promise.all([projectDetail(id), customFieldDefinitions.forEntity("project"), modelOptions(), crewOptions(), listsForProject(id), planSummary(id), planTemplateOptions()]);
+  const [detail, defs, models, users, packingLists, plan, planTemplates, quote, rateTables] = await Promise.all([projectDetail(id), customFieldDefinitions.forEntity("project"), modelOptions(), crewOptions(), listsForProject(id), planSummary(id), planTemplateOptions(), quoteFor("project", id), rateTableOptions()]);
   const tpack = await getTranslations("packing");
   const tplan = await getTranslations("plans");
   const tps = await getTranslations("packingStatus");
@@ -172,7 +173,7 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
                       models={models}
                       defaultFrom={project.reserveFrom}
                       defaultTo={project.reserveTo}
-                      existing={{ id: r.id, modelId: r.modelId, quantity: r.quantity, startDate: r.startDate, endDate: r.endDate, note: r.note }}
+                      existing={{ id: r.id, modelId: r.modelId, quantity: r.quantity, startDate: r.startDate, endDate: r.endDate, note: r.note, pricePerDay: r.pricePerDay, discountPct: r.discountPct }}
                     />
                     <RemoveReservationButton id={r.id} projectId={project.id} />
                   </span>
@@ -182,6 +183,8 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
           </ul>
         )}
       </section>
+
+      {quote && <QuoteSection quote={quote} tables={rateTables} canEdit={canEdit} showGear pdfHref={`/api/projects/${project.id}/quote.pdf`} />}
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

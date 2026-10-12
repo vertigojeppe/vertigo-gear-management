@@ -11,8 +11,7 @@ import { items as inventoryItems } from "@/modules/inventory/service";
 import { allocationsFor, clients, ConflictError, itemsForModel } from "@/modules/projects/service";
 // eslint-disable-next-line no-restricted-imports -- same reason
 import { checkRequest } from "@/modules/projects/availability";
-import { appConfig, type RentalStatus } from "../../../config/app.config";
-import { totals, type PriceLine } from "./pricing";
+import type { RentalStatus } from "../../../config/app.config";
 import type { RentalInput, RentalLineInput } from "./schema";
 
 export class RentalError extends Error {
@@ -74,7 +73,7 @@ export type RentalLineDto = {
   trackingType: string;
   quantity: number;
   pricePerDay: number | null;
-  pricePerWeek: number | null;
+  discountPct: number | null;
   itemId: string | null;
   itemTag: string | null;
   note: string | null;
@@ -199,9 +198,10 @@ export const rentalLines = {
     const [items, allocs] = await Promise.all([itemsForModel(input.modelId), allocationsFor(input.modelId)]);
     const check = checkRequest(items, allocs, { from, to }, input.quantity);
     if (!check.ok && !input.force) throw new ConflictError(check);
+    const listPrice = num((await prisma.model.findUnique({ where: { id: input.modelId }, select: { rentalDayPrice: true } }))?.rentalDayPrice);
     const line = await prisma.$transaction(async (tx) => {
       const l = await tx.rentalLine.create({
-        data: { rentalId, modelId: input.modelId, quantity: input.quantity, pricePerDay: input.pricePerDay ?? null, pricePerWeek: input.pricePerWeek ?? null, note: input.note ?? null },
+        data: { rentalId, modelId: input.modelId, quantity: input.quantity, pricePerDay: input.pricePerDay ?? listPrice, discountPct: input.discountPct ?? null, note: input.note ?? null },
         include: { model: true },
       });
       await tx.allocation.create({
@@ -225,7 +225,7 @@ export const rentalLines = {
     const line = await prisma.$transaction(async (tx) => {
       const l = await tx.rentalLine.update({
         where: { id: lineId },
-        data: { modelId: input.modelId, quantity: input.quantity, pricePerDay: input.pricePerDay ?? null, pricePerWeek: input.pricePerWeek ?? null, note: input.note ?? null, itemId: input.modelId === existing.modelId ? existing.itemId : null },
+        data: { modelId: input.modelId, quantity: input.quantity, pricePerDay: input.pricePerDay ?? null, discountPct: input.discountPct ?? null, note: input.note ?? null, itemId: input.modelId === existing.modelId ? existing.itemId : null },
         include: { model: true },
       });
       await tx.allocation.updateMany({ where: { rentalLineId: lineId }, data: { modelId: input.modelId, quantity: input.quantity, itemId: l.itemId } });
@@ -263,6 +263,3 @@ export const rentalLines = {
   },
 };
 
-export function rentalTotals(lines: PriceLine[], from: DateString, to: DateString) {
-  return totals(lines, from, to, appConfig.vatRate);
-}

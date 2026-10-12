@@ -42,6 +42,14 @@ model Project {
   /// { phaseKey: googleEventId } for idempotent calendar push.
   googleEventIds Json    @default("{}")
   customFields Json      @default("{}")
+  /// Quote settings (pricing module). Null rate table = the default table;
+  /// null chargeDays = the reservation window; terms null = default text.
+  rateTableId  String?
+  rateTable    RateTable? @relation(fields: [rateTableId], references: [id], onDelete: SetNull)
+  chargeDays   Int?
+  discountPct  Decimal?  @db.Decimal(5, 2)
+  terms        String?
+  extraLines   ExtraLine[]
   contacts     ProjectContact[]
   crew         ProjectCrew[]
   allocations  Allocation[]
@@ -100,6 +108,9 @@ model Allocation {
   startDate    DateTime    @db.Date
   endDate      DateTime    @db.Date
   note         String?
+  /// Project lines only: day price snapshot (from the model when reserved) and line discount.
+  pricePerDay  Decimal?    @db.Decimal(12, 2)
+  discountPct  Decimal?    @db.Decimal(5, 2)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
