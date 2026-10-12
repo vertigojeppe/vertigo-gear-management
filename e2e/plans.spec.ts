@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import sharp from "sharp";
 
 const password = process.env.SEED_PASSWORD ?? "vertigo123";
 const stamp = Date.now().toString(36);
@@ -80,5 +81,70 @@ test.describe("production plans", () => {
     await page.goto(url);
     await page.getByRole("button", { name: "Revoke link" }).click();
     await expect(page.getByRole("button", { name: "Create share link" })).toBeVisible();
+  });
+
+  test("documents: chunked upload, versions, markup", async ({ page }) => {
+    page.on("dialog", (d) => d.accept());
+    await signIn(page, "admin@vertigo.test");
+    await page.goto("/projects/new");
+    await page.getByLabel("Name", { exact: true }).fill(`E2E show ${stamp} docs`);
+    await page.getByRole("button", { name: "Create" }).click();
+    await page.getByRole("button", { name: "Create plan" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Create" }).click();
+    await expect(page).toHaveURL(/\/plan$/);
+    const planUrl = page.url();
+
+    // A PNG, uploaded through the chunked uploader.
+    const png = await sharp({ create: { width: 320, height: 200, channels: 3, background: "#dde3ea" } }).png().toBuffer();
+    const name = `plot-${stamp}.png`;
+    await page.getByLabel("Upload files").setInputFiles({ name, mimeType: "image/png", buffer: png });
+    await expect(page.getByText("uploaded").first()).toBeVisible();
+    await expect(page.getByRole("link", { name: new RegExp(name) })).toBeVisible();
+    await expect(page.getByText("Version 1")).toBeVisible();
+
+    // Same name again → version 2.
+    await page.getByLabel("Upload files").setInputFiles({ name, mimeType: "image/png", buffer: png });
+    await expect(page.getByText("Version 2")).toBeVisible();
+
+    // Open it, draw a box, save, reload: the box is still there.
+    await page.getByRole("link", { name: new RegExp(name) }).click();
+    await expect(page.getByRole("heading", { name })).toBeVisible();
+    await page.getByRole("button", { name: "Box" }).click();
+    const layer = page.getByLabel("markup");
+    const box = (await layer.boundingBox())!;
+    await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.6, { steps: 5 });
+    await page.mouse.up();
+    await expect(layer.locator("[data-shape=rect]")).toHaveCount(1);
+    await page.getByRole("button", { name: "Save markup" }).click();
+    await expect(page.getByText("Markup saved")).toBeVisible();
+    await page.reload();
+    await expect(page.getByLabel("markup").locator("[data-shape=rect]")).toHaveCount(1);
+    await expect(page.getByText("has markup")).toBeVisible();
+
+    // The plan PDF still renders with the document in it.
+    await page.goto(planUrl);
+    const pdfHref = (await page.locator('a[href*="/plan.pdf"]').first().getAttribute("href")) ?? "";
+    const planId = pdfHref.match(/\/api\/plans\/([^/]+)\//)?.[1];
+    if (planId) expect((await page.request.get(`/api/plans/${planId}/plan.pdf`)).status()).toBe(200);
+
+    // A PDF document opens in the page viewer.
+    const pdfBytes = await (await page.request.get(`/api/plans/${planId}/plan.pdf`)).body();
+    await page.getByLabel("Upload files").setInputFiles({ name: `rider-${stamp}.pdf`, mimeType: "application/pdf", buffer: pdfBytes });
+    await page.getByRole("link", { name: new RegExp(`rider-${stamp}.pdf`) }).click();
+    await expect(page.getByText(/Page 1 of \d+/)).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("canvas")).toBeVisible();
+
+    // An STL opens in the 3D viewer.
+    const tri = (a: number[], b: number[], c: number[]) =>
+      `facet normal 0 0 1\n outer loop\n  vertex ${a.join(" ")}\n  vertex ${b.join(" ")}\n  vertex ${c.join(" ")}\n endloop\nendfacet\n`;
+    const stl = Buffer.from("solid cube\n" + tri([0, 0, 0], [1, 0, 0], [1, 1, 0]) + tri([0, 0, 0], [1, 1, 0], [0, 1, 0]) + tri([0, 0, 1], [1, 1, 1], [1, 0, 1]) + "endsolid cube\n");
+    await page.goto(planUrl);
+    await page.getByLabel("Upload files").setInputFiles({ name: `cube-${stamp}.stl`, mimeType: "model/stl", buffer: stl });
+    await page.getByRole("link", { name: new RegExp(`cube-${stamp}.stl`) }).click();
+    await expect(page.getByRole("button", { name: "Measure" })).toBeVisible();
+    await expect(page.locator("canvas")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Could not load the model.")).toHaveCount(0);
   });
 });

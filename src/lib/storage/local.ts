@@ -1,5 +1,5 @@
 import { createReadStream } from "node:fs";
-import { access, mkdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { access, mkdir, open, readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import type { StorageAdapter } from "./index";
@@ -47,5 +47,35 @@ export class LocalStorage implements StorageAdapter {
     } catch {
       return false;
     }
+  }
+
+  /* Resumable uploads: a part file grows chunk by chunk, then moves into place. */
+
+  async appendPart(partKey: string, offset: number, chunk: Buffer | Uint8Array): Promise<number> {
+    const full = this.resolve(partKey);
+    await mkdir(path.dirname(full), { recursive: true });
+    const fh = await open(full, "a+");
+    try {
+      const { size } = await fh.stat();
+      if (size !== offset) throw new Error(`Chunk out of order: have ${size} bytes, got offset ${offset}`);
+      await fh.write(chunk, 0, chunk.length, offset);
+      return size + chunk.length;
+    } finally {
+      await fh.close();
+    }
+  }
+
+  async partSize(partKey: string): Promise<number> {
+    try {
+      return (await stat(this.resolve(partKey))).size;
+    } catch {
+      return 0;
+    }
+  }
+
+  async finalizePart(partKey: string, key: string): Promise<void> {
+    const full = this.resolve(key);
+    await mkdir(path.dirname(full), { recursive: true });
+    await rename(this.resolve(partKey), full);
   }
 }

@@ -17,6 +17,8 @@ model File {
 
   attachments       Attachment[]
   modelDefaultPhoto Model[]      @relation("ModelDefaultPhoto")
+  documentVersions  PlanDocumentVersion[]
+  documentPreviews  PlanDocument[] @relation("DocumentPreview")
 }
 
 /// Links a file to any entity (item, model, later project/plan).

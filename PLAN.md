@@ -251,11 +251,16 @@ plan PDF, read-only share link.
 **Tests:** template date maths and round trip, day grouping, task order and
 progress, plan lifecycle (DB), PDF smoke, browser flow.
 
-### Phase 4b — Documents, drawings, 3D, markup
-Files with versions and resumable upload, image / PDF / 3D inline viewers,
-markup layer, pin files to schedule entries and tasks, markups in the plan
-PDF.
-**Tests:** file versioning, markup persistence, PDF export smoke.
+### Phase 4b — Documents, drawings, 3D, markup ✅ (2026-10-12)
+Documents on a plan with versions (same name = new version), chunked
+resumable upload, inline viewers for images, PDFs (page navigation) and
+glTF/GLB/OBJ/STL (orbit, grid, lights, two-point measure), native formats
+stored with an optional preview image, markup layer (pen, arrow, box, text)
+saved separately with authorship, documents pinned to schedule entries and
+tasks, markups drawn into the plan and day-sheet PDFs, documents on the
+share page.
+**Tests:** chunk assembly, file versioning, markup authorship, PDF export
+with markup, browser upload/version/markup flow.
 
 ### Phase 5 — Import / export, labels, polish
 CSV/XLSX import with preview and commit, CSV export of any list, JSON

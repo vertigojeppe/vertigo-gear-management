@@ -11,7 +11,7 @@ external rentals. Full spec: `SPEC.md`; the spreadsheet we migrate from and
 what it implies: `MIGRATION.md`. Plan and data model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **4 (production plans) done**. Next: Phase 4b (documents, drawings, 3D viewer, markup).
+Current phase: **4b (plan documents, viewers, markup) done**. Next: Phase 5 (import/export, labels, polish, deployment).
 
 ## Stack
 
@@ -211,8 +211,25 @@ a second entry that exports components only and never a service.
   sheet; served by `/api/plans/[planId]/plan.pdf` for signed-in users or
   with the plan's share token. Share links reuse `ShareLink` with
   `targetType = "plan"`; the public page is `/share/plan/[token]`.
-- Documents, drawings, 3D viewers and markup are Phase 4b; they will attach
-  to schedule entries and tasks.
+- Documents (`PlanDocument` → `PlanDocumentVersion` → `File`) live in
+  `src/modules/plans/documents.ts`. Same name on the same plan = new
+  version; old versions stay. A document may be pinned to one schedule
+  entry or one task, and native formats can carry a preview image.
+- Uploads are chunked and resumable: `POST /api/uploads` starts an
+  `UploadSession`, `PUT /api/uploads/[id]?offset=` appends in order,
+  `GET` reports progress for resuming, `POST .../complete` turns the part
+  into a `File`. `DocumentUploader` does this client-side; the storage
+  adapter grew `appendPart/partSize/finalizePart` (local only; S3 needs
+  multipart). `MAX_UPLOAD_MB` caps the size (default 500).
+- Viewers (`DocumentViewer`) pick by `documentKind`: images and PDFs get
+  the `MarkupLayer` (shapes in 0..1 coordinates, one `Markup` row per
+  version and page, author stamped server-side); pdf.js and three.js load
+  only on the client through `next/dynamic`. 3D: glTF/GLB, OBJ (+MTL when
+  a sibling document has the same base name), STL.
+- The plan PDF embeds image documents with their markup; PDF documents are
+  rasterised with `pdftoppm` when poppler is installed (the Docker image
+  has it), otherwise listed by name. Day sheets include documents pinned
+  to that day's entries.
 
 ## Events, outbox, integrations
 

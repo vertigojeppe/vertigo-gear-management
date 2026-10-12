@@ -264,3 +264,51 @@ The October spec update splits production plans into plans (schedule,
 tasks, logistics, templates, PDFs) and documents (uploads with versions,
 viewers, 3D, markup). Phase 4 ships the first half so the team can run
 shows from it now; 4b adds files on top of the same entries.
+
+## 2026-10-12 — Markup is a layer, keyed by document version and page
+
+Shapes are stored in normalised coordinates (0..1) in a `Markup` row per
+version and page, never drawn into the file. The server stamps the author
+on new shapes, so a layer edited by several people keeps who drew what.
+A new version of a document starts with an empty layer: the drawing was
+about that version of the plot.
+
+## 2026-10-12 — Chunked uploads with a server-side session
+
+Large 3D files from a phone on venue wifi fail with one big POST. The
+client slices the file, retries each chunk, and asks the server where it
+got to after a drop (`UploadSession.received`). Only a completed upload
+becomes a `File`, so half-uploads never show up as documents and expire
+on their own. Local storage appends to a part file and renames it into
+place; an S3 driver would map this onto multipart upload.
+
+## 2026-10-12 — PDF documents in the plan export depend on poppler
+
+react-pdf cannot embed a PDF page as such. Where `pdftoppm` exists
+(Docker image) the pages with markup are rasterised and overlaid; on a
+developer machine without it the document is listed by name instead of
+failing the export.
+
+## 2026-10-12 — Markup is a layer, keyed by document version and page
+
+Shapes are stored in normalised coordinates (0..1) in a `Markup` row per
+version and page, never drawn into the file. The server stamps the author
+on new shapes, so a layer edited by several people keeps who drew what.
+A new version of a document starts with an empty layer: the drawing was
+about that version of the plot.
+
+## 2026-10-12 — Chunked uploads with a server-side session
+
+Large 3D files from a phone on venue wifi fail with one big POST. The
+client slices the file, retries each chunk, and asks the server where it
+got to after a drop (`UploadSession.received`). Only a completed upload
+becomes a `File`, so half-uploads never show up as documents and expire
+on their own. Local storage appends to a part file and renames it into
+place; an S3 driver would map this onto multipart upload.
+
+## 2026-10-12 — PDF documents in the plan export depend on poppler
+
+react-pdf cannot embed a PDF page as such. Where `pdftoppm` exists
+(Docker image) the pages with markup are rasterised and overlaid; on a
+developer machine without it the document is listed by name instead of
+failing the export.

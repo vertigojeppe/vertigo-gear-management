@@ -26,6 +26,8 @@ model User {
   locations   Location[]
   scheduleEntries ScheduleEntry[]
   planTasks   PlanTask[]
+  markups     Markup[]
+  uploadSessions UploadSession[]
 
   @@index([role])
 }

@@ -1,5 +1,18 @@
 import { addDays, dateFromString, dateToZonedInput, dayInZone, zonedInputToDate, type DateString } from "@/lib/dates";
-import { PLAN_PHASES, type LogisticsKind, type PlanPhase } from "../../../config/app.config";
+import { PLAN_PHASES, fileConfig, type LogisticsKind, type PlanPhase } from "../../../config/app.config";
+
+export type DocumentKind = "image" | "pdf" | "model3d" | "native" | "other";
+
+/** Which viewer a document gets, by MIME type first, then extension. */
+export function documentKind(name: string, mimeType: string): DocumentKind {
+  const ext = "." + (name.split(".").pop() ?? "").toLowerCase();
+  if ((fileConfig.inlineViewers.image as readonly string[]).includes(mimeType)) return "image";
+  if ((fileConfig.inlineViewers.pdf as readonly string[]).includes(mimeType) || ext === ".pdf") return "pdf";
+  if ((fileConfig.inlineViewers.model3d as readonly string[]).includes(ext)) return "model3d";
+  if ((fileConfig.nativeOnly as readonly string[]).includes(ext)) return "native";
+  if (mimeType.startsWith("image/")) return "image";
+  return "other";
+}
 
 /**
  * Pure helpers for production plans: grouping a schedule into days, task

@@ -14,6 +14,12 @@ export interface StorageAdapter {
   stream(key: string): Promise<ReadableStream<Uint8Array>>;
   delete(key: string): Promise<void>;
   exists(key: string): Promise<boolean>;
+  /** Resumable uploads: append a chunk at the expected offset; returns the new size. */
+  appendPart(partKey: string, offset: number, chunk: Buffer | Uint8Array): Promise<number>;
+  /** Bytes received so far for a part (0 when it does not exist). */
+  partSize(partKey: string): Promise<number>;
+  /** Move a finished part to its final key. */
+  finalizePart(partKey: string, key: string): Promise<void>;
 }
 
 let adapter: StorageAdapter | undefined;
@@ -24,7 +30,7 @@ export function getStorage(): StorageAdapter {
   if (driver === "local") {
     adapter = new LocalStorage(process.env.UPLOAD_DIR ?? "./uploads");
   } else if (driver === "s3") {
-    // Implemented in Phase 4 together with resumable uploads.
+    // S3 needs a multipart implementation of appendPart/finalizePart; not written yet.
     throw new Error("STORAGE_DRIVER=s3 is not available yet. Use local.");
   } else {
     throw new Error(`Unknown STORAGE_DRIVER: ${driver}`);

@@ -91,6 +91,14 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 - **Plan templates** (Projects › Plan templates): a whole plan relative to
   the load-in day, applied to a project in one go; any plan can be saved
   as one.
+- **Documents on the plan**: riders, stage plots, drawings, risk
+  assessments and 3D models. Upload anything (chunked, so large files from
+  a phone survive); uploading the same name again adds a version. Images
+  and PDFs open inline with a **markup** layer (pen, arrow, box, text) that
+  is saved separately and shows who drew it; glTF/GLB, OBJ and STL open in
+  a 3D viewer with a measure tool; SketchUp, DWG, DXF, Vectorworks, AI and
+  PSD are stored for download with an optional preview image. Pin a
+  document to a schedule entry or task; it appears on that day sheet.
 
 ## Scripts
 
