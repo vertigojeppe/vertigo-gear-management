@@ -40,6 +40,8 @@ model Model {
   items        Item[]
   allocations  Allocation[]
   rentalLines  RentalLine[]
+  packingLines PackingLine[]
+  packingTemplateLines PackingTemplateLine[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -83,6 +85,9 @@ model Item {
   statusLogs       StatusLog[]
   allocations      Allocation[]
   rentalLines      RentalLine[]
+  packingLineUnits PackingLine[] @relation("PackingLineItem")
+  packingLineCases PackingLine[] @relation("PackingLineCase")
+  packingChecks    PackingCheck[] @relation("PackingCheckItem")
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

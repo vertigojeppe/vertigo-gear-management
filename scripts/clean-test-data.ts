@@ -22,7 +22,12 @@ async function main() {
   // Projects and rentals created by the browser tests (names/dates only they use).
   const testProjects = await prisma.project.findMany({ where: { name: { startsWith: "E2E show " } }, select: { id: true } });
   await prisma.location.deleteMany({ where: { projectId: { in: testProjects.map((p) => p.id) } } });
+  await prisma.activityLog.deleteMany({ where: { entityId: { in: testProjects.map((p) => p.id) } } });
   const projects = await prisma.project.deleteMany({ where: { id: { in: testProjects.map((p) => p.id) } } });
+  // Packing lists go with their project; share links and templates do not.
+  const liveLists = (await prisma.packingList.findMany({ select: { id: true } })).map((l) => l.id);
+  await prisma.shareLink.deleteMany({ where: { targetType: "packing_list", targetId: { notIn: liveLists } } });
+  await prisma.packingTemplate.deleteMany({ where: { name: { startsWith: "E2E template " } } });
   const rentals = await prisma.rental.deleteMany({ where: { startDate: { gte: new Date("2032-01-01T00:00:00Z") }, notes: null } });
   await prisma.outbox.deleteMany({ where: { status: { in: ["done", "failed"] } } });
   console.log(`Removed ${tokens.count} tokens, ${ids.length} models, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals.`);

@@ -63,6 +63,18 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
   Calendar.
 - **Webhooks**: Settings › Webhooks posts signed JSON to your URL on events
   such as a status change or a confirmed project.
+- **Packing lists** (project page): start empty, from the project's
+  reservations, from a template, or by copying another list. Add models,
+  whole kits, or a template's lines; group by category or by case; see the
+  weight, case and power totals; print the PDF.
+- **Packing mode** (phone): tick units from a list, or scan a tag to tick
+  that unit; bulk gear is taken from a bin by quantity. **Check out** moves
+  everything ticked to the project. **Check in** records each unit as OK,
+  damaged or missing; finishing marks whatever is still out as missing.
+- **Share link**: a read-only page for the crew or the venue, no login
+  needed. Revoke it when the job is done.
+- **Packing templates** (Projects › Templates): reusable model lists, also
+  savable from any packing list.
 
 ## Scripts
 

@@ -29,7 +29,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | files | File, Attachment | `files.*`, `AttachmentsSection` |
 | projects | Client, Project, ProjectContact, ProjectCrew, Allocation | `clients`, `projects`, `allocations`, availability engine, timeline |
 | rentals | Rental, RentalLine | `rentals`, `rentalLines`, pricing, agreement PDF |
-| packing | PackingList, PackingLine, PackingCheck, PackingTemplate (Phase 3) | |
+| packing | PackingList, PackingLine, PackingCheck, PackingTemplate, ShareLink | `packingLists`, `packingLines`, `packingChecks`, `packingTemplates`, `shareLinks`, progress/totals logic, pack + check-in modes, list PDF |
 | plans | ProductionPlan, ScheduleEntry, Task, LogisticsEntry, PlanTemplate (Phase 4) | |
 | calendar | CalendarFeedToken, Google sync, outbox handlers | `feedTokens`, `buildFeed`, `syncProject`, `syncRental` |
 | settings | CustomFieldDefinition, Webhook, Outbox admin | `customFieldDefinitions`, `webhooks`, `outboxAdmin` |
@@ -38,6 +38,53 @@ Cross-cutting in `src/lib/`: `activity.ts` (ActivityLog), `asset-tag.ts`
 (Counter-backed tag sequence), `custom-fields.ts` (pure validation),
 `forms.ts` (FormData → zod → FormState), `storage/` (adapter),
 `api/` (REST auth, error mapping, OpenAPI), `auth/` (Auth.js, permissions).
+
+## Data model (Phase 3 additions)
+
+```mermaid
+erDiagram
+  Project ||--o{ PackingList : has
+  PackingList ||--o{ PackingLine : contains
+  PackingLine }o--|| Model : "of"
+  PackingLine }o--o| Item : "specific unit / kit"
+  PackingLine }o--o| Item : "travels in case"
+  PackingLine ||--o{ PackingCheck : "out / in"
+  PackingCheck }o--o| Item : "unit or travel bin"
+  PackingCheck }o--o| User : "checked by"
+  PackingTemplate ||--o{ PackingTemplateLine : contains
+  PackingTemplateLine }o--|| Model : "of"
+  ShareLink }o--o| User : "created by"
+
+  PackingList {
+    string status "draft | checked_out | checked_in"
+    string groupBy "category | case"
+    datetime checkedOutAt
+    datetime checkedInAt
+  }
+  PackingLine {
+    int quantity
+    string itemId "kit or chosen unit"
+    string caseItemId
+  }
+  PackingCheck {
+    string phase "out | in"
+    int quantity "1 for units, n for bulk"
+    string outcome "ok | damaged | missing (in only)"
+    string sourceItemId "bulk: bin it came from"
+  }
+  ShareLink {
+    string targetType "packing_list | plan"
+    string targetId
+    string token
+    datetime expiresAt
+  }
+```
+
+Check-out and check-in are the two state changes that touch inventory:
+ticked units go `on_project` at the project location (kits cascade to
+their contents), bulk quantities become a travel-bin Item; on return
+`ok` sends them home (bulk merges back), `damaged` → `in_repair`,
+`missing` stays at the project with status `missing`.
 
 ## Data model (Phase 2 additions)
 

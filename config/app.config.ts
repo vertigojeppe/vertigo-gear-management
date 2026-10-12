@@ -181,6 +181,28 @@ export const outboxConfig = {
 } as const;
 
 /* ---------------------------------------------------------------------- */
+/* Packing                                                                */
+/* ---------------------------------------------------------------------- */
+
+export const PACKING_STATUSES = [
+  { key: "draft", label: "packingStatus.draft", color: "gray" },
+  { key: "checked_out", label: "packingStatus.checked_out", color: "blue" },
+  { key: "checked_in", label: "packingStatus.checked_in", color: "green" },
+] as const;
+export type PackingStatus = (typeof PACKING_STATUSES)[number]["key"];
+
+/** What can happen to a unit at check-in, and the item status it leads to. */
+export const CHECK_OUTCOMES = [
+  { key: "ok", label: "checkOutcome.ok", itemStatus: "in_house", color: "green" },
+  { key: "damaged", label: "checkOutcome.damaged", itemStatus: "in_repair", color: "amber" },
+  { key: "missing", label: "checkOutcome.missing", itemStatus: "missing", color: "red" },
+] as const;
+export type CheckOutcome = (typeof CHECK_OUTCOMES)[number]["key"];
+
+export const PACKING_GROUPINGS = ["category", "case"] as const;
+export type PackingGrouping = (typeof PACKING_GROUPINGS)[number];
+
+/* ---------------------------------------------------------------------- */
 /* Labels                                                                 */
 /* ---------------------------------------------------------------------- */
 

@@ -11,7 +11,7 @@ external rentals. Full spec: `vertigo-gear-system-prompt.md`. Plan and data
 model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **2 (projects, availability, rentals, calendar) done**. Next: Phase 3 (packing lists, check-out/check-in).
+Current phase: **3 (packing lists, check-out/check-in, share links) done**. Next: Phase 4 (production plans, files, viewers).
 
 ## Stack
 
@@ -127,6 +127,36 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
   (Copenhagen days, stored as UTC midnight); datetimes come from
   `datetime-local` via `zonedInputToDate`.
 
+## Packing lists (Phase 3)
+
+- A `PackingList` belongs to a project and goes `draft → checked_out →
+  checked_in` (`PACKING_STATUSES`). Lines can only change while it is a
+  draft; `canEditLines/canPack/canCheckOut/canCheckIn` in
+  `src/modules/packing/logic.ts` are the only place that knows this.
+- A `PackingLine` is a model + quantity. A plain line of the same model is
+  merged on add. A kit is one line with `itemId = caseItemId = the kit`; its
+  contents are never separate lines (they travel with the case via the
+  inventory status cascade).
+- Progress is derived from `PackingCheck` rows: phase `out` (ticked while
+  packing, one per unit or one per bulk quantity) and phase `in` (outcome
+  `ok | damaged | missing`, `CHECK_OUTCOMES` maps outcome → item status).
+  `lineProgress/listProgress/listTotals` are pure and unit-tested.
+- Check-out moves ticked serialized units to `on_project` at the project
+  location (through `items.changeStatus(..., { viaFlow: true })` so the
+  kit cascade and status log apply). Bulk quantities split a **travel bin**
+  (new Item, new asset tag, `homeLocationId` of the source bin); check-in
+  with `ok` merges it back into the source bin and deletes it when empty.
+- `finishCheckIn` records anything still out as `missing` and closes the
+  list. Lists that are checked out cannot be deleted.
+- Scanning in pack mode (`packingChecks.scan`) finds the open line for the
+  tag's model and ticks it; the result object (`ticked | unknown |
+  not_on_list | error`) drives the message in `PackMode`.
+- `ShareLink` rows (`targetType`, `targetId`, random token) are generic;
+  `/share/packing/[token]` and `?share=<token>` on the PDF route are the
+  Phase 3 consumers. Public pages live under `src/app/share/` outside the
+  app shell, and `proxy.ts` lets `/share/` through without a session.
+- Templates (`PackingTemplate`) hold model lines only, no units or kits.
+
 ## Events, outbox, integrations
 
 - Services call `emitEvent(type, data, { calendar })` (`src/lib/events.ts`)
@@ -182,6 +212,13 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
   patch script to the scratchpad and run it with `node file.js`.
 - Only one `next dev` per project (lock in `.next/dev`). For checks while a
   dev server is already running, `npm run build` + `PORT=3001 npx next start`.
+- A service that needs another module imports `@/modules/<name>/service`
+  (or `/tree`, `/logic`) directly with an eslint-disable comment, not the
+  barrel: barrels re-export server actions, which import next-auth, which
+  does not load under Vitest. Pages and components keep using the barrel.
+- `ActionForm` passes the clicked submit button to `new FormData(form,
+  submitter)`, so buttons with `name="outcome" value="ok"` work like a
+  native submit. Keep that when touching it.
 - Do not use the build-generated global types (`RouteContext`, `PageProps`,
   `LayoutProps`) in source: CI runs `tsc` before `next build`, so they do not
   exist there. Type `params` explicitly: `{ params: Promise<{ id: string }> }`.

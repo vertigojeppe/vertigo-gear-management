@@ -226,7 +226,7 @@ Google Calendar push via outbox, webhooks (first events).
 **Tests:** availability maths, overlap edge cases, rental vs project
 conflicts, idempotent calendar push (mocked API).
 
-### Phase 3 — Packing
+### Phase 3 — Packing ✅ (2026-10-12)
 Packing lists from catalog / kits / templates / previous project, grouping by
 category or case, weight / case / power totals, packing mode with QR scan
 and check-out, check-in with missing/damaged flags, PDF export, share links.

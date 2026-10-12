@@ -20,6 +20,8 @@ model User {
   statusLogs  StatusLog[]
   activity    ActivityLog[]
   files       File[]
+  packingChecks PackingCheck[]
+  shareLinks  ShareLink[]
 
   @@index([role])
 }

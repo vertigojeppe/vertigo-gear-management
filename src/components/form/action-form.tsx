@@ -28,7 +28,9 @@ export function ActionForm({ action, children, ...props }: Props) {
       onSubmit={(e) => {
         e.preventDefault();
         if (pending) return;
-        const formData = new FormData(e.currentTarget);
+        // Include the clicked button's name/value, as a native submit would (e.g. outcome buttons).
+        const submitter = (e.nativeEvent as SubmitEvent).submitter;
+        const formData = new FormData(e.currentTarget, submitter instanceof HTMLButtonElement && submitter.name ? submitter : undefined);
         startTransition(() => action(formData));
       }}
     >
