@@ -140,8 +140,10 @@ const LOCATIONS: LocationSeed[] = [
   { name: "Case row", type: "warehouse", parent: "Warehouse" },
   { name: "Office", type: "warehouse" },
   { name: "AV Service Copenhagen", type: "repair", notes: "Projector and laser service partner" },
-  { name: "Roskilde Festival – Orange stage", type: "project", notes: "Placeholder until projects exist (Phase 2)" },
-  { name: "Nordic Light Rental", type: "renter", notes: "Placeholder until rentals exist (Phase 2)" },
+  // Created here so items can sit on them; the project and rental seeds
+  // adopt them (projectId / renterId) and this seed then leaves them alone.
+  { name: "Roskilde Festival – Orange stage", type: "project" },
+  { name: "Nordic Light Rental", type: "renter" },
 ];
 
 function zoneFor(catPath: string): string {
@@ -186,11 +188,17 @@ export async function seedInventory(prisma: PrismaClient) {
   for (const l of LOCATIONS) {
     const parentId = l.parent ? (locIds.get(l.parent) ?? null) : null;
     const existing = await prisma.location.findFirst({ where: { name: l.name } });
+    const adopted = Boolean(existing?.projectId || existing?.renterId);
     const row = existing
-      ? await prisma.location.update({ where: { id: existing.id }, data: { type: l.type, parentId, notes: l.notes ?? null } })
+      ? adopted
+        ? existing
+        : await prisma.location.update({ where: { id: existing.id }, data: { type: l.type, parentId, notes: l.notes ?? null } })
       : await prisma.location.create({ data: { name: l.name, type: l.type, parentId, notes: l.notes ?? null } });
     locIds.set(l.name, row.id);
   }
+
+  // Older seeds left a "Placeholder until ... (Phase 2)" note on these rows.
+  await prisma.location.updateMany({ where: { notes: { startsWith: "Placeholder until" } }, data: { notes: null } });
 
   // Models and items
   const random = rng(42);
