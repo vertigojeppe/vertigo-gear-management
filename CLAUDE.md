@@ -61,6 +61,10 @@ e2e/                   Playwright specs
 ```
 
 Modules import each other only via `@/modules/<name>` (ESLint-enforced).
+Client components import server actions from `@/modules/<name>/actions`
+and, when they need another module's client component (the rental form
+renders the projects module's `ClientDialog`), from `@/modules/<name>/ui`,
+a second entry that exports components only and never a service.
 
 ## Navigation
 

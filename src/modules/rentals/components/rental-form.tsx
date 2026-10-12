@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { ActionForm } from "@/components/form/action-form";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { CustomFieldDef } from "@/lib/custom-fields";
 import type { FormState } from "@/lib/forms";
 import { appConfig } from "../../../../config/app.config";
+import { ClientDialog } from "@/modules/projects/ui";
 import { saveRental } from "../actions";
 import type { RentalDto } from "../service";
 
@@ -26,20 +27,32 @@ export function RentalForm({ rental, clients, defs }: { rental?: RentalDto; clie
   const v = (name: string, fallback: string | number | null | undefined) =>
     state.values && name in state.values ? state.values[name] : fallback === null || fallback === undefined ? "" : String(fallback);
   const err = state.fieldErrors ?? {};
+  const [clientId, setClientId] = useState(v("clientId", rental?.clientId));
+  const [addedClients, setAddedClients] = useState<ClientOption[]>([]);
+  const clientOptions = [...clients, ...addedClients.filter((a) => !clients.some((c) => c.id === a.id))];
   return (
     <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
       {rental && <input type="hidden" name="id" value={rental.id} />}
       <FormError message={state.error} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="clientId" label={t("client")} error={err.clientId} className="sm:col-span-2">
-          <NativeSelect id="clientId" name="clientId" defaultValue={v("clientId", rental?.clientId)} required>
-            <option value="">—</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </NativeSelect>
+          <div className="flex gap-2">
+            <NativeSelect id="clientId" name="clientId" value={clientId} onChange={(e) => setClientId(e.target.value)} required className="min-w-0 flex-1">
+              <option value="">—</option>
+              {clientOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </NativeSelect>
+            <ClientDialog
+              trigger="inline"
+              onCreated={(c) => {
+                setAddedClients((list) => [...list, c]);
+                setClientId(c.id);
+              }}
+            />
+          </div>
         </Field>
         <Field id="startDate" label={t("startDate")} error={err.startDate}>
           <Input id="startDate" name="startDate" type="date" defaultValue={v("startDate", rental?.startDate)} required />
