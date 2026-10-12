@@ -44,7 +44,7 @@ test.describe("spreadsheet import", () => {
     // Reloading shows the recorded result, not the plan again.
     await page.reload();
     await expect(page.getByText("Import finished.")).toBeVisible();
-    await expect(page.getByText(/0 rentals created/)).toBeVisible();
+    await expect(page.getByText(/0 rentals, /)).toBeVisible();
 
     // The imported gear is in the inventory with its sheet cell as source.
     await page.goto("/inventory");

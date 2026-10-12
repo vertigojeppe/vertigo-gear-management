@@ -7,6 +7,7 @@ import { seedProjects } from "./projects";
 import { seedPacking } from "./packing";
 import { seedContacts } from "./contacts";
 import { seedPlans } from "./plans";
+import { seedPricing } from "./pricing";
 
 // Re-runnable demo data. Every seeder upserts on a stable key so running
 // `npm run db:seed` twice leaves the database in the same state.
@@ -15,6 +16,8 @@ async function main() {
   console.log("Seeding database...");
   const users = await seedUsers(prisma);
   console.log(`  users: ${users.length}`);
+  const rates = await seedPricing(prisma);
+  console.log(`  rate tables: ${rates}`);
   const contacts = await seedContacts(prisma);
   console.log(`  contacts: ${contacts}`);
   const inv = await seedInventory(prisma);

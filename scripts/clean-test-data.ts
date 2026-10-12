@@ -47,6 +47,7 @@ async function main() {
     await prisma.model.deleteMany({ where: { id: { in: ids("models") } } });
     await prisma.location.deleteMany({ where: { id: { in: ids("locations") } } });
     await prisma.contact.deleteMany({ where: { id: { in: ids("contacts") } } });
+    await prisma.rateTable.deleteMany({ where: { id: { in: ids("rateTables") } } });
     for (const id of ids("categories").reverse()) await prisma.category.delete({ where: { id } }).catch(() => undefined);
     await prisma.activityLog.delete({ where: { id: log.id } });
   }

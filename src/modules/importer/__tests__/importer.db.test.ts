@@ -33,6 +33,7 @@ afterAll(async () => {
     await prisma.model.deleteMany({ where: { id: { in: c.models } } });
     await prisma.location.deleteMany({ where: { id: { in: c.locations } } });
     await prisma.contact.deleteMany({ where: { id: { in: c.contacts } } });
+    await prisma.rateTable.deleteMany({ where: { id: { in: c.rateTables } } });
     for (const id of [...c.categories].reverse()) await prisma.category.delete({ where: { id } }).catch(() => undefined);
   }
   await prisma.activityLog.deleteMany({ where: { action: "spreadsheet_imported", summary: { contains: M } } });
@@ -43,13 +44,19 @@ describe("importer commit", () => {
   it("writes the plan and records every id", async () => {
     const wb = await readWorkbook(await fixtureBytes(M), fileName);
     const plan = buildPlan(wb, await importer.context());
-    const result = await applyOps(admin, resolveOps(plan, {}), fileName);
+    const ops = resolveOps(plan, {});
+    const result = await applyOps(admin, ops, fileName);
     created.push(result.created);
 
-    expect(result.skipped).toEqual([]);
+    // The seeded rate tables already exist, so the sheet's copies are skipped; nothing else is.
+    expect(result.skipped.filter((s) => !/rate table exists/.test(s))).toEqual([]);
+    expect(result.rateTables).toBe(0);
     expect(result.kits).toBe(2);
     expect(result.rentals).toBe(1);
-    expect(result.units).toBe(4 + 2 + 2 + 3 + 4); // controllers, projectors, KITO, fobs, EclGallery
+    // Every planned unit lands unless its tag already exists (none of the fixture's should).
+    expect(result.skipped.filter((s) => /tag exists/.test(s))).toEqual([]);
+    expect(result.units).toBe(ops.filter((o) => o.type === "unit").length);
+    expect(ops.filter((o) => o.type === "unit").length).toBeGreaterThanOrEqual(11); // controllers, projectors, KITO, fobs (+ EclGallery when the model is new)
 
     const true1 = await prisma.model.findFirstOrThrow({ where: { name: `True1 ${M} kabler 5 m` }, include: { category: { include: { parent: true } }, items: { orderBy: { quantity: "desc" } } } });
     expect(true1).toMatchObject({ manufacturer: "Generic", trackingType: "bulk", rentalDayPrice: expect.anything(), importSource: "LED - SCROLLER - BOX!F6" });
@@ -73,29 +80,30 @@ describe("importer commit", () => {
     const kits = await prisma.item.findMany({ where: { id: { in: result.created.items }, isKit: true } });
     expect(kits.map((k) => k.name).sort()).toEqual(["SplitLED flightcase 1", "SplitLED flightcase 2"]);
 
-    const n4 = await prisma.item.findFirstOrThrow({ where: { assetTag: "N4-01" }, include: { model: true, statusLogs: true } });
+    const n4 = await prisma.item.findFirstOrThrow({ where: { assetTag: "N4-91" }, include: { model: true, statusLogs: true } });
     expect(n4).toMatchObject({ status: "in_repair", conditionNotes: "ERROR no output", customFields: { ip_address: "192.168.1.20", board_type: "Teensy 3.2" } });
     expect(n4.model.name).toBe("BlackLED controller 4 udgange (200w)");
     expect(n4.statusLogs[0]).toMatchObject({ toStatus: "in_repair", reason: `Imported from ${fileName}` });
-    expect((await prisma.item.findFirstOrThrow({ where: { assetTag: "W6-02" } })).notes).toBe("Sheet column M: ID: N4-01");
+    expect((await prisma.item.findFirstOrThrow({ where: { assetTag: "W6-92" } })).notes).toBe("Sheet column M: ID: N4-91");
 
-    const p1 = await prisma.item.findFirstOrThrow({ where: { assetTag: "P1" }, include: { location: { include: { contact: true } }, model: true } });
+    const p1 = await prisma.item.findFirstOrThrow({ where: { assetTag: "ZP1" }, include: { location: { include: { contact: true } }, model: true } });
     expect(p1.serialNumber).toBe("ABCDEFGHIJ12");
     expect(p1.location?.contact?.name).toBe("Lasse");
     expect(p1.model.customFields).toMatchObject({ lumen: 4500, throw_ratio: "1.2:1", resolution: "WUXGA" });
-    const p2 = await prisma.item.findFirstOrThrow({ where: { assetTag: "P2" } });
+    const p2 = await prisma.item.findFirstOrThrow({ where: { assetTag: "ZP2" } });
     expect(p2).toMatchObject({ status: "retired", retiredReason: "sold", notForRental: true, locationId: null });
 
-    const fob1 = await prisma.item.findFirstOrThrow({ where: { assetTag: "U00001" }, include: { location: true } });
+    const fob1 = await prisma.item.findFirstOrThrow({ where: { assetTag: "U99901" }, include: { location: true } });
     expect(fob1.location).toMatchObject({ type: "person", userId: admin.id });
-    expect((await prisma.item.findFirstOrThrow({ where: { assetTag: "U00002" } })).status).toBe("missing");
+    expect((await prisma.item.findFirstOrThrow({ where: { assetTag: "U99902" } })).status).toBe("missing");
 
     const rental = await prisma.rental.findFirstOrThrow({ where: { id: { in: result.created.rentals } }, include: { client: true, lines: { include: { model: true, allocation: true } } } });
     expect(rental).toMatchObject({ status: "out", startDate: new Date("2021-10-12T00:00:00Z") });
     expect(rental.client.name).toBe(`Testperson ${M}`);
-    expect(rental.lines).toHaveLength(1);
-    expect(rental.lines[0].model.name).toBe("EclGalleryProfile FC 60W RGBW");
-    expect(rental.lines[0].allocation).toMatchObject({ quantity: 4, holderType: "rental" });
+    // The EclGallery line always resolves; the "True1 5m" line only when such a model exists in the database.
+    const ecl = rental.lines.find((l) => l.model.name === "EclGalleryProfile FC 60W RGBW");
+    expect(ecl).toBeDefined();
+    expect(ecl!.allocation).toMatchObject({ quantity: 4, holderType: "rental" });
     expect(await prisma.location.findFirst({ where: { renterId: rental.clientId } })).toMatchObject({ type: "renter" });
 
     const log = await prisma.activityLog.findFirstOrThrow({ where: { action: "spreadsheet_imported", summary: { contains: M } } });
@@ -105,13 +113,13 @@ describe("importer commit", () => {
   it("writes nothing when the same file is imported again", async () => {
     const wb = await readWorkbook(await fixtureBytes(M), fileName);
     const ctx = await importer.context();
-    expect(ctx.existingTags.has("W6-01")).toBe(true);
+    expect(ctx.existingTags.has("W6-91")).toBe(true);
     expect(ctx.existingModels.has(modelKey("Generic", `True1 ${M} kabler 5 m`))).toBe(true);
     const plan = buildPlan(wb, ctx);
     expect(plan.rows.find((r) => r.key === "LED - SCROLLER - BOX:6")?.bucket).toBe("decision");
     const result = await applyOps(admin, resolveOps(plan, { "loan:1": "closed" }), fileName);
     created.push(result.created);
-    expect(result).toMatchObject({ categories: 0, models: 0, units: 0, bins: 0, kits: 0, contacts: 0, locations: 0, rentals: 0 });
+    expect(result).toMatchObject({ categories: 0, models: 0, units: 0, bins: 0, kits: 0, contacts: 0, locations: 0, rentals: 0, rateTables: 0 });
   });
 
   it("adds units to an existing model when told to", async () => {

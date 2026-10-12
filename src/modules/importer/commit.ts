@@ -23,17 +23,18 @@ export type CommitResult = {
   contacts: number;
   locations: number;
   rentals: number;
+  rateTables: number;
   skipped: string[];
   created: CreatedIds;
 };
-export type CreatedIds = { categories: string[]; models: string[]; items: string[]; contacts: string[]; locations: string[]; clients: string[]; rentals: string[] };
+export type CreatedIds = { categories: string[]; models: string[]; items: string[]; contacts: string[]; locations: string[]; clients: string[]; rentals: string[]; rateTables: string[] };
 
 const SPLIT = /^([^|]*)\|(.*)$/;
 
 export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promise<CommitResult> {
   assertCan(actor, "settings.manage");
-  const created: CreatedIds = { categories: [], models: [], items: [], contacts: [], locations: [], clients: [], rentals: [] };
-  const result: CommitResult = { categories: 0, models: 0, units: 0, bins: 0, kits: 0, contacts: 0, locations: 0, rentals: 0, skipped: [], created };
+  const created: CreatedIds = { categories: [], models: [], items: [], contacts: [], locations: [], clients: [], rentals: [], rateTables: [] };
+  const result: CommitResult = { categories: 0, models: 0, units: 0, bins: 0, kits: 0, contacts: 0, locations: 0, rentals: 0, rateTables: 0, skipped: [], created };
   const reason = `Imported from ${fileName}`;
   await prisma.$transaction(
     async (tx) => {
@@ -229,6 +230,17 @@ export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promi
             }
             break;
           }
+          case "rateTable": {
+            if (await tx.rateTable.findFirst({ where: { name: { equals: op.name, mode: "insensitive" } }, select: { id: true } })) {
+              result.skipped.push(`${op.name} (rate table exists)`);
+              break;
+            }
+            const hasDefault = (await tx.rateTable.count({ where: { isDefault: true } })) > 0;
+            const t = await tx.rateTable.create({ data: { name: op.name, isDefault: op.isDefault && !hasDefault, extraRule: op.extraRule, extraFactor: op.extraFactor, notes: op.notes, importSource: op.importSource, tiers: { create: op.tiers } } });
+            created.rateTables.push(t.id);
+            result.rateTables++;
+            break;
+          }
           case "rental": {
             let client = await tx.client.findFirst({ where: { name: { equals: op.clientName, mode: "insensitive" } }, select: { id: true } });
             if (!client) {
@@ -261,7 +273,7 @@ export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promi
           entityType: "settings",
           entityId: "import",
           action: "spreadsheet_imported",
-          summary: `Imported ${fileName}: ${result.categories} categories, ${result.models} models, ${result.units} units, ${result.bins} bins, ${result.kits} cases, ${result.contacts} contacts, ${result.locations} locations, ${result.rentals} rentals`,
+          summary: `Imported ${fileName}: ${result.categories} categories, ${result.models} models, ${result.units} units, ${result.bins} bins, ${result.kits} cases, ${result.contacts} contacts, ${result.locations} locations, ${result.rentals} rentals, ${result.rateTables} rate tables`,
           details: { fileName, skipped: result.skipped, created },
         },
         tx,

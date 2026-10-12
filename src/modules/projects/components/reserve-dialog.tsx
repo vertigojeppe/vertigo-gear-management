@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import { Field, FormError } from "@/components/form/field";
@@ -13,9 +13,9 @@ import { Input } from "@/components/ui/input";
 import { reserve, type ReserveState } from "../actions";
 import { ConflictNotice } from "@/components/conflict-notice";
 
-type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string };
+type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string; rentalDayPrice?: number | null };
 
-export type ReservationEdit = { id: string; modelId: string; quantity: number; startDate: string; endDate: string; note: string | null };
+export type ReservationEdit = { id: string; modelId: string; quantity: number; startDate: string; endDate: string; note: string | null; pricePerDay: number | null; discountPct: number | null };
 
 /** "Reserve gear" / "Edit reservation" dialog with conflict warning + override. */
 export function ReserveDialog({
@@ -39,6 +39,13 @@ export function ReserveDialog({
   const v = (name: string, fallback: string | number | null | undefined) =>
     state.values && name in state.values ? state.values[name] : fallback === null || fallback === undefined ? "" : String(fallback);
   const conflict = state.data?.conflict;
+  const [modelId, setModelId] = useState(v("modelId", existing?.modelId));
+  const [price, setPrice] = useState(v("pricePerDay", existing?.pricePerDay));
+  const pickModel = (id: string) => {
+    setModelId(id);
+    // A new reservation starts from the model's list day price; an edit keeps what was typed.
+    if (!existing) setPrice(String(models.find((m) => m.id === id)?.rentalDayPrice ?? ""));
+  };
 
   return (
     <>
@@ -56,7 +63,7 @@ export function ReserveDialog({
             {existing && <input type="hidden" name="allocationId" value={existing.id} />}
             <FormError message={state.error} />
             <Field id="res-model" label={t("model")} error={err.modelId}>
-              <NativeSelect id="res-model" name="modelId" defaultValue={v("modelId", existing?.modelId)} required>
+              <NativeSelect id="res-model" name="modelId" value={modelId} onChange={(e) => pickModel(e.target.value)} required>
                 <option value="">—</option>
                 {models.map((m) => (
                   <option key={m.id} value={m.id}>
@@ -74,6 +81,14 @@ export function ReserveDialog({
               </Field>
               <Field id="res-to" label={t("to")} error={err.endDate}>
                 <Input id="res-to" name="endDate" type="date" defaultValue={v("endDate", existing?.endDate ?? defaultTo)} required />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field id="res-price" label={t("dayPrice")} help={t("dayPriceHelp")} optional error={err.pricePerDay}>
+                <Input id="res-price" name="pricePerDay" type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
+              </Field>
+              <Field id="res-disc" label={t("lineDiscount")} optional error={err.discountPct}>
+                <Input id="res-disc" name="discountPct" type="number" min="0" max="100" step="0.01" defaultValue={v("discountPct", existing?.discountPct)} />
               </Field>
             </div>
             <Field id="res-note" label={t("note")} optional error={err.note}>

@@ -34,6 +34,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | plans | ProductionPlan, ScheduleEntry, PlanTask, LogisticsEntry, PlanTemplate, PlanTemplateEntry | `plans`, `schedule`, `tasks`, `logistics`, `planTemplates`, template maths, plan + day-sheet PDF, share page |
 | calendar | CalendarFeedToken, Google sync, outbox handlers | `feedTokens`, `buildFeed`, `syncProject`, `syncRental` |
 | settings | CustomFieldDefinition, Webhook, Outbox admin | `customFieldDefinitions`, `webhooks`, `outboxAdmin` |
+| pricing | RateTable, RateTier, ExtraLine (+ quote fields on Project / Rental / Allocation / RentalLine) | `rateTables`, `quotes`, `extraLines`, pure `factorFor` / `quoteTotals`, `quoteFor` (priced view), `renderQuote` (quote + agreement PDF), rate table editor, quote section |
 | importer | nothing of its own (writes inventory, contacts, rentals) | `readWorkbook` (sheets → rows), `buildPlan` / `resolveOps` (pure plan with buckets and decisions), `applyOps` (one transaction), `importer.stash/plan/commit`, upload form + preview |
 
 Cross-cutting in `src/lib/`: `activity.ts` (ActivityLog), `asset-tag.ts`
@@ -83,6 +84,44 @@ erDiagram
     string time "HH:MM"
   }
 ```
+
+## Data model (Phase 6, pricing)
+
+```mermaid
+erDiagram
+  RateTable ||--o{ RateTier : "days → factor"
+  RateTable ||--o{ Project : "chosen or default"
+  RateTable ||--o{ Rental : "chosen or default"
+  Project ||--o{ ExtraLine : ""
+  Rental ||--o{ ExtraLine : ""
+  Project ||--o{ Allocation : "gear lines (pricePerDay, discountPct)"
+  Rental ||--o{ RentalLine : "gear lines (pricePerDay, discountPct)"
+
+  RateTable {
+    string name
+    boolean isDefault
+    string extraRule "none | per_day | per_10_days"
+    decimal extraFactor
+  }
+  RateTier {
+    int days
+    decimal factor
+  }
+  ExtraLine {
+    string description
+    int quantity
+    decimal unitPrice
+    decimal discountPct
+  }
+  Project {
+    int chargeDays "null = window"
+    decimal discountPct
+    string terms
+  }
+```
+
+Line price = day price × factor(charge days) × quantity − line discount;
+extra lines are fixed; document discount, then VAT (`config/app.config.ts`).
 
 ## Data model (spec update, October 2026)
 

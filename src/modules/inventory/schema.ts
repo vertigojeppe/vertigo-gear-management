@@ -38,6 +38,8 @@ export const modelInput = z.object({
   heightCm: optionalNumber,
   depthCm: optionalNumber,
   powerDrawW: optionalNumber.transform((v) => (v === undefined ? undefined : Math.round(v))),
+  /** List rental price per day excl. VAT; the pricing engine multiplies it by the rate-table factor. */
+  rentalDayPrice: optionalNumber,
   notes: optionalText,
   /** Textarea: one link per line as "Label | https://..." or just a URL. */
   linksText: optionalText,

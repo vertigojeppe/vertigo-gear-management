@@ -33,6 +33,8 @@ type ModelSeed = {
   /** Serialized: number of units. Bulk: quantity in the main bin. */
   units: number;
   price?: number;
+  /** Rental day price excl. VAT (default: 1% of the purchase price). */
+  day?: number;
 };
 
 const MODELS: ModelSeed[] = [
@@ -58,7 +60,7 @@ const MODELS: ModelSeed[] = [
   { cat: "Video/Video signal", mfr: "Blackmagic", name: "Smart Videohub 20x20", kg: 3, units: 1, price: 12000 },
   { cat: "Video/Video signal", mfr: "Datapath", name: "Fx4 SDI", kg: 1.2, units: 2, price: 15000 },
   // Lighting
-  { cat: "Lighting/Moving heads", mfr: "Robe", name: "Pointe", kg: 15, watts: 470, units: 8, price: 55000 },
+  { cat: "Lighting/Moving heads", mfr: "Robe", name: "Pointe", kg: 15, watts: 470, units: 8, price: 55000, day: 400 },
   { cat: "Lighting/Moving heads", mfr: "Robe", name: "Esprite", kg: 28, watts: 900, units: 4, price: 95000 },
   { cat: "Lighting/Moving heads", mfr: "Martin", name: "MAC Aura XB", kg: 6.5, watts: 320, units: 12, price: 22000 },
   { cat: "Lighting/Moving heads", mfr: "Ayrton", name: "Diablo", kg: 11, watts: 400, units: 6, price: 65000 },
@@ -218,6 +220,7 @@ export async function seedInventory(prisma: PrismaClient) {
       trackingType: m.tracking ?? "serialized",
       description: m.desc ?? null,
       weightKg: m.kg ?? null,
+      rentalDayPrice: m.day ?? (m.price ? Math.round(m.price / 100) : null),
       widthCm: m.w ?? null,
       heightCm: m.h ?? null,
       depthCm: m.d ?? null,

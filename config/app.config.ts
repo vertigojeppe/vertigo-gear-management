@@ -152,6 +152,14 @@ export const PHASE_DATES: Record<ProjectPhase, { start: string; end?: string }> 
   return: { start: "returnDate" },
 };
 
+/** How a rate table continues beyond its last tier. */
+export const RATE_EXTRA_RULES = [
+  { key: "none", label: "rateExtraRule.none" },
+  { key: "per_day", label: "rateExtraRule.per_day" },
+  { key: "per_10_days", label: "rateExtraRule.per_10_days" },
+] as const;
+export type RateExtraRule = (typeof RATE_EXTRA_RULES)[number]["key"];
+
 export const RENTAL_STATUSES = [
   { key: "reserved", label: "rentalStatus.reserved", color: "gray" },
   { key: "out", label: "rentalStatus.out", color: "purple" },

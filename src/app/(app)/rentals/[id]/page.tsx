@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { modelOptions } from "@/modules/inventory";
+import { QuoteSection, rateTableOptions } from "@/modules/pricing";
 import { AssignUnitForm, DeleteRentalButton, RemoveLineButton, RentalLineDialog, RentalStatusButtons, assignableUnits, rentalDetail } from "@/modules/rentals";
 import { customFieldDefinitions } from "@/modules/settings";
 import { RENTAL_STATUSES, appConfig } from "../../../../../config/app.config";
@@ -19,9 +20,9 @@ export const metadata: Metadata = { title: "Rental" };
 export default async function RentalPage(props: { params: Promise<{ id: string }> }) {
   const actor = await requireActor();
   const { id } = await props.params;
-  const [detail, defs, models] = await Promise.all([rentalDetail(id), customFieldDefinitions.forEntity("rental"), modelOptions()]);
+  const [detail, defs, models, tables] = await Promise.all([rentalDetail(id), customFieldDefinitions.forEntity("rental"), modelOptions(), rateTableOptions()]);
   if (!detail) notFound();
-  const { rental, client, lines, totals } = detail;
+  const { rental, client, lines, quote } = detail;
   const t = await getTranslations("rentals");
   const ts = await getTranslations("rentalStatus");
   const tc = await getTranslations("common");
@@ -29,6 +30,7 @@ export default async function RentalPage(props: { params: Promise<{ id: string }
   const canEdit = can(actor.role, "rentals.write") && rental.status !== "returned";
   const isAdmin = can(actor.role, "users.manage");
   const units = canEdit ? Object.fromEntries(await Promise.all(lines.filter((l) => l.trackingType === "serialized").map(async (l) => [l.id, await assignableUnits(l.modelId, id)] as const))) : {};
+  const gearTotal = lines.reduce((s, l) => s + l.lineTotal, 0);
 
   return (
     <div className="flex flex-col gap-8">
@@ -41,7 +43,7 @@ export default async function RentalPage(props: { params: Promise<{ id: string }
             </StatusPill>
           </span>
         }
-        subtitle={`${formatDate(rental.startDate)} – ${formatDate(rental.endDate)} · ${t("days", { count: totals.days })}${rental.outAt ? ` · ${t("outAt", { date: formatDateTime(rental.outAt) })}` : ""}${rental.returnedAt ? ` · ${t("returnedAt", { date: formatDateTime(rental.returnedAt) })}` : ""}`}
+        subtitle={`${formatDate(rental.startDate)} – ${formatDate(rental.endDate)} · ${t("days", { count: quote.windowDays ?? quote.chargeDays })}${rental.outAt ? ` · ${t("outAt", { date: formatDateTime(rental.outAt) })}` : ""}${rental.returnedAt ? ` · ${t("returnedAt", { date: formatDateTime(rental.returnedAt) })}` : ""}`}
         crumbs={[{ label: t("title"), href: "/rentals" }, { label: client.name }]}
         actions={
           <>
@@ -93,7 +95,7 @@ export default async function RentalPage(props: { params: Promise<{ id: string }
                   <th className="px-3 py-2 font-medium">{t("model")}</th>
                   <th className="px-3 py-2 text-right font-medium">{t("quantity")}</th>
                   <th className="px-3 py-2 text-right font-medium">{t("pricePerDay", { currency: appConfig.currency })}</th>
-                  <th className="px-3 py-2 text-right font-medium">{t("pricePerWeek", { currency: appConfig.currency })}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t("lineDiscount")}</th>
                   <th className="px-3 py-2 text-right font-medium">{t("lineTotal")}</th>
                   <th className="px-3 py-2 font-medium">{t("unit")}</th>
                   {canEdit && <th className="px-3 py-2" />}
@@ -115,7 +117,7 @@ export default async function RentalPage(props: { params: Promise<{ id: string }
                     </td>
                     <td className="px-3 py-2 text-right">{l.quantity}</td>
                     <td className="px-3 py-2 text-right">{l.pricePerDay !== null ? formatMoney(l.pricePerDay) : "–"}</td>
-                    <td className="px-3 py-2 text-right">{l.pricePerWeek !== null ? formatMoney(l.pricePerWeek) : "–"}</td>
+                    <td className="px-3 py-2 text-right">{l.discountPct ? `${l.discountPct}%` : ""}</td>
                     <td className="px-3 py-2 text-right">{formatMoney(l.lineTotal)}</td>
                     <td className="px-3 py-2">
                       {l.trackingType === "serialized" ? (
@@ -135,7 +137,7 @@ export default async function RentalPage(props: { params: Promise<{ id: string }
                     {canEdit && (
                       <td className="px-3 py-2">
                         <span className="flex items-center gap-1">
-                          <RentalLineDialog rentalId={rental.id} models={models} existing={{ id: l.id, modelId: l.modelId, quantity: l.quantity, pricePerDay: l.pricePerDay, pricePerWeek: l.pricePerWeek, note: l.note }} />
+                          <RentalLineDialog rentalId={rental.id} models={models} existing={{ id: l.id, modelId: l.modelId, quantity: l.quantity, pricePerDay: l.pricePerDay, discountPct: l.discountPct, note: l.note }} />
                           <RemoveLineButton id={l.id} rentalId={rental.id} />
                         </span>
                       </td>
@@ -148,21 +150,7 @@ export default async function RentalPage(props: { params: Promise<{ id: string }
                   <td colSpan={4} className="px-3 py-1 text-right text-muted-foreground">
                     {t("subtotal")}
                   </td>
-                  <td className="px-3 py-1 text-right">{formatMoney(totals.subtotal)}</td>
-                  <td colSpan={canEdit ? 2 : 1} />
-                </tr>
-                <tr>
-                  <td colSpan={4} className="px-3 py-1 text-right text-muted-foreground">
-                    {t("vat", { rate: Math.round(appConfig.vatRate * 100) })}
-                  </td>
-                  <td className="px-3 py-1 text-right">{formatMoney(totals.vat)}</td>
-                  <td colSpan={canEdit ? 2 : 1} />
-                </tr>
-                <tr className="font-medium">
-                  <td colSpan={4} className="px-3 py-1 text-right">
-                    {t("total")}
-                  </td>
-                  <td className="px-3 py-1 text-right">{formatMoney(totals.total)}</td>
+                  <td className="px-3 py-1 text-right">{formatMoney(gearTotal)}</td>
                   <td colSpan={canEdit ? 2 : 1} />
                 </tr>
               </tfoot>
@@ -171,6 +159,8 @@ export default async function RentalPage(props: { params: Promise<{ id: string }
         )}
         {canEdit && <p className="text-xs text-muted-foreground">{t("assignHelp")}</p>}
       </section>
+
+      <QuoteSection quote={quote} tables={tables} canEdit={canEdit} showGear={false} pdfHref={`/api/rentals/${rental.id}/agreement.pdf`} />
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-medium">{tc("activity")}</h2>

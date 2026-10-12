@@ -5,9 +5,10 @@ import { dateToString, today } from "@/lib/dates";
 import { appConfig } from "../../../config/app.config";
 import { checkRequest } from "@/modules/projects";
 import { allocationsFor, itemsForModel } from "@/modules/projects";
-import { lineTotal } from "./pricing";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { quoteFor, rentalSubtotals } from "@/modules/pricing/queries";
 import type { RentalFilters } from "./schema";
-import { rentalTotals, toRentalDto, type RentalDto, type RentalLineDto } from "./service";
+import { toRentalDto, type RentalDto, type RentalLineDto } from "./service";
 
 const PAGE = appConfig.pageSize;
 const num = (v: { toNumber(): number } | null) => (v === null ? null : v.toNumber());
@@ -29,15 +30,12 @@ export async function listRentals(filters: RentalFilters): Promise<{ rows: Renta
       orderBy: [{ startDate: "desc" }],
       skip: (filters.page - 1) * PAGE,
       take: PAGE,
-      include: { client: { select: { name: true } }, lines: true },
+      include: { client: { select: { name: true } }, lines: true, extraLines: true },
     }),
   ]);
+  const subtotals = await rentalSubtotals(rows);
   return {
-    rows: rows.map((r) => {
-      const dto = toRentalDto(r);
-      const lines = r.lines.map((l) => ({ quantity: l.quantity, pricePerDay: num(l.pricePerDay), pricePerWeek: num(l.pricePerWeek) }));
-      return { ...dto, clientName: r.client.name, lineCount: r.lines.length, total: rentalTotals(lines, dto.startDate, dto.endDate).subtotal };
-    }),
+    rows: rows.map((r) => ({ ...toRentalDto(r), clientName: r.client.name, lineCount: r.lines.length, total: subtotals.get(r.id) ?? 0 })),
     total,
     page: filters.page,
     pages: Math.max(1, Math.ceil(total / PAGE)),
@@ -45,33 +43,36 @@ export async function listRentals(filters: RentalFilters): Promise<{ rows: Renta
 }
 
 export async function rentalDetail(id: string) {
-  const r = await prisma.rental.findUnique({
-    where: { id },
-    include: {
-      client: true,
-      lines: { include: { model: { select: { id: true, manufacturer: true, name: true, trackingType: true } }, item: { select: { id: true, assetTag: true } } }, orderBy: { createdAt: "asc" } },
-    },
-  });
-  if (!r) return null;
+  const [r, quote] = await Promise.all([
+    prisma.rental.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        lines: { include: { model: { select: { id: true, manufacturer: true, name: true, trackingType: true } }, item: { select: { id: true, assetTag: true } } }, orderBy: { createdAt: "asc" } },
+      },
+    }),
+    quoteFor("rental", id),
+  ]);
+  if (!r || !quote) return null;
   const dto = toRentalDto(r);
   const lines: (RentalLineDto & { available: number; shortfall: number; conflicts: string[] })[] = [];
   for (const l of r.lines) {
     const [items, allocs] = await Promise.all([itemsForModel(l.modelId), allocationsFor(l.modelId)]);
     const alloc = allocs.find((a) => a.holderType === "rental" && a.holderId === id && a.modelId === l.modelId);
     const check = checkRequest(items, allocs, { from: dto.startDate, to: dto.endDate }, l.quantity, alloc ? { allocationId: alloc.id } : undefined);
-    const price = { quantity: l.quantity, pricePerDay: num(l.pricePerDay), pricePerWeek: num(l.pricePerWeek) };
+    const priced = quote.gearLines.find((g) => g.id === l.id);
     lines.push({
       id: l.id,
       modelId: l.modelId,
       modelLabel: `${l.model.manufacturer} ${l.model.name}`,
       trackingType: l.model.trackingType,
       quantity: l.quantity,
-      pricePerDay: price.pricePerDay,
-      pricePerWeek: price.pricePerWeek,
+      pricePerDay: num(l.pricePerDay),
+      discountPct: num(l.discountPct),
       itemId: l.itemId,
       itemTag: l.item?.assetTag ?? null,
       note: l.note,
-      lineTotal: lineTotal(price, dto.startDate, dto.endDate),
+      lineTotal: priced?.net ?? 0,
       available: check.available,
       shortfall: check.shortfall,
       conflicts: [...new Set(check.conflicts.map((c) => c.holderName))],
@@ -81,7 +82,8 @@ export async function rentalDetail(id: string) {
     rental: dto,
     client: r.client,
     lines,
-    totals: rentalTotals(lines, dto.startDate, dto.endDate),
+    quote,
+    totals: quote.totals,
     activity: await activityFor("rental", id, 30),
   };
 }

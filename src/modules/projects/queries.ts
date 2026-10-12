@@ -68,6 +68,8 @@ export type ReservationRow = {
   note: string | null;
   itemId: string | null;
   itemTag: string | null;
+  pricePerDay: number | null;
+  discountPct: number | null;
   /** Availability check for this reservation against everything else. */
   available: number;
   shortfall: number;
@@ -101,6 +103,8 @@ export async function projectDetail(id: string) {
       note: a.note,
       itemId: a.itemId,
       itemTag: a.item?.assetTag ?? null,
+      pricePerDay: a.pricePerDay === null ? null : a.pricePerDay.toNumber(),
+      discountPct: a.discountPct === null ? null : a.discountPct.toNumber(),
       available: check.available,
       shortfall: check.shortfall,
       conflicts: check.conflicts,

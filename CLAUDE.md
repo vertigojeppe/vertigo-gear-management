@@ -11,7 +11,7 @@ external rentals. Full spec: `SPEC.md`; the spreadsheet we migrate from and
 what it implies: `MIGRATION.md`. Plan and data model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **5a (spreadsheet importer) done**. Next: Phase 5b (export, labels, polish, deployment).
+Current phase: **6 (pricing engine, rate tables, quote PDF) done**. Next: Phase 5b (export, labels, polish, deployment), then sub-hire catalog, wish list, purchase records.
 
 ## Stack
 
@@ -231,6 +231,28 @@ a second entry that exports components only and never a service.
   has it), otherwise listed by name. Day sheets include documents pinned
   to that day's entries.
 
+## Pricing (Phase 6)
+
+- `src/modules/pricing`: `engine.ts` is pure (`factorFor`, `gearLinePrice`,
+  `extraLinePrice`, `quoteTotals`, `parseTiers`) and unit-tested against
+  the seeded tables; `service.ts` has `rateTables`, `quotes.setSettings`,
+  `extraLines`; `queries.ts` `quoteFor(kind, id)` builds the priced view
+  of a project (allocations) or rental (lines) that the `QuoteSection`,
+  the rentals list (`rentalSubtotals`) and `renderQuote` all use.
+- Gear lines carry a day-price snapshot (`pricePerDay`, copied from
+  `Model.rentalDayPrice` when the line is created, editable) and
+  `discountPct`; the factor comes from the rate table at render time.
+  Extra lines are fixed amounts. `chargeDays` null = booking window.
+- Rate table rules beyond the last tier: `RATE_EXTRA_RULES` in
+  `config/app.config.ts`. The default table is the fallback; a table in
+  use cannot be deleted. Seed: `prisma/seed/pricing.ts` (also exported as
+  `RATE_TABLE_SEED` for tests); the importer creates the sheet's tables
+  only when none of that name exists.
+- Quote settings and extra-line forms post `holderKind` + `holderId`;
+  permission is `projects.write` or `rentals.write` by kind, rate tables
+  need `settings.manage`. PDFs: `/api/projects/[id]/quote.pdf`,
+  `/api/rentals/[id]/agreement.pdf`.
+
 ## Spreadsheet import (Phase 5a)
 
 - `src/modules/importer`: `parse.ts` (exceljs → plain rows per sheet, every
@@ -308,7 +330,10 @@ a second entry that exports components only and never a service.
   editor tools instead.
 - `items.db.test.ts` hits the real dev database and cleans up after itself.
 - Multi-line text replacements in bash `node -e` break on quoting; write a
-  patch script to the scratchpad and run it with `node file.js`.
+  patch script to the scratchpad and run it with `node file.js`. Files a
+  `git checkout` has touched come back with CRLF on this machine, so a
+  patch script must normalise `\r\n` to `\n` when it reads a file (or
+  its anchors will not match).
 - Only one `next dev` per project (lock in `.next/dev`). For checks while a
   dev server is already running, `npm run build` + `PORT=3001 npx next start`.
 - Absolute URLs shown to people (share links, iCal feed addresses, QR

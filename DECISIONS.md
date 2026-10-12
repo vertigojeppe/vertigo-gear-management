@@ -318,3 +318,29 @@ item (a kit) whose contents travel with it through the packing flow and
 the status cascade, so a second way of saying "it is in case 3" would
 drift. Kits stay the model; the importer creates the SplitLED flightcases
 and Manfrotto bags as empty kits.
+
+## 2026-10-12 — Prices are snapshots on the line, the factor is live
+
+A reservation or rental line copies the model's day price when it is
+created (`pricePerDay`) and keeps it: a quote sent to a client must not
+change because the list price was edited a month later. The rate factor,
+on the other hand, is computed from the table at render time, so fixing a
+tier fixes every open quote. Extra lines (freight, insurance, crew) are
+fixed amounts, deliberately not multiplied by the factor.
+
+## 2026-10-12 — One rate table per document, charge days overridable
+
+The sheet prices "days" loosely (a 3-day show may be charged as 2). So a
+project or rental has `chargeDays`; empty means the booking window. The
+rate table is chosen per document with the default as fallback, and a
+table in use cannot be deleted. Weekly prices were dropped: the Standard
+table's 5–7 day tier is what they expressed.
+
+## 2026-10-12 — Rate tables beyond the last tier
+
+The sheet's three tables continue differently: Standard adds 10% of the
+day-1 price per further day, Theatre and Revised add 0.5 per 10 days. That
+is a rule on the table (`extraRule`, `extraFactor`), not more tiers, so
+a 230-day rental prices the same as the sheet's last row without listing
+every row. Revised has two copies on the sheet that differ at 30 days (3.3
+vs 3.4); 3.3 is used because the +0.5 series continues from it.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import { Field, FormError } from "@/components/form/field";
@@ -16,8 +16,8 @@ import { ConflictNotice } from "@/components/conflict-notice";
 import { appConfig } from "../../../../config/app.config";
 import { assignRentalItem, removeRentalLine, saveRentalLine, type LineState } from "../actions";
 
-type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string };
-type LineEdit = { id: string; modelId: string; quantity: number; pricePerDay: number | null; pricePerWeek: number | null; note: string | null };
+type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string; rentalDayPrice?: number | null };
+type LineEdit = { id: string; modelId: string; quantity: number; pricePerDay: number | null; discountPct: number | null; note: string | null };
 
 export function RentalLineDialog({ rentalId, models, existing }: { rentalId: string; models: ModelOption[]; existing?: LineEdit }) {
   const t = useTranslations("rentals");
@@ -29,6 +29,12 @@ export function RentalLineDialog({ rentalId, models, existing }: { rentalId: str
     state.values && name in state.values ? state.values[name] : fallback === null || fallback === undefined ? "" : String(fallback);
   const currency = appConfig.currency;
   const conflict = state.data?.conflict;
+  const [modelId, setModelId] = useState(v("modelId", existing?.modelId));
+  const [price, setPrice] = useState(v("pricePerDay", existing?.pricePerDay));
+  const pickModel = (id: string) => {
+    setModelId(id);
+    if (!existing) setPrice(String(models.find((m) => m.id === id)?.rentalDayPrice ?? ""));
+  };
   return (
     <>
       <Button variant={existing ? "ghost" : "default"} size={existing ? "xs" : "sm"} onClick={() => setOpen(true)}>
@@ -44,7 +50,7 @@ export function RentalLineDialog({ rentalId, models, existing }: { rentalId: str
             {existing && <input type="hidden" name="lineId" value={existing.id} />}
             <FormError message={state.error} />
             <Field id="line-model" label={t("model")} error={err.modelId}>
-              <NativeSelect id="line-model" name="modelId" defaultValue={v("modelId", existing?.modelId)} required>
+              <NativeSelect id="line-model" name="modelId" value={modelId} onChange={(e) => pickModel(e.target.value)} required>
                 <option value="">—</option>
                 {models.map((m) => (
                   <option key={m.id} value={m.id}>
@@ -58,10 +64,10 @@ export function RentalLineDialog({ rentalId, models, existing }: { rentalId: str
                 <Input id="line-qty" name="quantity" type="number" min="1" step="1" defaultValue={v("quantity", existing?.quantity ?? 1)} required />
               </Field>
               <Field id="line-day" label={t("pricePerDay", { currency })} optional error={err.pricePerDay}>
-                <Input id="line-day" name="pricePerDay" type="number" min="0" step="0.01" defaultValue={v("pricePerDay", existing?.pricePerDay)} />
+                <Input id="line-day" name="pricePerDay" type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
               </Field>
-              <Field id="line-week" label={t("pricePerWeek", { currency })} optional error={err.pricePerWeek}>
-                <Input id="line-week" name="pricePerWeek" type="number" min="0" step="0.01" defaultValue={v("pricePerWeek", existing?.pricePerWeek)} />
+              <Field id="line-disc" label={t("lineDiscount")} optional error={err.discountPct}>
+                <Input id="line-disc" name="discountPct" type="number" min="0" max="100" step="0.01" defaultValue={v("discountPct", existing?.discountPct)} />
               </Field>
             </div>
             <Field id="line-note" label={t("note")} optional error={err.note}>

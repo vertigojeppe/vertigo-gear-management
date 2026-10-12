@@ -1,8 +1,6 @@
 // Public interface of the rentals module.
-export { rentals, rentalLines, rentalTotals, RentalError } from "./service";
+export { rentals, rentalLines, RentalError } from "./service";
 export type { RentalDto, RentalLineDto } from "./service";
-export { lineTotal, totals, unitPriceForDays } from "./pricing";
-export { renderAgreement } from "./agreement-pdf";
 export { listRentals, rentalDetail, assignableUnits, overdueRentals } from "./queries";
 export type { RentalListRow } from "./queries";
 export { rentalInput, rentalLineInput, assignItemInput, rentalFilters } from "./schema";

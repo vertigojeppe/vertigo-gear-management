@@ -17,14 +17,11 @@ These came with the spreadsheet migration notes. The schema groundwork
 (statuses, not-for-rental, person locations, contacts, category-scoped
 fields) is done; the rest waits until production plans have shipped.
 
-- **Pricing engine**: rental day price per model; named, editable rate
-  tables (Standard, Theatre, Revised from `lejefaktor`) mapping days →
-  factor as a step function with a "+X per extra day / 10 days" rule beyond
-  the last tier; line price = day price × factor × quantity; per-line and
-  per-document discount %; free-text lines (freight, insurance, crew);
-  totals excl. and incl. 25% VAT; default terms text.
-- **Quote / rental agreement PDF** from a project or a rental using the
-  pricing engine (replaces the Phase 2 agreement PDF totals).
+- Pricing engine and quote / agreement PDF: shipped as Phase 6. Open
+  follow-ups: a quote number sequence and "quote sent / accepted" state on
+  projects; per-day extra lines (crew per day); editable default terms in
+  Settings instead of the translation text; weekly prices are gone (the
+  rate table covers them).
 - **Sub-hire catalog**: gear partner companies own that we rent in
   (GearGuys' Panasonic lenses); sub-hire lines on a packing list marked
   "rent in from X" with their cost, so list and quote are complete.

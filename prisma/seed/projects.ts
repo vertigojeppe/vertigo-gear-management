@@ -187,8 +187,8 @@ export async function seedProjects(prisma: PrismaClient) {
       deposit: 10000,
       notes: "Atom 20 + 2 hoists for a corporate event in Malmö.",
       lines: [
-        { model: "Atom 20", qty: 1, pricePerDay: 2500, pricePerWeek: 10000, assign: true },
-        { model: "Lodestar D8+ 1 t", qty: 2, pricePerDay: 350, pricePerWeek: 1400, assign: true },
+        { model: "Atom 20", qty: 1, pricePerDay: 2500, assign: true },
+        { model: "Lodestar D8+ 1 t", qty: 2, pricePerDay: 350, assign: true },
       ],
     },
     {
@@ -198,7 +198,7 @@ export async function seedProjects(prisma: PrismaClient) {
       endDate: d(18),
       deposit: 5000,
       notes: "Weekend rental: 6 Pointes with cases.",
-      lines: [{ model: "Pointe", qty: 6, pricePerDay: 400, pricePerWeek: 1600 }],
+      lines: [{ model: "Pointe", qty: 6, pricePerDay: 400 }],
     },
   ];
   let rentalCount = 0;
@@ -224,7 +224,7 @@ export async function seedProjects(prisma: PrismaClient) {
       const model = await prisma.model.findFirst({ where: { name: l.model } });
       if (!model) continue;
       let line = await prisma.rentalLine.findFirst({ where: { rentalId: rental.id, modelId: model.id } });
-      if (!line) line = await prisma.rentalLine.create({ data: { rentalId: rental.id, modelId: model.id, quantity: l.qty, pricePerDay: l.pricePerDay, pricePerWeek: l.pricePerWeek } });
+      if (!line) line = await prisma.rentalLine.create({ data: { rentalId: rental.id, modelId: model.id, quantity: l.qty, pricePerDay: l.pricePerDay } });
       const alloc = await prisma.allocation.findFirst({ where: { rentalLineId: line.id } });
       if (!alloc) await prisma.allocation.create({ data: { holderType: "rental", rentalId: rental.id, rentalLineId: line.id, modelId: model.id, quantity: l.qty, startDate: data.startDate, endDate: data.endDate } });
       if ((l as { assign?: boolean }).assign && r.status === "out") {
