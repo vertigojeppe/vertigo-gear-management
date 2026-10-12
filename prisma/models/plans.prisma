@@ -1,0 +1,107 @@
+// plans module — production plans (Phase 4). Documents, drawings and
+// markup come in Phase 4b and will hang off ScheduleEntry / PlanTask.
+
+/// One plan per project: schedule, tasks, logistics. Crew and contacts
+/// live on the project itself and are shown inside the plan.
+model ProductionPlan {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  notes     String?
+  schedule  ScheduleEntry[]
+  tasks     PlanTask[]
+  logistics LogisticsEntry[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// "Rig truss, Tuesday 10:00–16:00, stage left, Mikkel".
+model ScheduleEntry {
+  id            String         @id @default(cuid())
+  planId        String
+  plan          ProductionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  /// Copenhagen wall-clock stored as UTC.
+  startsAt      DateTime
+  durationMin   Int?
+  title         String
+  location      String?
+  responsibleId String?
+  responsible   User?          @relation(fields: [responsibleId], references: [id], onDelete: SetNull)
+  notes         String?
+  sortOrder     Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([planId, startsAt])
+}
+
+/// To-do with assignee, due date and done state, grouped by phase.
+model PlanTask {
+  id         String         @id @default(cuid())
+  planId     String
+  plan       ProductionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  /// Key from PLAN_PHASES in config/app.config.ts.
+  phase      String         @default("pre_production")
+  title      String
+  assigneeId String?
+  assignee   User?          @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  dueDate    DateTime?      @db.Date
+  done       Boolean        @default(false)
+  doneAt     DateTime?
+  notes      String?
+  sortOrder  Int            @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([planId, phase])
+}
+
+/// Vehicles, parking, loading dock, hotel, travel.
+model LogisticsEntry {
+  id        String         @id @default(cuid())
+  planId    String
+  plan      ProductionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  /// Key from LOGISTICS_KINDS in config/app.config.ts.
+  kind      String         @default("other")
+  title     String
+  details   String?
+  at        DateTime?
+  sortOrder Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([planId])
+}
+
+/// Reusable plan: entries relative to an anchor day (load-in = day 0).
+model PlanTemplate {
+  id          String              @id @default(cuid())
+  name        String
+  description String?
+  entries     PlanTemplateEntry[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model PlanTemplateEntry {
+  id            String       @id @default(cuid())
+  templateId    String
+  template      PlanTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  /// "schedule" | "task" | "logistics"
+  kind          String
+  /// Days relative to the anchor date (-1 = the day before load-in).
+  dayOffset     Int          @default(0)
+  /// "HH:MM" for schedule and logistics entries.
+  time          String?
+  durationMin   Int?
+  title         String
+  location      String?
+  /// Tasks: key from PLAN_PHASES.
+  phase         String?
+  /// Logistics: key from LOGISTICS_KINDS.
+  logisticsKind String?
+  notes         String?
+  sortOrder     Int          @default(0)
+
+  @@index([templateId])
+}

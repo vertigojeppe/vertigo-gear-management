@@ -236,3 +236,31 @@ resolved `categoryIds` so forms filter client-side as the category or model
 changes, and actions validate against the applicable set only. The unique
 key is (entity, categoryId, key), so "length" can exist on both truss and
 cables.
+
+## 2026-10-12 — One production plan per project
+
+A plan is the project's operational side, not a separate entity people
+pick from a list. `ProductionPlan.projectId` is unique and the plan is
+created when someone first opens it (optionally from a template), so the
+project page always has exactly one place to click.
+
+## 2026-10-12 — Plan templates are relative to an anchor day
+
+Template entries carry a day offset from an anchor (load-in = day 0) plus a
+time of day. Applying a template asks for the anchor date (defaults to the
+project's load-in) and dates every entry from it; saving a plan as a
+template does the inverse. This keeps templates reusable across projects
+with different dates without a second "relative schedule" model.
+
+## 2026-10-12 — Crew and contacts stay on the project
+
+The plan shows the project's crew (with call times) and contacts rather
+than owning copies. One list to maintain, and the packing list, calendar
+feed and plan all agree on who is on the job.
+
+## 2026-10-12 — Files and markup split into Phase 4b
+
+The October spec update splits production plans into plans (schedule,
+tasks, logistics, templates, PDFs) and documents (uploads with versions,
+viewers, 3D, markup). Phase 4 ships the first half so the team can run
+shows from it now; 4b adds files on top of the same entries.

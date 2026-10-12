@@ -242,10 +242,19 @@ fields with the seeded field sets. Deferred to after Phase 4 (see
 `BACKLOG.md`): pricing engine and rate tables, quote PDF, sub-hire catalog,
 wish list, purchase records. The spreadsheet importer waits for the file.
 
-### Phase 4 — Production plans
-Schedule, tasks, crew & contacts, logistics, documents with versions,
-resumable upload, image / PDF / 3D inline viewers, markup layer, pin files
-to entries, plan templates, day sheet and full plan PDF including markups.
+### Phase 4 — Production plans ✅ (2026-10-12)
+One plan per project: day-by-day schedule (time, duration, place, who),
+tasks by phase with assignee, due date and done state, crew & contacts from
+the project, logistics (vehicles, parking, dock, hotel, travel), plan
+templates relative to the load-in day (apply / save as), day sheet and full
+plan PDF, read-only share link.
+**Tests:** template date maths and round trip, day grouping, task order and
+progress, plan lifecycle (DB), PDF smoke, browser flow.
+
+### Phase 4b — Documents, drawings, 3D, markup
+Files with versions and resumable upload, image / PDF / 3D inline viewers,
+markup layer, pin files to schedule entries and tasks, markups in the plan
+PDF.
 **Tests:** file versioning, markup persistence, PDF export smoke.
 
 ### Phase 5 — Import / export, labels, polish

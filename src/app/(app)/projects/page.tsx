@@ -39,6 +39,9 @@ export default async function ProjectsPage(props: { searchParams: Promise<Record
             <Link href="/projects/packing-templates" className={buttonVariants({ variant: "outline" })}>
               {t("templates")}
             </Link>
+            <Link href="/projects/plan-templates" className={buttonVariants({ variant: "outline" })}>
+              {t("planTemplates")}
+            </Link>
             {canEdit && (
               <Link href="/projects/new" className={buttonVariants()}>
                 {t("newProject")}

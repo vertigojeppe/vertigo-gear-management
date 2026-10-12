@@ -82,6 +82,15 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
   needed. Revoke it when the job is done.
 - **Packing templates** (Projects › Templates): reusable model lists, also
   savable from any packing list.
+- **Production plan** (project page › Production plan): a day-by-day
+  schedule with times, places and who is responsible; tasks by phase with
+  assignee, due date and a big Done button; the project's crew with call
+  times and its contacts; logistics such as vans, parking, dock info and
+  hotels. Print a **day sheet** per day or the whole plan, and share a
+  read-only link with the crew.
+- **Plan templates** (Projects › Plan templates): a whole plan relative to
+  the load-in day, applied to a project in one go; any plan can be saved
+  as one.
 
 ## Scripts
 

@@ -7,7 +7,8 @@ when something ships or stops mattering.
 
 - Phase 1: inventory core
 - Phase 2: projects, availability engine, rentals, calendar
-- Phase 4: production plans, files, 3D viewer, markup
+- Phase 4b: documents with versions, resumable upload, image / PDF / 3D
+  viewers, markup layer, files pinned to schedule entries and tasks
 - Phase 5: import/export, labels, polish, deployment docs
 
 ## After Phase 4 (from the October 2026 spec update, see SPEC.md and MIGRATION.md)
@@ -54,6 +55,10 @@ fields) is done; the rest waits until production plans have shipped.
 - Low-stock warnings for bulk items (consumables like gaffer, cable ties).
 - Barcode (Code128) as an alternative to QR on labels.
 - Share links with an expiry date (the column exists, no UI yet).
+- Tasks on the dashboard: "my open tasks" and "due this week" across plans.
+- Call times per crew member straight from the plan (today: on the project).
+- Reorder schedule entries by drag; today ties sort by creation.
+- Plan PDF with per-user pages (only my schedule and tasks).
 - Scan tags in check-in mode too (today: tick buttons per unit).
 - Print a label for a travel bin straight from the packing list.
 - Case contents as a nested view when packing a kit (today: one line).

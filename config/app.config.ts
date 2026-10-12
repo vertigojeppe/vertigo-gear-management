@@ -251,3 +251,18 @@ export const fileConfig = {
     model3d: [".glb", ".gltf", ".obj", ".stl"],
   },
 } as const;
+
+/* ---------------------------------------------------------------------- */
+/* Production plans                                                       */
+/* ---------------------------------------------------------------------- */
+
+/** Task phases, in display order. */
+export const PLAN_PHASES = ["pre_production", "build", "show", "post"] as const;
+export type PlanPhase = (typeof PLAN_PHASES)[number];
+
+export const LOGISTICS_KINDS = ["vehicle", "parking", "loading", "hotel", "travel", "other"] as const;
+export type LogisticsKind = (typeof LOGISTICS_KINDS)[number];
+
+/** What a plan template entry becomes when applied. */
+export const PLAN_ENTRY_KINDS = ["schedule", "task", "logistics"] as const;
+export type PlanEntryKind = (typeof PLAN_ENTRY_KINDS)[number];
