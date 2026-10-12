@@ -10,6 +10,7 @@ import type { CategoryInput, ItemInput, LocationInput, ModelInput, StatusChangeI
 import { parseLinksText } from "./schema";
 import { validateStatusChange } from "./status";
 import { descendantIds, wouldCycle } from "./tree";
+import { modelLabel } from "@/lib/format";
 
 export class InventoryError extends Error {
   constructor(
@@ -212,7 +213,7 @@ export const models = {
       entityType: "model",
       entityId: m.id,
       action: "created",
-      summary: `Created model ${m.manufacturer} ${m.name}`,
+      summary: `Created model ${modelLabel(m)}`,
     });
     return toModelDto(m);
   },
@@ -230,7 +231,7 @@ export const models = {
       entityType: "model",
       entityId: m.id,
       action: "updated",
-      summary: `Updated model ${m.manufacturer} ${m.name}`,
+      summary: `Updated model ${modelLabel(m)}`,
       details: diffFields(toModelDto(before) as unknown as Record<string, unknown>, toModelDto(m) as unknown as Record<string, unknown>),
     });
     return toModelDto(m);
@@ -243,7 +244,7 @@ export const models = {
       entityType: "model",
       entityId: id,
       action: archived ? "archived" : "unarchived",
-      summary: `${archived ? "Archived" : "Unarchived"} model ${m.manufacturer} ${m.name}`,
+      summary: `${archived ? "Archived" : "Unarchived"} model ${modelLabel(m)}`,
     });
     return toModelDto(m);
   },
@@ -258,7 +259,7 @@ export const models = {
     const count = await prisma.item.count({ where: { modelId: id } });
     if (count > 0) throw new InventoryError("This model has items. Archive it instead.");
     const m = await prisma.model.delete({ where: { id } });
-    await logActivity(actor, { entityType: "model", entityId: id, action: "deleted", summary: `Deleted model ${m.manufacturer} ${m.name}` });
+    await logActivity(actor, { entityType: "model", entityId: id, action: "deleted", summary: `Deleted model ${modelLabel(m)}` });
   },
 };
 
@@ -419,7 +420,7 @@ export const items = {
             entityType: "item",
             entityId: row.id,
             action: "created",
-            summary: `Added ${itemLabel(row)} (${model.manufacturer} ${model.name})`,
+            summary: `Added ${itemLabel(row)} (${modelLabel(model)})`,
           },
           tx,
         );

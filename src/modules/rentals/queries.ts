@@ -9,6 +9,7 @@ import { allocationsFor, itemsForModel } from "@/modules/projects";
 import { quoteFor, rentalSubtotals } from "@/modules/pricing/queries";
 import type { RentalFilters } from "./schema";
 import { toRentalDto, type RentalDto, type RentalLineDto } from "./service";
+import { modelLabel } from "@/lib/format";
 
 const PAGE = appConfig.pageSize;
 const num = (v: { toNumber(): number } | null) => (v === null ? null : v.toNumber());
@@ -64,7 +65,7 @@ export async function rentalDetail(id: string) {
     lines.push({
       id: l.id,
       modelId: l.modelId,
-      modelLabel: `${l.model.manufacturer} ${l.model.name}`,
+      modelLabel: `${modelLabel(l.model)}`,
       trackingType: l.model.trackingType,
       quantity: l.quantity,
       pricePerDay: num(l.pricePerDay),

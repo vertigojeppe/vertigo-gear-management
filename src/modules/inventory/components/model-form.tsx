@@ -47,8 +47,8 @@ export function ModelForm({
       <FormError message={state.error} />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="manufacturer" label={t("manufacturer")} error={err.manufacturer}>
-          <Input id="manufacturer" name="manufacturer" defaultValue={v("manufacturer", model?.manufacturer)} required autoFocus={!model} />
+        <Field id="manufacturer" label={t("manufacturer")} help={t("manufacturerHelp")} optional error={err.manufacturer}>
+          <Input id="manufacturer" name="manufacturer" defaultValue={v("manufacturer", model?.manufacturer)} autoFocus={!model} />
         </Field>
         <Field id="name" label={t("modelName")} error={err.name}>
           <Input id="name" name="name" defaultValue={v("name", model?.name)} required />

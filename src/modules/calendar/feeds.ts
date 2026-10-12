@@ -3,6 +3,7 @@ import ical, { ICalCalendarMethod } from "ical-generator";
 import { prisma } from "@/lib/db";
 import { addDays, dateToString } from "@/lib/dates";
 import { appConfig, PHASE_DATES, PROJECT_PHASES } from "../../../config/app.config";
+import { modelLabel } from "@/lib/format";
 
 /**
  * Read-only iCal feeds with secret tokens. Users subscribe to the URL in
@@ -84,7 +85,7 @@ export async function buildFeed(scope: FeedScope, userId: string | null): Promis
         end: new Date(`${addDays(dateToString(r.endDate), 1)}T00:00:00Z`),
         allDay: true,
         summary: `Rental – ${r.client.name}`,
-        description: `${r.lines.map((l) => `${l.quantity}× ${l.model.manufacturer} ${l.model.name}`).join("\n")}\n${url}`,
+        description: `${r.lines.map((l) => `${l.quantity}× ${modelLabel(l.model)}`).join("\n")}\n${url}`,
         url,
       });
     }

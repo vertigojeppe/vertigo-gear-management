@@ -8,6 +8,7 @@ import { emitEvent } from "@/lib/events";
 import { PROJECT_STATUSES, type ProjectStatus } from "../../../config/app.config";
 import { checkRequest, type AllocationLike, type Availability } from "./availability";
 import { linksToText, parseLinks, type AllocationInput, type ClientInput, type ContactInput, type CrewInput, type Link, type ProjectInput } from "./schema";
+import { modelLabel } from "@/lib/format";
 
 export { linksToText };
 export type { Link };
@@ -362,7 +363,7 @@ export const allocations = {
       entityType: "project",
       entityId: projectId,
       action: "reserved",
-      summary: `Reserved ${row.quantity}× ${row.model.manufacturer} ${row.model.name} (${input.startDate} – ${input.endDate})${check.ok ? "" : " despite a conflict"}`,
+      summary: `Reserved ${row.quantity}× ${modelLabel(row.model)} (${input.startDate} – ${input.endDate})${check.ok ? "" : " despite a conflict"}`,
     });
     void project;
     return { allocation: row, check };
@@ -391,7 +392,7 @@ export const allocations = {
       entityType: "project",
       entityId: existing.projectId ?? existing.rentalId ?? "",
       action: "reservation_updated",
-      summary: `Updated reservation: ${row.quantity}× ${row.model.manufacturer} ${row.model.name} (${input.startDate} – ${input.endDate})`,
+      summary: `Updated reservation: ${row.quantity}× ${modelLabel(row.model)} (${input.startDate} – ${input.endDate})`,
     });
     return { allocation: row, check };
   },
@@ -403,7 +404,7 @@ export const allocations = {
       entityType: "project",
       entityId: row.projectId ?? row.rentalId ?? "",
       action: "reservation_removed",
-      summary: `Removed reservation ${row.quantity}× ${row.model.manufacturer} ${row.model.name}`,
+      summary: `Removed reservation ${row.quantity}× ${modelLabel(row.model)}`,
     });
   },
 };

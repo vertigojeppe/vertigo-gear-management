@@ -11,7 +11,7 @@ import { applicableDefs } from "@/lib/custom-fields";
 import { StatusBadge } from "@/components/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
-import { formatNumber, formatMoney } from "@/lib/format";
+import { formatNumber, formatMoney, modelLabel } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
 import { inventoryActions, modelDetail } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
@@ -34,7 +34,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
   const tc = await getTranslations("common");
   const ts = await getTranslations("itemStatus");
   const canEdit = can(actor.role, "inventory.write");
-  const label = `${model.manufacturer} ${model.name}`;
+  const label = `${modelLabel(model)}`;
 
   const specs: [string, string][] = [];
   if (model.weightKg !== null) specs.push([t("weightKg"), formatNumber(model.weightKg, 3)]);

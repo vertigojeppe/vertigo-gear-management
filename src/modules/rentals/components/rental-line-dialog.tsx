@@ -15,6 +15,7 @@ import type { FormState } from "@/lib/forms";
 import { ConflictNotice } from "@/components/conflict-notice";
 import { appConfig } from "../../../../config/app.config";
 import { assignRentalItem, removeRentalLine, saveRentalLine, type LineState } from "../actions";
+import { modelLabel } from "@/lib/format";
 
 type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string; rentalDayPrice?: number | null };
 type LineEdit = { id: string; modelId: string; quantity: number; pricePerDay: number | null; discountPct: number | null; note: string | null };
@@ -54,7 +55,7 @@ export function RentalLineDialog({ rentalId, models, existing }: { rentalId: str
                 <option value="">—</option>
                 {models.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.manufacturer} {m.name}
+                    {modelLabel(m)}
                   </option>
                 ))}
               </NativeSelect>

@@ -29,7 +29,8 @@ export const linkSchema = z.object({ label: z.string().trim().min(1).max(100), u
 
 export const modelInput = z.object({
   categoryId: z.string().min(1, "Choose a category."),
-  manufacturer: z.string().trim().min(1, "Manufacturer is required.").max(100),
+  /** Empty for own-built gear (BlackLED, SplitLED, cases): the label is then just the name. */
+  manufacturer: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().max(100).optional()).transform((v) => v ?? ""),
   name: z.string().trim().min(1, "Model name is required.").max(150),
   trackingType: z.enum(TRACKING_TYPES),
   description: optionalText,

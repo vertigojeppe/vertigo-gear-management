@@ -205,7 +205,8 @@
     "staff": "Staff",
     "contactsGroup": "Contacts",
     "rentalDayPrice": "Rental day price ({currency})",
-    "rentalDayPriceHelp": "List price per day excl. VAT. Quotes multiply it by the rate-table factor."
+    "rentalDayPriceHelp": "List price per day excl. VAT. Quotes multiply it by the rate-table factor.",
+    "manufacturerHelp": "Leave empty for gear we build ourselves and for generic parts (cables, rods); the name alone is the label."
   },
   "itemStatus": {
     "in_house": "In house",

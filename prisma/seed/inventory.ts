@@ -1,5 +1,5 @@
 import type { PrismaClient } from "../../src/generated/prisma/client";
-import { formatAssetTag } from "../../src/lib/asset-tag";
+import { formatAssetTag, nextAssetTag } from "../../src/lib/asset-tag";
 
 /**
  * Realistic demo inventory for a Copenhagen light/laser/projection studio.
@@ -48,7 +48,7 @@ const MODELS: ModelSeed[] = [
   { cat: "Video/Projectors/Lamp projectors", mfr: "Panasonic", name: "ET-DLE085 lens 0.8", kg: 1.5, units: 3, price: 12000 },
   { cat: "Video/Projectors/Lamp projectors", mfr: "Panasonic", name: "ET-DLE250 lens 2.3-3.6", kg: 1.3, units: 2, price: 14000 },
   { cat: "Video/Media servers", mfr: "disguise", name: "vx 2", kg: 16, watts: 650, units: 1, price: 180000, desc: "4K media server, 4 outputs" },
-  { cat: "Video/Media servers", mfr: "Vertigo", name: "Resolume server (custom)", kg: 14, watts: 600, units: 2, price: 45000, desc: "Ryzen 9 / RTX 4080, Resolume Arena 7" },
+  { cat: "Video/Media servers", mfr: "", name: "Resolume server (custom)", kg: 14, watts: 600, units: 2, price: 45000, desc: "Ryzen 9 / RTX 4080, Resolume Arena 7" },
   { cat: "Video/Media servers", mfr: "Dataton", name: "WATCHPAX 60", kg: 3, watts: 120, units: 2, price: 52000 },
   { cat: "Video/Media servers", mfr: "Blackmagic", name: "UltraStudio 4K Mini", kg: 1, units: 2, price: 8000 },
   { cat: "Video/LED walls", mfr: "ROE Visual", name: "Black Pearl BP2 panel", tracking: "bulk", kg: 8, w: 50, h: 50, d: 7, watts: 150, units: 60, price: 9000, desc: "2.84 mm indoor LED panel" },
@@ -99,7 +99,7 @@ const MODELS: ModelSeed[] = [
   { cat: "Rigging/Clamps & hardware", mfr: "Doughty", name: "Trigger clamp", tracking: "bulk", kg: 0.6, units: 60, price: 260 },
   { cat: "Rigging/Clamps & hardware", mfr: "Generic", name: "Safety wire 3 mm 1 m", tracking: "bulk", kg: 0.2, units: 150, price: 90 },
   { cat: "Rigging/Motors & hoists", mfr: "CM", name: "Lodestar D8+ 1 t", kg: 60, watts: 1100, units: 4, price: 32000 },
-  { cat: "Rigging/Motors & hoists", mfr: "Vertigo", name: "Motor controller 4-way", kg: 12, units: 1, price: 18000 },
+  { cat: "Rigging/Motors & hoists", mfr: "", name: "Motor controller 4-way", kg: 12, units: 1, price: 18000 },
   { cat: "Rigging/Stands", mfr: "Manfrotto", name: "Wind-up stand 087NWB", kg: 11, units: 6, price: 2800 },
   // Cables
   { cat: "Cables/Power", mfr: "Neutrik", name: "powerCON TRUE1 link 5 m", tracking: "bulk", kg: 0.8, units: 40, price: 350 },
@@ -118,10 +118,10 @@ const MODELS: ModelSeed[] = [
   { cat: "Cables/Signal/XLR", mfr: "Generic", name: "XLR 3-pin 5 m", tracking: "bulk", kg: 0.3, units: 30, price: 150 },
   { cat: "Cables/Signal/XLR", mfr: "Generic", name: "XLR 3-pin 10 m", tracking: "bulk", kg: 0.5, units: 20, price: 220 },
   // Cases
-  { cat: "Cases & storage", mfr: "Vertigo", name: "Flight case 120×60×60", kg: 28, w: 120, h: 60, d: 60, units: 6, price: 6500 },
-  { cat: "Cases & storage", mfr: "Vertigo", name: "Flight case 80×60×50", kg: 20, w: 80, h: 60, d: 50, units: 6, price: 5000 },
+  { cat: "Cases & storage", mfr: "", name: "Flight case 120×60×60", kg: 28, w: 120, h: 60, d: 60, units: 6, price: 6500 },
+  { cat: "Cases & storage", mfr: "", name: "Flight case 80×60×50", kg: 20, w: 80, h: 60, d: 50, units: 6, price: 5000 },
   { cat: "Cases & storage", mfr: "Peli", name: "1650", kg: 11, w: 80, h: 52, d: 32, units: 4, price: 3500 },
-  { cat: "Cases & storage", mfr: "Vertigo", name: "Cable trunk 100×60", kg: 25, units: 4, price: 5500 },
+  { cat: "Cases & storage", mfr: "", name: "Cable trunk 100×60", kg: 25, units: 4, price: 5500 },
   // Computers & networking
   { cat: "Computers & networking", mfr: "Apple", name: "MacBook Pro 16 M3 Max", kg: 2.2, units: 2, price: 42000 },
   { cat: "Computers & networking", mfr: "Netgear", name: "GS308 switch", kg: 0.5, units: 4, price: 450 },
@@ -267,6 +267,12 @@ export async function seedInventory(prisma: PrismaClient) {
     await prisma.counter.upsert({ where: { key: "asset_tag" }, create: { key: "asset_tag", value: tagNo }, update: { value: tagNo } });
   }
 
+  // The counter must sit past the highest tag in the database, including
+  // tags created by earlier seed runs or by users since.
+  const allTags = await prisma.item.findMany({ select: { assetTag: true } });
+  const highest = allTags.reduce((max, { assetTag }) => Math.max(max, Number(assetTag.split("-").pop()) || 0), tagNo);
+  await prisma.counter.upsert({ where: { key: "asset_tag" }, create: { key: "asset_tag", value: highest }, update: { value: { set: highest } } });
+
   // Kits: three cases with real contents.
   const byModel = (name: string) => createdItems.find((c) => c.modelName === name)?.ids ?? [];
   const caseIds = byModel("Flight case 120×60×60");
@@ -285,24 +291,21 @@ export async function seedInventory(prisma: PrismaClient) {
       await prisma.item.update({ where: { id }, data: { parentItemId: kit.id, locationId: kit.locationId } });
     }
     for (const b of k.bulk ?? []) {
-      const model = await prisma.model.findFirst({ where: { name: b.modelName } });
+      // The seed's own model (same manufacturer + name), not an imported one that happens to share the name.
+      const seedModel = MODELS.find((x) => x.name === b.modelName);
+      const model = await prisma.model.findFirst({ where: { manufacturer: seedModel?.mfr ?? "", name: b.modelName } });
       if (!model) continue;
       const existingBin = await prisma.item.findFirst({ where: { modelId: model.id, parentItemId: kit.id } });
       if (existingBin) continue;
       const mainBin = await prisma.item.findFirst({ where: { modelId: model.id, parentItemId: null } });
-      tagNo++;
+      // A fresh tag from the counter, which now sits past every tag in the database (imported ones included).
       await prisma.item.create({
-        data: { modelId: model.id, assetTag: formatAssetTag(tagNo), quantity: b.qty, status: "in_house", locationId: kit.locationId, parentItemId: kit.id, statusLogs: { create: { toStatus: "in_house", reason: "Imported" } } },
+        data: { modelId: model.id, assetTag: await nextAssetTag(prisma), quantity: b.qty, status: "in_house", locationId: kit.locationId, parentItemId: kit.id, statusLogs: { create: { toStatus: "in_house", reason: "Imported" } } },
       });
       if (mainBin) await prisma.item.update({ where: { id: mainBin.id }, data: { quantity: Math.max(0, mainBin.quantity - b.qty) } });
       itemCount++;
     }
   }
-  // The counter must sit past the highest tag in the database, including
-  // tags created by earlier seed runs or by users since.
-  const allTags = await prisma.item.findMany({ select: { assetTag: true } });
-  const highest = allTags.reduce((max, { assetTag }) => Math.max(max, Number(assetTag.split("-").pop()) || 0), tagNo);
-  await prisma.counter.upsert({ where: { key: "asset_tag" }, create: { key: "asset_tag", value: highest }, update: { value: { set: highest } } });
 
   // A few items in other statuses so the dashboard has something to show.
   const admin = await prisma.user.findFirst({ where: { role: "admin" } });

@@ -4,6 +4,7 @@ import { pathNames } from "@/modules/inventory/tree";
 import type { PackingStatus } from "../../../config/app.config";
 import { lineProgress, listProgress, listTotals, type LineProgress } from "./logic";
 import type { CatalogEntry } from "./picker";
+import { modelLabel } from "@/lib/format";
 
 const num = (v: { toNumber(): number } | null) => (v === null ? null : v.toNumber());
 
@@ -115,7 +116,7 @@ export async function listDetail(listId: string) {
     lines.push({
       id: l.id,
       modelId: l.modelId,
-      modelLabel: `${l.model.manufacturer} ${l.model.name}`,
+      modelLabel: `${modelLabel(l.model)}`,
       trackingType: tracking,
       categoryPath: path,
       categoryTop: path[0] ?? "",
@@ -125,7 +126,7 @@ export async function listDetail(listId: string) {
       itemTag: l.item?.assetTag ?? null,
       itemName: l.item?.name ?? null,
       isKit: l.item?.isKit ?? false,
-      kitContents: (l.item?.contents ?? []).map((c) => ({ id: c.id, assetTag: c.assetTag, label: `${c.model.manufacturer} ${c.model.name}`, quantity: c.quantity })),
+      kitContents: (l.item?.contents ?? []).map((c) => ({ id: c.id, assetTag: c.assetTag, label: `${modelLabel(c.model)}`, quantity: c.quantity })),
       caseItemId: l.caseItemId,
       caseLabel: l.caseItem ? (l.caseItem.name ?? l.caseItem.assetTag) : null,
       weightKg: num(l.model.weightKg),
@@ -189,7 +190,7 @@ export async function listsForProject(projectId: string) {
 
 export async function kitOptions() {
   const rows = await prisma.item.findMany({ where: { isKit: true, status: "in_house" }, orderBy: { name: "asc" }, include: { model: { select: { manufacturer: true, name: true } }, _count: { select: { contents: true } } } });
-  return rows.map((k) => ({ id: k.id, label: `${k.name ?? k.assetTag} (${k._count.contents} items, ${k.model.manufacturer} ${k.model.name})` }));
+  return rows.map((k) => ({ id: k.id, label: `${k.name ?? k.assetTag} (${k._count.contents} items, ${modelLabel(k.model)})` }));
 }
 
 export async function templateOptions() {
@@ -199,7 +200,7 @@ export async function templateOptions() {
 export async function templateDetail(id: string) {
   const t = await prisma.packingTemplate.findUnique({ where: { id }, include: { lines: { orderBy: { sortOrder: "asc" }, include: { model: { select: { id: true, manufacturer: true, name: true, trackingType: true } } } } } });
   if (!t) return null;
-  return { ...t, lines: t.lines.map((l) => ({ id: l.id, modelId: l.modelId, modelLabel: `${l.model.manufacturer} ${l.model.name}`, quantity: l.quantity, note: l.note })) };
+  return { ...t, lines: t.lines.map((l) => ({ id: l.id, modelId: l.modelId, modelLabel: `${modelLabel(l.model)}`, quantity: l.quantity, note: l.note })) };
 }
 
 export async function otherListsForCopy(projectId: string) {
@@ -237,12 +238,12 @@ export async function gearCatalog(scope: { listId: string } | { templateId: stri
   for (const l of lines) onList.set(l.itemId ?? l.modelId, (onList.get(l.itemId ?? l.modelId) ?? 0) + l.quantity);
   const out: CatalogEntry[] = models.map((m) => {
     const s = stock.get(m.id) ?? { owned: 0, inHouse: 0, tags: [] };
-    return { kind: "model", id: m.id, label: `${m.manufacturer} ${m.name}`, category: pathNames(cats, m.categoryId).join(" › "), trackingType: m.trackingType === "bulk" ? "bulk" : "serialized", owned: s.owned, inHouse: s.inHouse, onList: onList.get(m.id) ?? 0, tags: s.tags };
+    return { kind: "model", id: m.id, label: `${modelLabel(m)}`, category: pathNames(cats, m.categoryId).join(" › "), trackingType: m.trackingType === "bulk" ? "bulk" : "serialized", owned: s.owned, inHouse: s.inHouse, onList: onList.get(m.id) ?? 0, tags: s.tags };
   });
   if ("listId" in scope) {
-    const modelLabel = new Map(models.map((m) => [m.id, `${m.manufacturer} ${m.name}`]));
+    const labelOf = new Map(models.map((m) => [m.id, modelLabel(m)]));
     for (const k of items.filter((i) => i.isKit && i.status === "in_house")) {
-      out.push({ kind: "kit", id: k.id, label: k.name ?? k.assetTag, category: `${modelLabel.get(k.modelId) ?? ""} · ${k._count.contents} items`, trackingType: "kit", owned: 1, inHouse: 1, onList: onList.get(k.id) ?? 0, tags: [k.assetTag] });
+      out.push({ kind: "kit", id: k.id, label: k.name ?? k.assetTag, category: `${labelOf.get(k.modelId) ?? ""} · ${k._count.contents} items`, trackingType: "kit", owned: 1, inHouse: 1, onList: onList.get(k.id) ?? 0, tags: [k.assetTag] });
     }
   }
   return out;

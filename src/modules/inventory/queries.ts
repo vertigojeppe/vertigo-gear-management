@@ -5,6 +5,7 @@ import { appConfig, ITEM_STATUSES } from "../../../config/app.config";
 import type { ItemFilters, ModelFilters } from "./schema";
 import { categoryIdsIncludingChildren, toItemDto, toModelDto, type ItemDto, type ModelDto } from "./service";
 import { buildTree, flattenTree, pathNames } from "./tree";
+import { modelLabel } from "@/lib/format";
 
 const PAGE = appConfig.pageSize;
 
@@ -227,7 +228,7 @@ export async function itemDetail(id: string) {
     photoUrl: i.model.defaultPhoto ? `/api/files/${i.model.defaultPhoto.id}` : null,
     location: i.location ? { id: i.location.id, name: i.location.name, type: i.location.type } : null,
     parentItem: i.parentItem ? { id: i.parentItem.id, label: i.parentItem.name ?? i.parentItem.assetTag } : null,
-    contents: i.contents.map((c) => ({ ...toItemDto(c), modelLabel: `${c.model.manufacturer} ${c.model.name}` })),
+    contents: i.contents.map((c) => ({ ...toItemDto(c), modelLabel: `${modelLabel(c.model)}` })),
     statusLogs: i.statusLogs.map((l) => ({
       id: l.id,
       fromStatus: l.fromStatus,
@@ -258,7 +259,7 @@ export async function kitCandidates(kitId: string, q: string | undefined) {
     orderBy: { assetTag: "asc" },
     include: { model: { select: { manufacturer: true, name: true } } },
   });
-  return rows.map((r) => ({ id: r.id, assetTag: r.assetTag, label: `${r.model.manufacturer} ${r.model.name}${r.name ? ` · ${r.name}` : ""}${r.serialNumber ? ` · SN ${r.serialNumber}` : ""}` }));
+  return rows.map((r) => ({ id: r.id, assetTag: r.assetTag, label: `${modelLabel(r.model)}${r.name ? ` · ${r.name}` : ""}${r.serialNumber ? ` · SN ${r.serialNumber}` : ""}` }));
 }
 
 /* Dashboard */
@@ -300,11 +301,11 @@ export async function dashboardStats() {
     statusTotals,
     out: [...outGroups.values()].map((g) => ({
       location: g.location,
-      items: g.items.map((i) => ({ ...toItemDto(i), modelLabel: `${i.model.manufacturer} ${i.model.name}` })),
+      items: g.items.map((i) => ({ ...toItemDto(i), modelLabel: `${modelLabel(i.model)}` })),
     })),
     attention: attention.map((i) => ({
       ...toItemDto(i),
-      modelLabel: `${i.model.manufacturer} ${i.model.name}`,
+      modelLabel: `${modelLabel(i.model)}`,
       reason: i.statusLogs[0]?.reason ?? null,
       since: i.statusLogs[0]?.createdAt ?? i.updatedAt,
     })),

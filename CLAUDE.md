@@ -117,6 +117,11 @@ a second entry that exports components only and never a service.
 - REST: handlers under `src/app/api/v1/**` use `handler(permission, fn)`
   from `src/lib/api/respond.ts` and the module zod schemas. Add new
   endpoints to `src/lib/api/openapi.ts` so `/api/docs` stays complete.
+- `Model.manufacturer` may be empty: own-built gear (BlackLED, SplitLED,
+  controllers, cases) and generic parts (cables, rods) have none. Build
+  labels with `modelLabel(m)` from `src/lib/format.ts`, never
+  `${manufacturer} ${name}`. Models match by (manufacturer, name) in the
+  importer and seed, so "" is a real value there.
 - Asset tags come from `nextAssetTag(tx)` inside the creating transaction.
   The seed sets the counter past its highest tag.
 - Statuses include `under_construction` (exists, not usable, no reason

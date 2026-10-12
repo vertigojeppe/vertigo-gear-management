@@ -13,6 +13,7 @@ import { allocationsFor, clients, ConflictError, itemsForModel } from "@/modules
 import { checkRequest } from "@/modules/projects/availability";
 import type { RentalStatus } from "../../../config/app.config";
 import type { RentalInput, RentalLineInput } from "./schema";
+import { modelLabel } from "@/lib/format";
 
 export class RentalError extends Error {
   constructor(
@@ -184,7 +185,7 @@ export const rentals = {
 /** Models flagged "not for rental" stay on our own projects. */
 async function assertRentable(modelId: string) {
   const model = await prisma.model.findUnique({ where: { id: modelId }, select: { manufacturer: true, name: true, notForRental: true } });
-  if (model?.notForRental) throw new RentalError(`${model.manufacturer} ${model.name} is not for rental.`, "modelId");
+  if (model?.notForRental) throw new RentalError(`${modelLabel(model)} is not for rental.`, "modelId");
 }
 
 export const rentalLines = {
@@ -209,7 +210,7 @@ export const rentalLines = {
       });
       return l;
     });
-    await logActivity(actor, { entityType: "rental", entityId: rentalId, action: "line_added", summary: `Added ${line.quantity}× ${line.model.manufacturer} ${line.model.name}${check.ok ? "" : " despite a conflict"}` });
+    await logActivity(actor, { entityType: "rental", entityId: rentalId, action: "line_added", summary: `Added ${line.quantity}× ${modelLabel(line.model)}${check.ok ? "" : " despite a conflict"}` });
     return { line, check };
   },
 
@@ -231,7 +232,7 @@ export const rentalLines = {
       await tx.allocation.updateMany({ where: { rentalLineId: lineId }, data: { modelId: input.modelId, quantity: input.quantity, itemId: l.itemId } });
       return l;
     });
-    await logActivity(actor, { entityType: "rental", entityId: existing.rentalId, action: "line_updated", summary: `Updated line ${line.quantity}× ${line.model.manufacturer} ${line.model.name}` });
+    await logActivity(actor, { entityType: "rental", entityId: existing.rentalId, action: "line_updated", summary: `Updated line ${line.quantity}× ${modelLabel(line.model)}` });
     return { line, check };
   },
 
@@ -253,13 +254,13 @@ export const rentalLines = {
       await tx.rentalLine.update({ where: { id: lineId }, data: { itemId } });
       await tx.allocation.updateMany({ where: { rentalLineId: lineId }, data: { itemId } });
     });
-    await logActivity(actor, { entityType: "rental", entityId: line.rentalId, action: "line_assigned", summary: itemId ? `Assigned a unit to ${line.model.manufacturer} ${line.model.name}` : `Cleared unit on ${line.model.manufacturer} ${line.model.name}` });
+    await logActivity(actor, { entityType: "rental", entityId: line.rentalId, action: "line_assigned", summary: itemId ? `Assigned a unit to ${modelLabel(line.model)}` : `Cleared unit on ${modelLabel(line.model)}` });
   },
 
   async remove(actor: Actor, lineId: string) {
     assertCan(actor, "rentals.write");
     const line = await prisma.rentalLine.delete({ where: { id: lineId }, include: { model: true } });
-    await logActivity(actor, { entityType: "rental", entityId: line.rentalId, action: "line_removed", summary: `Removed ${line.quantity}× ${line.model.manufacturer} ${line.model.name}` });
+    await logActivity(actor, { entityType: "rental", entityId: line.rentalId, action: "line_removed", summary: `Removed ${line.quantity}× ${modelLabel(line.model)}` });
   },
 };
 
