@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormState } from "@/lib/forms";
-import { addTemplateLine, deleteTemplate, removeTemplateLine, saveTemplate } from "../actions";
+import { deleteTemplate, removeTemplateLine, saveTemplate } from "../actions";
 
 
 export function TemplateDialog({ template, trigger }: { template?: { id: string; name: string; description: string | null }; trigger: "new" | "edit" }) {
