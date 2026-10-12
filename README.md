@@ -54,6 +54,11 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 - **Not for rental**: flag a model or a unit as own-projects-only; the
   rentals screens refuse it. Retiring an item asks whether it was sold,
   scrapped or lost; own-built fixtures can sit as *under construction*.
+- **Settings › Import**: upload the old gear spreadsheet. You get a
+  preview first: what imports as is, what imports with a stated guess,
+  what needs your decision, and what is parked for later features. Nothing
+  is written until you confirm, and importing the same file again adds
+  nothing. Every imported row remembers its sheet cell.
 - **Settings › Users**: invite colleagues as admin, member or viewer.
 - **Settings › Your account › API tokens**: call the REST API from other
   tools. Docs at `/api/docs`.

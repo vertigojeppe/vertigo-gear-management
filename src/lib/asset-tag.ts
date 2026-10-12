@@ -21,11 +21,18 @@ export function formatAssetTag(n: number): string {
   return `${appConfig.assetTagPrefix}-${String(n).padStart(4, "0")}`;
 }
 
-/** Normalise user input ("vg-42", " VG-0042 ") to the canonical form. */
+/**
+ * Normalise user input to a tag. Our own tags ("vg-42", " VG-0042 ") become
+ * the canonical VG-0042; imported tags from the spreadsheet (B1, W6-01,
+ * U00825, "Pink FREDDY") are kept as typed, trimmed. Null when it cannot
+ * be a tag at all.
+ */
 export function normaliseAssetTag(input: string): string | null {
-  const m = input.trim().toUpperCase().match(/^([A-Z]+)-?0*(\d+)$/);
-  if (!m) return null;
-  return `${m[1]}-${m[2].padStart(4, "0")}`;
+  const s = input.trim();
+  if (!s) return null;
+  const m = s.toUpperCase().match(/^([A-Z]+)-?0*(\d+)$/);
+  if (m && m[1] === appConfig.assetTagPrefix) return `${m[1]}-${m[2].padStart(4, "0")}`;
+  return /^[\p{L}\p{N}][\p{L}\p{N} _.\-/]{0,39}$/u.test(s) ? s : null;
 }
 
 /**

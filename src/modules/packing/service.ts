@@ -332,7 +332,7 @@ export const packingChecks = {
   async scan(actor: Actor, listId: string, tag: string) {
     assertCan(actor, "packing.write");
     const normalised = normaliseAssetTag(tag);
-    const item = normalised ? await prisma.item.findUnique({ where: { assetTag: normalised }, include: { model: true } }) : null;
+    const item = normalised ? await prisma.item.findFirst({ where: { assetTag: { equals: normalised, mode: "insensitive" } }, include: { model: true } }) : null;
     if (!item) return { status: "unknown" as const, tag };
     const lines = await prisma.packingLine.findMany({ where: { listId }, include: { model: true, checks: true } });
     const bulk = item.model.trackingType === "bulk";

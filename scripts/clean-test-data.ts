@@ -33,8 +33,25 @@ async function main() {
   const testClients = await prisma.client.findMany({ where: { name: { startsWith: "E2E client " } }, select: { id: true } });
   await prisma.location.deleteMany({ where: { renterId: { in: testClients.map((c) => c.id) } } });
   await prisma.client.deleteMany({ where: { id: { in: testClients.map((c) => c.id) }, projects: { none: {} }, rentals: { none: {} } } });
+  // Spreadsheet imports made by the browser test (file name "E2E import …"):
+  // the import's activity row lists every id it created.
+  const imports = await prisma.activityLog.findMany({ where: { action: "spreadsheet_imported", summary: { contains: "E2E import" } } });
+  for (const log of imports.reverse()) {
+    const c = (log.details as { created?: Record<string, string[]> } | null)?.created ?? {};
+    const ids = (k: string) => c[k] ?? [];
+    await prisma.allocation.deleteMany({ where: { rentalId: { in: ids("rentals") } } });
+    await prisma.rental.deleteMany({ where: { id: { in: ids("rentals") } } });
+    await prisma.location.deleteMany({ where: { renterId: { in: ids("clients") } } });
+    await prisma.client.deleteMany({ where: { id: { in: ids("clients") } } });
+    await prisma.item.deleteMany({ where: { id: { in: ids("items") } } });
+    await prisma.model.deleteMany({ where: { id: { in: ids("models") } } });
+    await prisma.location.deleteMany({ where: { id: { in: ids("locations") } } });
+    await prisma.contact.deleteMany({ where: { id: { in: ids("contacts") } } });
+    for (const id of ids("categories").reverse()) await prisma.category.delete({ where: { id } }).catch(() => undefined);
+    await prisma.activityLog.delete({ where: { id: log.id } });
+  }
   await prisma.outbox.deleteMany({ where: { status: { in: ["done", "failed"] } } });
-  console.log(`Removed ${tokens.count} tokens, ${ids.length} models, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals.`);
+  console.log(`Removed ${tokens.count} tokens, ${ids.length} models, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals, ${imports.length} test imports.`);
   await prisma.$disconnect();
 }
 

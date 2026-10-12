@@ -40,6 +40,10 @@ model Model {
   archived     Boolean  @default(false)
   /// Usable on our own projects only; never on a rental.
   notForRental Boolean  @default(false)
+  /// List rental price per day (excl. VAT); the pricing engine (backlog) multiplies it by a rate-table factor.
+  rentalDayPrice Decimal? @db.Decimal(12, 2)
+  /// "Sheet!A1" of the spreadsheet row this came from, when imported.
+  importSource String?
   items        Item[]
   allocations  Allocation[]
   rentalLines  RentalLine[]
@@ -87,6 +91,8 @@ model Item {
   notForRental     Boolean   @default(false)
   /// When status = retired: sold | scrapped | lost (RETIREMENT_REASONS).
   retiredReason    String?
+  /// "Sheet!A1" of the spreadsheet row this came from, when imported.
+  importSource     String?
   notes            String?
   customFields     Json      @default("{}")
   statusLogs       StatusLog[]
@@ -124,6 +130,7 @@ model Location {
   contactId String?
   contact   Contact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
   notes     String?
+  importSource String?
   items     Item[]
   homeItems Item[]     @relation("HomeLocation")
   createdAt DateTime   @default(now())

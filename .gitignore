@@ -57,3 +57,7 @@ certificates
 
 # Google service account key
 google-service-account*.json
+
+# Real inventory spreadsheet(s) for the importer: never commit
+import/
+*.xlsx

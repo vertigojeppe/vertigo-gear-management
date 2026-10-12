@@ -12,6 +12,7 @@ model Rental {
   returnedAt     DateTime?
   deposit        Decimal?     @db.Decimal(12, 2)
   notes          String?
+  importSource   String?
   googleEventIds Json         @default("{}")
   customFields   Json         @default("{}")
   lines          RentalLine[]
