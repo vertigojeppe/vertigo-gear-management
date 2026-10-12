@@ -813,13 +813,15 @@
     "nextPage": "Næste side",
     "pageOf": "Side {page} af {pages}",
     "measure": "Mål",
-    "measureHint": "Tryk på to punkter på modellen.",
+    "measureHint": "Tryk på to punkter på modellen. Linjen forsvinder, når du forlader måletilstand.",
     "resetView": "Nulstil visning",
     "loadingModel": "Indlæser model…",
     "distance": "Afstand",
     "modelFailed": "Modellen kunne ikke indlæses.",
     "pdfDocsSkipped": "PDF-tegninger kræver poppler på serveren for at vises her; se dokumentlisten.",
     "noWebGL": "3D-visning kræver WebGL — slå hardwareacceleration til eller åbn i en anden browser. Selve filen fejler intet; download den herunder.",
-    "viewerFailed": "Visningen fejlede. Selve filen fejler intet; download den herunder."
+    "viewerFailed": "Visningen fejlede. Selve filen fejler intet; download den herunder.",
+    "fileUnits": "Filens enhed",
+    "unitsHint": "STL- og OBJ-filer har ingen enhed; vælg hvad filen er eksporteret i. glTF er i meter per definition."
   }
 }

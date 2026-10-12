@@ -813,13 +813,15 @@
     "nextPage": "Next page",
     "pageOf": "Page {page} of {pages}",
     "measure": "Measure",
-    "measureHint": "Tap two points on the model.",
+    "measureHint": "Tap two points on the model. Leaving measure mode clears the line.",
     "resetView": "Reset view",
     "loadingModel": "Loading model…",
     "distance": "Distance",
     "modelFailed": "Could not load the model.",
     "pdfDocsSkipped": "PDF drawings need poppler on the server to appear here; see the document list.",
     "noWebGL": "3D preview needs WebGL — enable hardware acceleration or open in another browser. The file itself is fine; download it below.",
-    "viewerFailed": "The viewer hit an error. The file itself is fine; download it below."
+    "viewerFailed": "The viewer hit an error. The file itself is fine; download it below.",
+    "fileUnits": "File units",
+    "unitsHint": "STL and OBJ files carry no unit; choose what the file was exported in. glTF is metres by definition."
   }
 }

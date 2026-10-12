@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { zonedInputToDate } from "@/lib/dates";
-import { dayOffset, defaultAnchor, endTime, groupByDay, materialiseTemplate, sortTasks, taskProgress, templateFromPlan, timeOfDay } from "../logic";
+import { dayOffset, defaultAnchor, defaultModelUnit, endTime, formatDistance, groupByDay, materialiseTemplate, sortTasks, taskProgress, templateFromPlan, timeOfDay } from "../logic";
 
 const entries = [
   { kind: "schedule", dayOffset: -1, time: "08:00", durationMin: 120, title: "Load truck", location: "Warehouse", phase: null, logisticsKind: null, notes: null, sortOrder: 0 },
@@ -75,5 +75,21 @@ describe("tasks", () => {
     expect(p.total).toBe(4);
     expect(p.done).toBe(1);
     expect(p.byPhase.find((x) => x.phase === "pre_production")).toEqual({ phase: "pre_production", total: 3, done: 1 });
+  });
+});
+
+describe("3D measure", () => {
+  it("defaults the file unit by format", () => {
+    expect(defaultModelUnit("glb")).toBe("m");
+    expect(defaultModelUnit("gltf")).toBe("m");
+    expect(defaultModelUnit("stl")).toBe("mm");
+    expect(defaultModelUnit("obj")).toBe("mm");
+  });
+  it("shows metres or centimetres depending on size", () => {
+    expect(formatDistance(1250, "mm")).toBe("1.25 m");
+    expect(formatDistance(453, "mm")).toBe("45.3 cm");
+    expect(formatDistance(2.4, "m")).toBe("2.40 m");
+    expect(formatDistance(0.08, "m")).toBe("8.0 cm");
+    expect(formatDistance(120, "cm")).toBe("1.20 m");
   });
 });

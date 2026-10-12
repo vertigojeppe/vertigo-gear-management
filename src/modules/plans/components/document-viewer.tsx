@@ -167,7 +167,7 @@ function DocumentViewerInner({ kind, version, canEdit, userId, mtlUrl, previewUr
         url={version.url}
         ext={ext}
         mtlUrl={mtlUrl}
-        labels={{ measure: t("measure"), measureHint: t("measureHint"), resetView: t("resetView"), loading: t("loadingModel"), distance: t("distance"), failed: t("modelFailed"), noWebGL: t("noWebGL"), download: t("download") }}
+        labels={{ measure: t("measure"), measureHint: t("measureHint"), resetView: t("resetView"), loading: t("loadingModel"), distance: t("distance"), failed: t("modelFailed"), noWebGL: t("noWebGL"), download: t("download"), fileUnits: t("fileUnits"), unitsHint: t("unitsHint") }}
         file={{ name: version.name, size: version.size, mimeType: version.mimeType, downloadUrl: `${version.url}?download=1`, previewUrl }}
       />
     );

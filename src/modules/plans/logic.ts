@@ -142,3 +142,20 @@ export function defaultAnchor(project: { loadIn: Date | string | null; showStart
   if (typeof d === "string") return d.length === 10 ? d : dayInZone(new Date(d));
   return dayInZone(d);
 }
+
+/* 3D measure ------------------------------------------------------------- */
+
+export const MODEL_UNITS = ["mm", "cm", "m"] as const;
+export type ModelUnit = (typeof MODEL_UNITS)[number];
+
+/** glTF is metres by definition; STL and OBJ carry no unit and are usually exported in millimetres. */
+export function defaultModelUnit(ext: string): ModelUnit {
+  return ext === "glb" || ext === "gltf" ? "m" : "mm";
+}
+
+/** A raw file-unit distance as a readable metric length: "1.25 m" or "45.3 cm". */
+export function formatDistance(raw: number, unit: ModelUnit): string {
+  const metres = unit === "m" ? raw : unit === "cm" ? raw / 100 : raw / 1000;
+  if (metres >= 1) return `${(Math.round(metres * 100) / 100).toFixed(2)} m`;
+  return `${(Math.round(metres * 1000) / 10).toFixed(1)} cm`;
+}

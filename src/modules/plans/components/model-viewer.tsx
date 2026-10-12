@@ -8,9 +8,10 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { hasWebGL } from "@/lib/webgl";
+import { MODEL_UNITS, defaultModelUnit, formatDistance, type ModelUnit } from "../logic";
 import { formatBytes } from "@/lib/format";
 
-type Labels = { measure: string; measureHint: string; resetView: string; loading: string; distance: string; failed: string; noWebGL: string; download: string };
+type Labels = { measure: string; measureHint: string; resetView: string; loading: string; distance: string; failed: string; noWebGL: string; download: string; fileUnits: string; unitsHint: string };
 export type FileCard = { name: string; size: number; mimeType: string; downloadUrl: string; previewUrl?: string | null };
 
 /** What to show instead of the canvas: file facts, the preview image if any, a download button. */
@@ -38,7 +39,8 @@ export function ModelFallbackCard({ file, note, download }: { file: FileCard; no
 /**
  * three.js viewer for glTF/GLB, OBJ (+MTL) and STL: orbit/pan/zoom, grid,
  * lights, and a two-point measure tool (click two points on the model).
- * Units are whatever the file uses; the label shows the raw distance.
+ * STL/OBJ carry no unit, so the user picks what the file was exported in;
+ * glTF is metres. Leaving measure mode clears the markers and the line.
  */
 export function ModelViewer({ url, ext, mtlUrl, labels, file }: { url: string; ext: string; mtlUrl?: string | null; labels: Labels; file: FileCard }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -48,10 +50,13 @@ export function ModelViewer({ url, ext, mtlUrl, labels, file }: { url: string; e
   const [error, setError] = useState<string | null>(null);
   const [measuring, setMeasuring] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
+  const [unit, setUnit] = useState<ModelUnit>(() => defaultModelUnit(ext));
   const measuringRef = useRef(false);
   const resetRef = useRef<() => void>(() => {});
+  const clearRef = useRef<() => void>(() => {});
   useEffect(() => {
     measuringRef.current = measuring;
+    if (!measuring) clearRef.current();
   }, [measuring]);
 
   useEffect(() => {
@@ -114,6 +119,11 @@ export function ModelViewer({ url, ext, mtlUrl, labels, file }: { url: string; e
       controls.update();
     };
     resetRef.current = fit;
+    clearRef.current = () => {
+      points.length = 0;
+      measureGroup.clear();
+      setDistance(null);
+    };
 
     const onLoaded = (obj: THREE.Object3D) => {
       if (disposed) return;
@@ -219,10 +229,22 @@ export function ModelViewer({ url, ext, mtlUrl, labels, file }: { url: string; e
         <button type="button" className="rounded border px-2 py-1" onClick={() => resetRef.current()}>
           {labels.resetView}
         </button>
-        {measuring && <span className="text-xs text-muted-foreground">{labels.measureHint}</span>}
+        {measuring && (
+          <label className="flex items-center gap-1 text-xs text-muted-foreground" title={labels.unitsHint}>
+            {labels.fileUnits}
+            <select value={unit} onChange={(e) => setUnit(e.target.value as ModelUnit)} className="rounded border bg-background px-1 py-0.5 text-xs text-foreground">
+              {MODEL_UNITS.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {measuring && distance === null && <span className="text-xs text-muted-foreground">{labels.measureHint}</span>}
         {distance !== null && (
-          <span className="rounded bg-muted px-2 py-0.5 font-mono text-xs">
-            {labels.distance}: {distance.toFixed(3)}
+          <span className="rounded bg-muted px-2 py-0.5 font-mono text-xs" title={`${distance.toFixed(3)} ${unit} (${labels.unitsHint})`}>
+            {labels.distance}: {formatDistance(distance, unit)}
           </span>
         )}
         {status === "loading" && <span className="text-xs text-muted-foreground">{labels.loading}</span>}
