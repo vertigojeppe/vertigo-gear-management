@@ -19,6 +19,8 @@ export type CheckRow = {
   checkedAt: Date;
   /** For out checks: how much of it has come back (bulk) / whether it is back. */
   returned: number;
+  /** For in checks: the out check it answers. */
+  outCheckId: string | null;
 };
 
 export type LineRow = {
@@ -95,7 +97,8 @@ export async function listDetail(listId: string) {
       note: c.note,
       checkedBy: c.checkedBy?.name ?? null,
       checkedAt: c.checkedAt,
-      returned: c.phase === "out" ? l.checks.filter((x) => x.phase === "in" && x.itemId === c.itemId).reduce((s, x) => s + x.quantity, 0) : 0,
+      returned: c.phase === "out" ? l.checks.filter((x) => x.phase === "in" && (x.outCheckId ? x.outCheckId === c.id : x.itemId === c.itemId)).reduce((s, x) => s + x.quantity, 0) : 0,
+      outCheckId: c.outCheckId,
     }));
     const progress = lineProgress({ quantity: l.quantity, trackingType: tracking, checks });
     const availableUnits =

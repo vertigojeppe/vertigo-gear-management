@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth/session";
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { checkInInput, lineInput, lineUpdateInput, packingListInput, scanInput, templateInput, templateLineInput, tickInput } from "./schema";
-import { packingChecks, packingLines, packingLists, packingTemplates, shareLinks } from "./service";
+import { packingChecks, packingLines, packingLists, packingTemplates, shareLinks, undoCheckIn } from "./service";
 
 function revalidateList(projectId: string, listId?: string) {
   revalidatePath(`/projects/${projectId}`, "layout");
@@ -173,6 +173,14 @@ export async function untickCheck(formData: FormData): Promise<void> {
   const projectId = String(formData.get("projectId"));
   const listId = String(formData.get("listId"));
   await packingChecks.untick(actor, String(formData.get("checkId")));
+  revalidateList(projectId, listId);
+}
+
+export async function undoReturn(formData: FormData): Promise<void> {
+  const actor = await requirePermission("packing.write");
+  const projectId = String(formData.get("projectId"));
+  const listId = String(formData.get("listId"));
+  await undoCheckIn(actor, String(formData.get("checkId")));
   revalidateList(projectId, listId);
 }
 

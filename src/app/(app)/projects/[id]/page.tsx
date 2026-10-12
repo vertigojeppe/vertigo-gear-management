@@ -24,6 +24,8 @@ import {
 } from "@/modules/projects";
 import { customFieldDefinitions } from "@/modules/settings";
 import { listsForProject } from "@/modules/packing";
+import { CreatePlanDialog, defaultAnchor, planSummary, planTemplateOptions } from "@/modules/plans";
+import { today } from "@/lib/dates";
 import { PACKING_STATUSES, PROJECT_STATUSES } from "../../../../../config/app.config";
 
 export const metadata: Metadata = { title: "Project" };
@@ -31,8 +33,9 @@ export const metadata: Metadata = { title: "Project" };
 export default async function ProjectPage(props: { params: Promise<{ id: string }> }) {
   const actor = await requireActor();
   const { id } = await props.params;
-  const [detail, defs, models, users, packingLists] = await Promise.all([projectDetail(id), customFieldDefinitions.forEntity("project"), modelOptions(), crewOptions(), listsForProject(id)]);
+  const [detail, defs, models, users, packingLists, plan, planTemplates] = await Promise.all([projectDetail(id), customFieldDefinitions.forEntity("project"), modelOptions(), crewOptions(), listsForProject(id), planSummary(id), planTemplateOptions()]);
   const tpack = await getTranslations("packing");
+  const tplan = await getTranslations("plans");
   const tps = await getTranslations("packingStatus");
   if (!detail) notFound();
   const { project, client, crew, contacts, reservations } = detail;
@@ -211,6 +214,20 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-medium">{tplan("title")}</h2>
+          {plan ? (
+            <Link href={`/projects/${project.id}/plan`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              {tplan("openPlan")}
+            </Link>
+          ) : (
+            can(actor.role, "plans.write") && <CreatePlanDialog projectId={project.id} templates={planTemplates.map((x) => ({ id: x.id, label: `${x.name} (${x._count.entries})` }))} defaultAnchor={defaultAnchor(project, today())} />
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground">{plan ? tplan("planSummary", { schedule: plan.schedule, done: plan.tasksDone, tasks: plan.tasks, logistics: plan.logistics }) : tplan("noPlanBody")}</p>
       </section>
 
       <div className="grid gap-8 md:grid-cols-2">

@@ -11,7 +11,7 @@ external rentals. Full spec: `SPEC.md`; the spreadsheet we migrate from and
 what it implies: `MIGRATION.md`. Plan and data model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **3 (packing lists, check-out/check-in, share links) done**. Next: Phase 4 (production plans, files, viewers).
+Current phase: **4 (production plans) done**. Next: Phase 4b (documents, drawings, 3D viewer, markup).
 
 ## Stack
 
@@ -191,6 +191,29 @@ a second entry that exports components only and never a service.
   app shell, and `proxy.ts` lets `/share/` through without a session.
 - Templates (`PackingTemplate`) hold model lines only, no units or kits.
 
+## Production plans (Phase 4)
+
+- One `ProductionPlan` per project (`projectId @unique`), created on first
+  use by `plans.ensure`. It owns `ScheduleEntry`, `PlanTask` and
+  `LogisticsEntry` rows; crew and contacts are the project's own and are
+  only shown inside the plan.
+- Schedule entries store `startsAt` as an instant; the day they belong to
+  is the Copenhagen day (`dayInZone`). The form posts `date` + `time` and
+  the service combines them with `zonedInputToDate`. Day sheets filter by
+  that day.
+- Tasks have a phase (`PLAN_PHASES`), optional assignee and due date, and a
+  done flag; `sortTasks` orders them phase → open first → due date.
+- Templates (`PlanTemplate`, `PlanTemplateEntry`) hold entries relative to
+  an **anchor day** (`dayOffset`, load-in = 0). `materialiseTemplate` dates
+  them; `templateFromPlan` is the inverse used by "save as template". Both
+  are pure and tested in `src/modules/plans/logic.ts`.
+- PDFs: `renderPlan(detail, { day? })` renders the full plan or one day
+  sheet; served by `/api/plans/[planId]/plan.pdf` for signed-in users or
+  with the plan's share token. Share links reuse `ShareLink` with
+  `targetType = "plan"`; the public page is `/share/plan/[token]`.
+- Documents, drawings, 3D viewers and markup are Phase 4b; they will attach
+  to schedule entries and tasks.
+
 ## Events, outbox, integrations
 
 - Services call `emitEvent(type, data, { calendar })` (`src/lib/events.ts`)
@@ -251,6 +274,13 @@ a second entry that exports components only and never a service.
   patch script to the scratchpad and run it with `node file.js`.
 - Only one `next dev` per project (lock in `.next/dev`). For checks while a
   dev server is already running, `npm run build` + `PORT=3001 npx next start`.
+- Absolute URLs shown to people (share links, iCal feed addresses, QR
+  codes) are built in the browser from `window.location.origin`
+  (`ShareUrl`, `QrImage`), never from `APP_URL` or request headers: the
+  dev machine is reached over https and a LAN address that the server
+  cannot know. Route handlers that must build one server-side use
+  `publicOrigin(req)`; only background jobs (iCal feed contents, Google
+  Calendar links) rely on `APP_URL`, which production must set.
 - A service that needs another module imports `@/modules/<name>/service`
   (or `/tree`, `/logic`) directly with an eslint-disable comment, not the
   barrel: barrels re-export server actions, which import next-auth, which

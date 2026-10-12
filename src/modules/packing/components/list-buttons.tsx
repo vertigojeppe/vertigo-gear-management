@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { ConfirmButton } from "@/components/form/confirm-button";
+import { ShareUrl } from "@/components/share-url";
 import { Button } from "@/components/ui/button";
 import { addReservedLines, checkOutList, createShareLink, deletePackingList, finishCheckIn, revokeShareLink } from "../actions";
 
@@ -65,7 +66,7 @@ export function DeleteListButton({ ids }: { ids: Ids }) {
   );
 }
 
-export function ShareLinkControls({ ids, url }: { ids: Ids; url: string | null }) {
+export function ShareLinkControls({ ids, path }: { ids: Ids; path: string | null }) {
   const t = useTranslations("packing");
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3 text-sm">
@@ -73,11 +74,9 @@ export function ShareLinkControls({ ids, url }: { ids: Ids; url: string | null }
         <p className="font-medium">{t("share")}</p>
         <p className="text-xs text-muted-foreground">{t("shareHelp")}</p>
       </div>
-      {url ? (
+      {path ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1 font-mono text-xs" title={url}>
-            {url}
-          </code>
+          <ShareUrl path={path} />
           <form action={revokeShareLink}>
             <Hidden ids={ids} />
             <ConfirmButton confirm={t("revokeShare") + "?"} size="xs" variant="ghost" className="text-destructive">

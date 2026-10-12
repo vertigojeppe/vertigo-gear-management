@@ -2,12 +2,13 @@
 
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Undo2 } from "lucide-react";
 import { ActionForm } from "@/components/form/action-form";
 import { SubmitButton } from "@/components/form/submit-button";
 import { Input } from "@/components/ui/input";
 import type { FormState } from "@/lib/forms";
 import { CHECK_OUTCOMES } from "../../../../config/app.config";
-import { checkInUnit } from "../actions";
+import { checkInUnit, undoReturn } from "../actions";
 import type { LineRow } from "../queries";
 
 type Ids = { projectId: string; listId: string };
@@ -18,7 +19,9 @@ export function CheckInMode({ ids, lines }: { ids: Ids; lines: LineRow[] }) {
   const to = useTranslations("checkOutcome");
   const [remainingOnly, setRemainingOnly] = useState(true);
   const withOut = lines.filter((l) => l.checks.some((c) => c.phase === "out"));
-  const visible = withOut.filter((l) => !remainingOnly || l.progress.toReturn > 0);
+  // "Remaining only" keeps lines with a return in the last 15 minutes, so a wrong tap can still be undone.
+  const [recent] = useState(() => Date.now() - 15 * 60_000);
+  const visible = withOut.filter((l) => !remainingOnly || l.progress.toReturn > 0 || l.checks.some((c) => c.phase === "in" && new Date(c.checkedAt).getTime() > recent));
   const totalOut = withOut.reduce((s, l) => s + l.progress.packed, 0);
   const totalBack = withOut.reduce((s, l) => s + l.progress.packed - l.progress.toReturn, 0);
 
@@ -50,7 +53,7 @@ export function CheckInMode({ ids, lines }: { ids: Ids; lines: LineRow[] }) {
                 .filter((c) => c.phase === "out")
                 .map((c) => {
                   const remaining = c.quantity - c.returned;
-                  const inRows = line.checks.filter((x) => x.phase === "in" && x.itemId === c.itemId);
+                  const inRows = line.checks.filter((x) => x.phase === "in" && (x.outCheckId ? x.outCheckId === c.id : x.itemId === c.itemId));
                   return (
                     <li key={c.id} className="rounded border bg-background p-2">
                       <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -61,6 +64,14 @@ export function CheckInMode({ ids, lines }: { ids: Ids; lines: LineRow[] }) {
                             {line.trackingType === "bulk" ? `${x.quantity}× ` : ""}
                             {to(x.outcome as "ok")}
                             {x.note ? ` · ${x.note}` : ""}
+                            <form action={undoReturn} className="ml-1 inline">
+                              <input type="hidden" name="projectId" value={ids.projectId} />
+                              <input type="hidden" name="listId" value={ids.listId} />
+                              <input type="hidden" name="checkId" value={x.id} />
+                              <button type="submit" className="align-middle opacity-70 hover:opacity-100" aria-label={t("undoReturn")} title={t("undoReturn")}>
+                                <Undo2 className="size-3" aria-hidden />
+                              </button>
+                            </form>
                           </span>
                         ))}
                         {remaining <= 0 && inRows.length === 0 && <span className="text-xs text-muted-foreground">{to("ok")}</span>}

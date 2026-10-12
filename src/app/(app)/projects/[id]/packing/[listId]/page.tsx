@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
@@ -56,8 +55,6 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
   const editable = canEdit && canEditLines(list.status);
   const ids = { projectId: id, listId };
   const [models, kits, templates, share] = await Promise.all([editable ? modelOptions() : [], editable ? kitOptions() : [], editable ? templateOptions() : [], shareLinks.current("packing_list", listId)]);
-  const h = await headers();
-  const origin = process.env.APP_URL?.replace(/\/$/, "") || `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
   const caseOptions = lines.filter((l) => l.isKit && l.itemId).map((l) => ({ id: l.itemId!, label: l.itemName ?? l.itemTag ?? "" }));
   const groups = groupLines(lines, list.groupBy);
 
@@ -173,7 +170,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
 
       {list.notes && <p className="whitespace-pre-line text-sm text-muted-foreground">{list.notes}</p>}
 
-      {can(actor.role, "share.create") && <ShareLinkControls ids={ids} url={share ? `${origin}/share/packing/${share.token}` : null} />}
+      {can(actor.role, "share.create") && <ShareLinkControls ids={ids} path={share ? `/share/packing/${share.token}` : null} />}
     </div>
   );
 }

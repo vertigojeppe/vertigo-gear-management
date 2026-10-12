@@ -31,7 +31,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | projects | Client, Project, ProjectContact, ProjectCrew, Allocation | `clients`, `projects`, `allocations`, availability engine, timeline |
 | rentals | Rental, RentalLine | `rentals`, `rentalLines`, pricing, agreement PDF |
 | packing | PackingList, PackingLine, PackingCheck, PackingTemplate, ShareLink | `packingLists`, `packingLines`, `packingChecks`, `packingTemplates`, `shareLinks`, progress/totals logic, pack + check-in modes, list PDF |
-| plans | ProductionPlan, ScheduleEntry, Task, LogisticsEntry, PlanTemplate (Phase 4) | |
+| plans | ProductionPlan, ScheduleEntry, PlanTask, LogisticsEntry, PlanTemplate, PlanTemplateEntry | `plans`, `schedule`, `tasks`, `logistics`, `planTemplates`, template maths, plan + day-sheet PDF, share page |
 | calendar | CalendarFeedToken, Google sync, outbox handlers | `feedTokens`, `buildFeed`, `syncProject`, `syncRental` |
 | settings | CustomFieldDefinition, Webhook, Outbox admin | `customFieldDefinitions`, `webhooks`, `outboxAdmin` |
 
@@ -39,6 +39,41 @@ Cross-cutting in `src/lib/`: `activity.ts` (ActivityLog), `asset-tag.ts`
 (Counter-backed tag sequence), `custom-fields.ts` (pure validation),
 `forms.ts` (FormData → zod → FormState), `storage/` (adapter),
 `api/` (REST auth, error mapping, OpenAPI), `auth/` (Auth.js, permissions).
+
+## Data model (Phase 4 additions)
+
+```mermaid
+erDiagram
+  Project ||--o| ProductionPlan : "has one"
+  ProductionPlan ||--o{ ScheduleEntry : schedule
+  ProductionPlan ||--o{ PlanTask : tasks
+  ProductionPlan ||--o{ LogisticsEntry : logistics
+  ScheduleEntry }o--o| User : responsible
+  PlanTask }o--o| User : assignee
+  PlanTemplate ||--o{ PlanTemplateEntry : entries
+  ShareLink }o--o| ProductionPlan : "targetType=plan"
+
+  ScheduleEntry {
+    datetime startsAt
+    int durationMin
+    string title
+    string location
+  }
+  PlanTask {
+    string phase "pre_production | build | show | post"
+    date dueDate
+    boolean done
+  }
+  LogisticsEntry {
+    string kind "vehicle | parking | loading | hotel | travel | other"
+    datetime at
+  }
+  PlanTemplateEntry {
+    string kind "schedule | task | logistics"
+    int dayOffset "relative to the anchor day"
+    string time "HH:MM"
+  }
+```
 
 ## Data model (spec update, October 2026)
 

@@ -94,6 +94,11 @@ test.describe("packing lists", () => {
     await page.getByRole("link", { name: "Check in", exact: true }).click();
     await page.getByRole("button", { name: "OK, back on shelf" }).click();
     await expect(page.getByText("1 / 1 back").first()).toBeVisible();
+    // A wrong tap can be undone, then recorded again.
+    await page.getByRole("button", { name: "Undo this return" }).click();
+    await expect(page.getByText("0 / 1 back").first()).toBeVisible();
+    await page.getByRole("button", { name: "OK, back on shelf" }).click();
+    await expect(page.getByText("1 / 1 back").first()).toBeVisible();
     await page.getByRole("button", { name: "Finish check-in" }).click();
     await expect(page.getByText("Checked in", { exact: true })).toBeVisible();
 

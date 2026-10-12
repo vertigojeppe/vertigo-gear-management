@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import type { Actor } from "@/lib/auth/session";
-import { PackingError, packingChecks, packingLines, packingLists, packingTemplates, shareLinks } from "../service";
+import { PackingError, packingChecks, packingLines, packingLists, packingTemplates, shareLinks, undoCheckIn } from "../service";
 import { listDetail } from "../queries";
 
 /**
@@ -168,6 +168,33 @@ describe("packing list lifecycle", () => {
     expect(travel?.quantity).toBe(2);
     const mid = await listDetail(listId);
     expect(mid?.progress.toReturn).toBe(3); // kit + 2 cables
+  });
+
+  it("a wrong return can be undone and redone", async () => {
+    const detail = await listDetail(listId);
+    const mover = detail!.lines.find((l) => l.modelId === moverModelId && !l.isKit)!;
+    const damagedIn = mover.checks.find((c) => c.phase === "in" && c.itemId === moverIds[1])!;
+    await undoCheckIn(admin, damagedIn.id);
+    const m1 = await prisma.item.findUnique({ where: { id: moverIds[1] } });
+    expect(m1?.status).toBe("on_project");
+    const projectLoc = await prisma.location.findFirst({ where: { projectId } });
+    expect(m1?.locationId).toBe(projectLoc?.id);
+
+    const cable = detail!.lines.find((l) => l.modelId === cableModelId)!;
+    const cableIn = cable.checks.find((c) => c.phase === "in")!;
+    await undoCheckIn(admin, cableIn.id);
+    expect((await prisma.item.findUnique({ where: { id: binId } }))?.quantity).toBe(15);
+    const travel = await prisma.item.findFirst({ where: { modelId: cableModelId, id: { not: binId } } });
+    expect(travel).toMatchObject({ quantity: 5, status: "on_project" });
+    expect((await listDetail(listId))?.progress.toReturn).toBe(7);
+
+    // Redo both so the rest of the lifecycle is unchanged.
+    const again = await listDetail(listId);
+    const out1 = again!.lines.find((l) => l.modelId === moverModelId && !l.isKit)!.checks.find((c) => c.phase === "out" && c.itemId === moverIds[1])!;
+    await packingChecks.checkIn(admin, { outCheckId: out1.id, outcome: "damaged", quantity: undefined, note: "Broken pan motor" });
+    const outCable = again!.lines.find((l) => l.modelId === cableModelId)!.checks.find((c) => c.phase === "out")!;
+    await packingChecks.checkIn(admin, { outCheckId: outCable.id, outcome: "ok", quantity: 3, note: undefined });
+    expect((await listDetail(listId))?.progress.toReturn).toBe(3);
   });
 
   it("finish check-in marks the rest missing and closes the list", async () => {

@@ -24,6 +24,8 @@ model User {
   shareLinks  ShareLink[]
   /// "Mikkel has 2": locations of type person pointing at this user.
   locations   Location[]
+  scheduleEntries ScheduleEntry[]
+  planTasks   PlanTask[]
 
   @@index([role])
 }

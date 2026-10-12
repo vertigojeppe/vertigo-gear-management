@@ -6,6 +6,7 @@ import { seedCustomFields } from "./custom-fields";
 import { seedProjects } from "./projects";
 import { seedPacking } from "./packing";
 import { seedContacts } from "./contacts";
+import { seedPlans } from "./plans";
 
 // Re-runnable demo data. Every seeder upserts on a stable key so running
 // `npm run db:seed` twice leaves the database in the same state.
@@ -25,6 +26,8 @@ async function main() {
   console.log(`  clients: ${pr.clients}, projects: ${pr.projects}, reservations: ${pr.allocations}, rentals: ${pr.rentals}`);
   const pk = await seedPacking(prisma);
   console.log(`  packing templates: ${pk.templates}, packing lists: ${pk.lists}`);
+  const pl = await seedPlans(prisma);
+  console.log(`  plan templates: ${pl.templates}, production plans: ${pl.plans}`);
   console.log("Done.");
 }
 
