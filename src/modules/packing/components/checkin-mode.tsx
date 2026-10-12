@@ -20,7 +20,7 @@ export function CheckInMode({ ids, lines }: { ids: Ids; lines: LineRow[] }) {
   const [remainingOnly, setRemainingOnly] = useState(true);
   const withOut = lines.filter((l) => l.checks.some((c) => c.phase === "out"));
   // "Remaining only" keeps lines with a return in the last 15 minutes, so a wrong tap can still be undone.
-  const recent = Date.now() - 15 * 60_000;
+  const [recent] = useState(() => Date.now() - 15 * 60_000);
   const visible = withOut.filter((l) => !remainingOnly || l.progress.toReturn > 0 || l.checks.some((c) => c.phase === "in" && new Date(c.checkedAt).getTime() > recent));
   const totalOut = withOut.reduce((s, l) => s + l.progress.packed, 0);
   const totalBack = withOut.reduce((s, l) => s + l.progress.packed - l.progress.toReturn, 0);
