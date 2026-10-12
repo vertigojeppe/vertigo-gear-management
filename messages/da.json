@@ -659,7 +659,16 @@
     "inTruck": "I bilen",
     "onSiteNote": "Udleveret udstyr er på projektets placering, indtil det modtages igen.",
     "inHouseHint": "Kun {count} af {owned} på lageret i dag",
-    "undoReturn": "Fortryd denne returnering"
+    "undoReturn": "Fortryd denne returnering",
+    "searchGear": "Søg udstyr",
+    "searchGearPlaceholder": "Model, kategori eller tag… Enter tilføjer første match",
+    "searchHint": "{count} modeller og kasser. Skriv for at søge; piletaster og Enter tilføjer uden mus, og et scannet tag finder sin model.",
+    "noMatches": "Intet matcher “{query}”.",
+    "added": "Tilføjet",
+    "onList": "{count} på listen",
+    "inHouseOf": "{inHouse} af {owned} hjemme",
+    "kitOnList": "På listen",
+    "addIntoCase": "I kasse"
   },
   "retiredReason": {
     "sold": "Solgt",

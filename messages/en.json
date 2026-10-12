@@ -659,7 +659,16 @@
     "inTruck": "In the truck",
     "onSiteNote": "Checked-out gear is at the project location until it is checked in.",
     "inHouseHint": "Only {count} of {owned} in house today",
-    "undoReturn": "Undo this return"
+    "undoReturn": "Undo this return",
+    "searchGear": "Search gear",
+    "searchGearPlaceholder": "Model, category or asset tag… Enter adds the first match",
+    "searchHint": "{count} models and kits. Type to search; arrow keys and Enter add without the mouse, and a scanned tag finds its model.",
+    "noMatches": "Nothing matches “{query}”.",
+    "added": "Added",
+    "onList": "{count} on the list",
+    "inHouseOf": "{inHouse} of {owned} in house",
+    "kitOnList": "On the list",
+    "addIntoCase": "Into case"
   },
   "retiredReason": {
     "sold": "Sold",

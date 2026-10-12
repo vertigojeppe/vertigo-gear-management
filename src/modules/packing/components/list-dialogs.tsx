@@ -14,9 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormState } from "@/lib/forms";
 import { PACKING_GROUPINGS } from "../../../../config/app.config";
-import { addKitLine, addLine, applyTemplateToList, removeLine, saveListAsTemplate, updateLine, updatePackingList } from "../actions";
+import { applyTemplateToList, removeLine, saveListAsTemplate, updateLine, updatePackingList } from "../actions";
 
-type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string };
 type Option = { id: string; label: string };
 type Ids = { projectId: string; listId: string };
 
@@ -31,99 +30,6 @@ function DialogShell({ title, description, open, setOpen, children }: { title: s
         {children}
       </DialogContent>
     </Dialog>
-  );
-}
-
-export function AddGearDialog({ ids, models, cases }: { ids: Ids; models: ModelOption[]; cases: Option[] }) {
-  const t = useTranslations("packing");
-  const tc = useTranslations("common");
-  const [state, action] = useActionState<FormState, FormData>(addLine, {});
-  const [open, setOpen] = useActionDialog(state);
-  const err = state.fieldErrors ?? {};
-  return (
-    <>
-      <Button size="sm" onClick={() => setOpen(true)}>
-        {t("addGear")}
-      </Button>
-      <DialogShell title={t("addGear")} open={open} setOpen={setOpen}>
-        <ActionForm action={action} className="flex flex-col gap-4">
-          <input type="hidden" name="projectId" value={ids.projectId} />
-          <input type="hidden" name="listId" value={ids.listId} />
-          <FormError message={state.error} />
-          <Field id="pl-model" label={t("model")} error={err.modelId}>
-            <NativeSelect id="pl-model" name="modelId" defaultValue={state.values?.modelId ?? ""} required>
-              <option value="">—</option>
-              {models.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.manufacturer} {m.name}
-                </option>
-              ))}
-            </NativeSelect>
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field id="pl-qty" label={t("quantity")} error={err.quantity}>
-              <Input id="pl-qty" name="quantity" type="number" min="1" step="1" defaultValue={state.values?.quantity ?? "1"} required />
-            </Field>
-            <Field id="pl-case" label={t("case")} optional error={err.caseItemId}>
-              <NativeSelect id="pl-case" name="caseItemId" defaultValue={state.values?.caseItemId ?? ""}>
-                <option value="">{t("noCase")}</option>
-                {cases.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </NativeSelect>
-            </Field>
-          </div>
-          <Field id="pl-note" label={t("note")} optional error={err.note}>
-            <Input id="pl-note" name="note" defaultValue={state.values?.note ?? ""} />
-          </Field>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              {tc("cancel")}
-            </Button>
-            <SubmitButton pendingText={tc("loading")}>{tc("add")}</SubmitButton>
-          </div>
-        </ActionForm>
-      </DialogShell>
-    </>
-  );
-}
-
-export function AddKitDialog({ ids, kits }: { ids: Ids; kits: Option[] }) {
-  const t = useTranslations("packing");
-  const tc = useTranslations("common");
-  const [state, action] = useActionState<FormState, FormData>(addKitLine, {});
-  const [open, setOpen] = useActionDialog(state);
-  return (
-    <>
-      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-        {t("addKit")}
-      </Button>
-      <DialogShell title={t("addKit")} open={open} setOpen={setOpen}>
-        <ActionForm action={action} className="flex flex-col gap-4">
-          <input type="hidden" name="projectId" value={ids.projectId} />
-          <input type="hidden" name="listId" value={ids.listId} />
-          <FormError message={state.error} />
-          <Field id="pl-kit" label={t("kit")} error={state.fieldErrors?.kitItemId}>
-            <NativeSelect id="pl-kit" name="kitItemId" defaultValue="" required>
-              <option value="">—</option>
-              {kits.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.label}
-                </option>
-              ))}
-            </NativeSelect>
-          </Field>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              {tc("cancel")}
-            </Button>
-            <SubmitButton pendingText={tc("loading")}>{tc("add")}</SubmitButton>
-          </div>
-        </ActionForm>
-      </DialogShell>
-    </>
   );
 }
 

@@ -190,6 +190,11 @@ a second entry that exports components only and never a service.
   Phase 3 consumers. Public pages live under `src/app/share/` outside the
   app shell, and `proxy.ts` lets `/share/` through without a session.
 - Templates (`PackingTemplate`) hold model lines only, no units or kits.
+- Lines are added with the `GearPicker` (one search box over
+  `gearCatalog()`: models with stock and asset tags, kits in house, and
+  what is already on the list); `filterCatalog` in `picker.ts` is pure
+  and tested. Enter adds the highlighted row, so a barcode scanner that
+  types a tag + Enter adds the model. The same picker feeds templates.
 
 ## Production plans (Phase 4)
 

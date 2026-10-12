@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
-import { modelOptions } from "@/modules/inventory";
-import { DeleteTemplateButton, RemoveTemplateLineButton, TemplateDialog, TemplateLineForm, templateDetail } from "@/modules/packing";
+import { DeleteTemplateButton, GearPicker, RemoveTemplateLineButton, TemplateDialog, gearCatalog, templateDetail } from "@/modules/packing";
 
 export const metadata: Metadata = { title: "Packing template" };
 
@@ -13,7 +12,7 @@ export default async function TemplatePage(props: { params: Promise<{ templateId
   const { templateId } = await props.params;
   const t = await getTranslations("packing");
   const tp = await getTranslations("projects");
-  const [tpl, models] = await Promise.all([templateDetail(templateId), modelOptions()]);
+  const [tpl, catalog] = await Promise.all([templateDetail(templateId), gearCatalog({ templateId })]);
   if (!tpl) notFound();
   const canEdit = can(actor.role, "packing.write");
   return (
@@ -47,7 +46,7 @@ export default async function TemplatePage(props: { params: Promise<{ templateId
           ))}
         </ul>
       )}
-      {canEdit && <TemplateLineForm templateId={tpl.id} models={models} />}
+      {canEdit && <GearPicker target={{ kind: "template", templateId: tpl.id }} catalog={catalog} />}
     </div>
   );
 }

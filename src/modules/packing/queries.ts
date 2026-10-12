@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { pathNames } from "@/modules/inventory/tree";
 import type { PackingStatus } from "../../../config/app.config";
 import { lineProgress, listProgress, listTotals, type LineProgress } from "./logic";
+import type { CatalogEntry } from "./picker";
 
 const num = (v: { toNumber(): number } | null) => (v === null ? null : v.toNumber());
 
@@ -204,4 +205,45 @@ export async function templateDetail(id: string) {
 export async function otherListsForCopy(projectId: string) {
   const rows = await prisma.packingList.findMany({ where: { projectId: { not: projectId } }, orderBy: { createdAt: "desc" }, take: 30, include: { project: { select: { name: true } }, _count: { select: { lines: true } } } });
   return rows.map((r) => ({ id: r.id, label: `${r.project.name} – ${r.name} (${r._count.lines} lines)` }));
+}
+
+/* Gear picker ------------------------------------------------------------- */
+
+
+/**
+ * Everything the picker can add: active models with their stock and the
+ * units' asset tags (so a scanned tag finds the model), plus kits that are
+ * in house. `onList` tells how much of each is already on the list or
+ * template, so the picker can show it and the user does not add twice.
+ */
+export async function gearCatalog(scope: { listId: string } | { templateId: string }): Promise<CatalogEntry[]> {
+  const [models, cats, items, lines] = await Promise.all([
+    prisma.model.findMany({ where: { archived: false }, orderBy: [{ manufacturer: "asc" }, { name: "asc" }], select: { id: true, manufacturer: true, name: true, trackingType: true, categoryId: true } }),
+    prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
+    prisma.item.findMany({ where: { status: { not: "retired" } }, select: { id: true, modelId: true, assetTag: true, name: true, status: true, quantity: true, isKit: true, _count: { select: { contents: true } } } }),
+    "listId" in scope
+      ? prisma.packingLine.findMany({ where: { listId: scope.listId }, select: { modelId: true, itemId: true, quantity: true } })
+      : prisma.packingTemplateLine.findMany({ where: { templateId: scope.templateId }, select: { modelId: true, quantity: true } }).then((rows) => rows.map((r) => ({ ...r, itemId: null as string | null }))),
+  ]);
+  const stock = new Map<string, { owned: number; inHouse: number; tags: string[] }>();
+  for (const i of items) {
+    const cur = stock.get(i.modelId) ?? { owned: 0, inHouse: 0, tags: [] };
+    cur.owned += i.quantity;
+    if (i.status === "in_house") cur.inHouse += i.quantity;
+    if (!i.isKit) cur.tags.push(i.assetTag);
+    stock.set(i.modelId, cur);
+  }
+  const onList = new Map<string, number>();
+  for (const l of lines) onList.set(l.itemId ?? l.modelId, (onList.get(l.itemId ?? l.modelId) ?? 0) + l.quantity);
+  const out: CatalogEntry[] = models.map((m) => {
+    const s = stock.get(m.id) ?? { owned: 0, inHouse: 0, tags: [] };
+    return { kind: "model", id: m.id, label: `${m.manufacturer} ${m.name}`, category: pathNames(cats, m.categoryId).join(" › "), trackingType: m.trackingType === "bulk" ? "bulk" : "serialized", owned: s.owned, inHouse: s.inHouse, onList: onList.get(m.id) ?? 0, tags: s.tags };
+  });
+  if ("listId" in scope) {
+    const modelLabel = new Map(models.map((m) => [m.id, `${m.manufacturer} ${m.name}`]));
+    for (const k of items.filter((i) => i.isKit && i.status === "in_house")) {
+      out.push({ kind: "kit", id: k.id, label: k.name ?? k.assetTag, category: `${modelLabel.get(k.modelId) ?? ""} · ${k._count.contents} items`, trackingType: "kit", owned: 1, inHouse: 1, onList: onList.get(k.id) ?? 0, tags: [k.assetTag] });
+    }
+  }
+  return out;
 }

@@ -7,10 +7,7 @@ import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/format";
-import { modelOptions } from "@/modules/inventory";
 import {
-  AddGearDialog,
-  AddKitDialog,
   AddReservedButton,
   ApplyTemplateDialog,
   CheckOutButton,
@@ -18,13 +15,14 @@ import {
   EditLineDialog,
   EditListDialog,
   FinishCheckInButton,
+  GearPicker,
   RemoveLineButton,
   SaveAsTemplateDialog,
   ShareLinkControls,
   canCheckIn,
   canEditLines,
+  gearCatalog,
   groupLines,
-  kitOptions,
   listDetail,
   shareLinks,
   templateOptions,
@@ -54,7 +52,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
   const canEdit = can(actor.role, "packing.write");
   const editable = canEdit && canEditLines(list.status);
   const ids = { projectId: id, listId };
-  const [models, kits, templates, share] = await Promise.all([editable ? modelOptions() : [], editable ? kitOptions() : [], editable ? templateOptions() : [], shareLinks.current("packing_list", listId)]);
+  const [catalog, templates, share] = await Promise.all([editable ? gearCatalog({ listId }) : [], editable ? templateOptions() : [], shareLinks.current("packing_list", listId)]);
   const caseOptions = lines.filter((l) => l.isKit && l.itemId).map((l) => ({ id: l.itemId!, label: l.itemName ?? l.itemTag ?? "" }));
   const groups = groupLines(lines, list.groupBy);
 
@@ -114,12 +112,13 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
       )}
 
       {editable && (
-        <div className="flex flex-wrap gap-2">
-          <AddGearDialog ids={ids} models={models} cases={caseOptions} />
-          <AddKitDialog ids={ids} kits={kits} />
-          {templates.length > 0 && <ApplyTemplateDialog ids={ids} templates={templates.map((x) => ({ id: x.id, label: `${x.name} (${x._count.lines})` }))} />}
-          <AddReservedButton ids={ids} />
-        </div>
+        <>
+          <GearPicker target={{ kind: "list", ...ids }} catalog={catalog} cases={caseOptions} />
+          <div className="flex flex-wrap gap-2">
+            {templates.length > 0 && <ApplyTemplateDialog ids={ids} templates={templates.map((x) => ({ id: x.id, label: `${x.name} (${x._count.lines})` }))} />}
+            <AddReservedButton ids={ids} />
+          </div>
+        </>
       )}
 
       {lines.length === 0 ? (
