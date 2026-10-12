@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
 import { CUSTOM_FIELD_ENTITIES } from "@/lib/custom-fields";
+import { categoryOptions } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 import { CustomFieldDialog, DeleteCustomFieldButton } from "./forms";
 
@@ -12,14 +13,14 @@ export const metadata: Metadata = { title: "Extra fields" };
 export default async function CustomFieldsPage() {
   await requirePermission("settings.manage");
   const t = await getTranslations("settings");
-  const rows = await customFieldDefinitions.listAll();
+  const [rows, categories] = await Promise.all([customFieldDefinitions.listAll(), categoryOptions()]);
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title={t("customFields")}
         subtitle={t("customFieldsHelp")}
         crumbs={[{ label: t("title"), href: "/settings" }, { label: t("customFields") }]}
-        actions={<CustomFieldDialog trigger="new" />}
+        actions={<CustomFieldDialog trigger="new" categories={categories} />}
       />
       {rows.length === 0 ? (
         <EmptyState title={t("noCustomFields")} body={t("noCustomFieldsBody")} />
@@ -40,14 +41,17 @@ export default async function CustomFieldsPage() {
                       </span>
                       <span className="block text-xs text-muted-foreground">
                         <span className="font-mono">{f.key}</span> · {t(`fieldType.${f.type as "text"}`)}
+                        {f.category ? ` · ${f.category.name}` : ""}
                         {f.type === "select" && Array.isArray(f.options) ? ` · ${(f.options as string[]).join(", ")}` : ""}
                       </span>
                     </span>
                     <CustomFieldDialog
                       trigger="edit"
+                      categories={categories}
                       field={{
                         id: f.id,
                         entity: f.entity,
+                        categoryId: f.categoryId,
                         key: f.key,
                         label: f.label,
                         type: f.type,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { ActionForm } from "@/components/form/action-form";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -16,6 +16,7 @@ import { dateToZonedInput } from "@/lib/dates";
 import type { FormState } from "@/lib/forms";
 import { PROJECT_STATUSES } from "../../../../config/app.config";
 import { saveProject } from "../actions";
+import { ClientDialog } from "./client-dialog";
 import { linksToText } from "../schema";
 import type { ProjectDto } from "../service";
 
@@ -28,6 +29,9 @@ export function ProjectForm({ project, clients, defs }: { project?: ProjectDto; 
   const [state, action] = useActionState<FormState, FormData>(saveProject, {});
   const v = (name: string, fallback: string | null | undefined) => (state.values && name in state.values ? state.values[name] : (fallback ?? ""));
   const err = state.fieldErrors ?? {};
+  const [clientId, setClientId] = useState(v("clientId", project?.clientId));
+  const [addedClients, setAddedClients] = useState<ClientOption[]>([]);
+  const clientOptions = [...clients, ...addedClients.filter((a) => !clients.some((c) => c.id === a.id))];
 
   return (
     <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
@@ -39,14 +43,23 @@ export function ProjectForm({ project, clients, defs }: { project?: ProjectDto; 
           <Input id="name" name="name" defaultValue={v("name", project?.name)} required autoFocus={!project} />
         </Field>
         <Field id="clientId" label={t("client")} optional error={err.clientId}>
-          <NativeSelect id="clientId" name="clientId" defaultValue={v("clientId", project?.clientId)}>
-            <option value="">{t("noClient")}</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </NativeSelect>
+          <div className="flex gap-2">
+            <NativeSelect id="clientId" name="clientId" value={clientId} onChange={(e) => setClientId(e.target.value)} className="min-w-0 flex-1">
+              <option value="">{t("noClient")}</option>
+              {clientOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </NativeSelect>
+            <ClientDialog
+              trigger="inline"
+              onCreated={(c) => {
+                setAddedClients((list) => [...list, c]);
+                setClientId(c.id);
+              }}
+            />
+          </div>
         </Field>
         <Field id="status" label={t("status")} error={err.status}>
           <NativeSelect id="status" name="status" defaultValue={v("status", project?.status ?? "quote")}>

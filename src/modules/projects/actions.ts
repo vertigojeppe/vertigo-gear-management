@@ -23,21 +23,27 @@ function prefixErrors(errors: Record<string, string>) {
 
 /* Clients */
 
-export async function saveClient(_prev: FormState, formData: FormData): Promise<FormState> {
+export type ClientSaved = { client?: { id: string; name: string } };
+
+export async function saveClient(_prev: FormState<ClientSaved>, formData: FormData): Promise<FormState<ClientSaved>> {
   const actor = await requirePermission("projects.write");
   const id = String(formData.get("id") ?? "");
   const parsed = parseForm(clientInput, formData);
   if (!parsed.ok) return parsed.state;
+  let created: { id: string; name: string } | undefined;
   try {
     if (id) await clients.update(actor, id, parsed.data);
-    else await clients.create(actor, parsed.data);
+    else {
+      const c = await clients.create(actor, parsed.data);
+      created = { id: c.id, name: c.name };
+    }
   } catch (err) {
-    return errorState(err, echoValues(formData));
+    return { ...errorState(err, echoValues(formData)) };
   }
   revalidateProjects();
   revalidatePath("/projects/clients");
   revalidatePath("/rentals", "layout");
-  return { ok: true };
+  return { ok: true, data: { client: created } };
 }
 
 export async function deleteClient(formData: FormData): Promise<void> {

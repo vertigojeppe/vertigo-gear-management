@@ -7,11 +7,11 @@ change it here in the same commit.
 
 Self-hosted web app for Vertigo (Copenhagen light/laser/projection studio):
 gear inventory, availability, projects, packing lists, production plans,
-external rentals. Full spec: `vertigo-gear-system-prompt.md`. Plan and data
-model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
+external rentals. Full spec: `SPEC.md`; the spreadsheet we migrate from and
+what it implies: `MIGRATION.md`. Plan and data model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **2 (projects, availability, rentals, calendar) done**. Next: Phase 3 (packing lists, check-out/check-in).
+Current phase: **3 (packing lists, check-out/check-in, share links) done**. Next: Phase 4 (production plans, files, viewers).
 
 ## Stack
 
@@ -61,6 +61,10 @@ e2e/                   Playwright specs
 ```
 
 Modules import each other only via `@/modules/<name>` (ESLint-enforced).
+Client components import server actions from `@/modules/<name>/actions`
+and, when they need another module's client component (the rental form
+renders the projects module's `ClientDialog`), from `@/modules/<name>/ui`,
+a second entry that exports components only and never a service.
 
 ## Navigation
 
@@ -78,7 +82,15 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
   `can(role, permission)` is pure and unit-tested.
 - `src/proxy.ts` only does an optimistic cookie check; it is not the
   authorisation layer.
-- Session is a JWT with `id` and `role`. Role changes apply at next login.
+- Session is a JWT with `id` and `role`, but `getActor` looks the user up
+  once per request (cached): name and role come from the database, and a
+  deleted / deactivated user or a cookie from before a database reset is
+  treated as signed out. `requireActor` sends such a session through
+  `/api/session/stale`, which clears the cookie before `/login` (a plain
+  redirect to `/login` would bounce back via the proxy's cookie check).
+- Mutations that write several rows (entity + location + activity row) run
+  in one `$transaction` and pass `tx` to `logActivity`, so a failed
+  activity row never leaves a half-created entity behind.
 
 ## Inventory conventions
 
@@ -107,6 +119,24 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
   endpoints to `src/lib/api/openapi.ts` so `/api/docs` stays complete.
 - Asset tags come from `nextAssetTag(tx)` inside the creating transaction.
   The seed sets the counter past its highest tag.
+- Statuses include `under_construction` (exists, not usable, no reason
+  needed). Retiring requires `retiredReason` (sold | scrapped | lost,
+  `RETIREMENT_REASONS`) next to the free-text reason; it is cleared when
+  the item leaves `retired`.
+- `notForRental` on a model or an item means own projects only; the
+  rentals service refuses such models (`assertRentable`) and units.
+- Locations of type `person` carry `userId` or `contactId`; the dialog
+  posts `person=user:<id>|contact:<id>` and `personRefs()` maps it. Cases
+  are not locations (kit membership via `parentItemId` already covers it).
+- Contacts (`src/modules/contacts`) are people and companies who are not
+  users; permissions `contacts.read/write`. Clients stay separate for now.
+- Custom field definitions can be scoped to a category
+  (`categoryId`, applies to sub-categories). `forEntity(entity)` returns
+  every definition with `categoryIds` resolved; `forEntity(entity,
+  categoryId)` only the applicable ones. Forms filter with
+  `applicableDefs` as the category/model changes; actions validate with
+  the category. Seeded sets: projectors, LED controllers, alu profiles,
+  computers, truss.
 
 ## Availability, projects, rentals
 
@@ -126,6 +156,40 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
 - Dates: `src/lib/dates.ts`. Date-only values are YYYY-MM-DD strings
   (Copenhagen days, stored as UTC midnight); datetimes come from
   `datetime-local` via `zonedInputToDate`.
+
+## Packing lists (Phase 3)
+
+- A `PackingList` belongs to a project and goes `draft → checked_out →
+  checked_in` (`PACKING_STATUSES`). Lines can only change while it is a
+  draft; `canEditLines/canPack/canCheckOut/canCheckIn` in
+  `src/modules/packing/logic.ts` are the only place that knows this.
+- A `PackingLine` is a model + quantity. A plain line of the same model is
+  merged on add. The quantity of a model across a list can never exceed
+  what exists in the inventory (`modelStock`: any status except retired);
+  `add` throws, and the template / copy / reservation sources pass
+  `{ clamp: true }` to cut the line down instead. Lines show an amber
+  "only N of M in house today" hint when fewer are in house right now. A kit is one line with `itemId = caseItemId = the kit`; its
+  contents are never separate lines (they travel with the case via the
+  inventory status cascade).
+- Progress is derived from `PackingCheck` rows: phase `out` (ticked while
+  packing, one per unit or one per bulk quantity) and phase `in` (outcome
+  `ok | damaged | missing`, `CHECK_OUTCOMES` maps outcome → item status).
+  `lineProgress/listProgress/listTotals` are pure and unit-tested.
+- Check-out moves ticked serialized units to `on_project` at the project
+  location (through `items.changeStatus(..., { viaFlow: true })` so the
+  kit cascade and status log apply). Bulk quantities split a **travel bin**
+  (new Item, new asset tag, `homeLocationId` of the source bin); check-in
+  with `ok` merges it back into the source bin and deletes it when empty.
+- `finishCheckIn` records anything still out as `missing` and closes the
+  list. Lists that are checked out cannot be deleted.
+- Scanning in pack mode (`packingChecks.scan`) finds the open line for the
+  tag's model and ticks it; the result object (`ticked | unknown |
+  not_on_list | error`) drives the message in `PackMode`.
+- `ShareLink` rows (`targetType`, `targetId`, random token) are generic;
+  `/share/packing/[token]` and `?share=<token>` on the PDF route are the
+  Phase 3 consumers. Public pages live under `src/app/share/` outside the
+  app shell, and `proxy.ts` lets `/share/` through without a session.
+- Templates (`PackingTemplate`) hold model lines only, no units or kits.
 
 ## Events, outbox, integrations
 
@@ -166,7 +230,12 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
 - Prisma 7: datasource URL is in `prisma.config.ts`, not the schema. The
   client is generated into `src/generated/prisma`; import from
   `@/generated/prisma/client`. `npm install` regenerates it (postinstall).
-- `prisma migrate dev` needs the dev Postgres running.
+- `prisma migrate dev` needs the dev Postgres running, and it refuses to
+  run without a TTY (it prompts on warnings). From a non-interactive shell:
+  `npx prisma migrate diff --from-config-datasource --to-schema prisma
+  --script -o prisma/migrations/<stamp>_<name>/migration.sql`, then
+  `npx prisma migrate deploy` and `npx prisma generate`. Check the SQL
+  before deploying: an empty file still gets recorded as applied.
 - Auth.js `signIn()` succeeds by throwing a redirect; server actions must
   rethrow anything that is not an `AuthError`.
 - Playwright config starts `next dev` locally and `next start` in CI
@@ -182,6 +251,13 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
   patch script to the scratchpad and run it with `node file.js`.
 - Only one `next dev` per project (lock in `.next/dev`). For checks while a
   dev server is already running, `npm run build` + `PORT=3001 npx next start`.
+- A service that needs another module imports `@/modules/<name>/service`
+  (or `/tree`, `/logic`) directly with an eslint-disable comment, not the
+  barrel: barrels re-export server actions, which import next-auth, which
+  does not load under Vitest. Pages and components keep using the barrel.
+- `ActionForm` passes the clicked submit button to `new FormData(form,
+  submitter)`, so buttons with `name="outcome" value="ok"` work like a
+  native submit. Keep that when touching it.
 - Do not use the build-generated global types (`RouteContext`, `PageProps`,
   `LayoutProps`) in source: CI runs `tsc` before `next build`, so they do not
   exist there. Type `params` explicitly: `{ params: Promise<{ id: string }> }`.

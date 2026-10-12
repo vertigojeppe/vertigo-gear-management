@@ -73,6 +73,15 @@ export const categories = {
 /* Locations                                                                */
 /* ------------------------------------------------------------------------ */
 
+/** type = person must point at a user or a contact; other types clear both. */
+function personRefs(input: LocationInput): { userId: string | null; contactId: string | null } {
+  if (input.type !== "person") return { userId: null, contactId: null };
+  const [kind, id] = (input.person ?? "").split(":");
+  if (kind === "user" && id) return { userId: id, contactId: null };
+  if (kind === "contact" && id) return { userId: null, contactId: id };
+  throw new InventoryError("Choose who holds the gear.", "person");
+}
+
 export const locations = {
   async list() {
     return prisma.location.findMany({ orderBy: [{ type: "asc" }, { name: "asc" }] });
@@ -81,7 +90,7 @@ export const locations = {
   async create(actor: Actor, input: LocationInput) {
     assertCan(actor, "inventory.write");
     const loc = await prisma.location.create({
-      data: { name: input.name, type: input.type, parentId: input.parentId ?? null, notes: input.notes ?? null },
+      data: { name: input.name, type: input.type, parentId: input.parentId ?? null, notes: input.notes ?? null, ...personRefs(input) },
     });
     await logActivity(actor, { entityType: "location", entityId: loc.id, action: "created", summary: `Created location ${loc.name}` });
     return loc;
@@ -95,7 +104,7 @@ export const locations = {
     }
     const loc = await prisma.location.update({
       where: { id },
-      data: { name: input.name, type: input.type, parentId: input.parentId ?? null, notes: input.notes ?? null },
+      data: { name: input.name, type: input.type, parentId: input.parentId ?? null, notes: input.notes ?? null, ...personRefs(input) },
     });
     await logActivity(actor, { entityType: "location", entityId: loc.id, action: "updated", summary: `Updated location ${loc.name}` });
     return loc;
@@ -137,6 +146,7 @@ export type ModelDto = {
   defaultPhotoId: string | null;
   customFields: CustomFieldValues;
   archived: boolean;
+  notForRental: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -161,6 +171,7 @@ export function toModelDto(m: ModelRow): ModelDto {
     defaultPhotoId: m.defaultPhotoId,
     customFields: (m.customFields ?? {}) as CustomFieldValues,
     archived: m.archived,
+    notForRental: m.notForRental,
     createdAt: m.createdAt,
     updatedAt: m.updatedAt,
   };
@@ -180,6 +191,7 @@ function modelData(input: ModelInput, customFields: CustomFieldValues) {
     powerDrawW: input.powerDrawW ?? null,
     notes: input.notes ?? null,
     links: parseLinksText(input.linksText),
+    notForRental: input.notForRental,
     customFields,
   };
 }
@@ -269,6 +281,8 @@ export type ItemDto = {
   replacementValue: number | null;
   conditionNotes: string | null;
   notes: string | null;
+  notForRental: boolean;
+  retiredReason: string | null;
   customFields: CustomFieldValues;
   createdAt: Date;
   updatedAt: Date;
@@ -295,6 +309,8 @@ export function toItemDto(i: ItemRow): ItemDto {
     replacementValue: num(i.replacementValue),
     conditionNotes: i.conditionNotes,
     notes: i.notes,
+    notForRental: i.notForRental,
+    retiredReason: i.retiredReason,
     customFields: (i.customFields ?? {}) as CustomFieldValues,
     createdAt: i.createdAt,
     updatedAt: i.updatedAt,
@@ -330,6 +346,7 @@ function itemData(input: ItemInput, tracking: "serialized" | "bulk", customField
     replacementValue: input.replacementValue ?? null,
     conditionNotes: input.conditionNotes ?? null,
     notes: input.notes ?? null,
+    notForRental: input.notForRental,
     customFields,
   };
 }
@@ -455,13 +472,15 @@ export const items = {
     if (problem === "same_status") throw new InventoryError("The item already has that status.", "status");
     if (problem === "not_manual") throw new InventoryError("That status is set by check-out and rentals, not by hand.", "status");
     if (problem === "reason_required") throw new InventoryError("Give a reason for this status.", "reason");
+    if (input.status === "retired" && !input.retiredReason) throw new InventoryError("Say why it was retired: sold, scrapped or lost.", "retiredReason");
+    const retiredReason = input.status === "retired" ? (input.retiredReason ?? null) : null;
 
     const targets = [item, ...(item.isKit ? await prisma.item.findMany({ where: { parentItemId: id } }) : [])];
     await prisma.$transaction(async (tx) => {
       for (const t of targets) {
         await tx.item.update({
           where: { id: t.id },
-          data: { status: input.status, ...(input.locationId !== undefined ? { locationId: input.locationId } : {}) },
+          data: { status: input.status, retiredReason, ...(input.locationId !== undefined ? { locationId: input.locationId } : {}) },
         });
         await tx.statusLog.create({
           data: {

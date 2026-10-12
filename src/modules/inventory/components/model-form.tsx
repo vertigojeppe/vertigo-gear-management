@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -11,7 +11,7 @@ import { SubmitButton } from "@/components/form/submit-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { buttonVariants } from "@/components/ui/button";
-import type { CustomFieldDef } from "@/lib/custom-fields";
+import { applicableDefs, type CustomFieldDef } from "@/lib/custom-fields";
 import type { FormState } from "@/lib/forms";
 import { saveModel } from "../actions";
 import { linksToText, TRACKING_TYPES } from "../schema";
@@ -38,6 +38,7 @@ export function ModelForm({
   const v = (name: string, fallback: string | number | null | undefined) =>
     state.values && name in state.values ? state.values[name] : fallback === null || fallback === undefined ? "" : String(fallback);
   const err = state.fieldErrors ?? {};
+  const [categoryId, setCategoryId] = useState(v("categoryId", model?.categoryId ?? defaultCategoryId));
 
   return (
     <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
@@ -52,7 +53,7 @@ export function ModelForm({
           <Input id="name" name="name" defaultValue={v("name", model?.name)} required />
         </Field>
         <Field id="categoryId" label={t("category")} error={err.categoryId}>
-          <NativeSelect id="categoryId" name="categoryId" defaultValue={v("categoryId", model?.categoryId ?? defaultCategoryId)} required>
+          <NativeSelect id="categoryId" name="categoryId" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
             <option value="">—</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -107,7 +108,15 @@ export function ModelForm({
         </Field>
       </fieldset>
 
-      <CustomFieldInputs defs={defs} values={model?.customFields} echoed={state.values} errors={err} title={t("customFields")} />
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" name="notForRental" className="mt-0.5 size-4" defaultChecked={state.values ? state.values.notForRental === "on" : Boolean(model?.notForRental)} />
+        <span>
+          {t("notForRental")}
+          <span className="block text-xs text-muted-foreground">{t("notForRentalHelp")}</span>
+        </span>
+      </label>
+
+      <CustomFieldInputs defs={applicableDefs(defs, categoryId || null)} values={model?.customFields} echoed={state.values} errors={err} title={t("customFields")} />
 
       <div className="flex gap-2">
         <SubmitButton pendingText={tc("loading")}>{tc("save")}</SubmitButton>

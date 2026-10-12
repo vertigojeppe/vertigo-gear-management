@@ -7,6 +7,7 @@ import { ActivityList } from "@/components/activity-list";
 import { CustomFieldValuesList } from "@/components/form/custom-field-inputs";
 import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/page-header";
+import { applicableDefs } from "@/lib/custom-fields";
 import { StatusBadge } from "@/components/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
@@ -46,7 +47,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
     <div className="flex flex-col gap-8">
       <PageHeader
         title={label}
-        subtitle={`${detail.categoryPath.join(" › ")} · ${t(model.trackingType)}${model.archived ? ` · ${t("archived")}` : ""}`}
+        subtitle={`${detail.categoryPath.join(" › ")} · ${t(model.trackingType)}${model.notForRental ? ` · ${t("notForRental")}` : ""}${model.archived ? ` · ${t("archived")}` : ""}`}
         crumbs={[{ label: t("title"), href: "/inventory" }, { label }]}
         actions={
           canEdit && (
@@ -126,7 +127,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
               ))}
             </ul>
           )}
-          <CustomFieldValuesList defs={defs} values={model.customFields} />
+          <CustomFieldValuesList defs={applicableDefs(defs, model.categoryId)} values={model.customFields} />
           {model.notes && <p className="text-sm whitespace-pre-line text-muted-foreground">{model.notes}</p>}
           <p className="text-xs text-muted-foreground">{ts("in_house")}: {detail.byStatus.in_house ?? 0} · {t("owned")}: {detail.owned}</p>
         </div>

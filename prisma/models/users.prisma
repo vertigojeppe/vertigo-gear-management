@@ -20,6 +20,10 @@ model User {
   statusLogs  StatusLog[]
   activity    ActivityLog[]
   files       File[]
+  packingChecks PackingCheck[]
+  shareLinks  ShareLink[]
+  /// "Mikkel has 2": locations of type person pointing at this user.
+  locations   Location[]
 
   @@index([role])
 }

@@ -163,3 +163,76 @@ resolves. With validation and conflict responses that is exactly when the
 user needs their input kept (and native selects were not restored at all).
 `ActionForm` submits via `startTransition(() => action(formData))`, so
 nothing resets; `SubmitButton` gets the pending flag from context.
+
+## 2026-10-12 — Bulk gear travels in a split-off bin
+
+A packing list takes "5 of the 20 DMX cables". Instead of a quantity field
+on the project, check-out creates a new Item (a travel bin with its own tag)
+holding that quantity at the project location and reduces the source bin.
+The inventory then shows the truth at every moment, QR labels can be printed
+for the travel bin, and check-in merges it back (or leaves a damaged/missing
+bin behind with that status). Costs one extra asset tag per bulk line.
+
+## 2026-10-12 — A kit is one line on a packing list
+
+Adding a kit (a case with `isKit`) adds one line with the case as the unit.
+Its contents are shown but never become lines, and ticking the case ticks
+everything inside. Check-out/check-in reuse the inventory status cascade
+(`parentItemId`), so a kit's contents are never in a different state than
+the case. Taking something out of a kit for a job means removing it from the
+kit first (Phase 1 kit section).
+
+## 2026-10-12 — Finish check-in marks the rest missing
+
+The user does not have to click "missing" on every absent unit at 03:00
+after load-out. Finishing a check-in records `missing` for everything still
+out and closes the list; items get the `missing` status and stay at the
+project location, so the inventory keeps asking for them. Finding one later
+is a normal status change on the item.
+
+## 2026-10-12 — Share links are generic rows with random tokens
+
+`ShareLink(targetType, targetId, token)` rather than a token column per
+entity, so Phase 4 plans reuse it. Tokens are 18 random bytes, base64url.
+A share link does not expire by default (the crew uses it until the show
+is over); revoking deletes the row. No login, no write access.
+
+## 2026-10-12 — Spec update: schema first, pricing later
+
+`SPEC.md` (the renamed system prompt) and `MIGRATION.md` added statuses,
+flags, contacts, person locations, category-scoped fields, a pricing engine,
+sub-hire, wish list and purchase records. We land the schema-level changes
+now, while the inventory model is still young, and park everything that
+needs its own UI and maths (pricing, quotes, sub-hire, wish list, purchase
+records) until after Phase 4, so production plans are not delayed.
+
+## 2026-10-12 — A case is not a Location row
+
+The spec lists "a case/kit" among location types. Kits already contain
+items through `parentItemId`, and an item inside a kit shows "in Laser
+case 1" on its page, so a second representation as a Location would drift.
+"Case" stays a property of kit membership; `LOCATION_TYPES` gained only
+`person`.
+
+## 2026-10-12 — Person locations point at a user or a contact
+
+"Mikkel has 2" is a Location of type `person` with either `userId` (staff)
+or `contactId` (external). Items keep their normal status, so a loan to a
+colleague is visible in the inventory without inventing a status for it.
+Contacts stay separate from `Client` for now; unifying them is in the
+backlog.
+
+## 2026-10-12 — Retired items carry a reason category
+
+`retiredReason` (sold / scrapped / lost) sits next to the free-text reason.
+The status log keeps the text; the category makes "what did we sell" a
+filter instead of a search.
+
+## 2026-10-12 — Custom fields can be scoped to a category
+
+`CustomFieldDefinition.categoryId` limits a model/item field to a category
+and its sub-categories; `null` means every category. Definitions carry the
+resolved `categoryIds` so forms filter client-side as the category or model
+changes, and actions validate against the applicable set only. The unique
+key is (entity, categoryId, key), so "length" can exist on both truss and
+cables.

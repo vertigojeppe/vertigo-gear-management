@@ -23,14 +23,17 @@ import {
   projectDetail,
 } from "@/modules/projects";
 import { customFieldDefinitions } from "@/modules/settings";
-import { PROJECT_STATUSES } from "../../../../../config/app.config";
+import { listsForProject } from "@/modules/packing";
+import { PACKING_STATUSES, PROJECT_STATUSES } from "../../../../../config/app.config";
 
 export const metadata: Metadata = { title: "Project" };
 
 export default async function ProjectPage(props: { params: Promise<{ id: string }> }) {
   const actor = await requireActor();
   const { id } = await props.params;
-  const [detail, defs, models, users] = await Promise.all([projectDetail(id), customFieldDefinitions.forEntity("project"), modelOptions(), crewOptions()]);
+  const [detail, defs, models, users, packingLists] = await Promise.all([projectDetail(id), customFieldDefinitions.forEntity("project"), modelOptions(), crewOptions(), listsForProject(id)]);
+  const tpack = await getTranslations("packing");
+  const tps = await getTranslations("packingStatus");
   if (!detail) notFound();
   const { project, client, crew, contacts, reservations } = detail;
   const t = await getTranslations("projects");
@@ -171,6 +174,39 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
                     <RemoveReservationButton id={r.id} projectId={project.id} />
                   </span>
                 )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-medium">
+            {t("packingLists")} <span className="text-sm font-normal text-muted-foreground">({packingLists.length})</span>
+          </h2>
+          {can(actor.role, "packing.write") && (
+            <Link href={`/projects/${project.id}/packing/new`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              {tpack("newList")}
+            </Link>
+          )}
+        </div>
+        {packingLists.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{tpack("noLists")}</p>
+        ) : (
+          <ul className="divide-y rounded-md border text-sm">
+            {packingLists.map((pl) => (
+              <li key={pl.id}>
+                <Link href={`/projects/${project.id}/packing/${pl.id}`} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50">
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium">{pl.name}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {pl.lineCount} {tpack("lines").toLowerCase()} · {tpack("packed", { packed: pl.progress.packed, total: pl.progress.units })}
+                      {pl.status === "checked_out" ? ` · ${tpack("returned", { returned: pl.progress.packed - pl.progress.toReturn, packed: pl.progress.packed })}` : ""}
+                    </span>
+                  </span>
+                  <StatusPill color={PACKING_STATUSES.find((s) => s.key === pl.status)?.color ?? "gray"}>{tps(pl.status)}</StatusPill>
+                </Link>
               </li>
             ))}
           </ul>

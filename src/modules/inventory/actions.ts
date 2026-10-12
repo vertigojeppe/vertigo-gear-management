@@ -81,7 +81,7 @@ export async function saveModel(_prev: FormState, formData: FormData): Promise<F
   const id = String(formData.get("id") ?? "");
   const parsed = parseForm(modelInput, formData);
   if (!parsed.ok) return parsed.state;
-  const defs = await customFieldDefinitions.forEntity("model");
+  const defs = await customFieldDefinitions.forEntity("model", parsed.data.categoryId);
   const cf = validateCustomFields(defs, customFieldsFromForm(formData));
   if (!cf.ok) return { ok: false, fieldErrors: prefixErrors(cf.errors), values: echoValues(formData) };
   let modelId = id;
@@ -116,7 +116,7 @@ export async function createItems(_prev: FormState, formData: FormData): Promise
   const actor = await requirePermission("inventory.write");
   const parsed = parseForm(itemBatchInput, formData);
   if (!parsed.ok) return parsed.state;
-  const defs = await customFieldDefinitions.forEntity("item");
+  const defs = await customFieldDefinitions.forEntity("item", (await models.get(parsed.data.modelId))?.categoryId ?? null);
   const cf = validateCustomFields(defs, customFieldsFromForm(formData));
   if (!cf.ok) return { ok: false, fieldErrors: prefixErrors(cf.errors), values: echoValues(formData) };
   const { count, serialNumbers, ...input } = parsed.data;
@@ -140,7 +140,7 @@ export async function updateItem(_prev: FormState, formData: FormData): Promise<
   const id = String(formData.get("id") ?? "");
   const parsed = parseForm(itemInput, formData);
   if (!parsed.ok) return parsed.state;
-  const defs = await customFieldDefinitions.forEntity("item");
+  const defs = await customFieldDefinitions.forEntity("item", (await models.get(parsed.data.modelId))?.categoryId ?? null);
   const cf = validateCustomFields(defs, customFieldsFromForm(formData));
   if (!cf.ok) return { ok: false, fieldErrors: prefixErrors(cf.errors), values: echoValues(formData) };
   try {

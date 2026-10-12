@@ -1,0 +1,105 @@
+// packing module
+
+/// A packing list belongs to a project. Lines are models + quantities;
+/// specific units are recorded in PackingCheck rows as they are packed.
+model PackingList {
+  id           String        @id @default(cuid())
+  projectId    String
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name         String
+  /// "category" | "case"
+  groupBy      String        @default("category")
+  /// "draft" | "checked_out" | "checked_in"
+  status       String        @default("draft")
+  checkedOutAt DateTime?
+  checkedInAt  DateTime?
+  notes        String?
+  lines        PackingLine[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([projectId])
+}
+
+model PackingLine {
+  id         String         @id @default(cuid())
+  listId     String
+  list       PackingList    @relation(fields: [listId], references: [id], onDelete: Cascade)
+  modelId    String
+  model      Model          @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  quantity   Int            @default(1)
+  /// Pre-assigned unit (a kit, or a chosen serialized unit).
+  itemId     String?
+  item       Item?          @relation("PackingLineItem", fields: [itemId], references: [id], onDelete: SetNull)
+  /// The kit/case this line travels in (grouping for "by case").
+  caseItemId String?
+  caseItem   Item?          @relation("PackingLineCase", fields: [caseItemId], references: [id], onDelete: SetNull)
+  note       String?
+  sortOrder  Int            @default(0)
+  checks     PackingCheck[]
+  createdAt  DateTime       @default(now())
+
+  @@index([listId])
+}
+
+/// One row per packed unit (serialized) or per packed quantity (bulk),
+/// per phase. Check-in rows reference the out row they close.
+model PackingCheck {
+  id           String       @id @default(cuid())
+  lineId       String
+  line         PackingLine  @relation(fields: [lineId], references: [id], onDelete: Cascade)
+  /// "out" | "in"
+  phase        String
+  /// The unit that went out / came back. For bulk: the travel bin.
+  itemId       String?
+  item         Item?        @relation("PackingCheckItem", fields: [itemId], references: [id], onDelete: SetNull)
+  /// Bulk only: the warehouse bin the quantity was taken from.
+  sourceItemId String?
+  quantity     Int          @default(1)
+  /// "ok" | "missing" | "damaged"
+  outcome      String       @default("ok")
+  note         String?
+  checkedById  String?
+  checkedBy    User?        @relation(fields: [checkedById], references: [id], onDelete: SetNull)
+  checkedAt    DateTime     @default(now())
+
+  @@index([lineId, phase])
+  @@index([itemId])
+}
+
+model PackingTemplate {
+  id          String                @id @default(cuid())
+  name        String
+  description String?
+  lines       PackingTemplateLine[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model PackingTemplateLine {
+  id         String          @id @default(cuid())
+  templateId String
+  template   PackingTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  modelId    String
+  model      Model           @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  quantity   Int             @default(1)
+  note       String?
+  sortOrder  Int             @default(0)
+
+  @@index([templateId])
+}
+
+/// Read-only share links for packing lists (and plans in Phase 4).
+model ShareLink {
+  id          String    @id @default(cuid())
+  /// "packing_list" | "plan"
+  targetType  String
+  targetId    String
+  token       String    @unique
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([targetType, targetId])
+}

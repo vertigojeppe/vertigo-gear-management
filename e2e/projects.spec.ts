@@ -29,7 +29,13 @@ test.describe("projects and rentals", () => {
 
     await page.goto("/projects/new");
     await page.getByLabel("Name").fill(`E2E show ${stamp}`);
-    await pickOption(page, "Client", "Vega");
+    // A client can be created from the dropdown and is selected afterwards.
+    await page.getByRole("button", { name: "New client" }).click();
+    await page.getByLabel("Company / name").fill(`E2E client ${stamp}`);
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByLabel(/^Client/)).toHaveValue(/.+/);
+    await expect(page.getByLabel(/^Client/).locator("option:checked")).toHaveText(`E2E client ${stamp}`);
+    await expect(page.getByLabel("Name", { exact: true })).toHaveValue(`E2E show ${stamp}`);
     await page.getByLabel("Status").selectOption("confirmed");
     await page.getByLabel("Prep start").fill(day(0));
     await page.getByLabel("Load-in").fill(`${day(1)}T08:00`);
@@ -69,11 +75,14 @@ test.describe("projects and rentals", () => {
   test("rental: add a line, hand out, return", async ({ page }) => {
     await signIn(page, "member@vertigo.test");
     await page.goto("/rentals/new");
-    await pickOption(page, "Renter", "Nordic Light Rental");
+    await page.getByRole("button", { name: "New client" }).click();
+    await page.getByLabel("Company / name").fill(`E2E client ${stamp} rental`);
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByLabel(/^Renter/).locator("option:checked")).toHaveText(`E2E client ${stamp} rental`);
     await page.getByLabel(/^From$/).fill(day(10));
     await page.getByLabel(/^To$/).fill(day(12));
     await page.getByRole("button", { name: "Create" }).click();
-    await expect(page.getByRole("heading", { name: "Nordic Light Rental" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: `E2E client ${stamp} rental` })).toBeVisible();
 
     await page.getByRole("button", { name: "Add gear" }).click();
     await pickOption(page, "Model", "Robe Pointe");
@@ -85,11 +94,11 @@ test.describe("projects and rentals", () => {
 
     page.once("dialog", (d) => d.accept());
     await page.getByRole("button", { name: "Hand out" }).click();
-    await expect(page.getByRole("heading", { name: "Nordic Light Rental" }).getByText("Out")).toBeVisible();
+    await expect(page.getByRole("heading", { name: `E2E client ${stamp} rental` }).getByText("Out")).toBeVisible();
 
     page.once("dialog", (d) => d.accept());
     await page.getByRole("button", { name: "Mark returned" }).click();
-    await expect(page.getByRole("heading", { name: "Nordic Light Rental" }).getByText("Returned")).toBeVisible();
+    await expect(page.getByRole("heading", { name: `E2E client ${stamp} rental` }).getByText("Returned")).toBeVisible();
 
     const pdf = await page.request.get(page.url().replace(/\/rentals\//, "/api/rentals/") + "/agreement.pdf");
     expect(pdf.status()).toBe(200);

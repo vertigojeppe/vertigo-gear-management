@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
+import { personOptions } from "@/modules/contacts";
 import { DeleteLocationButton, InventoryTabs, LocationDialog, locationList, locationOptions } from "@/modules/inventory";
 
 export const metadata: Metadata = { title: "Locations" };
@@ -14,7 +15,7 @@ export default async function LocationsPage() {
   const actor = await requireActor();
   const t = await getTranslations("inventory");
   const tl = await getTranslations("locationType");
-  const [tree, options] = await Promise.all([locationList(), locationOptions()]);
+  const [tree, options, people] = await Promise.all([locationList(), locationOptions(), personOptions()]);
   const canEdit = can(actor.role, "inventory.write");
 
   const render = (nodes: Node[]) => (
@@ -29,7 +30,7 @@ export default async function LocationsPage() {
             <span className="text-xs text-muted-foreground">{t("itemsCount", { count: n._count.items })}</span>
             {canEdit && (
               <span className="ml-auto flex items-center gap-1">
-                <LocationDialog trigger="edit" location={{ id: n.id, name: n.name, type: n.type, parentId: n.parentId, notes: n.notes }} parents={options} />
+                <LocationDialog trigger="edit" location={{ id: n.id, name: n.name, type: n.type, parentId: n.parentId, notes: n.notes, userId: n.userId, contactId: n.contactId }} parents={options} people={people} />
                 {n._count.items === 0 && n.children.length === 0 && <DeleteLocationButton id={n.id} />}
               </span>
             )}
@@ -43,7 +44,7 @@ export default async function LocationsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={t("title")} actions={canEdit && <LocationDialog trigger="new" parents={options} />} />
+      <PageHeader title={t("title")} actions={canEdit && <LocationDialog trigger="new" parents={options} people={people} />} />
       <InventoryTabs />
       {tree.length === 0 ? <EmptyState title={t("noLocations")} body={t("noLocationsBody")} /> : <div className="rounded-md border px-4 py-2 text-sm">{render(tree)}</div>}
     </div>

@@ -45,6 +45,7 @@ model Project {
   contacts     ProjectContact[]
   crew         ProjectCrew[]
   allocations  Allocation[]
+  packingLists PackingList[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

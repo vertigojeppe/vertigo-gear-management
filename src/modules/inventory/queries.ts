@@ -40,7 +40,7 @@ export async function modelOptions() {
   const rows = await prisma.model.findMany({
     where: { archived: false },
     orderBy: [{ manufacturer: "asc" }, { name: "asc" }],
-    select: { id: true, manufacturer: true, name: true, trackingType: true },
+    select: { id: true, manufacturer: true, name: true, trackingType: true, categoryId: true, notForRental: true },
   });
   return rows;
 }

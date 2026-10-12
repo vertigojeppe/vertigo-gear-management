@@ -25,6 +25,9 @@ describe("validateStatusChange", () => {
     expect(isAvailableStatus("in_repair")).toBe(false);
     expect(isAvailableStatus("missing")).toBe(false);
     expect(isAvailableStatus("retired")).toBe(false);
+    expect(isAvailableStatus("under_construction")).toBe(false);
     expect(manualStatuses()).toContain("in_house");
+    expect(manualStatuses()).toContain("under_construction");
+    expect(validateStatusChange("in_house", "under_construction", undefined)).toBeNull();
   });
 });

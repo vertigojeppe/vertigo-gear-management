@@ -46,7 +46,14 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 - **Scan** (phone): point the camera at a tag, or type it. Browsers only
   allow the camera over HTTPS (or localhost), so in production put the app
   behind HTTPS and in development use `npm run dev:https`.
-- **Settings › Extra fields**: add your own fields to models and items.
+- **Settings › Extra fields**: add your own fields to models and items,
+  for every category or just one (projectors get lumen and throw ratio,
+  LED controllers get IP and firmware, and so on).
+- **Settings › Contacts**: people and companies who are not users. A
+  contact or a colleague can be a *person* location ("Mikkel has 2").
+- **Not for rental**: flag a model or a unit as own-projects-only; the
+  rentals screens refuse it. Retiring an item asks whether it was sold,
+  scrapped or lost; own-built fixtures can sit as *under construction*.
 - **Settings › Users**: invite colleagues as admin, member or viewer.
 - **Settings › Your account › API tokens**: call the REST API from other
   tools. Docs at `/api/docs`.
@@ -63,6 +70,18 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
   Calendar.
 - **Webhooks**: Settings › Webhooks posts signed JSON to your URL on events
   such as a status change or a confirmed project.
+- **Packing lists** (project page): start empty, from the project's
+  reservations, from a template, or by copying another list. Add models,
+  whole kits, or a template's lines; group by category or by case; see the
+  weight, case and power totals; print the PDF.
+- **Packing mode** (phone): tick units from a list, or scan a tag to tick
+  that unit; bulk gear is taken from a bin by quantity. **Check out** moves
+  everything ticked to the project. **Check in** records each unit as OK,
+  damaged or missing; finishing marks whatever is still out as missing.
+- **Share link**: a read-only page for the crew or the venue, no login
+  needed. Revoke it when the job is done.
+- **Packing templates** (Projects › Templates): reusable model lists, also
+  savable from any packing list.
 
 ## Scripts
 
