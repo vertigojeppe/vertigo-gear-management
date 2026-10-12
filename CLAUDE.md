@@ -7,8 +7,8 @@ change it here in the same commit.
 
 Self-hosted web app for Vertigo (Copenhagen light/laser/projection studio):
 gear inventory, availability, projects, packing lists, production plans,
-external rentals. Full spec: `vertigo-gear-system-prompt.md`. Plan and data
-model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
+external rentals. Full spec: `SPEC.md`; the spreadsheet we migrate from and
+what it implies: `MIGRATION.md`. Plan and data model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
 Current phase: **3 (packing lists, check-out/check-in, share links) done**. Next: Phase 4 (production plans, files, viewers).
@@ -115,6 +115,24 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
   endpoints to `src/lib/api/openapi.ts` so `/api/docs` stays complete.
 - Asset tags come from `nextAssetTag(tx)` inside the creating transaction.
   The seed sets the counter past its highest tag.
+- Statuses include `under_construction` (exists, not usable, no reason
+  needed). Retiring requires `retiredReason` (sold | scrapped | lost,
+  `RETIREMENT_REASONS`) next to the free-text reason; it is cleared when
+  the item leaves `retired`.
+- `notForRental` on a model or an item means own projects only; the
+  rentals service refuses such models (`assertRentable`) and units.
+- Locations of type `person` carry `userId` or `contactId`; the dialog
+  posts `person=user:<id>|contact:<id>` and `personRefs()` maps it. Cases
+  are not locations (kit membership via `parentItemId` already covers it).
+- Contacts (`src/modules/contacts`) are people and companies who are not
+  users; permissions `contacts.read/write`. Clients stay separate for now.
+- Custom field definitions can be scoped to a category
+  (`categoryId`, applies to sub-categories). `forEntity(entity)` returns
+  every definition with `categoryIds` resolved; `forEntity(entity,
+  categoryId)` only the applicable ones. Forms filter with
+  `applicableDefs` as the category/model changes; actions validate with
+  the category. Seeded sets: projectors, LED controllers, alu profiles,
+  computers, truss.
 
 ## Availability, projects, rentals
 
@@ -208,7 +226,12 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
 - Prisma 7: datasource URL is in `prisma.config.ts`, not the schema. The
   client is generated into `src/generated/prisma`; import from
   `@/generated/prisma/client`. `npm install` regenerates it (postinstall).
-- `prisma migrate dev` needs the dev Postgres running.
+- `prisma migrate dev` needs the dev Postgres running, and it refuses to
+  run without a TTY (it prompts on warnings). From a non-interactive shell:
+  `npx prisma migrate diff --from-config-datasource --to-schema prisma
+  --script -o prisma/migrations/<stamp>_<name>/migration.sql`, then
+  `npx prisma migrate deploy` and `npx prisma generate`. Check the SQL
+  before deploying: an empty file still gets recorded as applied.
 - Auth.js `signIn()` succeeds by throwing a redirect; server actions must
   rethrow anything that is not an `AuthError`.
 - Playwright config starts `next dev` locally and `next start` in CI

@@ -233,6 +233,15 @@ and check-out, check-in with missing/damaged flags, PDF export, share links.
 **Tests:** check-out / check-in state machine, partial returns, kit
 expansion, share link access without login.
 
+### Spec update (2026-10-12) ✅ schema part
+`SPEC.md` replaced the original system prompt and `MIGRATION.md` describes
+the spreadsheet we migrate from. Done now: `under_construction` status,
+retired reason (sold / scrapped / lost), not-for-rental flag on models and
+items, person locations (user or contact), contacts, category-scoped custom
+fields with the seeded field sets. Deferred to after Phase 4 (see
+`BACKLOG.md`): pricing engine and rate tables, quote PDF, sub-hire catalog,
+wish list, purchase records. The spreadsheet importer waits for the file.
+
 ### Phase 4 — Production plans
 Schedule, tasks, crew & contacts, logistics, documents with versions,
 resumable upload, image / PDF / 3D inline viewers, markup layer, pin files

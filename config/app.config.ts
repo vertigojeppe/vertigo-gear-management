@@ -45,6 +45,8 @@ export const PERMISSIONS = [
   "plans.write",
   "rentals.read",
   "rentals.write",
+  "contacts.read",
+  "contacts.write",
   "files.write",
   "share.create",
   "users.manage",
@@ -92,6 +94,8 @@ export const ITEM_STATUSES = [
   { key: "on_project", label: "itemStatus.on_project", color: "blue", available: true, reasonRequired: false, manual: true },
   { key: "rented_out", label: "itemStatus.rented_out", color: "purple", available: true, reasonRequired: false, manual: true },
   { key: "in_repair", label: "itemStatus.in_repair", color: "amber", available: false, reasonRequired: true, manual: true },
+  /** Exists but is not usable yet (own-built LED fixtures). */
+  { key: "under_construction", label: "itemStatus.under_construction", color: "amber", available: false, reasonRequired: false, manual: true },
   { key: "missing", label: "itemStatus.missing", color: "red", available: false, reasonRequired: true, manual: true },
   { key: "retired", label: "itemStatus.retired", color: "gray", available: false, reasonRequired: true, manual: true },
 ] as const;
@@ -106,7 +110,12 @@ export type AttachmentKind = (typeof ATTACHMENT_KINDS)[number];
 
 export type ItemStatus = (typeof ITEM_STATUSES)[number]["key"];
 
-export const LOCATION_TYPES = ["warehouse", "project", "renter", "repair"] as const;
+/** Why an item was retired; stored on the item next to the free-text reason. */
+export const RETIREMENT_REASONS = ["sold", "scrapped", "lost"] as const;
+export type RetirementReason = (typeof RETIREMENT_REASONS)[number];
+
+/** person = a staff member (User) or a Contact holding gear ("Mikkel has 2"). */
+export const LOCATION_TYPES = ["warehouse", "person", "project", "renter", "repair"] as const;
 export type LocationType = (typeof LOCATION_TYPES)[number];
 
 /* ---------------------------------------------------------------------- */

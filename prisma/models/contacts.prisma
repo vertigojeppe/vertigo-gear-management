@@ -1,0 +1,20 @@
+// contacts module
+
+/// People and companies who are not users: borrowers, suppliers, partners,
+/// key-fob holders. A contact can be a location (type = person).
+model Contact {
+  id           String   @id @default(cuid())
+  /// "person" | "company"
+  kind         String   @default("person")
+  name         String
+  organisation String?
+  email        String?
+  phone        String?
+  address      String?
+  notes        String?
+  locations    Location[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([name])
+}

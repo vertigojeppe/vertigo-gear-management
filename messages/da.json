@@ -196,7 +196,14 @@
     "toStatus": "Til",
     "when": "Hvornår",
     "who": "Hvem",
-    "cascadeNote": "Gælder kittet og alt i det."
+    "cascadeNote": "Gælder kittet og alt i det.",
+    "notForRental": "Ikke til udleje",
+    "notForRentalHelp": "Kun til vores egne projekter. Kan ikke sættes på en udlejning.",
+    "retiredReason": "Udgået fordi",
+    "person": "Hvem har det",
+    "personHelp": "En kollega eller en kontakt. Udstyr på denne lokation er hos den person.",
+    "staff": "Medarbejdere",
+    "contactsGroup": "Kontakter"
   },
   "itemStatus": {
     "in_house": "På lager",
@@ -204,13 +211,15 @@
     "rented_out": "Udlejet",
     "in_repair": "Til reparation",
     "missing": "Mangler",
-    "retired": "Udfaset"
+    "retired": "Udfaset",
+    "under_construction": "Under opbygning"
   },
   "locationType": {
     "warehouse": "Lager",
     "project": "Projekt",
     "renter": "Lejer",
-    "repair": "Værksted"
+    "repair": "Værksted",
+    "person": "Person"
   },
   "attachments": {
     "title": "Vedhæftninger",
@@ -334,7 +343,12 @@
       "processing": "Behandles",
       "done": "Færdig",
       "failed": "Fejlet"
-    }
+    },
+    "contacts": "Kontakter",
+    "contactsHelp": "Personer og firmaer som ikke er brugere: lånere, leverandører, partnere, nøglebrik-holdere.",
+    "cfCategory": "Kategori",
+    "cfCategoryHelp": "Kun modeller eller enheder i denne kategori (og underkategorier) får feltet. Tom = alle.",
+    "allCategories": "Alle kategorier"
   },
   "roles": {
     "admin": "Administrator",
@@ -635,5 +649,28 @@
     "inTruck": "I bilen",
     "onSiteNote": "Udleveret udstyr er på projektets placering, indtil det modtages igen.",
     "inHouseHint": "Kun {count} af {owned} på lageret i dag"
+  },
+  "retiredReason": {
+    "sold": "Solgt",
+    "scrapped": "Kasseret",
+    "lost": "Mistet"
+  },
+  "contacts": {
+    "title": "Kontakter",
+    "newContact": "Ny kontakt",
+    "editContact": "Rediger kontakt",
+    "kind": "Type",
+    "person": "Person",
+    "company": "Firma",
+    "name": "Navn",
+    "organisation": "Organisation",
+    "email": "E-mail",
+    "phone": "Telefon",
+    "address": "Adresse",
+    "notes": "Noter",
+    "noContacts": "Ingen kontakter endnu",
+    "noContactsBody": "Tilføj de personer og firmaer I låner udstyr til, køber fra eller lejer ind fra.",
+    "deleteConfirm": "Slet denne kontakt?",
+    "holdsGear": "har udstyr"
   }
 }

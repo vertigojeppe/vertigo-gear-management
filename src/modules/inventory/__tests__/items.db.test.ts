@@ -52,6 +52,7 @@ const base = {
   replacementValue: undefined,
   conditionNotes: undefined,
   notes: undefined,
+  notForRental: false,
 };
 
 describe("items service", () => {

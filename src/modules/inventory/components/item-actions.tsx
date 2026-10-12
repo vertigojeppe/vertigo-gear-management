@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormState } from "@/lib/forms";
-import { ITEM_STATUSES } from "../../../../config/app.config";
+import { ITEM_STATUSES, RETIREMENT_REASONS } from "../../../../config/app.config";
 import { changeItemStatus, moveItem } from "../actions";
 
 type LocationOption = { id: string; name: string; depth: number };
@@ -20,6 +20,7 @@ type LocationOption = { id: string; name: string; depth: number };
 export function StatusDialog({ itemId, current, isKit, locations }: { itemId: string; current: string; isKit: boolean; locations: LocationOption[] }) {
   const t = useTranslations("inventory");
   const ts = useTranslations("itemStatus");
+  const tr = useTranslations("retiredReason");
   const tc = useTranslations("common");
   const [state, action] = useActionState<FormState, FormData>(changeItemStatus, {});
   const [status, setStatus] = useState(current);
@@ -50,6 +51,18 @@ export function StatusDialog({ itemId, current, isKit, locations }: { itemId: st
                 ))}
               </NativeSelect>
             </Field>
+            {status === "retired" && (
+              <Field id="retiredReason" label={t("retiredReason")} error={state.fieldErrors?.retiredReason}>
+                <NativeSelect id="retiredReason" name="retiredReason" defaultValue="" required>
+                  <option value="">—</option>
+                  {RETIREMENT_REASONS.map((r) => (
+                    <option key={r} value={r}>
+                      {tr(r)}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </Field>
+            )}
             <Field id="reason" label={t("reason")} optional={!def?.reasonRequired} help={t("reasonHelp")} error={state.fieldErrors?.reason}>
               <Textarea id="reason" name="reason" rows={2} required={def?.reasonRequired} />
             </Field>

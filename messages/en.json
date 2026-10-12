@@ -196,7 +196,14 @@
     "toStatus": "To",
     "when": "When",
     "who": "Who",
-    "cascadeNote": "Applies to the kit and everything in it."
+    "cascadeNote": "Applies to the kit and everything in it.",
+    "notForRental": "Not for rental",
+    "notForRentalHelp": "Only for our own projects. It cannot be put on a rental.",
+    "retiredReason": "Retired because",
+    "person": "Who holds it",
+    "personHelp": "A colleague or a contact. Items at this location are with that person.",
+    "staff": "Staff",
+    "contactsGroup": "Contacts"
   },
   "itemStatus": {
     "in_house": "In house",
@@ -204,13 +211,15 @@
     "rented_out": "Rented out",
     "in_repair": "In repair",
     "missing": "Missing",
-    "retired": "Retired"
+    "retired": "Retired",
+    "under_construction": "Under construction"
   },
   "locationType": {
     "warehouse": "Warehouse",
     "project": "Project",
     "renter": "Renter",
-    "repair": "Repair shop"
+    "repair": "Repair shop",
+    "person": "Person"
   },
   "attachments": {
     "title": "Attachments",
@@ -334,7 +343,12 @@
       "processing": "Processing",
       "done": "Done",
       "failed": "Failed"
-    }
+    },
+    "contacts": "Contacts",
+    "contactsHelp": "People and companies who are not users: borrowers, suppliers, partners, key-fob holders.",
+    "cfCategory": "Category",
+    "cfCategoryHelp": "Only models or items in this category (and its sub-categories) get the field. Leave empty for all.",
+    "allCategories": "All categories"
   },
   "roles": {
     "admin": "Admin",
@@ -635,5 +649,28 @@
     "inTruck": "In the truck",
     "onSiteNote": "Checked-out gear is at the project location until it is checked in.",
     "inHouseHint": "Only {count} of {owned} in house today"
+  },
+  "retiredReason": {
+    "sold": "Sold",
+    "scrapped": "Scrapped",
+    "lost": "Lost"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "newContact": "New contact",
+    "editContact": "Edit contact",
+    "kind": "Type",
+    "person": "Person",
+    "company": "Company",
+    "name": "Name",
+    "organisation": "Organisation",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "notes": "Notes",
+    "noContacts": "No contacts yet",
+    "noContactsBody": "Add the people and companies you lend gear to, buy from, or rent in from.",
+    "deleteConfirm": "Delete this contact?",
+    "holdsGear": "holds gear"
   }
 }

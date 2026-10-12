@@ -6,6 +6,7 @@ import { ActivityList } from "@/components/activity-list";
 import { CustomFieldValuesList } from "@/components/form/custom-field-inputs";
 import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/page-header";
+import { applicableDefs } from "@/lib/custom-fields";
 import { QrImage } from "@/components/qr-image";
 import { StatusBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
   const t = await getTranslations("inventory");
   const tc = await getTranslations("common");
   const tl = await getTranslations("locationType");
+  const trr = await getTranslations("retiredReason");
   const canEdit = can(actor.role, "inventory.write");
   const canSeeFinance = can(actor.role, "inventory.finance");
   const isAdmin = can(actor.role, "users.manage");
@@ -43,6 +45,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
   else facts.push([t("serialNumber"), item.serialNumber ?? t("noSerial")]);
   facts.push([t("location"), detail.location ? `${detail.location.name} (${tl(detail.location.type)})` : t("noLocation")]);
   if (detail.parentItem) facts.push([t("inKit"), <Link key="kit" href={`/inventory/items/${detail.parentItem.id}`} className="underline">{detail.parentItem.label}</Link>]);
+  if (item.status === "retired" && item.retiredReason) facts.push([t("retiredReason"), trr(item.retiredReason as "sold")]);
   if (item.conditionNotes) facts.push([t("conditionNotes"), item.conditionNotes]);
   if (item.notes) facts.push([tc("notes"), item.notes]);
 
@@ -62,6 +65,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
           <span className="flex flex-wrap items-center gap-2">
             {item.isKit && <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium uppercase">{t("kit")}</span>}
             {title}
+            {(item.notForRental || model.notForRental) && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">{t("notForRental")}</span>}
             <StatusBadge status={item.status} className="text-sm" />
           </span>
         }
@@ -112,7 +116,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
               </dl>
             </div>
           )}
-          <CustomFieldValuesList defs={defs} values={item.customFields} />
+          <CustomFieldValuesList defs={applicableDefs(defs, model.categoryId)} values={item.customFields} />
         </div>
         <div className="flex flex-col items-center gap-2 rounded-md border p-3">
           <QrImage itemId={item.id} assetTag={item.assetTag} className="size-40" />

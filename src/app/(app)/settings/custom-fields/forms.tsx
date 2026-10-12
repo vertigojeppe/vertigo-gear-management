@@ -16,13 +16,15 @@ import { CUSTOM_FIELD_ENTITIES, CUSTOM_FIELD_TYPES } from "@/lib/custom-fields";
 import type { FormState } from "@/lib/forms";
 import { createCustomField, deleteCustomField, updateCustomField } from "@/modules/settings/actions";
 
-type FieldRow = { id: string; entity: string; key: string; label: string; type: string; options: string[]; required: boolean; sortOrder: number };
+type FieldRow = { id: string; entity: string; categoryId: string | null; key: string; label: string; type: string; options: string[]; required: boolean; sortOrder: number };
+type CategoryOption = { id: string; name: string; depth: number };
 
-export function CustomFieldDialog({ field, trigger }: { field?: FieldRow; trigger: "new" | "edit" }) {
+export function CustomFieldDialog({ field, trigger, categories }: { field?: FieldRow; trigger: "new" | "edit"; categories: CategoryOption[] }) {
   const t = useTranslations("settings");
   const tc = useTranslations("common");
   const [state, action] = useActionState<FormState, FormData>(field ? updateCustomField : createCustomField, {});
   const [type, setType] = useState(field?.type ?? "text");
+  const [entity, setEntity] = useState(field?.entity ?? "item");
   const [open, setOpen] = useActionDialog(state);
   const err = state.fieldErrors ?? {};
   const v = (name: string, fallback: string | number | null | undefined) =>
@@ -43,7 +45,7 @@ export function CustomFieldDialog({ field, trigger }: { field?: FieldRow; trigge
             <FormError message={state.error} />
             <div className="grid gap-4 sm:grid-cols-2">
               <Field id="cf-entity" label={t("cfEntity")} error={err.entity}>
-                <NativeSelect id="cf-entity" name="entity" defaultValue={v("entity", field?.entity ?? "item")} disabled={Boolean(field)}>
+                <NativeSelect id="cf-entity" name="entity" value={entity} onChange={(e) => setEntity(e.target.value)} disabled={Boolean(field)}>
                   {CUSTOM_FIELD_ENTITIES.map((e) => (
                     <option key={e} value={e}>
                       {t(`entity.${e}`)}
@@ -69,6 +71,19 @@ export function CustomFieldDialog({ field, trigger }: { field?: FieldRow; trigge
                 {field && <input type="hidden" name="key" value={field.key} />}
               </Field>
             </div>
+            {(entity === "model" || entity === "item") && (
+              <Field id="cf-category" label={t("cfCategory")} help={t("cfCategoryHelp")} error={err.categoryId}>
+                <NativeSelect id="cf-category" name="categoryId" defaultValue={v("categoryId", field?.categoryId)}>
+                  <option value="">{t("allCategories")}</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {"  ".repeat(c.depth)}
+                      {c.name}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </Field>
+            )}
             {type === "select" && (
               <Field id="cf-options" label={t("cfOptions")} help={t("cfOptionsHelp")} error={err.optionsText}>
                 <Textarea id="cf-options" name="optionsText" rows={4} defaultValue={v("optionsText", field?.options.join("\n"))} />

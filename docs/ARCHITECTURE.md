@@ -26,6 +26,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | users | User, ApiToken | `users.*`, `apiTokens.*`, user/account actions |
 | settings | CustomFieldDefinition | `customFieldDefinitions.*` |
 | inventory | Category, Model, Item, Location, StatusLog | `categories`, `locations`, `models`, `items`, list/detail queries, forms |
+| contacts | Contact | `contacts`, `contactList`, `personOptions`, contact dialog |
 | files | File, Attachment | `files.*`, `AttachmentsSection` |
 | projects | Client, Project, ProjectContact, ProjectCrew, Allocation | `clients`, `projects`, `allocations`, availability engine, timeline |
 | rentals | Rental, RentalLine | `rentals`, `rentalLines`, pricing, agreement PDF |
@@ -38,6 +39,37 @@ Cross-cutting in `src/lib/`: `activity.ts` (ActivityLog), `asset-tag.ts`
 (Counter-backed tag sequence), `custom-fields.ts` (pure validation),
 `forms.ts` (FormData → zod → FormState), `storage/` (adapter),
 `api/` (REST auth, error mapping, OpenAPI), `auth/` (Auth.js, permissions).
+
+## Data model (spec update, October 2026)
+
+```mermaid
+erDiagram
+  Contact ||--o{ Location : "type=person"
+  User ||--o{ Location : "type=person"
+  Category ||--o{ CustomFieldDefinition : "scopes"
+
+  Contact {
+    string kind "person | company"
+    string name
+    string organisation
+  }
+  Model {
+    boolean notForRental
+  }
+  Item {
+    string status "+ under_construction"
+    boolean notForRental
+    string retiredReason "sold | scrapped | lost"
+  }
+  Location {
+    string type "warehouse | person | project | renter | repair"
+    string userId
+    string contactId
+  }
+  CustomFieldDefinition {
+    string categoryId "null = all categories"
+  }
+```
 
 ## Data model (Phase 3 additions)
 

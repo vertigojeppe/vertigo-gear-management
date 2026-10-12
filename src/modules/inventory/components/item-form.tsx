@@ -11,13 +11,13 @@ import { SubmitButton } from "@/components/form/submit-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { buttonVariants } from "@/components/ui/button";
-import type { CustomFieldDef } from "@/lib/custom-fields";
+import { applicableDefs, type CustomFieldDef } from "@/lib/custom-fields";
 import type { FormState } from "@/lib/forms";
 import { appConfig } from "../../../../config/app.config";
 import { createItems, updateItem } from "../actions";
 import type { ItemDto } from "../service";
 
-type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string };
+type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string; categoryId?: string };
 type LocationOption = { id: string; name: string; depth: number };
 
 export function ItemForm({
@@ -156,7 +156,15 @@ export function ItemForm({
         <Textarea id="notes" name="notes" rows={2} defaultValue={v("notes", item?.notes)} />
       </Field>
 
-      <CustomFieldInputs defs={defs} values={item?.customFields} echoed={state.values} errors={err} title={t("customFields")} />
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" name="notForRental" className="mt-0.5 size-4" defaultChecked={state.values ? state.values.notForRental === "on" : Boolean(item?.notForRental)} />
+        <span>
+          {t("notForRental")}
+          <span className="block text-xs text-muted-foreground">{t("notForRentalHelp")}</span>
+        </span>
+      </label>
+
+      <CustomFieldInputs defs={applicableDefs(defs, model?.categoryId ?? null)} values={item?.customFields} echoed={state.values} errors={err} title={t("customFields")} />
 
       <div className="flex gap-2">
         <SubmitButton pendingText={tc("loading")}>{item ? tc("save") : tc("create")}</SubmitButton>

@@ -196,3 +196,43 @@ is a normal status change on the item.
 entity, so Phase 4 plans reuse it. Tokens are 18 random bytes, base64url.
 A share link does not expire by default (the crew uses it until the show
 is over); revoking deletes the row. No login, no write access.
+
+## 2026-10-12 — Spec update: schema first, pricing later
+
+`SPEC.md` (the renamed system prompt) and `MIGRATION.md` added statuses,
+flags, contacts, person locations, category-scoped fields, a pricing engine,
+sub-hire, wish list and purchase records. We land the schema-level changes
+now, while the inventory model is still young, and park everything that
+needs its own UI and maths (pricing, quotes, sub-hire, wish list, purchase
+records) until after Phase 4, so production plans are not delayed.
+
+## 2026-10-12 — A case is not a Location row
+
+The spec lists "a case/kit" among location types. Kits already contain
+items through `parentItemId`, and an item inside a kit shows "in Laser
+case 1" on its page, so a second representation as a Location would drift.
+"Case" stays a property of kit membership; `LOCATION_TYPES` gained only
+`person`.
+
+## 2026-10-12 — Person locations point at a user or a contact
+
+"Mikkel has 2" is a Location of type `person` with either `userId` (staff)
+or `contactId` (external). Items keep their normal status, so a loan to a
+colleague is visible in the inventory without inventing a status for it.
+Contacts stay separate from `Client` for now; unifying them is in the
+backlog.
+
+## 2026-10-12 — Retired items carry a reason category
+
+`retiredReason` (sold / scrapped / lost) sits next to the free-text reason.
+The status log keeps the text; the category makes "what did we sell" a
+filter instead of a search.
+
+## 2026-10-12 — Custom fields can be scoped to a category
+
+`CustomFieldDefinition.categoryId` limits a model/item field to a category
+and its sub-categories; `null` means every category. Definitions carry the
+resolved `categoryIds` so forms filter client-side as the category or model
+changes, and actions validate against the applicable set only. The unique
+key is (entity, categoryId, key), so "length" can exist on both truss and
+cables.

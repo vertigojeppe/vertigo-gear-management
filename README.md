@@ -46,7 +46,14 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 - **Scan** (phone): point the camera at a tag, or type it. Browsers only
   allow the camera over HTTPS (or localhost), so in production put the app
   behind HTTPS and in development use `npm run dev:https`.
-- **Settings › Extra fields**: add your own fields to models and items.
+- **Settings › Extra fields**: add your own fields to models and items,
+  for every category or just one (projectors get lumen and throw ratio,
+  LED controllers get IP and firmware, and so on).
+- **Settings › Contacts**: people and companies who are not users. A
+  contact or a colleague can be a *person* location ("Mikkel has 2").
+- **Not for rental**: flag a model or a unit as own-projects-only; the
+  rentals screens refuse it. Retiring an item asks whether it was sold,
+  scrapped or lost; own-built fixtures can sit as *under construction*.
 - **Settings › Users**: invite colleagues as admin, member or viewer.
 - **Settings › Your account › API tokens**: call the REST API from other
   tools. Docs at `/api/docs`.

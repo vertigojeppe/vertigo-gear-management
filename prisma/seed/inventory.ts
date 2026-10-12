@@ -10,10 +10,10 @@ type Cat = { name: string; children?: Cat[] };
 
 const CATEGORIES: Cat[] = [
   { name: "Video", children: [{ name: "Projectors", children: [{ name: "Laser projectors" }, { name: "Lamp projectors" }] }, { name: "Media servers" }, { name: "LED walls" }, { name: "Video signal" }] },
-  { name: "Lighting", children: [{ name: "Moving heads" }, { name: "LED" }, { name: "Conventional" }, { name: "Control" }, { name: "Atmospherics" }] },
+  { name: "Lighting", children: [{ name: "Moving heads" }, { name: "LED" }, { name: "LED controllers" }, { name: "Conventional" }, { name: "Control" }, { name: "Atmospherics" }] },
   { name: "Laser", children: [{ name: "Laser projectors" }, { name: "Laser control & safety" }] },
   { name: "Audio", children: [{ name: "Speakers" }, { name: "Playback & mixing" }] },
-  { name: "Rigging", children: [{ name: "Truss" }, { name: "Clamps & hardware" }, { name: "Motors & hoists" }, { name: "Stands" }] },
+  { name: "Rigging", children: [{ name: "Truss" }, { name: "Alu profiles" }, { name: "Clamps & hardware" }, { name: "Motors & hoists" }, { name: "Stands" }] },
   { name: "Cables", children: [{ name: "Power" }, { name: "Signal", children: [{ name: "DMX" }, { name: "SDI" }, { name: "HDMI" }, { name: "Ethernet" }, { name: "XLR" }] }] },
   { name: "Cases & storage" },
   { name: "Computers & networking" },

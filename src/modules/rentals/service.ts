@@ -5,8 +5,12 @@ import type { Actor } from "@/lib/auth/session";
 import type { CustomFieldValues } from "@/lib/custom-fields";
 import { dateFromString, dateToString, today, type DateString } from "@/lib/dates";
 import { emitEvent } from "@/lib/events";
-import { items as inventoryItems } from "@/modules/inventory";
-import { allocationsFor, checkRequest, clients, ConflictError, itemsForModel } from "@/modules/projects";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { items as inventoryItems } from "@/modules/inventory/service";
+// eslint-disable-next-line no-restricted-imports -- same reason
+import { allocationsFor, clients, ConflictError, itemsForModel } from "@/modules/projects/service";
+// eslint-disable-next-line no-restricted-imports -- same reason
+import { checkRequest } from "@/modules/projects/availability";
 import { appConfig, type RentalStatus } from "../../../config/app.config";
 import { totals, type PriceLine } from "./pricing";
 import type { RentalInput, RentalLineInput } from "./schema";
@@ -178,11 +182,18 @@ export const rentals = {
   },
 };
 
+/** Models flagged "not for rental" stay on our own projects. */
+async function assertRentable(modelId: string) {
+  const model = await prisma.model.findUnique({ where: { id: modelId }, select: { manufacturer: true, name: true, notForRental: true } });
+  if (model?.notForRental) throw new RentalError(`${model.manufacturer} ${model.name} is not for rental.`, "modelId");
+}
+
 export const rentalLines = {
   async add(actor: Actor, rentalId: string, input: RentalLineInput) {
     assertCan(actor, "rentals.write");
     const r = await prisma.rental.findUniqueOrThrow({ where: { id: rentalId } });
     if (r.status === "returned") throw new RentalError("This rental is finished.");
+    await assertRentable(input.modelId);
     const from = dateToString(r.startDate);
     const to = dateToString(r.endDate);
     const [items, allocs] = await Promise.all([itemsForModel(input.modelId), allocationsFor(input.modelId)]);
@@ -205,6 +216,7 @@ export const rentalLines = {
   async update(actor: Actor, lineId: string, input: RentalLineInput) {
     assertCan(actor, "rentals.write");
     const existing = await prisma.rentalLine.findUniqueOrThrow({ where: { id: lineId }, include: { rental: true, allocation: true } });
+    await assertRentable(input.modelId);
     const from = dateToString(existing.rental.startDate);
     const to = dateToString(existing.rental.endDate);
     const [items, allocs] = await Promise.all([itemsForModel(input.modelId), allocationsFor(input.modelId)]);
@@ -230,6 +242,7 @@ export const rentalLines = {
     if (itemId) {
       const item = await prisma.item.findUnique({ where: { id: itemId } });
       if (!item || item.modelId !== line.modelId) throw new RentalError("Choose a unit of the same model.", "itemId");
+      if (item.notForRental || line.model.notForRental) throw new RentalError(`${item.assetTag} is not for rental.`, "itemId");
       const clash = await prisma.allocation.findFirst({
         where: { itemId, rentalLineId: { not: lineId }, startDate: { lte: line.rental.endDate }, endDate: { gte: line.rental.startDate }, OR: [{ project: { status: { notIn: ["done", "cancelled"] } } }, { rental: { status: { not: "returned" } } }] },
         include: { project: { select: { name: true } }, rental: { select: { client: { select: { name: true } } } } },

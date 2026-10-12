@@ -3,7 +3,9 @@ import { prisma } from "@/lib/db";
 import { logActivity } from "@/lib/activity";
 import { assertCan } from "@/lib/auth/permissions";
 import type { Actor } from "@/lib/auth/session";
-import type { CustomFieldDef, CustomFieldEntity } from "@/lib/custom-fields";
+import { applicableDefs, type CustomFieldDef, type CustomFieldEntity } from "@/lib/custom-fields";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { descendantIds } from "@/modules/inventory/tree";
 import { WEBHOOK_EVENTS } from "../../../config/app.config";
 import type { CustomFieldDefinitionInput, WebhookInput } from "./schema";
 
@@ -17,25 +19,35 @@ export class SettingsError extends Error {
   }
 }
 
-function toDef(row: { key: string; label: string; type: string; options: unknown; required: boolean }): CustomFieldDef {
+function toDef(row: { key: string; label: string; type: string; options: unknown; required: boolean; categoryId?: string | null }, categoryIds: string[] | null = null): CustomFieldDef {
   return {
     key: row.key,
     label: row.label,
     type: row.type as CustomFieldDef["type"],
     options: Array.isArray(row.options) ? (row.options as string[]) : [],
     required: row.required,
+    categoryId: row.categoryId ?? null,
+    categoryIds,
   };
 }
 
+const categoryRows = cache(() => prisma.category.findMany({ select: { id: true, name: true, parentId: true } }));
+
 export const customFieldDefinitions = {
-  /** Definitions for one entity, in display order. Cached per request. */
-  forEntity: cache(async (entity: CustomFieldEntity): Promise<CustomFieldDef[]> => {
+  /**
+   * Definitions for one entity, in display order. Without a category every
+   * definition comes back (with `categoryIds` resolved, so forms can filter
+   * client-side); with one, only the fields that apply to it. Cached per request.
+   */
+  forEntity: cache(async (entity: CustomFieldEntity, categoryId?: string | null): Promise<CustomFieldDef[]> => {
     const rows = await prisma.customFieldDefinition.findMany({ where: { entity }, orderBy: [{ sortOrder: "asc" }, { label: "asc" }] });
-    return rows.map(toDef);
+    const cats = rows.some((r) => r.categoryId) ? await categoryRows() : [];
+    const defs = rows.map((r) => toDef(r, r.categoryId ? descendantIds(cats, r.categoryId) : null));
+    return categoryId === undefined ? defs : applicableDefs(defs, categoryId);
   }),
 
   async listAll() {
-    return prisma.customFieldDefinition.findMany({ orderBy: [{ entity: "asc" }, { sortOrder: "asc" }, { label: "asc" }] });
+    return prisma.customFieldDefinition.findMany({ orderBy: [{ entity: "asc" }, { sortOrder: "asc" }, { label: "asc" }], include: { category: { select: { name: true } } } });
   },
 
   async get(id: string) {
@@ -44,8 +56,9 @@ export const customFieldDefinitions = {
 
   async create(actor: Actor, input: CustomFieldDefinitionInput) {
     assertCan(actor, "settings.manage");
-    const existing = await prisma.customFieldDefinition.findUnique({ where: { entity_key: { entity: input.entity, key: input.key } } });
-    if (existing) throw new SettingsError("A field with that key already exists for this entity.", "key");
+    const categoryId = input.entity === "model" || input.entity === "item" ? (input.categoryId ?? null) : null;
+    const existing = await prisma.customFieldDefinition.findFirst({ where: { entity: input.entity, key: input.key, categoryId } });
+    if (existing) throw new SettingsError("A field with that key already exists for this entity and category.", "key");
     const row = await prisma.customFieldDefinition.create({ data: toData(input) });
     await logActivity(actor, { entityType: "settings", entityId: row.id, action: "custom_field_created", summary: `Added custom field "${row.label}" on ${row.entity}` });
     return row;
@@ -78,6 +91,7 @@ function toData(input: CustomFieldDefinitionInput) {
     type: input.type,
     options,
     required: input.required,
+    categoryId: input.entity === "model" || input.entity === "item" ? (input.categoryId ?? null) : null,
     sortOrder: input.sortOrder,
   };
 }

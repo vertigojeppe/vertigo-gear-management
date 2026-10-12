@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ITEM_STATUS_KEYS, LOCATION_TYPES } from "../../../config/app.config";
+import { ITEM_STATUS_KEYS, LOCATION_TYPES, RETIREMENT_REASONS } from "../../../config/app.config";
 import { checkbox, optionalDate, optionalId, optionalNumber, optionalText } from "@/lib/forms";
 
 /* Categories */
@@ -16,6 +16,8 @@ export const locationInput = z.object({
   type: z.enum(LOCATION_TYPES),
   parentId: optionalId,
   notes: optionalText,
+  /** type = person: "user:<id>" or "contact:<id>". */
+  person: optionalText,
 });
 export type LocationInput = z.infer<typeof locationInput>;
 
@@ -39,6 +41,8 @@ export const modelInput = z.object({
   notes: optionalText,
   /** Textarea: one link per line as "Label | https://..." or just a URL. */
   linksText: optionalText,
+  /** Own projects only; never on a rental. */
+  notForRental: checkbox,
 });
 export type ModelInput = z.infer<typeof modelInput>;
 
@@ -76,6 +80,7 @@ export const itemInput = z.object({
   replacementValue: optionalNumber,
   conditionNotes: optionalText,
   notes: optionalText,
+  notForRental: checkbox,
 });
 export type ItemInput = z.infer<typeof itemInput>;
 
@@ -96,6 +101,8 @@ export const statusChangeInput = z.object({
   status: z.enum(ITEM_STATUS_KEYS as [string, ...string[]]),
   reason: optionalText,
   locationId: keepOrLocation,
+  /** Required when status = retired. */
+  retiredReason: z.preprocess((v) => (v === "" ? undefined : v), z.enum(RETIREMENT_REASONS).optional()),
 });
 export type StatusChangeInput = z.infer<typeof statusChangeInput>;
 

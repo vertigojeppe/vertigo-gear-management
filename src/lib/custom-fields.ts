@@ -17,7 +17,16 @@ export type CustomFieldDef = {
   type: CustomFieldType;
   options: string[];
   required: boolean;
+  /** Category the field is limited to (models/items only); null = every category. */
+  categoryId?: string | null;
+  /** That category plus its sub-categories, resolved by the settings service. */
+  categoryIds?: string[] | null;
 };
+
+/** Fields that apply to a category: global ones plus those scoped to it or an ancestor. */
+export function applicableDefs(defs: CustomFieldDef[], categoryId: string | null | undefined): CustomFieldDef[] {
+  return defs.filter((d) => !d.categoryIds || (categoryId ? d.categoryIds.includes(categoryId) : false));
+}
 
 export type CustomFieldValues = Record<string, string | number | boolean | null>;
 
