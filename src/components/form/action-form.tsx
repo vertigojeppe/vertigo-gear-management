@@ -26,7 +26,11 @@ export function ActionForm({ action, children, ...props }: Props) {
     <form
       {...props}
       onSubmit={(e) => {
+        // React bubbles submit events through the component tree, even out of a
+        // portaled dialog form nested in this one. Only handle our own form.
+        if (e.target !== e.currentTarget) return;
         e.preventDefault();
+        e.stopPropagation();
         if (pending) return;
         // Include the clicked button's name/value, as a native submit would (e.g. outcome buttons).
         const submitter = (e.nativeEvent as SubmitEvent).submitter;

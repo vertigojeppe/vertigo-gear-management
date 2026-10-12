@@ -24,6 +24,9 @@ async function main() {
   await prisma.location.deleteMany({ where: { projectId: { in: testProjects.map((p) => p.id) } } });
   await prisma.activityLog.deleteMany({ where: { entityId: { in: testProjects.map((p) => p.id) } } });
   const projects = await prisma.project.deleteMany({ where: { id: { in: testProjects.map((p) => p.id) } } });
+  const testClients = await prisma.client.findMany({ where: { name: { startsWith: "E2E client " } }, select: { id: true } });
+  await prisma.location.deleteMany({ where: { renterId: { in: testClients.map((c) => c.id) } } });
+  await prisma.client.deleteMany({ where: { id: { in: testClients.map((c) => c.id) }, projects: { none: {} }, rentals: { none: {} } } });
   // Packing lists go with their project; share links and templates do not.
   const liveLists = (await prisma.packingList.findMany({ select: { id: true } })).map((l) => l.id);
   await prisma.shareLink.deleteMany({ where: { targetType: "packing_list", targetId: { notIn: liveLists } } });

@@ -29,7 +29,13 @@ test.describe("projects and rentals", () => {
 
     await page.goto("/projects/new");
     await page.getByLabel("Name").fill(`E2E show ${stamp}`);
-    await pickOption(page, "Client", "Vega");
+    // A client can be created from the dropdown and is selected afterwards.
+    await page.getByRole("button", { name: "New client" }).click();
+    await page.getByLabel("Company / name").fill(`E2E client ${stamp}`);
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByLabel(/^Client/)).toHaveValue(/.+/);
+    await expect(page.getByLabel(/^Client/).locator("option:checked")).toHaveText(`E2E client ${stamp}`);
+    await expect(page.getByLabel("Name", { exact: true })).toHaveValue(`E2E show ${stamp}`);
     await page.getByLabel("Status").selectOption("confirmed");
     await page.getByLabel("Prep start").fill(day(0));
     await page.getByLabel("Load-in").fill(`${day(1)}T08:00`);
