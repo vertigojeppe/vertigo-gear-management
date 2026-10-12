@@ -649,7 +649,8 @@
     "status": "Status",
     "inTruck": "In the truck",
     "onSiteNote": "Checked-out gear is at the project location until it is checked in.",
-    "inHouseHint": "Only {count} of {owned} in house today"
+    "inHouseHint": "Only {count} of {owned} in house today",
+    "undoReturn": "Undo this return"
   },
   "retiredReason": {
     "sold": "Sold",

@@ -1,5 +1,5 @@
 // Public interface of the packing module.
-export { packingLists, packingLines, packingChecks, packingTemplates, shareLinks, PackingError } from "./service";
+export { packingLists, packingLines, packingChecks, packingTemplates, shareLinks, undoCheckIn, PackingError } from "./service";
 export { lineProgress, listProgress, listTotals, canEditLines, canPack, canCheckOut, canCheckIn, outcomeItemStatus, isOutcome } from "./logic";
 export type { LineProgress } from "./logic";
 export { listDetail, groupLines, listsForProject, kitOptions, templateOptions, templateDetail, otherListsForCopy } from "./queries";

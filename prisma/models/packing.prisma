@@ -55,6 +55,14 @@ model PackingCheck {
   item         Item?        @relation("PackingCheckItem", fields: [itemId], references: [id], onDelete: SetNull)
   /// Bulk only: the warehouse bin the quantity was taken from.
   sourceItemId String?
+  /// In-checks: the out-check they answer, so a return can be undone.
+  outCheckId   String?
+  outCheck     PackingCheck?  @relation("CheckInOf", fields: [outCheckId], references: [id], onDelete: SetNull)
+  checkIns     PackingCheck[] @relation("CheckInOf")
+  /// In-checks: the item the return ended up on (the unit, the source bin after
+  /// a merge, or the split-off damaged/missing bin), so undo knows what to reverse.
+  resultItemId String?
+  resultItem   Item?          @relation("PackingCheckResult", fields: [resultItemId], references: [id], onDelete: SetNull)
   quantity     Int          @default(1)
   /// "ok" | "missing" | "damaged"
   outcome      String       @default("ok")
@@ -65,6 +73,7 @@ model PackingCheck {
 
   @@index([lineId, phase])
   @@index([itemId])
+  @@index([outCheckId])
 }
 
 model PackingTemplate {

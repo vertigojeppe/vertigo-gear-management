@@ -95,6 +95,7 @@ model Item {
   packingLineUnits PackingLine[] @relation("PackingLineItem")
   packingLineCases PackingLine[] @relation("PackingLineCase")
   packingChecks    PackingCheck[] @relation("PackingCheckItem")
+  packingCheckResults PackingCheck[] @relation("PackingCheckResult")
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

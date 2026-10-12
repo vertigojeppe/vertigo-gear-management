@@ -148,7 +148,7 @@ export const packingLists = {
     for (const line of lines) {
       const bulk = line.model.trackingType === "bulk";
       for (const out of line.checks.filter((c) => c.phase === "out")) {
-        const back = line.checks.filter((c) => c.phase === "in" && c.itemId === out.itemId).reduce((s, c) => s + c.quantity, 0);
+        const back = line.checks.filter((c) => c.phase === "in" && (c.outCheckId ? c.outCheckId === out.id : c.itemId === out.itemId)).reduce((s, c) => s + c.quantity, 0);
         const remaining = out.quantity - back;
         if (remaining <= 0) continue;
         await packingChecks.checkIn(actor, { outCheckId: out.id, outcome: "missing", quantity: bulk ? remaining : undefined, note: "Not returned at check-in" });
@@ -355,13 +355,14 @@ export const packingChecks = {
     if (!canCheckIn(out.line.list.status as PackingStatus)) throw new PackingError("This list is not checked out.");
     const outcome = input.outcome as CheckOutcome;
     const bulk = out.line.model.trackingType === "bulk";
-    const back = out.line.checks.filter((c) => c.phase === "in" && c.itemId === out.itemId).reduce((s, c) => s + c.quantity, 0);
+    const back = out.line.checks.filter((c) => c.phase === "in" && (c.outCheckId ? c.outCheckId === out.id : c.itemId === out.itemId)).reduce((s, c) => s + c.quantity, 0);
     const remaining = out.quantity - back;
     if (remaining <= 0) throw new PackingError("Already fully checked in.");
     const qty = bulk ? Math.min(input.quantity ?? remaining, remaining) : 1;
     const project = out.line.list.project;
     const targetStatus = outcomeItemStatus(outcome);
     const reason = `${outcome === "ok" ? "Returned from" : outcome === "damaged" ? "Damaged on" : "Missing after"} ${project.name}${input.note ? `: ${input.note}` : ""}`;
+    let resultItemId: string | null = out.itemId;
 
     if (out.item) {
       if (bulk) {
@@ -373,14 +374,16 @@ export const packingChecks = {
             await tx.item.update({ where: { id: source.id }, data: { quantity: source.quantity + qty } });
             if (left <= 0) await tx.item.delete({ where: { id: travel.id } });
             else await tx.item.update({ where: { id: travel.id }, data: { quantity: left } });
+            resultItemId = source.id;
           } else if (outcome === "ok") {
             // No source bin any more: the travel bin becomes a normal bin at home.
             await tx.item.update({ where: { id: travel.id }, data: { quantity: travel.quantity, status: "in_house", locationId: travel.homeLocationId ?? null } });
+            resultItemId = travel.id;
           } else {
             // Damaged / missing quantity stays on its own bin with that status.
             if (left > 0) {
               await tx.item.update({ where: { id: travel.id }, data: { quantity: left } });
-              await tx.item.create({
+              const split = await tx.item.create({
                 data: {
                   modelId: travel.modelId,
                   assetTag: await nextAssetTag(tx),
@@ -392,9 +395,11 @@ export const packingChecks = {
                   statusLogs: { create: { fromStatus: "on_project", toStatus: targetStatus, reason, userId: actor.id } },
                 },
               });
+              resultItemId = split.id;
             } else {
               await tx.item.update({ where: { id: travel.id }, data: { status: targetStatus, locationId: outcome === "missing" ? travel.locationId : travel.homeLocationId } });
               await tx.statusLog.create({ data: { itemId: travel.id, fromStatus: "on_project", toStatus: targetStatus, reason, userId: actor.id } });
+              resultItemId = travel.id;
             }
           }
         });
@@ -406,7 +411,7 @@ export const packingChecks = {
       }
     }
     const row = await prisma.packingCheck.create({
-      data: { lineId: out.lineId, phase: "in", itemId: out.itemId, sourceItemId: out.sourceItemId, quantity: qty, outcome, note: input.note ?? null, checkedById: actor.id },
+      data: { lineId: out.lineId, phase: "in", itemId: out.itemId, sourceItemId: out.sourceItemId, outCheckId: out.id, resultItemId, quantity: qty, outcome, note: input.note ?? null, checkedById: actor.id },
     });
     await logActivity(actor, {
       entityType: "project",
@@ -417,6 +422,76 @@ export const packingChecks = {
     return row;
   },
 };
+
+/**
+ * Undo a recorded return while the list is still checked out: the unit (or
+ * bulk quantity) goes back out to the project and the in-check disappears.
+ * Reverses exactly what checkIn did, using the ids it recorded.
+ */
+export async function undoCheckIn(actor: Actor, inCheckId: string) {
+  assertCan(actor, "packing.write");
+  const row = await prisma.packingCheck.findUniqueOrThrow({ where: { id: inCheckId }, include: { line: { include: { model: true, list: { include: { project: true } } } } } });
+  if (row.phase !== "in") throw new PackingError("Not a check-in.");
+  if (!canCheckIn(row.line.list.status as PackingStatus)) throw new PackingError("The check-in is finished. Change the item's status by hand instead.");
+  const project = row.line.list.project;
+  const locationId = await projectLocationId(project.id);
+  const reason = `Check-in undone: ${project.name}`;
+  const bulk = row.line.model.trackingType === "bulk";
+
+  if (!bulk) {
+    if (row.itemId) {
+      const item = await prisma.item.findUnique({ where: { id: row.itemId } });
+      if (item && item.status !== "on_project") await inventoryItems.changeStatus(actor, item.id, { status: "on_project", reason, locationId }, { viaFlow: true });
+    }
+  } else {
+    const out = row.outCheckId ? await prisma.packingCheck.findUnique({ where: { id: row.outCheckId } }) : await prisma.packingCheck.findFirst({ where: { lineId: row.lineId, phase: "out", sourceItemId: row.sourceItemId } });
+    const qty = row.quantity;
+    await prisma.$transaction(async (tx) => {
+      let travel = out?.itemId ? await tx.item.findUnique({ where: { id: out.itemId } }) : null;
+      const source = row.sourceItemId ? await tx.item.findUnique({ where: { id: row.sourceItemId } }) : null;
+      const addBack = async (n: number) => {
+        if (travel) {
+          travel = await tx.item.update({ where: { id: travel.id }, data: { quantity: travel.quantity + n, status: "on_project", locationId } });
+        } else {
+          travel = await tx.item.create({
+            data: {
+              modelId: row.line.modelId,
+              assetTag: await nextAssetTag(tx),
+              quantity: n,
+              status: "on_project",
+              locationId,
+              homeLocationId: source?.homeLocationId ?? source?.locationId ?? null,
+              notes: `Travel bin (${project.name})`,
+              statusLogs: { create: { fromStatus: null, toStatus: "on_project", reason, userId: actor.id } },
+            },
+          });
+          if (out) await tx.packingCheck.update({ where: { id: out.id }, data: { itemId: travel.id } });
+        }
+      };
+      if (row.outcome === "ok") {
+        if (source && row.resultItemId === source.id) {
+          // Merged into the source bin: take it out again.
+          await tx.item.update({ where: { id: source.id }, data: { quantity: Math.max(0, source.quantity - qty) } });
+          await addBack(qty);
+        } else if (travel) {
+          // Travel bin had become a home bin: send it back out.
+          await tx.item.update({ where: { id: travel.id }, data: { status: "on_project", locationId } });
+        }
+      } else if (row.resultItemId && row.resultItemId !== travel?.id) {
+        // Damaged / missing quantity was split off: remove that bin, put the quantity back.
+        const split = await tx.item.findUnique({ where: { id: row.resultItemId } });
+        if (split) await tx.item.delete({ where: { id: split.id } });
+        await addBack(qty);
+      } else if (travel) {
+        // The whole travel bin had the outcome status: back out it goes.
+        await tx.item.update({ where: { id: travel.id }, data: { status: "on_project", locationId } });
+        await tx.statusLog.create({ data: { itemId: travel.id, fromStatus: travel.status, toStatus: "on_project", reason, userId: actor.id } });
+      }
+    });
+  }
+  await prisma.packingCheck.delete({ where: { id: inCheckId } });
+  await logActivity(actor, { entityType: "project", entityId: project.id, action: "check_in_undone", summary: `${row.line.list.name}: undid ${row.outcome} return of ${row.quantity}× ${row.line.model.manufacturer} ${row.line.model.name}` });
+}
 
 /* ------------------------------------------------------------------------ */
 /* Templates                                                                */
