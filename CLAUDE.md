@@ -246,7 +246,7 @@ a second entry that exports components only and never a service.
 - Every imported row has `importSource`; the ActivityLog row
   (`spreadsheet_imported`) lists every created id, which is how
   `db:clean-tests` removes browser-test imports.
-- The real workbook stays out of git (`*.xlsx`, `import/` ignored). Tests
+- The real workbook stays out of git (`*.xlsx`, `/import/` (root only: the pattern must not catch `settings/import`) ignored). Tests
   build a synthetic workbook in `__tests__/fixture.ts` with the same sheet
   names and column layouts; extend it when a reader changes.
 - Server actions accept 25 MB bodies (`next.config.ts`) for the upload.

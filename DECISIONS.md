@@ -297,7 +297,7 @@ doubtful row means are the ones clicking, not a build step. So Settings ›
 Import takes an upload, keeps it in storage under `imports/<id>.xlsx`
 between the preview and the confirmation, and deletes it afterwards. The
 preview is the contract: three buckets plus *parked*, and nothing is
-written until confirmed. `*.xlsx` and `import/` are gitignored; tests use
+written until confirmed. `*.xlsx` and `/import/` are gitignored; tests use
 a synthetic workbook with the same sheet layouts.
 
 ## 2026-10-12 — Imported rows keep their cell, not a batch table
