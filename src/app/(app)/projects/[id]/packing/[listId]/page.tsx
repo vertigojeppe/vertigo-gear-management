@@ -147,6 +147,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
                       {[l.note && l.note !== l.itemName ? l.note : null, l.itemTag && !l.isKit ? l.itemTag : null, l.caseLabel && !l.isKit ? `${t("case")}: ${l.caseLabel}` : null].filter(Boolean).join(" · ")}
                       {l.isKit && l.kitContents.length > 0 ? `${t("contains")}: ${l.kitContents.map((c) => `${c.quantity > 1 ? `${c.quantity}× ` : ""}${c.label}`).join(", ")}` : ""}
                     </span>
+                    {list.status === "draft" && !l.isKit && l.quantity > l.inHouse && <span className="block text-xs text-amber-700 dark:text-amber-300">{t("inHouseHint", { count: l.inHouse, owned: l.owned })}</span>}
                     {l.checks.filter((c) => c.phase === "out").length > 0 && (
                       <span className="block font-mono text-xs text-muted-foreground">{l.checks.filter((c) => c.phase === "out").map((c) => `${c.assetTag ?? ""}${l.trackingType === "bulk" ? ` ×${c.quantity}` : ""}`).join(", ")}</span>
                     )}

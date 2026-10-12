@@ -34,6 +34,23 @@ function lineLabel(line: { quantity: number; model: { manufacturer: string; name
   return `${line.quantity}× ${line.model.manufacturer} ${line.model.name}`;
 }
 
+/**
+ * How many of a model exist (any status except retired) and how many are
+ * in house right now. Bulk counts quantities; serialized counts units,
+ * including those inside kits.
+ */
+export async function modelStock(modelId: string): Promise<{ owned: number; inHouse: number }> {
+  const rows = await prisma.item.groupBy({ by: ["status"], where: { modelId }, _sum: { quantity: true } });
+  let owned = 0;
+  let inHouse = 0;
+  for (const r of rows) {
+    const q = r._sum.quantity ?? 0;
+    if (r.status !== "retired") owned += q;
+    if (r.status === "in_house") inHouse += q;
+  }
+  return { owned, inHouse };
+}
+
 async function projectLocationId(projectId: string, tx: Tx | Db = prisma): Promise<string> {
   const loc = await tx.location.findFirst({ where: { projectId } });
   if (loc) return loc.id;
@@ -156,20 +173,34 @@ async function assertDraft(listId: string) {
 }
 
 export const packingLines = {
-  /** Add a model line; merges into an existing plain line of the same model. */
-  async add(actor: Actor, listId: string, input: LineInput) {
+  /**
+   * Add a model line; merges into an existing plain line of the same model.
+   * The quantity on the list can never exceed what exists in the inventory.
+   * With `clamp` (templates, copies, reservations) it is cut down to what is
+   * owned instead of failing; returns null when nothing could be added.
+   */
+  async add(actor: Actor, listId: string, input: LineInput, opts: { clamp?: boolean } = {}) {
     assertCan(actor, "packing.write");
     const list = await assertDraft(listId);
     const model = await prisma.model.findUnique({ where: { id: input.modelId } });
     if (!model) throw new PackingError("Model not found.", "modelId");
     const existing = await prisma.packingLine.findFirst({ where: { listId, modelId: input.modelId, itemId: null, caseItemId: input.caseItemId ?? null } });
+    const { owned } = await modelStock(model.id);
+    const already = await prisma.packingLine.aggregate({ where: { listId, modelId: model.id, itemId: null }, _sum: { quantity: true } });
+    const room = owned - (already._sum.quantity ?? 0);
+    let quantity = input.quantity;
+    if (quantity > room) {
+      if (!opts.clamp) throw new PackingError(`Only ${owned} ${model.manufacturer} ${model.name} exist in the inventory${room < owned ? ` (${owned - room} already on this list)` : ""}.`, "quantity");
+      quantity = Math.max(0, room);
+      if (quantity === 0) return null;
+    }
     const line = existing
-      ? await prisma.packingLine.update({ where: { id: existing.id }, data: { quantity: existing.quantity + input.quantity, note: input.note ?? existing.note }, include: { model: true } })
+      ? await prisma.packingLine.update({ where: { id: existing.id }, data: { quantity: existing.quantity + quantity, note: input.note ?? existing.note }, include: { model: true } })
       : await prisma.packingLine.create({
-          data: { listId, modelId: input.modelId, quantity: input.quantity, note: input.note ?? null, caseItemId: input.caseItemId ?? null, sortOrder: await nextSort(listId) },
+          data: { listId, modelId: input.modelId, quantity, note: input.note ?? null, caseItemId: input.caseItemId ?? null, sortOrder: await nextSort(listId) },
           include: { model: true },
         });
-    await logActivity(actor, { entityType: "project", entityId: list.projectId, action: "packing_line_added", summary: `${list.name}: added ${lineLabel({ quantity: input.quantity, model })}` });
+    await logActivity(actor, { entityType: "project", entityId: list.projectId, action: "packing_line_added", summary: `${list.name}: added ${lineLabel({ quantity, model })}` });
     return line;
   },
 
@@ -197,6 +228,12 @@ export const packingLines = {
       const unit = await prisma.item.findUnique({ where: { id: input.itemId } });
       if (!unit || unit.modelId !== line.modelId) throw new PackingError("Choose a unit of the same model.", "itemId");
     }
+    if (!line.itemId) {
+      const { owned } = await modelStock(line.modelId);
+      const others = await prisma.packingLine.aggregate({ where: { listId: line.listId, modelId: line.modelId, itemId: null, id: { not: line.id } }, _sum: { quantity: true } });
+      const room = owned - (others._sum.quantity ?? 0);
+      if (input.quantity > room) throw new PackingError(`Only ${owned} ${line.model.manufacturer} ${line.model.name} exist in the inventory${room < owned ? ` (${owned - room} on other lines)` : ""}.`, "quantity");
+    }
     const updated = await prisma.packingLine.update({
       where: { id: lineId },
       data: { quantity: line.itemId ? 1 : input.quantity, note: input.note ?? null, caseItemId: input.caseItemId ?? null, itemId: input.itemId ?? line.itemId ?? null },
@@ -216,7 +253,7 @@ export const packingLines = {
   async addFromReservations(actor: Actor, listId: string) {
     const list = await assertDraft(listId);
     const allocs = await prisma.allocation.findMany({ where: { projectId: list.projectId } });
-    for (const a of allocs) await packingLines.add(actor, listId, { modelId: a.modelId, quantity: a.quantity, note: undefined, caseItemId: undefined });
+    for (const a of allocs) await packingLines.add(actor, listId, { modelId: a.modelId, quantity: a.quantity, note: undefined, caseItemId: undefined }, { clamp: true });
     return allocs.length;
   },
 
@@ -224,7 +261,7 @@ export const packingLines = {
     await assertDraft(listId);
     const t = await prisma.packingTemplate.findUnique({ where: { id: templateId }, include: { lines: true } });
     if (!t) throw new PackingError("Template not found.");
-    for (const l of t.lines) await packingLines.add(actor, listId, { modelId: l.modelId, quantity: l.quantity, note: l.note ?? undefined, caseItemId: undefined });
+    for (const l of t.lines) await packingLines.add(actor, listId, { modelId: l.modelId, quantity: l.quantity, note: l.note ?? undefined, caseItemId: undefined }, { clamp: true });
     return t.lines.length;
   },
 
@@ -233,7 +270,7 @@ export const packingLines = {
     const lines = await prisma.packingLine.findMany({ where: { listId: otherListId } });
     for (const l of lines) {
       if (l.itemId) await packingLines.addKit(actor, listId, l.itemId).catch(() => {});
-      else await packingLines.add(actor, listId, { modelId: l.modelId, quantity: l.quantity, note: l.note ?? undefined, caseItemId: undefined });
+      else await packingLines.add(actor, listId, { modelId: l.modelId, quantity: l.quantity, note: l.note ?? undefined, caseItemId: undefined }, { clamp: true });
     }
     return lines.length;
   },

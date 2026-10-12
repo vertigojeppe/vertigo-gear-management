@@ -142,7 +142,11 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
   draft; `canEditLines/canPack/canCheckOut/canCheckIn` in
   `src/modules/packing/logic.ts` are the only place that knows this.
 - A `PackingLine` is a model + quantity. A plain line of the same model is
-  merged on add. A kit is one line with `itemId = caseItemId = the kit`; its
+  merged on add. The quantity of a model across a list can never exceed
+  what exists in the inventory (`modelStock`: any status except retired);
+  `add` throws, and the template / copy / reservation sources pass
+  `{ clamp: true }` to cut the line down instead. Lines show an amber
+  "only N of M in house today" hint when fewer are in house right now. A kit is one line with `itemId = caseItemId = the kit`; its
   contents are never separate lines (they travel with the case via the
   inventory status cascade).
 - Progress is derived from `PackingCheck` rows: phase `out` (ticked while

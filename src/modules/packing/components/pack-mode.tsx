@@ -116,6 +116,7 @@ export function PackMode({ ids, lines, units, packed }: { ids: Ids; lines: LineR
                   {line.caseLabel && !line.isKit ? ` · ${t("case")}: ${line.caseLabel}` : ""}
                   {line.note && line.note !== line.itemName ? ` · ${line.note}` : ""}
                 </p>
+                {!line.isKit && line.quantity > line.inHouse && <p className="text-xs text-amber-700 dark:text-amber-300">{t("inHouseHint", { count: line.inHouse, owned: line.owned })}</p>}
                 {line.isKit && line.kitContents.length > 0 && (
                   <p className="text-xs text-muted-foreground">
                     {t("contains")}: {line.kitContents.map((c) => `${c.quantity > 1 ? `${c.quantity}× ` : ""}${c.label}`).join(", ")}

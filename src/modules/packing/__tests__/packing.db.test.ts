@@ -74,6 +74,13 @@ describe("packing list lifecycle", () => {
     await packingLines.add(admin, listId, { modelId: cableModelId, quantity: 5, note: undefined, caseItemId: undefined });
     await packingLines.addKit(admin, listId, kitId);
     await expect(packingLines.addKit(admin, listId, kitId)).rejects.toBeInstanceOf(PackingError);
+    // 4 movers exist (3 loose + 1 in the kit) and 3 are on the list: no room for 2 more.
+    await expect(packingLines.add(admin, listId, { modelId: moverModelId, quantity: 2, note: undefined, caseItemId: undefined })).rejects.toThrow(/Only 4 .* exist/);
+    // The bin holds 20 cables and 5 are on the list.
+    await expect(packingLines.add(admin, listId, { modelId: cableModelId, quantity: 16, note: undefined, caseItemId: undefined })).rejects.toThrow(/Only 20 .* exist/);
+    const stock = (await listDetail(listId))!.lines.find((l) => l.modelId === moverModelId && !l.isKit)!;
+    expect(stock.owned).toBe(4);
+    expect(stock.inHouse).toBe(4);
     const detail = await listDetail(listId);
     expect(detail?.lines).toHaveLength(3);
     const mover = detail!.lines.find((l) => l.modelId === moverModelId && !l.isKit)!;
@@ -182,9 +189,11 @@ describe("packing list lifecycle", () => {
     const tpl = await packingTemplates.createFromList(admin, listId, `Template ${marker}`);
     const rows = await prisma.packingTemplateLine.findMany({ where: { templateId: tpl.id } });
     expect(rows).toHaveLength(2);
+    // A template asking for more than exists is clamped to what is owned.
+    await prisma.packingTemplateLine.updateMany({ where: { templateId: tpl.id, modelId: moverModelId }, data: { quantity: 10 } });
     const copy = await packingLists.create(admin, projectId, { name: `Copy ${marker}`, groupBy: "case", notes: undefined, source: "template", sourceId: tpl.id });
     const detail = await listDetail(copy.id);
-    expect(detail?.lines.map((l) => l.quantity).sort()).toEqual([3, 5]);
+    expect(detail?.lines.map((l) => l.quantity).sort()).toEqual([4, 5]);
     await packingLists.remove(admin, copy.id);
   });
 

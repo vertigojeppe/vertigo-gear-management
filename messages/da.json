@@ -633,6 +633,7 @@
     "notPacked": "Ikke pakket",
     "status": "Status",
     "inTruck": "I bilen",
-    "onSiteNote": "Udleveret udstyr er på projektets placering, indtil det modtages igen."
+    "onSiteNote": "Udleveret udstyr er på projektets placering, indtil det modtages igen.",
+    "inHouseHint": "Kun {count} af {owned} på lageret i dag"
   }
 }

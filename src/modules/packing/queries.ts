@@ -45,6 +45,10 @@ export type LineRow = {
   availableUnits: { id: string; assetTag: string; serialNumber: string | null }[];
   /** Bulk: bins to take from. */
   bins: { id: string; assetTag: string; quantity: number; locationName: string | null }[];
+  /** Units (or bulk quantity) of this model that exist, any status except retired. */
+  owned: number;
+  /** ... and how many are in house right now. */
+  inHouse: number;
 };
 
 export async function listDetail(listId: string) {
@@ -68,6 +72,16 @@ export async function listDetail(listId: string) {
   const packedUnitIds = new Set(list.lines.flatMap((l) => l.checks.filter((c) => c.phase === "out" && c.itemId).map((c) => c.itemId!)));
 
   const lines: LineRow[] = [];
+  const stockRows = await prisma.item.groupBy({ by: ["modelId", "status"], where: { modelId: { in: [...new Set(list.lines.map((l) => l.modelId))] } }, _sum: { quantity: true } });
+  const stockByModel = new Map<string, { owned: number; inHouse: number }>();
+  for (const r of stockRows) {
+    const cur = stockByModel.get(r.modelId) ?? { owned: 0, inHouse: 0 };
+    const q = r._sum.quantity ?? 0;
+    if (r.status !== "retired") cur.owned += q;
+    if (r.status === "in_house") cur.inHouse += q;
+    stockByModel.set(r.modelId, cur);
+  }
+
   for (const l of list.lines) {
     const tracking = l.model.trackingType === "bulk" ? "bulk" : "serialized";
     const checks: CheckRow[] = l.checks.map((c) => ({
@@ -93,6 +107,7 @@ export async function listDetail(listId: string) {
         ? (await prisma.item.findMany({ where: { modelId: l.modelId, status: "in_house", parentItemId: null }, orderBy: { quantity: "desc" }, include: { location: { select: { name: true } } } })).map((b) => ({ id: b.id, assetTag: b.assetTag, quantity: b.quantity, locationName: b.location?.name ?? null }))
         : [];
     const path = pathNames(cats, l.model.categoryId);
+    const stock = stockByModel.get(l.modelId) ?? { owned: 0, inHouse: 0 };
     lines.push({
       id: l.id,
       modelId: l.modelId,
@@ -115,6 +130,8 @@ export async function listDetail(listId: string) {
       checks,
       availableUnits,
       bins,
+      owned: stock.owned,
+      inHouse: stock.inHouse,
     });
   }
 
