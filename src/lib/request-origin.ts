@@ -44,3 +44,20 @@ function lanIPv4(): string | null {
   }
   return null;
 }
+
+/**
+ * Origin for absolute URLs the app hands out (API docs base, links in
+ * feeds): APP_URL when it points at a real address, otherwise the origin
+ * the request came in on, so dev and LAN setups get something that works.
+ */
+export function publicOrigin(req: NextRequest): string {
+  const configured = (process.env.APP_URL ?? "").replace(/\/$/, "");
+  if (configured) {
+    try {
+      if (!LOCAL_HOSTS.test(new URL(configured).hostname)) return configured;
+    } catch {
+      /* fall through */
+    }
+  }
+  return requestOrigin(req);
+}

@@ -8,6 +8,7 @@ import { NativeSelect } from "@/components/form/native-select";
 import { SubmitButton } from "@/components/form/submit-button";
 import { ConfirmButton } from "@/components/form/confirm-button";
 import { useActionDialog } from "@/components/form/use-action-dialog";
+import { ShareUrl } from "@/components/share-url";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -172,7 +173,7 @@ export function DeletePlanButton({ ids }: { ids: Ids }) {
   );
 }
 
-export function PlanShareControls({ ids, url }: { ids: Ids; url: string | null }) {
+export function PlanShareControls({ ids, path }: { ids: Ids; path: string | null }) {
   const t = useTranslations("plans");
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3 text-sm">
@@ -180,11 +181,9 @@ export function PlanShareControls({ ids, url }: { ids: Ids; url: string | null }
         <p className="font-medium">{t("share")}</p>
         <p className="text-xs text-muted-foreground">{t("shareHelp")}</p>
       </div>
-      {url ? (
+      {path ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1 font-mono text-xs" title={url}>
-            {url}
-          </code>
+          <ShareUrl path={path} />
           <form action={revokePlanShareLink}>
             <Hidden ids={ids} />
             <ConfirmButton confirm={t("revokeShare") + "?"} size="xs" variant="ghost" className="text-destructive">

@@ -274,6 +274,13 @@ a second entry that exports components only and never a service.
   patch script to the scratchpad and run it with `node file.js`.
 - Only one `next dev` per project (lock in `.next/dev`). For checks while a
   dev server is already running, `npm run build` + `PORT=3001 npx next start`.
+- Absolute URLs shown to people (share links, iCal feed addresses, QR
+  codes) are built in the browser from `window.location.origin`
+  (`ShareUrl`, `QrImage`), never from `APP_URL` or request headers: the
+  dev machine is reached over https and a LAN address that the server
+  cannot know. Route handlers that must build one server-side use
+  `publicOrigin(req)`; only background jobs (iCal feed contents, Google
+  Calendar links) rely on `APP_URL`, which production must set.
 - A service that needs another module imports `@/modules/<name>/service`
   (or `/tree`, `/logic`) directly with an eslint-disable comment, not the
   barrel: barrels re-export server actions, which import next-auth, which

@@ -49,7 +49,11 @@ test.describe("projects and rentals", () => {
     await pickOption(page, "Model", "Panasonic PT-RZ21K");
     await page.getByLabel("Quantity").fill("2");
     await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
-    await expect(page.getByRole("dialog")).toBeHidden();
+    // A leftover run in the same date window may already hold them: accept the overlap.
+    await expect(page.getByRole("dialog")).toBeHidden({ timeout: 4000 }).catch(async () => {
+      await page.getByRole("dialog").getByRole("button", { name: /Reserve anyway/ }).click();
+      await expect(page.getByRole("dialog")).toBeHidden();
+    });
     await expect(page.getByRole("link", { name: "Panasonic PT-RZ21K" })).toBeVisible();
 
     // Reserve 3 more of the same model in the same window: conflict.

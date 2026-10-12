@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { EmptyState } from "@/components/empty-state";
@@ -67,8 +66,6 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
   const { plan, days, tasks, taskProgress, logistics, crew, contacts, packingLists } = detail;
   const ids = { projectId: id, planId: plan.id };
   const share = await shareLinks.current("plan", plan.id);
-  const h = await headers();
-  const origin = process.env.APP_URL?.replace(/\/$/, "") || `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
   const todayStr = today();
 
   return (
@@ -271,7 +268,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
 
       {canEdit ? <PlanNotesForm ids={ids} notes={plan.notes} /> : plan.notes ? <p className="whitespace-pre-line text-sm text-muted-foreground">{plan.notes}</p> : null}
 
-      {can(actor.role, "share.create") && <PlanShareControls ids={ids} url={share ? `${origin}/share/plan/${share.token}` : null} />}
+      {can(actor.role, "share.create") && <PlanShareControls ids={ids} path={share ? `/share/plan/${share.token}` : null} />}
     </div>
   );
 }

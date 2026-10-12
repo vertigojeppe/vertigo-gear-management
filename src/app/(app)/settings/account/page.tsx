@@ -6,7 +6,6 @@ import { requireActor } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/format";
 import { apiTokens } from "@/modules/users";
 import { feedTokens } from "@/modules/calendar";
-import { headers } from "next/headers";
 import { FeedRow } from "../calendar/forms";
 import { ApiTokenForm, ChangePasswordForm, RevokeTokenButton } from "./forms";
 
@@ -18,8 +17,6 @@ export default async function AccountPage() {
   const tr = await getTranslations("roles");
   const tcal = await getTranslations("calendar");
   const tokens = await apiTokens.listFor(actor.id);
-  const h = await headers();
-  const origin = process.env.APP_URL?.replace(/\/$/, "") || `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
   const mine = await feedTokens.ensure("mine", actor.id);
   return (
     <div className="flex flex-col gap-8">
@@ -42,7 +39,7 @@ export default async function AccountPage() {
           <p className="text-sm text-muted-foreground">{tcal("feedsHelp")}</p>
         </div>
         <ul className="divide-y rounded-md border text-sm">
-          <FeedRow label={tcal("feedMine")} scope="mine" url={feedTokens.url(mine.token, origin)} />
+          <FeedRow label={tcal("feedMine")} scope="mine" path={feedTokens.url(mine.token, "")} />
         </ul>
       </section>
       <section className="flex flex-col gap-3">
