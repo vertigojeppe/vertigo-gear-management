@@ -191,9 +191,12 @@ export const projects = {
 
   async create(actor: Actor, input: ProjectInput, customFields: CustomFieldValues = {}): Promise<ProjectDto> {
     assertCan(actor, "projects.write");
-    const p = await prisma.project.create({ data: projectData(input, customFields) });
-    await prisma.location.create({ data: { name: p.name, type: "project", projectId: p.id } });
-    await logActivity(actor, { entityType: "project", entityId: p.id, action: "created", summary: `Created project ${p.name}` });
+    const p = await prisma.$transaction(async (tx) => {
+      const row = await tx.project.create({ data: projectData(input, customFields) });
+      await tx.location.create({ data: { name: row.name, type: "project", projectId: row.id } });
+      await logActivity(actor, { entityType: "project", entityId: row.id, action: "created", summary: `Created project ${row.name}` }, tx);
+      return row;
+    });
     await emitEvent("project.created", { id: p.id, name: p.name, status: p.status }, p.status === "confirmed" ? { calendar: { kind: "project", id: p.id } } : {});
     if (p.status === "confirmed") await emitEvent("project.confirmed", { id: p.id, name: p.name }, { calendar: { kind: "project", id: p.id } });
     return toProjectDto(p);

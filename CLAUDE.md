@@ -78,7 +78,15 @@ Modules import each other only via `@/modules/<name>` (ESLint-enforced).
   `can(role, permission)` is pure and unit-tested.
 - `src/proxy.ts` only does an optimistic cookie check; it is not the
   authorisation layer.
-- Session is a JWT with `id` and `role`. Role changes apply at next login.
+- Session is a JWT with `id` and `role`, but `getActor` looks the user up
+  once per request (cached): name and role come from the database, and a
+  deleted / deactivated user or a cookie from before a database reset is
+  treated as signed out. `requireActor` sends such a session through
+  `/api/session/stale`, which clears the cookie before `/login` (a plain
+  redirect to `/login` would bounce back via the proxy's cookie check).
+- Mutations that write several rows (entity + location + activity row) run
+  in one `$transaction` and pass `tx` to `logActivity`, so a failed
+  activity row never leaves a half-created entity behind.
 
 ## Inventory conventions
 

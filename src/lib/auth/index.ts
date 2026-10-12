@@ -25,8 +25,10 @@ const credentialsSchema = z.object({
  * Auth.js configuration.
  *
  * Strategy: JWT sessions (required by the Credentials provider). The token
- * carries the user id and role so pages and the proxy can authorise without
- * a database round-trip. Role changes take effect on next login.
+ * carries the user id (and the role at sign-in time, used only by the
+ * proxy's optimistic check). `getActor` in session.ts loads the user once
+ * per request, so role changes and deactivation apply immediately and a
+ * stale cookie is signed out.
  *
  * Adding Google login later: add the Google provider here and set
  * AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET. Nothing else changes.

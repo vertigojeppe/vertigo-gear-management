@@ -53,6 +53,15 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
+describe("project creation", () => {
+  it("creates nothing when the activity row fails (actor that no longer exists)", async () => {
+    const ghost: Actor = { ...admin, id: "ghost-user-id" };
+    await expect(projects.create(ghost, { ...projectInput, name: `Ghost ${marker}` })).rejects.toThrow();
+    expect(await prisma.project.findFirst({ where: { name: `Ghost ${marker}` } })).toBeNull();
+    expect(await prisma.location.findFirst({ where: { name: `Ghost ${marker}` } })).toBeNull();
+  });
+});
+
 describe("reservations", () => {
   it("derives the reservation window from the phase dates", async () => {
     const p = await projects.get(projectId);

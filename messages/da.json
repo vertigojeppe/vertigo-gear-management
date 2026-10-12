@@ -54,7 +54,8 @@
     "password": "Adgangskode",
     "submit": "Log ind",
     "invalid": "Forkert e-mail eller adgangskode.",
-    "error": "Noget gik galt. Prøv igen."
+    "error": "Noget gik galt. Prøv igen.",
+    "stale": "Din session gælder ikke længere (kontoen er fjernet, eller databasen er nulstillet). Log ind igen."
   },
   "dashboard": {
     "title": "Oversigt",

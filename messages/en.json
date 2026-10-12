@@ -54,7 +54,8 @@
     "password": "Password",
     "submit": "Sign in",
     "invalid": "Wrong email or password.",
-    "error": "Something went wrong. Try again."
+    "error": "Something went wrong. Try again.",
+    "stale": "Your session is no longer valid (the account was removed or the database was reset). Sign in again."
   },
   "dashboard": {
     "title": "Dashboard",
