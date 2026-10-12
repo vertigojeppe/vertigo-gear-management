@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { Button } from "@/components/ui/button";
+import { formatBytes } from "@/lib/format";
 import { MARKUP_COLORS, MARKUP_TOOLS, type MarkupTool } from "../../../../config/app.config";
 import { saveMarkup } from "../actions";
 import { MarkupLayer, type Shape } from "./markup-layer";
@@ -11,13 +13,43 @@ import { MarkupLayer, type Shape } from "./markup-layer";
 const PdfViewer = dynamic(() => import("./pdf-viewer").then((m) => m.PdfViewer), { ssr: false });
 const ModelViewer = dynamic(() => import("./model-viewer").then((m) => m.ModelViewer), { ssr: false });
 
-export type ViewerVersion = { id: string; url: string; name: string; mimeType: string; markups: { page: number; shapes: Shape[] }[] };
+export type ViewerVersion = { id: string; url: string; name: string; mimeType: string; size: number; markups: { page: number; shapes: Shape[] }[] };
 
 /**
  * Picks the viewer for a document version and, for images and PDFs, puts
  * the markup layer with its toolbar on top.
  */
-export function DocumentViewer({ kind, version, canEdit, userId, mtlUrl, previewUrl }: { kind: string; version: ViewerVersion; canEdit: boolean; userId: string; mtlUrl?: string | null; previewUrl?: string | null }) {
+/** Viewer with a safety net: a crashing viewer shows the file card instead of a blank page. */
+export function DocumentViewer(props: { kind: string; version: ViewerVersion; canEdit: boolean; userId: string; mtlUrl?: string | null; previewUrl?: string | null }) {
+  const t = useTranslations("plans");
+  const { version, previewUrl } = props;
+  return (
+    <ErrorBoundary
+      fallback={() => (
+        <div className="flex flex-col gap-3 rounded-md border p-4 text-sm" role="alert" data-testid="viewer-fallback">
+          {previewUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={previewUrl} alt={version.name} className="max-h-[50vh] max-w-full self-start rounded border" />
+          )}
+          <p>
+            <span className="font-medium">{version.name}</span>
+            <span className="block text-xs text-muted-foreground">
+              {formatBytes(version.size)} · {version.mimeType || version.name.split(".").pop()?.toUpperCase()}
+            </span>
+          </p>
+          <p className="text-muted-foreground">{t("viewerFailed")}</p>
+          <a href={`${version.url}?download=1`} className="self-start rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted">
+            {t("download")}
+          </a>
+        </div>
+      )}
+    >
+      <DocumentViewerInner {...props} />
+    </ErrorBoundary>
+  );
+}
+
+function DocumentViewerInner({ kind, version, canEdit, userId, mtlUrl, previewUrl }: { kind: string; version: ViewerVersion; canEdit: boolean; userId: string; mtlUrl?: string | null; previewUrl?: string | null }) {
   const t = useTranslations("plans");
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
@@ -130,7 +162,15 @@ export function DocumentViewer({ kind, version, canEdit, userId, mtlUrl, preview
 
   if (kind === "model3d") {
     const ext = version.name.split(".").pop()?.toLowerCase() ?? "";
-    return <ModelViewer url={version.url} ext={ext} mtlUrl={mtlUrl} labels={{ measure: t("measure"), measureHint: t("measureHint"), resetView: t("resetView"), loading: t("loadingModel"), distance: t("distance"), failed: t("modelFailed") }} />;
+    return (
+      <ModelViewer
+        url={version.url}
+        ext={ext}
+        mtlUrl={mtlUrl}
+        labels={{ measure: t("measure"), measureHint: t("measureHint"), resetView: t("resetView"), loading: t("loadingModel"), distance: t("distance"), failed: t("modelFailed"), noWebGL: t("noWebGL"), download: t("download") }}
+        file={{ name: version.name, size: version.size, mimeType: version.mimeType, downloadUrl: `${version.url}?download=1`, previewUrl }}
+      />
+    );
   }
 
   return (

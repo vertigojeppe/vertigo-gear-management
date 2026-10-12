@@ -818,6 +818,8 @@
     "loadingModel": "Loading model…",
     "distance": "Distance",
     "modelFailed": "Could not load the model.",
-    "pdfDocsSkipped": "PDF drawings need poppler on the server to appear here; see the document list."
+    "pdfDocsSkipped": "PDF drawings need poppler on the server to appear here; see the document list.",
+    "noWebGL": "3D preview needs WebGL — enable hardware acceleration or open in another browser. The file itself is fine; download it below.",
+    "viewerFailed": "The viewer hit an error. The file itself is fine; download it below."
   }
 }

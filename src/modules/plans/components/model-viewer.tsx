@@ -7,17 +7,44 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
+import { hasWebGL } from "@/lib/webgl";
+import { formatBytes } from "@/lib/format";
 
-type Labels = { measure: string; measureHint: string; resetView: string; loading: string; distance: string; failed: string };
+type Labels = { measure: string; measureHint: string; resetView: string; loading: string; distance: string; failed: string; noWebGL: string; download: string };
+export type FileCard = { name: string; size: number; mimeType: string; downloadUrl: string; previewUrl?: string | null };
+
+/** What to show instead of the canvas: file facts, the preview image if any, a download button. */
+export function ModelFallbackCard({ file, note, download }: { file: FileCard; note: string; download: string }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-md border p-4 text-sm" data-testid="model-fallback">
+      {file.previewUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={file.previewUrl} alt={file.name} className="max-h-[50vh] max-w-full self-start rounded border" />
+      )}
+      <p>
+        <span className="font-medium">{file.name}</span>
+        <span className="block text-xs text-muted-foreground">
+          {formatBytes(file.size)} · {file.mimeType || file.name.split(".").pop()?.toUpperCase()}
+        </span>
+      </p>
+      <p className="text-muted-foreground">{note}</p>
+      <a href={file.downloadUrl} className="self-start rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted">
+        {download}
+      </a>
+    </div>
+  );
+}
 
 /**
  * three.js viewer for glTF/GLB, OBJ (+MTL) and STL: orbit/pan/zoom, grid,
  * lights, and a two-point measure tool (click two points on the model).
  * Units are whatever the file uses; the label shows the raw distance.
  */
-export function ModelViewer({ url, ext, mtlUrl, labels }: { url: string; ext: string; mtlUrl?: string | null; labels: Labels }) {
+export function ModelViewer({ url, ext, mtlUrl, labels, file }: { url: string; ext: string; mtlUrl?: string | null; labels: Labels; file: FileCard }) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  // Probed once on the client; the server never renders the canvas.
+  const [webgl] = useState(() => (typeof document === "undefined" ? true : hasWebGL()));
+  const [status, setStatus] = useState<"loading" | "ready" | "error" | "nowebgl">(webgl ? "loading" : "nowebgl");
   const [error, setError] = useState<string | null>(null);
   const [measuring, setMeasuring] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
@@ -29,12 +56,20 @@ export function ModelViewer({ url, ext, mtlUrl, labels }: { url: string; ext: st
 
   useEffect(() => {
     const host = hostRef.current;
-    if (!host) return;
+    if (!host || !webgl) return;
     let disposed = false;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf4f4f5);
     const camera = new THREE.PerspectiveCamera(50, 1, 0.01, 10_000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+    } catch (err) {
+      // The probe passed but the real context failed (GPU reset, blocked driver): fall back, never throw into render.
+      console.warn("WebGL renderer could not be created", err);
+      queueMicrotask(() => setStatus("nowebgl"));
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     host.appendChild(renderer.domElement);
     renderer.domElement.style.touchAction = "none";
@@ -171,7 +206,9 @@ export function ModelViewer({ url, ext, mtlUrl, labels }: { url: string; ext: st
       renderer.dispose();
       host.removeChild(renderer.domElement);
     };
-  }, [url, ext, mtlUrl]);
+  }, [url, ext, mtlUrl, webgl]);
+
+  if (status === "nowebgl") return <ModelFallbackCard file={file} note={labels.noWebGL} download={labels.download} />;
 
   return (
     <div className="flex flex-col gap-2">

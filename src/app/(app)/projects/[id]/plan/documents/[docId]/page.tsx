@@ -46,7 +46,7 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
         }
       />
 
-      <DocumentViewer kind={document.kind} version={{ id: version.id, url: version.url, name: version.name, mimeType: version.mimeType, markups: version.markups }} canEdit={canEdit} userId={actor.id} mtlUrl={mtlUrl} previewUrl={document.previewUrl} />
+      <DocumentViewer kind={document.kind} version={{ id: version.id, url: version.url, name: version.name, mimeType: version.mimeType, size: version.size, markups: version.markups }} canEdit={canEdit} userId={actor.id} mtlUrl={mtlUrl} previewUrl={document.previewUrl} />
 
       {canEdit && (document.kind === "native" || document.kind === "other") && (
         <DocumentUploader planId={plan.id} previewFor={document.id} accept="image/*" compact />

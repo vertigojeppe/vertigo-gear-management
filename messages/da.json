@@ -818,6 +818,8 @@
     "loadingModel": "Indlæser model…",
     "distance": "Afstand",
     "modelFailed": "Modellen kunne ikke indlæses.",
-    "pdfDocsSkipped": "PDF-tegninger kræver poppler på serveren for at vises her; se dokumentlisten."
+    "pdfDocsSkipped": "PDF-tegninger kræver poppler på serveren for at vises her; se dokumentlisten.",
+    "noWebGL": "3D-visning kræver WebGL — slå hardwareacceleration til eller åbn i en anden browser. Selve filen fejler intet; download den herunder.",
+    "viewerFailed": "Visningen fejlede. Selve filen fejler intet; download den herunder."
   }
 }
