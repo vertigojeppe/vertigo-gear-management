@@ -6,6 +6,14 @@ export { planDetail, planDetailById, planSummary, planTemplateOptions, planTempl
 export type { PlanDetail, ScheduleRow, TaskRow, LogisticsRow } from "./queries";
 export { planInput, createPlanInput, applyTemplateInput, scheduleEntryInput, taskInput, logisticsInput, planTemplateInput, templateEntryInput, saveAsTemplateInput } from "./schema";
 export { renderPlan } from "./plan-pdf";
+export { documents, documentsForPlan, documentDetail, fileIdsForPlan, shapesSchema } from "./documents";
+export type { DocumentRow, DocumentVersionRow, Shape } from "./documents";
+export { documentKind, defaultModelUnit, formatDistance, MODEL_UNITS } from "./logic";
+export type { ModelUnit } from "./logic";
+export type { DocumentKind } from "./logic";
+export { DocumentUploader } from "./components/document-uploader";
+export { DocumentViewer } from "./components/document-viewer";
+export { PinDocumentForm, RemoveDocumentButton, RemoveVersionButton } from "./components/document-forms";
 export { CreatePlanDialog, ApplyPlanTemplateDialog, SavePlanAsTemplateDialog, DeletePlanButton, PlanShareControls, PlanNotesForm } from "./components/plan-dialogs";
 export { ScheduleEntryDialog, RemoveScheduleEntryButton } from "./components/schedule-dialogs";
 export { TaskDialog, TaskDoneButton, RemoveTaskButton } from "./components/task-dialogs";

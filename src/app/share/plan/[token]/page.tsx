@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { dateFromString } from "@/lib/dates";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { shareLinks } from "@/modules/packing";
-import { planDetailById } from "@/modules/plans";
+import { documentsForPlan, planDetailById } from "@/modules/plans";
 import { PLAN_PHASES, appConfig } from "../../../../../config/app.config";
 
 export const metadata: Metadata = { title: "Production plan" };
@@ -24,6 +24,8 @@ export default async function SharedPlanPage(props: { params: Promise<{ token: s
   const tph = await getTranslations("planPhase");
   const tk = await getTranslations("logisticsKind");
   const { plan, project, days, tasks, logistics, crew, contacts } = detail;
+  const docs = await documentsForPlan(plan.id);
+  const fileUrl = (url: string) => `${url}${url.includes("?") ? "&" : "?"}share=${encodeURIComponent(token)}`;
   const pdf = (day?: string) => `/api/plans/${plan.id}/plan.pdf?share=${encodeURIComponent(token)}${day ? `&day=${day}` : ""}`;
 
   return (
@@ -122,6 +124,32 @@ export default async function SharedPlanPage(props: { params: Promise<{ token: s
               </section>
             );
           })}
+        </>
+      )}
+
+      {docs.length > 0 && (
+        <>
+          <h2 className="mt-6 border-b pb-1 text-sm font-medium">{t("documents")}</h2>
+          <ul className="divide-y text-sm">
+            {docs.map((d) => (
+              <li key={d.id} className="flex items-center gap-3 py-1.5">
+                {d.latest.thumbUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={fileUrl(d.latest.thumbUrl)} alt="" className="size-10 rounded object-cover" />
+                )}
+                <span className="min-w-0 flex-1">
+                  {d.name}
+                  <span className="block text-xs text-muted-foreground">
+                    {t("version")} {d.latest.version}
+                    {d.pinnedTo ? ` · ${d.pinnedTo}` : ""}
+                  </span>
+                </span>
+                <a href={fileUrl(`${d.latest.url}?download=1`)} className="text-xs underline">
+                  {t("download")}
+                </a>
+              </li>
+            ))}
+          </ul>
         </>
       )}
 

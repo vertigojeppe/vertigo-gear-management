@@ -52,6 +52,14 @@ erDiagram
   PlanTask }o--o| User : assignee
   PlanTemplate ||--o{ PlanTemplateEntry : entries
   ShareLink }o--o| ProductionPlan : "targetType=plan"
+  ProductionPlan ||--o{ PlanDocument : documents
+  PlanDocument ||--o{ PlanDocumentVersion : versions
+  PlanDocumentVersion }o--|| File : bytes
+  PlanDocumentVersion ||--o{ Markup : "per page"
+  PlanDocument }o--o| ScheduleEntry : "pinned to"
+  PlanDocument }o--o| PlanTask : "pinned to"
+  PlanDocument }o--o| File : "preview image"
+  User ||--o{ UploadSession : "in progress"
 
   ScheduleEntry {
     datetime startsAt

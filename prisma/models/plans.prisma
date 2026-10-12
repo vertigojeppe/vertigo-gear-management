@@ -11,6 +11,7 @@ model ProductionPlan {
   schedule  ScheduleEntry[]
   tasks     PlanTask[]
   logistics LogisticsEntry[]
+  documents PlanDocument[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -29,6 +30,7 @@ model ScheduleEntry {
   responsible   User?          @relation(fields: [responsibleId], references: [id], onDelete: SetNull)
   notes         String?
   sortOrder     Int            @default(0)
+  documents     PlanDocument[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -50,6 +52,7 @@ model PlanTask {
   doneAt     DateTime?
   notes      String?
   sortOrder  Int            @default(0)
+  documents  PlanDocument[]
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
@@ -104,4 +107,77 @@ model PlanTemplateEntry {
   sortOrder     Int          @default(0)
 
   @@index([templateId])
+}
+
+/// A document on a plan (rider, stage plot, CAD, 3D model, risk assessment).
+/// Uploading a file with the same name adds a version; old versions stay.
+model PlanDocument {
+  id              String         @id @default(cuid())
+  planId          String
+  plan            ProductionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  /// Logical name, normally the file name.
+  name            String
+  /// Pinned to a schedule entry or a task ("the load-in drawing on Rig truss").
+  scheduleEntryId String?
+  scheduleEntry   ScheduleEntry? @relation(fields: [scheduleEntryId], references: [id], onDelete: SetNull)
+  taskId          String?
+  task            PlanTask?      @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  /// User-uploaded preview image for formats without an inline viewer (SKP, DWG, ...).
+  previewFileId   String?
+  previewFile     File?          @relation("DocumentPreview", fields: [previewFileId], references: [id], onDelete: SetNull)
+  versions        PlanDocumentVersion[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([planId, name])
+  @@index([scheduleEntryId])
+  @@index([taskId])
+}
+
+model PlanDocumentVersion {
+  id         String       @id @default(cuid())
+  documentId String
+  document   PlanDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version    Int
+  fileId     String
+  file       File         @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  note       String?
+  markups    Markup[]
+  createdAt  DateTime     @default(now())
+
+  @@unique([documentId, version])
+}
+
+/// Drawings on top of an image or a PDF page: a separate layer, never baked
+/// into the file. One row per version and page; shapes carry their author.
+model Markup {
+  id          String              @id @default(cuid())
+  versionId   String
+  version     PlanDocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  page        Int                 @default(1)
+  /// [{ id, type: "path" | "arrow" | "rect" | "text", points: [x,y,...] (0..1), text?, color, authorId, authorName, createdAt }]
+  shapes      Json                @default("[]")
+  updatedById String?
+  updatedBy   User?               @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime            @updatedAt
+
+  @@unique([versionId, page])
+}
+
+/// A chunked upload in progress; the bytes sit in storage under partKey
+/// until the client completes it and a File row is created.
+model UploadSession {
+  id         String   @id @default(cuid())
+  uploaderId String
+  uploader   User     @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  name       String
+  mimeType   String
+  size       Int
+  received   Int      @default(0)
+  chunkSize  Int
+  partKey    String
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([expiresAt])
 }

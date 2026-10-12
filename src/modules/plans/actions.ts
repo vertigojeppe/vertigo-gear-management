@@ -8,6 +8,7 @@ import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { shareLinks } from "@/modules/packing/service";
 import { applyTemplateInput, createPlanInput, logisticsInput, planInput, planTemplateInput, saveAsTemplateInput, scheduleEntryInput, taskInput, templateEntryInput } from "./schema";
 import { logistics, planTemplates, plans, schedule, tasks } from "./service";
+import { documents, type Shape } from "./documents";
 
 function revalidatePlan(projectId: string) {
   revalidatePath(`/projects/${projectId}`);
@@ -215,4 +216,77 @@ export async function revokePlanShareLink(formData: FormData): Promise<void> {
   const actor = await requirePermission("share.create");
   await shareLinks.revoke(actor, "plan", planIdOf(formData));
   revalidatePlan(projectIdOf(formData));
+}
+
+/* Documents -------------------------------------------------------------- */
+
+type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
+
+async function planProjectId(planId: string) {
+  const { prisma } = await import("@/lib/db");
+  return (await prisma.productionPlan.findUnique({ where: { id: planId }, select: { projectId: true } }))?.projectId ?? null;
+}
+
+/** Called by the uploader once all chunks are in. */
+export async function attachUploadedFile(input: { planId: string; fileId: string; name?: string; note?: string; scheduleEntryId?: string; taskId?: string }): Promise<Result<{ documentId: string; version: number }>> {
+  const actor = await requirePermission("plans.write");
+  try {
+    const r = await documents.add(actor, input.planId, { fileId: input.fileId, name: input.name, note: input.note, scheduleEntryId: input.scheduleEntryId ?? undefined, taskId: input.taskId ?? undefined });
+    const projectId = await planProjectId(input.planId);
+    if (projectId) revalidatePlan(projectId);
+    return { ok: true, documentId: r.doc.id, version: r.version.version };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Could not attach the file." };
+  }
+}
+
+export async function setDocumentPreview(input: { documentId: string; fileId: string | null }): Promise<Result> {
+  const actor = await requirePermission("plans.write");
+  try {
+    const doc = await documents.setPreview(actor, input.documentId, input.fileId);
+    const projectId = await planProjectId(doc.planId);
+    if (projectId) revalidatePlan(projectId);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Could not set the preview." };
+  }
+}
+
+export async function saveMarkup(input: { versionId: string; page: number; shapes: Shape[] }): Promise<Result<{ shapes?: Shape[] }>> {
+  const actor = await requirePermission("plans.write");
+  try {
+    const row = await documents.saveMarkup(actor, input.versionId, input.page, input.shapes);
+    return { ok: true, shapes: row.shapes as Shape[] };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Could not save the markup." };
+  }
+}
+
+export async function pinDocument(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("plans.write");
+  const target = String(formData.get("target") ?? "");
+  const [kind, targetId] = target.split(":");
+  try {
+    await documents.pin(actor, String(formData.get("documentId")), { scheduleEntryId: kind === "entry" ? targetId : null, taskId: kind === "task" ? targetId : null });
+  } catch (err) {
+    return errorState(err, echoValues(formData));
+  }
+  revalidatePlan(projectIdOf(formData));
+  return { ok: true };
+}
+
+export async function removeDocument(formData: FormData): Promise<void> {
+  const actor = await requirePermission("plans.write");
+  const projectId = projectIdOf(formData);
+  await documents.remove(actor, String(formData.get("documentId")));
+  revalidatePlan(projectId);
+  redirect(`/projects/${projectId}/plan`);
+}
+
+export async function removeDocumentVersion(formData: FormData): Promise<void> {
+  const actor = await requirePermission("plans.write");
+  const projectId = projectIdOf(formData);
+  await documents.removeVersion(actor, String(formData.get("versionId")));
+  revalidatePlan(projectId);
+  redirect(`/projects/${projectId}/plan/documents/${String(formData.get("documentId"))}`);
 }

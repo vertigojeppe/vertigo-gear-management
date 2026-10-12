@@ -59,6 +59,11 @@ fields) is done; the rest waits until production plans have shipped.
 - Call times per crew member straight from the plan (today: on the project).
 - Reorder schedule entries by drag; today ties sort by creation.
 - Plan PDF with per-user pages (only my schedule and tasks).
+- S3/R2 storage driver with multipart upload (the adapter interface is
+  ready; local disk only today).
+- Markup on 3D models (today: images and PDFs) and on preview images.
+- Thumbnails for PDF documents (poppler is in the Docker image already).
+- Compare two versions of a drawing side by side.
 - Scan tags in check-in mode too (today: tick buttons per unit).
 - Print a label for a travel bin straight from the packing list.
 - Case contents as a nested view when packing a kit (today: one line).

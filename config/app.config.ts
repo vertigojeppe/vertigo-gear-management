@@ -250,7 +250,17 @@ export const fileConfig = {
     pdf: ["application/pdf"],
     model3d: [".glb", ".gltf", ".obj", ".stl"],
   },
+  /** Stored and downloadable, shown with an icon and an optional preview image. */
+  nativeOnly: [".skp", ".blend", ".dwg", ".dxf", ".vwx", ".ai", ".psd"],
+  /** Resumable upload chunk size (bytes). */
+  chunkBytes: 4 * 1024 * 1024,
+  /** Unfinished uploads are discarded after this many hours. */
+  uploadSessionHours: 24,
 } as const;
+
+export const MARKUP_TOOLS = ["select", "pen", "arrow", "rect", "text"] as const;
+export type MarkupTool = (typeof MARKUP_TOOLS)[number];
+export const MARKUP_COLORS = ["#e11d48", "#2563eb", "#16a34a", "#f59e0b", "#111111"] as const;
 
 /* ---------------------------------------------------------------------- */
 /* Production plans                                                       */

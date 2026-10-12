@@ -8,12 +8,14 @@ import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { dateFromString, dateToZonedInput, today } from "@/lib/dates";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatBytes, formatDate, formatDateTime } from "@/lib/format";
+import { Paperclip } from "lucide-react";
 import { shareLinks } from "@/modules/packing";
 import {
   ApplyPlanTemplateDialog,
   CreatePlanDialog,
   DeletePlanButton,
+  DocumentUploader,
   LogisticsDialog,
   PlanNotesForm,
   PlanShareControls,
@@ -25,6 +27,7 @@ import {
   TaskDialog,
   TaskDoneButton,
   defaultAnchor,
+  documentsForPlan,
   planDetail,
   planTemplateOptions,
 } from "@/modules/plans";
@@ -65,7 +68,19 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
 
   const { plan, days, tasks, taskProgress, logistics, crew, contacts, packingLists } = detail;
   const ids = { projectId: id, planId: plan.id };
-  const share = await shareLinks.current("plan", plan.id);
+  const [share, docs] = await Promise.all([shareLinks.current("plan", plan.id), documentsForPlan(plan.id)]);
+  const docsFor = (key: "scheduleEntryId" | "taskId", value: string) => docs.filter((d) => d[key] === value);
+  const clip = (list: typeof docs) =>
+    list.length > 0 ? (
+      <span className="flex flex-wrap gap-1">
+        {list.map((d) => (
+          <Link key={d.id} href={`/projects/${id}/plan/documents/${d.id}`} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs hover:bg-muted" title={d.name}>
+            <Paperclip className="size-3" aria-hidden />
+            <span className="max-w-40 truncate">{d.name}</span>
+          </Link>
+        ))}
+      </span>
+    ) : null;
   const todayStr = today();
 
   return (
@@ -116,6 +131,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">{e.title}</span>
                       <span className="block text-xs text-muted-foreground">{[e.location, e.responsibleName, e.notes].filter(Boolean).join(" · ")}</span>
+                      {clip(docsFor("scheduleEntryId", e.id))}
                     </span>
                     {canEdit && (
                       <span className="flex shrink-0 items-center gap-1">
@@ -160,6 +176,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
                             {[x.assigneeName, x.dueDate ? formatDate(x.dueDate) : null, x.notes].filter(Boolean).join(" · ")}
                             {overdue ? <span className="ml-1 text-destructive">{t("overdue")}</span> : null}
                           </span>
+                          {clip(docsFor("taskId", x.id))}
                         </span>
                         {canEdit && (
                           <span className="flex shrink-0 items-center gap-1">
@@ -243,6 +260,44 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
           )}
         </section>
       </div>
+
+      {/* Documents */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">
+          {t("documents")} <span className="text-sm font-normal text-muted-foreground">({docs.length})</span>
+        </h2>
+        {docs.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{t("noDocuments")}</p>
+        ) : (
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {docs.map((d) => (
+              <li key={d.id}>
+                <Link href={`/projects/${id}/plan/documents/${d.id}`} className="flex gap-3 rounded-md border p-2 hover:bg-muted/50">
+                  {d.latest.thumbUrl || d.previewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={d.latest.thumbUrl ?? d.previewUrl ?? ""} alt="" className="size-16 shrink-0 rounded object-cover" />
+                  ) : (
+                    <span className="flex size-16 shrink-0 items-center justify-center rounded bg-muted text-xs font-medium uppercase text-muted-foreground">{d.latest.name.split(".").pop()?.slice(0, 5)}</span>
+                  )}
+                  <span className="min-w-0 flex-1 text-sm">
+                    <span className="block truncate font-medium">{d.name}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {t(`kind_doc_${d.kind}` as "kind_doc_image")} · {t("version")} {d.latest.version} · {formatBytes(d.latest.size)}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {d.latest.uploaderName ?? ""} · {formatDate(d.latest.createdAt)}
+                      {d.pinnedTo ? ` · 📎 ${d.pinnedTo}` : ""}
+                      {d.latest.markups.some((m) => m.shapes.length > 0) ? ` · ${t("hasMarkup")}` : ""}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        {canEdit && <DocumentUploader planId={plan.id} />}
+        {canEdit && <p className="text-xs text-muted-foreground">{t("documentsHelp")}</p>}
+      </section>
 
       {/* Packing lists */}
       <section className="flex flex-col gap-3">

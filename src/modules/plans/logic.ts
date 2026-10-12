@@ -1,5 +1,18 @@
 import { addDays, dateFromString, dateToZonedInput, dayInZone, zonedInputToDate, type DateString } from "@/lib/dates";
-import { PLAN_PHASES, type LogisticsKind, type PlanPhase } from "../../../config/app.config";
+import { PLAN_PHASES, fileConfig, type LogisticsKind, type PlanPhase } from "../../../config/app.config";
+
+export type DocumentKind = "image" | "pdf" | "model3d" | "native" | "other";
+
+/** Which viewer a document gets, by MIME type first, then extension. */
+export function documentKind(name: string, mimeType: string): DocumentKind {
+  const ext = "." + (name.split(".").pop() ?? "").toLowerCase();
+  if ((fileConfig.inlineViewers.image as readonly string[]).includes(mimeType)) return "image";
+  if ((fileConfig.inlineViewers.pdf as readonly string[]).includes(mimeType) || ext === ".pdf") return "pdf";
+  if ((fileConfig.inlineViewers.model3d as readonly string[]).includes(ext)) return "model3d";
+  if ((fileConfig.nativeOnly as readonly string[]).includes(ext)) return "native";
+  if (mimeType.startsWith("image/")) return "image";
+  return "other";
+}
 
 /**
  * Pure helpers for production plans: grouping a schedule into days, task
@@ -128,4 +141,21 @@ export function defaultAnchor(project: { loadIn: Date | string | null; showStart
   if (!d) return fallback;
   if (typeof d === "string") return d.length === 10 ? d : dayInZone(new Date(d));
   return dayInZone(d);
+}
+
+/* 3D measure ------------------------------------------------------------- */
+
+export const MODEL_UNITS = ["mm", "cm", "m"] as const;
+export type ModelUnit = (typeof MODEL_UNITS)[number];
+
+/** glTF is metres by definition; STL and OBJ carry no unit and are usually exported in millimetres. */
+export function defaultModelUnit(ext: string): ModelUnit {
+  return ext === "glb" || ext === "gltf" ? "m" : "mm";
+}
+
+/** A raw file-unit distance as a readable metric length: "1.25 m" or "45.3 cm". */
+export function formatDistance(raw: number, unit: ModelUnit): string {
+  const metres = unit === "m" ? raw : unit === "cm" ? raw / 100 : raw / 1000;
+  if (metres >= 1) return `${(Math.round(metres * 100) / 100).toFixed(2)} m`;
+  return `${(Math.round(metres * 1000) / 10).toFixed(1)} cm`;
 }
