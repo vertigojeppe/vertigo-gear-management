@@ -17,7 +17,9 @@ export default auth((req) => {
   // answer 401 instead of redirecting to the login page.
   if (pathname.startsWith("/api/")) return NextResponse.next();
 
-  const isPublic = pathname.startsWith("/login") || pathname.startsWith("/share/");
+  // The manifest, the service worker and the offline page must load without a session: the
+  // phone fetches them while installing and when the network is gone.
+  const isPublic = pathname.startsWith("/login") || pathname.startsWith("/share/") || pathname === "/offline" || pathname === "/sw.js" || pathname === "/manifest.webmanifest";
   const origin = requestOrigin(req);
 
   if (!req.auth && !isPublic) {

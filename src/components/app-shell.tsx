@@ -3,6 +3,7 @@ import { appConfig } from "../../config/app.config";
 import { Sidebar } from "./sidebar";
 import { MobileTabBar, MobileTopBar } from "./mobile-nav";
 import { ScrollContainer } from "./scroll-container";
+import { InstallHint } from "./pwa/install-hint";
 
 /**
  * Application frame.
@@ -19,6 +20,7 @@ export function AppShell({ actor, children }: { actor: Actor; children: React.Re
       <Sidebar actor={actor} appName={appConfig.name} />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileTopBar appName={appConfig.name} />
+        <InstallHint />
         <ScrollContainer>
           <main className="mx-auto w-full max-w-6xl px-4 py-5 md:px-8 md:py-8">{children}</main>
         </ScrollContainer>

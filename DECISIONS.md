@@ -438,3 +438,16 @@ internal view) and the packing list (a "Rented in" block, never ticked,
 since those boxes are collected at the partner's door, not packed from
 our shelves). Sub-hire is for own projects only; an external rental of
 someone else's gear is a different business.
+
+## 2026-10-13 — A phone app means the installed web app
+
+The phone app is the web app installed on the home screen (web manifest,
+service worker), not a store app. The phone layout, the camera scanner
+and HTTPS were already there, so installing is the only missing step;
+a wrapped store app (Capacitor) would add an Apple developer account, a
+Mac for the builds and review cycles for every release, for a team of
+five. The service worker caches only hashed build assets and the offline
+page: every screen shows live data behind login, so caching pages or API
+responses would show stale stock and reservations. If native features
+(NFC tags, offline packing) are wanted later, wrapping this same app is
+the path, not a second code base.

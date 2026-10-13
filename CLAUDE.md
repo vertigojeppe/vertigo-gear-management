@@ -392,6 +392,25 @@ a second entry that exports components only and never a service.
   in-memory `loginLimiter` (`src/lib/rate-limit.ts`): ten failures per
   email + address, then fifteen minutes. One process, no store.
 
+## Installable on phones (PWA)
+
+- `src/app/manifest.ts` serves `/manifest.webmanifest` (standalone,
+  start at `/dashboard`, shortcuts to Scan / Projects / Inventory);
+  icons are PNGs in `public/icons/` rendered by
+  `npx tsx scripts/make-icons.ts` (committed, re-run after changing the
+  mark). The root layout sets `manifest`, `appleWebApp` and the
+  light/dark `themeColor`.
+- `public/sw.js` is the service worker: navigations go to the network and
+  fall back to `/offline` (a public page) when it is unreachable; only
+  `/_next/static` and the icons are cached. API responses, PDFs and
+  uploads are never cached. `RegisterServiceWorker` (root layout)
+  registers it in production only. Bump `VERSION` in `sw.js` when the
+  caching rules change.
+- `proxy.ts` lets `/manifest.webmanifest`, `/sw.js` and `/offline`
+  through without a session. `InstallHint` (phone layout) shows the iOS
+  "Share › Add to Home Screen" text or Android's install prompt until
+  installed or dismissed (localStorage).
+
 ## Events, outbox, integrations
 
 - Services call `emitEvent(type, data, { calendar })` (`src/lib/events.ts`)
