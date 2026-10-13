@@ -33,6 +33,9 @@ export default async function ProjectsPage(props: { searchParams: Promise<Record
         title={t("title")}
         actions={
           <>
+            <a href={`/api/export/projects.csv${(() => { const q = new URLSearchParams(Object.entries(sp).filter(([k, v]) => v !== undefined && k !== "page") as [string, string][]).toString(); return q ? `?${q}` : ""; })()}`} className={buttonVariants({ variant: "outline" })}>
+              {tc("exportCsv")}
+            </a>
             <Link href="/projects/clients" className={buttonVariants({ variant: "outline" })}>
               {t("clients")}
             </Link>

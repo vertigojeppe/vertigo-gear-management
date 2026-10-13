@@ -50,7 +50,8 @@ services:
     depends_on:
       - app
     environment:
-      APP_DOMAIN: ${APP_DOMAIN:?set APP_DOMAIN in .env, e.g. gear.vertigo.dk}
+      # Set APP_DOMAIN in .env for production (the dev database alone never needs it; the default keeps `docker compose up -d db` working).
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
     ports:
       - "80:80"
       - "443:443"

@@ -107,6 +107,22 @@ test.describe("inventory", () => {
     await expect(page.getByRole("heading", { name: "XLR 3-pin 5 m" })).toBeVisible();
   });
 
+  test("lists export as CSV with their filters", async ({ page }) => {
+    await signIn(page, "member@vertigo.test");
+    await page.goto("/inventory/items?q=Pointe");
+    const href = await page.getByRole("link", { name: "Export CSV" }).getAttribute("href");
+    expect(href).toBe("/api/export/items.csv?q=Pointe");
+    const csv = await page.request.get(href!);
+    expect(csv.status()).toBe(200);
+    expect(csv.headers()["content-type"]).toContain("text/csv");
+    const text = await csv.text();
+    expect(text.startsWith("\uFEFFAsset tag;Model;")).toBe(true);
+    expect(text).toContain("Robe Pointe");
+    expect(text).not.toContain("MAC Aura");
+    for (const list of ["models", "projects", "rentals", "contacts"]) expect((await page.request.get(`/api/export/${list}.csv`)).status(), list).toBe(200);
+    expect((await page.request.get("/api/export/nope.csv")).status()).toBe(404);
+  });
+
   test("labels print as a PDF for a filtered list and for one unit", async ({ page }) => {
     await signIn(page, "member@vertigo.test");
     await page.goto("/inventory/items?q=Pointe");

@@ -34,7 +34,8 @@
     "next": "Næste",
     "forbidden": "Du har ikke rettigheder til det.",
     "activity": "Aktivitet",
-    "noActivity": "Ingen aktivitet endnu."
+    "noActivity": "Ingen aktivitet endnu.",
+    "exportCsv": "Eksportér CSV"
   },
   "nav": {
     "dashboard": "Oversigt",
@@ -385,7 +386,9 @@
     "import": "Importér regneark",
     "importHelp": "Indlæs udstyrslisten: se hvad der oprettes, afgør tvivlsrækkerne, og bekræft.",
     "pricing": "Priser",
-    "pricingHelp": "Lejefaktor-tabeller (dage → faktor) til tilbud og lejeaftaler."
+    "pricingHelp": "Lejefaktor-tabeller (dage → faktor) til tilbud og lejeaftaler.",
+    "backup": "Backup",
+    "backupHelp": "Download hele databasen som en fil, eller gendan en (admins)."
   },
   "roles": {
     "admin": "Administrator",
@@ -985,5 +988,20 @@
     "light": "Lys",
     "dark": "Mørk",
     "system": "System"
+  },
+  "backup": {
+    "title": "Backup",
+    "subtitle": "Databasen som én JSON-fil: alle tabeller, alle rækker. Uploadede filer er ikke med; scripts/backup.sh på serveren tager begge dele.",
+    "download": "Download en backup",
+    "downloadHelp": "Alle rækker i alle {tables} tabeller, med id'er, så en gendannelse sætter alt tilbage præcist. Gem filen et sikkert sted: den indeholder kundeoplysninger og password-hashes.",
+    "downloadButton": "Download backup (JSON)",
+    "filesNote": "Fotos, tegninger og 3D-filer ligger på upload-volumen. På serveren samler scripts/backup.sh database og uploads i ét arkiv hver nat.",
+    "restore": "Gendan",
+    "restoreWarning": "Gendannelse erstatter alt i databasen med filens indhold. Det kan ikke fortrydes. Download en backup først.",
+    "file": "Backup-fil",
+    "confirmLabel": "Bekræftelse",
+    "confirmHelp": "Skriv restore for at bekræfte.",
+    "restoring": "Gendanner…",
+    "restored": "Gendannede {rows} rækker i {tables} tabeller. Genindlæs appen."
   }
 }

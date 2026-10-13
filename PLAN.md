@@ -306,10 +306,12 @@ step by step.
 Labels ✅ (2026-10-13): Avery sheets with an offset for used cells and
 single thermal labels, from the item list, a model or a unit
 (`/api/labels/sheet.pdf`); pure grid maths in `label-layout.ts`.
-Still to do: CSV export of any list, JSON backup/restore from Settings,
-empty states and inline help, README polish.
-**Tests:** rate limiter, health route, label layout; backup round-trip
-when the JSON backup lands.
+Export and backup ✅ (2026-10-13): CSV of every list with its filters
+(`/api/export/<list>.csv`), Settings › Backup with a whole-database JSON
+download and a one-transaction restore.
+Still to do: empty states and inline help, README polish.
+**Tests:** rate limiter, health route, label layout, CSV, backup tables
+and round-trip (CI).
 
 ## 6. Decisions I will make unless you object
 

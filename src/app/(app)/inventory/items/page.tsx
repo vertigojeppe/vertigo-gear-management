@@ -36,6 +36,9 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
         title={t("title")}
         actions={
           <>
+            <a href={`/api/export/items.csv${(() => { const q = new URLSearchParams(Object.entries(sp).filter(([k, v]) => v !== undefined && k !== "page") as [string, string][]).toString(); return q ? `?${q}` : ""; })()}`} className={buttonVariants({ variant: "outline" })}>
+              {tc("exportCsv")}
+            </a>
             <LabelsDialog query={new URLSearchParams(Object.entries(sp).filter(([k, v]) => v !== undefined && k !== "page") as [string, string][]).toString()} count={result.total} />
             {canEdit && (
               <Link href="/inventory/items/new" className={buttonVariants()}>

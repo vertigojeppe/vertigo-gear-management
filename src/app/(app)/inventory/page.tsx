@@ -31,11 +31,16 @@ export default async function ModelsPage(props: { searchParams: Promise<Record<s
         title={t("title")}
         subtitle={result.total > 0 ? t("familiesCount", { families: result.total, models: result.models }) : undefined}
         actions={
-          canEdit && (
-            <Link href="/inventory/models/new" className={buttonVariants()}>
-              {t("newModel")}
-            </Link>
-          )
+          <>
+            <a href={`/api/export/models.csv${(() => { const q = new URLSearchParams(Object.entries(sp).filter(([k, v]) => v !== undefined && k !== "page") as [string, string][]).toString(); return q ? `?${q}` : ""; })()}`} className={buttonVariants({ variant: "outline" })}>
+              {tc("exportCsv")}
+            </a>
+            {canEdit && (
+              <Link href="/inventory/models/new" className={buttonVariants()}>
+                {t("newModel")}
+              </Link>
+            )}
+          </>
         }
       />
       <InventoryTabs />

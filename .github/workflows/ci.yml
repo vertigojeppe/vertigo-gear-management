@@ -46,6 +46,10 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test
+      # The backup round-trip replaces the whole database, so it runs alone, after the parallel suite.
+      - run: npm run test:backup
+        env:
+          BACKUP_RESTORE_TEST: "1"
 
       - run: npm run build
 

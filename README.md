@@ -70,6 +70,12 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
   what needs your decision, and what is parked for later features. Nothing
   is written until you confirm, and importing the same file again adds
   nothing. Every imported row remembers its sheet cell.
+- **Export CSV** on every list (models, items, projects, rentals,
+  contacts) with the filters you have set; semicolon-separated so Danish
+  Excel opens it straight away.
+- **Settings › Backup** (admins): the whole database as one JSON file,
+  and a restore that replaces everything with such a file. Uploaded files
+  are not inside; `scripts/backup.sh` on the server bundles both.
 - **Settings › Users**: invite colleagues as admin, member or viewer.
 - **Settings › Your account › API tokens**: call the REST API from other
   tools. Docs at `/api/docs`.

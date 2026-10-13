@@ -31,6 +31,22 @@ test("seeded admin can sign in, navigate and sign out", async ({ page }) => {
   await expect(page).toHaveURL(/\/login/);
 });
 
+test("an admin can download a backup; members cannot", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill("admin@vertigo.test");
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+  await page.goto("/settings/backup");
+  await expect(page.getByRole("heading", { name: "Backup", exact: true })).toBeVisible();
+  const res = await page.request.get("/api/backup.json");
+  expect(res.status()).toBe(200);
+  const data = await res.json();
+  expect(data.version).toBe(1);
+  expect(Array.isArray(data.tables.User)).toBe(true);
+  expect(data.tables.Item.length).toBeGreaterThan(0);
+});
+
 test("ten wrong passwords lock the form for a while", async ({ page }) => {
   // A throwaway email, so the throttle never touches the seeded accounts other tests sign in with.
   const email = `nobody-${Date.now().toString(36)}@vertigo.test`;

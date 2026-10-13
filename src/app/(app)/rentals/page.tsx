@@ -31,11 +31,16 @@ export default async function RentalsPage(props: { searchParams: Promise<Record<
       <PageHeader
         title={t("title")}
         actions={
-          canEdit && (
-            <Link href="/rentals/new" className={buttonVariants()}>
-              {t("newRental")}
-            </Link>
-          )
+          <>
+            <a href={`/api/export/rentals.csv${(() => { const q = new URLSearchParams(Object.entries(sp).filter(([k, v]) => v !== undefined && k !== "page") as [string, string][]).toString(); return q ? `?${q}` : ""; })()}`} className={buttonVariants({ variant: "outline" })}>
+              {tc("exportCsv")}
+            </a>
+            {canEdit && (
+              <Link href="/rentals/new" className={buttonVariants()}>
+                {t("newRental")}
+              </Link>
+            )}
+          </>
         }
       />
       <form method="get" className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end">

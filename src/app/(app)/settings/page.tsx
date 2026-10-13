@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { BookUser, CalendarDays, Coins, FileSpreadsheet, KeyRound, ListPlus, Users, Webhook } from "lucide-react";
+import { BookUser, CalendarDays, Coins, DatabaseBackup, FileSpreadsheet, KeyRound, ListPlus, Users, Webhook } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
 
@@ -19,6 +19,7 @@ export default async function SettingsPage() {
     { href: "/settings/calendar", icon: CalendarDays, title: t("calendar"), body: t("calendarHelp"), show: can(actor.role, "settings.manage") },
     { href: "/settings/webhooks", icon: Webhook, title: t("webhooks"), body: t("webhooksHelp"), show: can(actor.role, "settings.manage") },
     { href: "/settings/import", icon: FileSpreadsheet, title: t("import"), body: t("importHelp"), show: can(actor.role, "settings.manage") },
+    { href: "/settings/backup", icon: DatabaseBackup, title: t("backup"), body: t("backupHelp"), show: can(actor.role, "users.manage") },
   ].filter((c) => c.show);
   return (
     <div className="flex flex-col gap-6">

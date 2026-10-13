@@ -35,6 +35,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | calendar | CalendarFeedToken, Google sync, outbox handlers | `feedTokens`, `buildFeed`, `syncProject`, `syncRental` |
 | settings | CustomFieldDefinition, Webhook, Outbox admin | `customFieldDefinitions`, `webhooks`, `outboxAdmin` |
 | pricing | RateTable, RateTier, ExtraLine (+ quote fields on Project / Rental / Allocation / RentalLine) | `rateTables`, `quotes`, `extraLines`, pure `factorFor` / `quoteTotals`, `quoteFor` (priced view), `renderQuote` (quote + agreement PDF), rate table editor, quote section |
+| backup | nothing of its own (reads and writes every table) | `backup.export` / `backup.restore`, `TABLES` (insert order), restore form |
 | importer | nothing of its own (writes inventory, contacts, rentals) | `readWorkbook` (sheets → rows), `buildPlan` / `resolveOps` (pure plan with buckets and decisions), `applyOps` (one transaction), `importer.stash/plan/commit`, upload form + preview |
 
 Cross-cutting in `src/lib/`: `activity.ts` (ActivityLog), `asset-tag.ts`
