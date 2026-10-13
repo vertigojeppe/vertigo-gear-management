@@ -64,6 +64,9 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
               <Link href={`/inventory/models/${model.id}/edit`} className={buttonVariants({ variant: "outline" })}>
                 {tc("edit")}
               </Link>
+              <Link href={`/inventory/models/new?from=${model.id}`} className={buttonVariants({ variant: "outline" })}>
+                {t("newVariant")}
+              </Link>
               <form action={inventoryActions.setModelArchived}>
                 <input type="hidden" name="id" value={model.id} />
                 <input type="hidden" name="archived" value={model.archived ? "false" : "true"} />
@@ -142,6 +145,24 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
           <p className="text-xs text-muted-foreground">{ts("in_house")}: {detail.byStatus.in_house ?? 0} · {t("owned")}: {detail.owned}</p>
         </div>
       </div>
+
+      {(detail.variants.length > 0 || model.variant) && (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-lg font-medium">
+            {t("variants")} <span className="text-sm font-normal text-muted-foreground">({detail.variants.length + 1})</span>
+          </h2>
+          <ul className="flex flex-wrap gap-2 text-sm">
+            <li className="rounded-md border bg-muted px-2.5 py-1 font-medium">{model.variant ?? "—"}</li>
+            {detail.variants.map((v) => (
+              <li key={v.id}>
+                <Link href={`/inventory/models/${v.id}`} className={`rounded-md border px-2.5 py-1 hover:bg-muted/50 ${v.archived ? "text-muted-foreground line-through" : ""}`}>
+                  {v.variant ?? "—"}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">

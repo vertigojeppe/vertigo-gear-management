@@ -29,7 +29,7 @@ export type CommitResult = {
 };
 export type CreatedIds = { categories: string[]; models: string[]; items: string[]; contacts: string[]; locations: string[]; clients: string[]; rentals: string[]; rateTables: string[] };
 
-const SPLIT = /^([^|]*)\|(.*)$/;
+const SPLIT = /^([^|]*)\|([^|]*)\|(.*)$/;
 
 export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promise<CommitResult> {
   assertCan(actor, "settings.manage");
@@ -110,7 +110,7 @@ export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promi
         const known = modelIds.get(key);
         if (known) return known;
         const m = key.match(SPLIT);
-        const existing = m ? await tx.model.findFirst({ where: { manufacturer: { equals: m[1], mode: "insensitive" }, name: { equals: m[2], mode: "insensitive" } }, select: { id: true } }) : null;
+        const existing = m ? await tx.model.findFirst({ where: { manufacturer: { equals: m[1], mode: "insensitive" }, name: { equals: m[2], mode: "insensitive" }, variant: m[3] ? { equals: m[3], mode: "insensitive" } : null }, select: { id: true } }) : null;
         if (!existing) throw new Error(`Import plan refers to an unknown model: ${key}`);
         modelIds.set(key, existing.id);
         return existing.id;
@@ -133,7 +133,7 @@ export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promi
             break;
           case "model": {
             if (modelIds.has(op.key)) break;
-            const existing = await tx.model.findFirst({ where: { manufacturer: { equals: op.manufacturer, mode: "insensitive" }, name: { equals: op.name, mode: "insensitive" } }, select: { id: true } });
+            const existing = await tx.model.findFirst({ where: { manufacturer: { equals: op.manufacturer, mode: "insensitive" }, name: { equals: op.name, mode: "insensitive" }, variant: op.variant ? { equals: op.variant, mode: "insensitive" } : null }, select: { id: true } });
             if (existing) {
               modelIds.set(op.key, existing.id);
               break;
@@ -144,6 +144,7 @@ export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promi
                 categoryId,
                 manufacturer: op.manufacturer,
                 name: op.name,
+                variant: op.variant ?? null,
                 trackingType: op.tracking,
                 weightKg: op.weightKg ?? null,
                 powerDrawW: op.powerDrawW ?? null,

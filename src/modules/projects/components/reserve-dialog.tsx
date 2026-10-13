@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import { Field, FormError } from "@/components/form/field";
-import { NativeSelect } from "@/components/form/native-select";
+import { ModelSelect } from "@/components/form/model-select";
 import { SubmitButton } from "@/components/form/submit-button";
 import { useActionDialog } from "@/components/form/use-action-dialog";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { reserve, type ReserveState } from "../actions";
 import { ConflictNotice } from "@/components/conflict-notice";
-import { modelLabel } from "@/lib/format";
 
-type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string; rentalDayPrice?: number | null };
+type ModelOption = { id: string; manufacturer: string; name: string; variant?: string | null; trackingType: string; rentalDayPrice?: number | null };
 
 export type ReservationEdit = { id: string; modelId: string; quantity: number; startDate: string; endDate: string; note: string | null; pricePerDay: number | null; discountPct: number | null };
 
@@ -64,14 +63,7 @@ export function ReserveDialog({
             {existing && <input type="hidden" name="allocationId" value={existing.id} />}
             <FormError message={state.error} />
             <Field id="res-model" label={t("model")} error={err.modelId}>
-              <NativeSelect id="res-model" name="modelId" value={modelId} onChange={(e) => pickModel(e.target.value)} required>
-                <option value="">—</option>
-                {models.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {modelLabel(m)}
-                  </option>
-                ))}
-              </NativeSelect>
+              <ModelSelect id="res-model" name="modelId" value={modelId} onChange={(e) => pickModel(e.target.value)} models={models} required />
             </Field>
             <div className="grid grid-cols-3 gap-3">
               <Field id="res-qty" label={t("quantity")} error={err.quantity}>

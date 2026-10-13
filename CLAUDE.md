@@ -117,6 +117,14 @@ a second entry that exports components only and never a service.
 - REST: handlers under `src/app/api/v1/**` use `handler(permission, fn)`
   from `src/lib/api/respond.ts` and the module zod schemas. Add new
   endpoints to `src/lib/api/openapi.ts` so `/api/docs` stays complete.
+- A model is one **variant** of a family: `name` is the family ("DMX
+  5-pin", "16 mm rustfri rods"), `variant` the size ("5 m", "150 cm", or
+  null). Stock, weight and price stay per model. The inventory list groups
+  by family (`groupFamilies`), `ModelSelect` renders families as
+  `<optgroup>`s, the gear picker groups results (`groupCatalog`), and
+  the importer and seed match models by (manufacturer, name, variant).
+  `splitVariant` / `compareVariants` in `src/lib/variant.ts` split a
+  legacy combined name and sort sizes numerically.
 - `Model.manufacturer` may be empty: own-built gear (BlackLED, SplitLED,
   controllers, cases) and generic parts (cables, rods) have none. Build
   labels with `modelLabel(m)` from `src/lib/format.ts`, never

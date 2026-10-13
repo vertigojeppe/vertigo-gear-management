@@ -1,4 +1,5 @@
 import type { PrismaClient } from "../../src/generated/prisma/client";
+import { splitVariant } from "../../src/lib/variant";
 import { addDays, dateFromString, today, zonedInputToDate } from "../../src/lib/dates";
 
 /**
@@ -153,7 +154,7 @@ export async function seedProjects(prisma: PrismaClient) {
       if (!exists) await prisma.projectContact.create({ data: { projectId: project.id, ...c } });
     }
     for (const r of p.reservations) {
-      const model = await prisma.model.findFirst({ where: { name: r.model } });
+      const model = await prisma.model.findFirst({ where: splitVariant(r.model) });
       if (!model) continue;
       const exists = await prisma.allocation.findFirst({ where: { projectId: project.id, modelId: model.id } });
       if (exists) {
@@ -221,7 +222,7 @@ export async function seedProjects(prisma: PrismaClient) {
       (await prisma.location.findFirst({ where: { name: r.client, renterId: null } }).then((l) => (l ? prisma.location.update({ where: { id: l.id }, data: { renterId: clientId, type: "renter" } }) : null))) ??
       (await prisma.location.create({ data: { name: r.client, type: "renter", renterId: clientId } }));
     for (const l of r.lines) {
-      const model = await prisma.model.findFirst({ where: { name: l.model } });
+      const model = await prisma.model.findFirst({ where: splitVariant(l.model) });
       if (!model) continue;
       let line = await prisma.rentalLine.findFirst({ where: { rentalId: rental.id, modelId: model.id } });
       if (!line) line = await prisma.rentalLine.create({ data: { rentalId: rental.id, modelId: model.id, quantity: l.qty, pricePerDay: l.pricePerDay } });

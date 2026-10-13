@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Field, FormError } from "@/components/form/field";
 import { CustomFieldInputs } from "@/components/form/custom-field-inputs";
+import { ModelSelect } from "@/components/form/model-select";
 import { NativeSelect } from "@/components/form/native-select";
 import { SubmitButton } from "@/components/form/submit-button";
 import { Input } from "@/components/ui/input";
@@ -16,9 +17,8 @@ import type { FormState } from "@/lib/forms";
 import { appConfig } from "../../../../config/app.config";
 import { createItems, updateItem } from "../actions";
 import type { ItemDto } from "../service";
-import { modelLabel } from "@/lib/format";
 
-type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string; categoryId?: string };
+type ModelOption = { id: string; manufacturer: string; name: string; variant?: string | null; trackingType: string; categoryId?: string };
 type LocationOption = { id: string; name: string; depth: number };
 
 export function ItemForm({
@@ -57,14 +57,7 @@ export function ItemForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="modelId" label={t("model")} error={err.modelId} className="sm:col-span-2">
-          <NativeSelect id="modelId" name="modelId" value={modelId} onChange={(e) => setModelId(e.target.value)} required>
-            <option value="">—</option>
-            {models.map((m) => (
-              <option key={m.id} value={m.id}>
-                {modelLabel(m)} ({t(m.trackingType === "bulk" ? "bulk" : "serialized")})
-              </option>
-            ))}
-          </NativeSelect>
+          <ModelSelect id="modelId" name="modelId" value={modelId} onChange={(e) => setModelId(e.target.value)} required models={models} trackingLabels={{ bulk: t("bulk"), serialized: t("serialized") }} />
         </Field>
 
         {bulk ? (
