@@ -121,6 +121,8 @@ test.describe("inventory", () => {
     expect(text).not.toContain("MAC Aura");
     for (const list of ["models", "projects", "rentals", "contacts"]) expect((await page.request.get(`/api/export/${list}.csv`)).status(), list).toBe(200);
     expect((await page.request.get("/api/export/nope.csv")).status()).toBe(404);
+  });
+
   test("labels print as a PDF for a filtered list and for one unit", async ({ page }) => {
     await signIn(page, "member@vertigo.test");
     await page.goto("/inventory/items?q=Pointe");
