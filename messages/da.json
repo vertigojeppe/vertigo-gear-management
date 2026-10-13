@@ -207,6 +207,7 @@
     "rentalDayPrice": "Dagspris ({currency})",
     "rentalDayPriceHelp": "Listepris pr. dag ekskl. moms. Tilbud ganger den med lejefaktoren.",
     "manufacturerHelp": "Tom for udstyr vi selv bygger og for generiske dele (kabler, rør); navnet alene er etiketten.",
+    "inUse": "Kan ikke slettes: bruges af {what}. Arkivér den i stedet.",
     "variant": "Variant",
     "variantHelp": "Størrelsen inden for familien: 5 m, 150 cm, 6 udgange. Én model pr. variant, fordi lager, vægt og pris er forskellige.",
     "modelNameHelp": "Familien: \"DMX 5-pin\", \"16 mm rustfri rods\". Skriv længde eller størrelse i Variant.",

@@ -1,5 +1,6 @@
 // Public interface of the inventory module.
-export { categories, locations, models, items, InventoryError, redactFinance, actorCanSeeFinance } from "./service";
+export { categories, locations, models, items, modelUsage, InventoryError, redactFinance, actorCanSeeFinance } from "./service";
+export type { ModelUsage } from "./service";
 export type { ModelDto, ItemDto, Link } from "./service";
 export {
   categoryOptions,

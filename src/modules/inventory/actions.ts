@@ -7,7 +7,7 @@ import { customFieldsFromForm, validateCustomFields, CF_PREFIX } from "@/lib/cus
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitions } from "@/modules/settings";
 import { categoryInput, itemBatchInput, itemInput, locationInput, modelInput, statusChangeInput } from "./schema";
-import { categories, items, locations, models } from "./service";
+import { categories, items, locations, models, InventoryError } from "./service";
 
 function revalidateInventory() {
   revalidatePath("/inventory", "layout");
@@ -105,7 +105,13 @@ export async function setModelArchived(formData: FormData): Promise<void> {
 
 export async function deleteModel(formData: FormData): Promise<void> {
   const actor = await requirePermission("inventory.write");
-  await models.remove(actor, String(formData.get("id")));
+  const id = String(formData.get("id"));
+  try {
+    await models.remove(actor, id);
+  } catch (err) {
+    if (err instanceof InventoryError) redirect(`/inventory/models/${id}?error=${encodeURIComponent(err.message)}`);
+    throw err;
+  }
   revalidateInventory();
   redirect("/inventory");
 }
