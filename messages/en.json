@@ -512,7 +512,8 @@
     "planTemplates": "Plan templates",
     "dayPrice": "Day price",
     "dayPriceHelp": "Filled from the model's list price; change it for this project only.",
-    "lineDiscount": "Line discount %"
+    "lineDiscount": "Line discount %",
+    "notRentableNote": "{count, plural, one {# unit is} other {# units are}} own-projects-only and not counted for rentals."
   },
   "rentals": {
     "title": "Rentals",

@@ -327,7 +327,7 @@ export async function allocationsFor(modelId: string): Promise<AllocationLike[]>
 }
 
 export async function itemsForModel(modelId: string) {
-  return prisma.item.findMany({ where: { modelId }, select: { id: true, quantity: true, status: true } });
+  return prisma.item.findMany({ where: { modelId }, select: { id: true, quantity: true, status: true, notForRental: true } });
 }
 
 /** Availability of a model in a window, optionally ignoring one holder. */

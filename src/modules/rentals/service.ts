@@ -197,7 +197,7 @@ export const rentalLines = {
     const from = dateToString(r.startDate);
     const to = dateToString(r.endDate);
     const [items, allocs] = await Promise.all([itemsForModel(input.modelId), allocationsFor(input.modelId)]);
-    const check = checkRequest(items, allocs, { from, to }, input.quantity);
+    const check = checkRequest(items, allocs, { from, to }, input.quantity, undefined, { forRental: true });
     if (!check.ok && !input.force) throw new ConflictError(check);
     const listPrice = num((await prisma.model.findUnique({ where: { id: input.modelId }, select: { rentalDayPrice: true } }))?.rentalDayPrice);
     const line = await prisma.$transaction(async (tx) => {
@@ -221,7 +221,7 @@ export const rentalLines = {
     const from = dateToString(existing.rental.startDate);
     const to = dateToString(existing.rental.endDate);
     const [items, allocs] = await Promise.all([itemsForModel(input.modelId), allocationsFor(input.modelId)]);
-    const check = checkRequest(items, allocs, { from, to }, input.quantity, { allocationId: existing.allocation?.id });
+    const check = checkRequest(items, allocs, { from, to }, input.quantity, { allocationId: existing.allocation?.id }, { forRental: true });
     if (!check.ok && !input.force) throw new ConflictError(check);
     const line = await prisma.$transaction(async (tx) => {
       const l = await tx.rentalLine.update({
