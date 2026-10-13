@@ -122,8 +122,11 @@ const KIND_LABEL: Record<string, string> = { vehicle: "Vehicle", parking: "Parki
  * the day, open tasks due that day) or the full plan (every day plus
  * tasks, logistics, crew and contacts).
  */
-export async function renderPlan(detail: PlanDetail, opts: { day?: DateString } = {}): Promise<Buffer> {
-  const { project, days, tasks, logistics, crew, contacts, plan } = detail;
+export async function renderPlan(detail: PlanDetail, opts: { day?: DateString; /** "My plan": only this person's tasks and call time, the whole schedule. */ forUser?: { id: string; name: string } } = {}): Promise<Buffer> {
+  const { project, days, logistics, contacts, plan } = detail;
+  const me = opts.forUser;
+  const tasks = me ? detail.tasks.filter((t) => t.assigneeId === me.id) : detail.tasks;
+  const crew = me ? detail.crew.filter((c) => c.userId === me.id) : detail.crew;
   const dayOnly = opts.day;
   const shownDays = dayOnly ? days.filter((d) => d.day === dayOnly) : days;
   // Documents: every image/PDF for the full plan; for a day sheet only those pinned to that day's entries.
@@ -135,7 +138,7 @@ export async function renderPlan(detail: PlanDetail, opts: { day?: DateString } 
   const pageW = 595.28 - 72; // A4 minus padding
   const shownTasks = dayOnly ? tasks.filter((t) => t.dueDate === dayOnly && !t.done) : tasks;
   const shownLogistics = dayOnly ? logistics.filter((l) => !l.at || formatDate(l.at) === formatDate(dayOnly)) : logistics;
-  const title = dayOnly ? `Day sheet ${formatDate(dayOnly)}` : "Production plan";
+  const title = me ? `${me.name}${dayOnly ? ` · ${formatDate(dayOnly)}` : ""}` : dayOnly ? `Day sheet ${formatDate(dayOnly)}` : "Production plan";
   const header = [project.clientName, project.venueName, project.venueAddress].filter(Boolean).join(" · ");
 
   const doc = (

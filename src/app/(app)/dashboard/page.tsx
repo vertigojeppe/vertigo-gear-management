@@ -6,10 +6,11 @@ import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { recentActivity } from "@/lib/activity";
-import { requireActor } from "@/lib/auth/session";
+import { can, requireActor } from "@/lib/auth/session";
 import { formatDate } from "@/lib/format";
 import { dashboardStats } from "@/modules/inventory";
 import { upcomingProjects } from "@/modules/projects";
+import { MyDaySection, myDay } from "@/modules/plans";
 import { overdueRentals } from "@/modules/rentals";
 import { StatusPill } from "@/components/status-pill";
 import { PROJECT_STATUSES } from "../../../../config/app.config";
@@ -20,7 +21,7 @@ export default async function DashboardPage() {
   const actor = await requireActor();
   const t = await getTranslations("dashboard");
   const tl = await getTranslations("locationType");
-  const [stats, activity, upcoming, overdue] = await Promise.all([dashboardStats(), recentActivity(15), upcomingProjects(6), overdueRentals()]);
+  const [stats, activity, upcoming, overdue, mine] = await Promise.all([dashboardStats(), recentActivity(15), upcomingProjects(6), overdueRentals(), myDay(actor.id)]);
   const tp = await getTranslations("projectStatus");
   const inHouse = stats.statusTotals.in_house?.units ?? 0;
   const out = (stats.statusTotals.on_project?.units ?? 0) + (stats.statusTotals.rented_out?.units ?? 0);
@@ -40,6 +41,8 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground">{t("welcome", { name: actor.name })}</p>
       </div>
+
+      <MyDaySection data={mine} canEditPlans={can(actor.role, "plans.write")} />
 
       {empty ? (
         <EmptyState

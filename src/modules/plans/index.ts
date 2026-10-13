@@ -3,6 +3,9 @@ export { plans, schedule, tasks, logistics, planTemplates, PlanError } from "./s
 export { groupByDay, taskProgress, sortTasks, materialiseTemplate, templateFromPlan, dayOffset, defaultAnchor, timeOfDay, endTime } from "./logic";
 export type { TemplateEntryLike, Materialised } from "./logic";
 export { planDetail, planDetailById, planSummary, planTemplateOptions, planTemplateDetail } from "./queries";
+export { myDay } from "./my-day";
+export type { MyDay, MyScheduleRow, MyTaskRow, MyProjectRow } from "./my-day";
+export { MyDaySection } from "./components/my-day-section";
 export type { PlanDetail, ScheduleRow, TaskRow, LogisticsRow } from "./queries";
 export { planInput, createPlanInput, applyTemplateInput, scheduleEntryInput, taskInput, logisticsInput, planTemplateInput, templateEntryInput, saveAsTemplateInput } from "./schema";
 export { renderPlan } from "./plan-pdf";

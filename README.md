@@ -129,6 +129,10 @@ start, and help text under the fields that need it. The short version:
   needed. Revoke it when the job is done.
 - **Packing templates** (Projects › Templates): reusable model lists, also
   savable from any packing list.
+- **My day** on the dashboard: what is on today and tomorrow on your
+  projects, your open tasks (overdue first, tick them off right there), and
+  the projects you are booked on this week with your call time. "My plan
+  (PDF)" prints the schedule with only your tasks and call time.
 - **Production plan** (project page › Production plan): a day-by-day
   schedule with times, places and who is responsible; tasks by phase with
   assignee, due date and a big Done button; the project's crew with call

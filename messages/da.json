@@ -1109,5 +1109,23 @@
     "retry": "Prøv igen",
     "savedLists": "Pakkelister på denne telefon",
     "savedListsHelp": "Som de så ud, da de sidst blev åbnet. Afkrydsning og indtjek kræver forbindelse."
+  },
+  "myDay": {
+    "title": "Min dag",
+    "nothing": "Ingenting på programmet: intet i kalenderen i dag, ingen åbne opgaver, ingen projekter denne uge.",
+    "today": "I dag",
+    "todayEmpty": "Intet planlagt i dag på dine projekter.",
+    "tomorrow": "I morgen",
+    "tasks": "Mine opgaver",
+    "tasksEmpty": "Ingen åbne opgaver til dig.",
+    "overdue": "Forfalden",
+    "dueSoon": "Denne uge",
+    "moreTasks": "{count} flere på planerne",
+    "thisWeek": "Denne uge",
+    "thisWeekEmpty": "Du er ikke sat på et projekt denne uge.",
+    "callTime": "Mødetid {when}",
+    "youAreResponsible": "dig",
+    "openPlan": "Plan",
+    "myPlanPdf": "Min plan (PDF)"
   }
 }
