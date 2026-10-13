@@ -23,7 +23,7 @@ export default async function ImportPreviewPage(props: { params: Promise<{ impor
         <PageHeader title={t("previewTitle")} subtitle={done.fileName} crumbs={crumbs} />
         <div className="rounded-md border border-green-600/30 bg-green-600/10 p-4 text-sm" role="status">
           <p className="font-medium">{t("done")}</p>
-          <p>{t("doneCounts", { categories: r.categories, models: r.models, units: r.units, bins: r.bins, kits: r.kits, contacts: r.contacts, locations: r.locations, rentals: r.rentals, rateTables: r.rateTables, wishes: r.wishes ?? 0 })}</p>
+          <p>{t("doneCounts", { categories: r.categories, models: r.models, units: r.units, bins: r.bins, kits: r.kits, contacts: r.contacts, locations: r.locations, rentals: r.rentals, rateTables: r.rateTables, wishes: r.wishes ?? 0, purchases: r.purchases ?? 0 })}</p>
           {r.skipped.length > 0 && (
             <p className="mt-1 text-muted-foreground">
               {t("skipped")}: {r.skipped.join(", ")}

@@ -29,6 +29,7 @@ model User {
   markups     Markup[]
   uploadSessions UploadSession[]
   wishItems   WishItem[]
+  purchases   Purchase[]
 
   @@index([role])
 }

@@ -1,0 +1,32 @@
+// purchases module
+
+/// What we paid for a model: one row per quote / order / invoice line.
+/// Prices are per unit excl. VAT; the net price is what was paid after
+/// the discount. Quotes and invoices attach through Attachment
+/// (entityType = "purchase"). Independent of the per-unit purchase
+/// fields on Item, which stay for insurance value and age.
+model Purchase {
+  id                String   @id @default(cuid())
+  modelId           String
+  model             Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  supplierContactId String?
+  supplier          Contact? @relation(fields: [supplierContactId], references: [id], onDelete: SetNull)
+  /// Date of the quote, order or invoice.
+  date              DateTime? @db.Date
+  /// Quote, order confirmation or invoice number.
+  reference         String?
+  quantity          Int      @default(1)
+  listPrice         Decimal? @db.Decimal(12, 2)
+  discountPct       Decimal? @db.Decimal(5, 2)
+  netPrice          Decimal? @db.Decimal(12, 2)
+  notes             String?
+  createdById       String?
+  createdBy         User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  /// "Sheet!A1" of the spreadsheet row this came from, when imported.
+  importSource      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([modelId])
+  @@index([supplierContactId])
+}

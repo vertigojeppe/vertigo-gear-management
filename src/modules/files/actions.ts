@@ -7,7 +7,7 @@ import { errorState, type FormState } from "@/lib/forms";
 import { ATTACHMENT_KINDS, type AttachmentKind } from "../../../config/app.config";
 import { files } from "./service";
 
-const ENTITY_TYPES: ActivityEntity[] = ["item", "model", "project", "rental"];
+const ENTITY_TYPES: ActivityEntity[] = ["item", "model", "project", "rental", "purchase"];
 
 export async function uploadAttachment(_prev: FormState, formData: FormData): Promise<FormState> {
   const actor = await requirePermission("files.write");

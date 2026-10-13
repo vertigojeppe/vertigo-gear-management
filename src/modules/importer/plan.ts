@@ -12,8 +12,8 @@ import { readInventorySheet, readControllers, readProjectors, readComputers, rea
  *  - import      → will be written as read
  *  - assumption  → will be written, with a stated guess
  *  - decision    → written only after you pick an option
- *  - parked      → belongs to a feature that is not built yet (sub-hire,
- *                  purchase records); shown, not written
+ *  - parked      → belongs to a feature that is not built yet (sub-hire);
+ *                  shown, not written
  */
 
 export type Bucket = "import" | "assumption" | "decision" | "parked";
@@ -58,9 +58,10 @@ export type ContactOp = { type: "contact"; name: string; kind: "person" | "compa
 export type LocationOp = { type: "location"; name: string; kind: "warehouse" | "person"; contactName?: string; importSource: Src };
 export type RentalOp = { type: "rental"; clientName: string; startDate: string; endDate: string; notes: string; lines: { modelKey: string | null; quantity: number; text: string }[]; importSource: Src };
 export type NoteOp = { type: "modelNote"; modelKey: string; note: string };
+export type PurchaseOp = { type: "purchase"; modelKey: string; supplierName: string | null; date: string | null; reference: string | null; quantity: number; listPrice: number | null; discountPct: number | null; netPrice: number | null; notes: string | null; importSource: Src };
 export type WishOp = { type: "wish"; manufacturer: string; name: string; variant: string | null; categoryPath?: string[]; rentalDayPrice: number | null; notes: string | null; importSource: Src };
 export type RateTableOp = { type: "rateTable"; name: string; isDefault: boolean; extraRule: "none" | "per_day" | "per_10_days"; extraFactor: number; notes: string | null; tiers: { days: number; factor: number }[]; importSource: Src };
-export type Op = ModelOp | BinOp | UnitOp | KitOp | ContactOp | LocationOp | RentalOp | NoteOp | RateTableOp | WishOp;
+export type Op = ModelOp | BinOp | UnitOp | KitOp | ContactOp | LocationOp | RentalOp | NoteOp | RateTableOp | WishOp | PurchaseOp;
 
 export type Decision = { question: string; options: { key: string; label: string; ops: Op[] }[]; defaultKey: string };
 
@@ -535,10 +536,41 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
       if (row.lengthM !== null && row.lengthM >= 0.5) cf.length_m = row.lengthM;
       const ops: Op[] = [];
       if (!ctx.existingModels.has(mkey)) ops.push({ type: "model", key: mkey, categoryPath: ["Rigging", "Truss"], manufacturer: "Truss (Urs)", name, tracking: "bulk", rentalDayPrice: row.dayPrice, customFields: Object.keys(cf).length ? cf : undefined, notes: [row.note, row.listPrice ? `List ${row.listPrice} kr, ${row.discountPct ?? 0}% off → ${row.netPrice} kr` : ""].filter(Boolean).join(" · ") || null, importSource: row.src });
-      if (row.qty) ops.push({ type: "bin", modelKey: mkey, quantity: row.qty, status: "in_house", importSource: row.src });
-      rows.push({ key: `truss:${row.row}`, sheet: "Truss", src: row.src, bucket: "assumption", summary: `Rigging › Truss › ${name}: ${row.qty ?? 0}${row.dayPrice ? ` · day price ${row.dayPrice}` : ""}`, assumption: `Manufacturer unknown on the sheet (supplier Urs); net price ${row.netPrice ?? "?"} kr kept as a note. The order confirmation lists other quantities (see parked rows).`, ops });
+      if (row.qty && !ctx.existingModels.has(mkey)) ops.push({ type: "bin", modelKey: mkey, quantity: row.qty, status: "in_house", importSource: row.src });
+      rows.push({ key: `truss:${row.row}`, sheet: "Truss", src: row.src, bucket: "assumption", summary: `Rigging › Truss › ${name}: ${row.qty ?? 0}${row.dayPrice ? ` · day price ${row.dayPrice}` : ""}`, assumption: `Manufacturer unknown on the sheet (supplier Urs); net price ${row.netPrice ?? "?"} kr kept as a note. The order confirmation lists other quantities (see the quote rows).`, ops });
     }
-    for (const q of t.quotes) rows.push({ key: `truss:quote:${q.row}`, sheet: "Truss", src: `Truss!A${q.row}`, bucket: "parked", summary: q.title, ops: [], parked: { feature: "Purchase records", detail: "Supplier quote with quantities, discounts and powder coating; goes into purchase records when that feature is built (backlog)." } });
+    // The quotes below the inventory: one purchase record per line that names a truss model (matched on the code).
+    const byCode = new Map(t.inventory.map((row) => [row.code.trim().toLowerCase(), modelKey("Truss (Urs)", row.description ? `${row.code} ${row.description}` : row.code)]));
+    for (const q of t.quotes) {
+      const matched = q.lines.filter((l) => l.qty && byCode.has(l.code.trim().toLowerCase()));
+      const extras = q.lines.filter((l) => !l.qty && (l.listPrice || l.netPrice));
+      const unmatched = q.lines.filter((l) => !matched.includes(l) && !extras.includes(l));
+      const orderNote = [
+        q.title,
+        ...extras.map((l) => `${l.code}: ${l.netPrice ?? l.listPrice} kr`),
+        q.total !== null ? `order total ${q.total} kr` : "",
+        q.invoiceDiscount !== null ? `invoice discount ${q.invoiceDiscount} kr → ${q.finalTotal ?? "?"} kr` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      const ops: Op[] = matched.length ? [{ type: "contact", name: "Urs", kind: "company", notes: "Truss supplier", importSource: q.src }] : [];
+      for (const l of matched) ops.push({ type: "purchase", modelKey: byCode.get(l.code.trim().toLowerCase())!, supplierName: "Urs", date: q.date, reference: q.reference, quantity: l.qty!, listPrice: l.listPrice, discountPct: l.discountPct, netPrice: l.netPrice, notes: orderNote, importSource: l.src });
+      rows.push({
+        key: `truss:quote:${q.row}`,
+        sheet: "Truss",
+        src: q.src,
+        bucket: "assumption",
+        summary: `Purchase records: ${q.title} (${matched.length} line${matched.length === 1 ? "" : "s"})`,
+        assumption: [
+          `Each line becomes a purchase record on its truss model (supplier Urs${q.date ? `, ${q.date}` : ""}${q.reference ? `, ref. ${q.reference}` : ""}); the order total${q.invoiceDiscount !== null ? ", invoice discount" : ""}${extras.length ? ` and ${extras.map((l) => l.code).join(", ")}` : ""} go in the notes.`,
+          unmatched.length ? `Not imported (no model with that code): ${unmatched.map((l) => l.code).join("; ")}.` : "",
+          "Skipped where the record exists already.",
+        ]
+          .filter(Boolean)
+          .join(" "),
+        ops,
+      });
+    }
     if (t.notes.length) rows.push({ key: "truss:notes", sheet: "Truss", src: "Truss!A51", bucket: "assumption", summary: `Notes: ${t.notes.join(" / ")}`, assumption: "Kept as a note on HD24-200.", ops: [{ type: "modelNote", modelKey: modelKey("Truss (Urs)", "HD24-200"), note: t.notes.join(" / ") }] });
   }
 

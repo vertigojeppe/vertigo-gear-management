@@ -14,6 +14,7 @@ model Contact {
   notes        String?
   importSource String?
   locations    Location[]
+  purchases    Purchase[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

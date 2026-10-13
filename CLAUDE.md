@@ -11,7 +11,7 @@ external rentals. Full spec: `SPEC.md`; the spreadsheet we migrate from and
 what it implies: `MIGRATION.md`. Plan and data model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **wish list done** (after 5b). Next: purchase records, sub-hire catalog (BACKLOG.md).
+Current phase: **wish list and purchase records done** (after 5b). Next: sub-hire catalog (BACKLOG.md).
 
 ## Stack
 
@@ -317,6 +317,25 @@ a second entry that exports components only and never a service.
   `/api/export/wishes.csv` exports it.
 - The importer writes the projector "Ønsker" rows and the Dirverse castor
   references as `WishOp`s (idempotent on `importSource` + name).
+
+## Purchase records
+
+- `Purchase` (`src/modules/purchases`): one row per quote / order /
+  invoice line on a model: supplier (a company contact), date, reference,
+  quantity, list price, discount %, net price per unit (computed by
+  `netFrom` when left empty), notes. Cascades with the model; the
+  supplier link is set null when the contact goes.
+- Reading needs `inventory.finance` (same gate as unit purchase prices),
+  writing `inventory.write` too. The model page shows `PurchasesSection`
+  only to finance readers; each record has its own page
+  (`/inventory/purchases/[id]`) where the quote PDF is attached through
+  the files module (`entityType = "purchase"`, allowed in
+  `files/actions.ts`). `/api/export/purchases.csv` exports them.
+- The importer reads the truss quotes line by line (`readTruss().quotes`,
+  `parseQuoteTitle` for the number and Danish date) and writes a
+  `PurchaseOp` per line that matches a truss model by code; the order
+  total, invoice discount and unpriced lines go in the notes. Idempotent
+  on `importSource` + model.
 
 ## Spreadsheet import (Phase 5a)
 

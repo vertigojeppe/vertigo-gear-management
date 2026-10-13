@@ -888,7 +888,7 @@
     "reading": "Reading…",
     "howTitle": "How it works",
     "how1": "Every sheet is read: cables, LED, controllers, projectors, computers, truss, stands, rods, loans, key fobs.",
-    "how2": "The preview sorts rows into: will import, imported with an assumption (shown), needs a decision (you choose), and parked (sub-hire and purchase records come later).",
+    "how2": "The preview sorts rows into: will import, imported with an assumption (shown), needs a decision (you choose), and parked (sub-hire comes later).",
     "how3": "Rows for models or tags that already exist are skipped unless you say otherwise, so re-running an export is safe.",
     "how4": "Every imported model, unit, contact and location remembers its cell (Sheet!A1).",
     "previewTitle": "Import preview",
@@ -907,7 +907,7 @@
     "confirm": "Import {count} rows",
     "importing": "Importing…",
     "done": "Import finished.",
-    "doneCounts": "{categories} categories, {models} models, {units} units, {bins} bulk bins, {kits} cases, {contacts} contacts, {locations} locations, {rentals} rentals, {rateTables} rate tables, {wishes} wishes created.",
+    "doneCounts": "{categories} categories, {models} models, {units} units, {bins} bulk bins, {kits} cases, {contacts} contacts, {locations} locations, {rentals} rentals, {rateTables} rate tables, {wishes} wishes, {purchases} purchase records created.",
     "skipped": "Skipped",
     "openInventory": "Open inventory",
     "another": "Import another spreadsheet"
@@ -1031,5 +1031,28 @@
     "markBought": "Bought",
     "reopen": "Reopen",
     "deleteConfirm": "Remove this wish?"
+  },
+  "purchases": {
+    "title": "Purchases",
+    "none": "No purchase records yet. Add one per quote, order or invoice line; attach the document on the record.",
+    "newPurchase": "Add purchase",
+    "editPurchase": "Edit purchase",
+    "supplier": "Supplier",
+    "supplierHelp": "A company under Settings › Contacts.",
+    "date": "Date",
+    "reference": "Reference",
+    "referenceHelp": "Quote, order or invoice number.",
+    "quantity": "Quantity",
+    "listPrice": "List price",
+    "discountPct": "Discount %",
+    "netPrice": "Net price per unit",
+    "netPriceHelp": "Excl. VAT. Left empty, it is worked out from the list price and the discount.",
+    "total": "Total",
+    "notes": "Notes",
+    "listLess": "list {price} less {pct} %",
+    "totalPaid": "Total across the records: {amount}",
+    "addedBy": "Added by {name}, {date}",
+    "backToModel": "Back to the model",
+    "deleteConfirm": "Remove this purchase record and its attachments?"
   }
 }

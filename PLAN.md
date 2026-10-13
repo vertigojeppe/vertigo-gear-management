@@ -321,10 +321,17 @@ export; the importer now writes the projector wish rows and the castor
 references instead of parking them.
 **Tests:** service round-trip (DB), importer plan, browser flow.
 
+### Purchase records ✅ (2026-10-13)
+Per model: supplier, date, reference, quantity, list price, discount and
+net price, notes, attachments on the record's own page; visible to
+finance readers only. CSV export. The importer turns the Urs truss
+quotes into purchase records line by line.
+**Tests:** net price rule and service round-trip (DB), quote title and
+line parsing, importer plan, browser flow.
+
 ### Next
-Purchase records and the sub-hire catalog (the rest of the October spec
-update, see `BACKLOG.md`), then whatever using the app at Vertigo turns
-up.
+The sub-hire catalog (the last item of the October spec update, see
+`BACKLOG.md`), then whatever using the app at Vertigo turns up.
 
 ## 6. Decisions I will make unless you object
 

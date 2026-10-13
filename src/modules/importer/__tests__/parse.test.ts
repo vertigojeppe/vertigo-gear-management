@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAmpsToWatts, parseLoan, parseMoney, parseQuantity, parseVariant, parseWeightKg, readControllers, readFobs, readInventorySheet, readLoans, readProjectors, readRods, readWorkbook } from "../parse";
+import { parseAmpsToWatts, parseLoan, parseMoney, parseQuantity, parseVariant, parseWeightKg, readControllers, readFobs, readInventorySheet, readLoans, readProjectors, readRods, readWorkbook, parseQuoteTitle } from "../parse";
 import { fixtureBytes } from "./fixture";
 
 describe("parse helpers", () => {
@@ -94,5 +94,13 @@ describe("sheet readers", () => {
 
   it("rejects a file that is not a workbook", async () => {
     await expect(readWorkbook(Buffer.from("not a zip"), "x.xlsx")).rejects.toThrow();
+  });
+});
+
+describe("parseQuoteTitle", () => {
+  it("reads the reference number and the Danish date", () => {
+    expect(parseQuoteTitle("Tilbud fra Urs Ordrebekræftelse 303053885 d. 23. juli 2025")).toEqual({ reference: "303053885", date: "2025-07-23" });
+    expect(parseQuoteTitle("NEO Tilbud fra Urs Salgstilbud 302026792 d. 24. juli 2025")).toEqual({ reference: "302026792", date: "2025-07-24" });
+    expect(parseQuoteTitle("Tilbud uden nummer")).toEqual({ reference: null, date: null });
   });
 });

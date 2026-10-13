@@ -119,7 +119,7 @@ test.describe("inventory", () => {
     expect(text.startsWith("\uFEFFAsset tag;Model;")).toBe(true);
     expect(text).toContain("Robe Pointe");
     expect(text).not.toContain("MAC Aura");
-    for (const list of ["models", "projects", "rentals", "contacts", "wishes"]) expect((await page.request.get(`/api/export/${list}.csv`)).status(), list).toBe(200);
+    for (const list of ["models", "projects", "rentals", "contacts", "wishes", "purchases"]) expect((await page.request.get(`/api/export/${list}.csv`)).status(), list).toBe(200);
     expect((await page.request.get("/api/export/nope.csv")).status()).toBe(404);
   });
 
@@ -174,6 +174,39 @@ test.describe("inventory", () => {
     page.once("dialog", (d) => d.accept());
     await bought.getByRole("button", { name: "Delete" }).click();
     await expect(bought).toHaveCount(0);
+  });
+
+  test("a purchase record is added to a model, opened and removed", async ({ page }) => {
+    await signIn(page, "admin@vertigo.test");
+    // A model of our own, so the record never lands on real gear.
+    await page.goto("/inventory/models/new");
+    await page.getByLabel("Manufacturer").fill("Testlight");
+    await page.getByLabel("Model name").fill(`Bought ${stamp}`);
+    const category = page.getByLabel("Category");
+    const movingHeads = await category.locator("option", { hasText: "Moving heads" }).first().getAttribute("value");
+    await category.selectOption(movingHeads!);
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("heading", { name: `Testlight Bought ${stamp}` })).toBeVisible();
+
+    await page.getByRole("button", { name: "Add purchase" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.locator("#p-reference").fill(`ORD-${stamp}`);
+    await dialog.locator("#p-quantity").fill("4");
+    await dialog.locator("#p-list").fill("1000");
+    await dialog.locator("#p-discount").fill("25");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toBeHidden();
+    const row = page.getByRole("link", { name: new RegExp(`ORD-${stamp}`) });
+    await expect(row).toContainText("4 × 750,00 kr.");
+    await expect(page.getByText(/Total across the records/)).toContainText("3.000,00 kr.");
+
+    await row.click();
+    await expect(page.getByRole("heading", { name: /Purchases: Testlight Bought/ })).toBeVisible();
+    await expect(page.getByText("Net price per unit")).toBeVisible();
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Delete" }).click();
+    await expect(page.getByRole("heading", { name: `Testlight Bought ${stamp}` })).toBeVisible();
+    await expect(page.getByText("No purchase records yet")).toBeVisible();
   });
 
   test("viewer sees inventory but no edit controls", async ({ page }) => {

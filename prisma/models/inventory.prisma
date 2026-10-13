@@ -54,6 +54,7 @@ model Model {
   packingLines PackingLine[]
   packingTemplateLines PackingTemplateLine[]
   wishItems    WishItem[]
+  purchases    Purchase[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

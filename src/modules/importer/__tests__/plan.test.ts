@@ -47,6 +47,15 @@ describe("buildPlan", () => {
     expect(byKey["rods:3"]).toBeUndefined();
     expect(byKey["rods:4"]).toMatchObject({ bucket: "assumption", ops: [] });
 
+    // Truss quote: purchase records on the two matched models, the baseplate skipped, coating and discount in the notes.
+    expect(byKey["truss:quote:57"].bucket).toBe("assumption");
+    expect(byKey["truss:quote:57"].assumption).toMatch(/mangler pris/);
+    const purchases = byKey["truss:quote:57"].ops.filter((o) => o.type === "purchase");
+    expect(purchases).toHaveLength(2);
+    expect(purchases[0]).toMatchObject({ type: "purchase", supplierName: "Urs", date: "2025-07-23", reference: "303053885", quantity: 25, listPrice: 3016, discountPct: 40, netPrice: 1809.6, importSource: "Truss!A59" });
+    expect((purchases[0] as { notes: string }).notes).toMatch(/Pulver lakering - Truss: 18744 kr · order total 70358.4 kr · invoice discount -7035.84 kr → 63322.56 kr/);
+    expect(byKey["truss:quote:57"].ops[0]).toMatchObject({ type: "contact", name: "Urs", kind: "company" });
+
     // Rate tables are imported with the rule beyond the last tier stated.
     expect(byKey["rate:Standard"]).toMatchObject({ bucket: "assumption", ops: [expect.objectContaining({ type: "rateTable", name: "Standard", isDefault: true, extraRule: "per_day", extraFactor: 0.1, tiers: [{ days: 1, factor: 1 }, { days: 2, factor: 1.5 }, { days: 5, factor: 2.7 }] })] });
     expect(byKey["rate:Theatre"].ops[0]).toMatchObject({ type: "rateTable", extraRule: "per_10_days", extraFactor: 0.5, isDefault: false });

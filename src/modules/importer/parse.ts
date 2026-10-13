@@ -381,25 +381,54 @@ export function readComputers(g: Grid): { servers: MediaServerRow[]; parts: Comp
 }
 
 export type TrussRow = { row: number; code: string; src: Src; description: string | null; lengthM: number | null; qty: number | null; dayPrice: number | null; listPrice: number | null; discountPct: number | null; netPrice: number | null; note: string | null };
+/** A line of a supplier quote: code (or a free-text item), quantity, list price, discount, net per unit, line total. */
+export type TrussQuoteLine = { row: number; code: string; src: Src; description: string | null; qty: number | null; listPrice: number | null; discountPct: number | null; netPrice: number | null; total: number | null };
+export type TrussQuote = { title: string; row: number; src: Src; reference: string | null; date: string | null; lines: TrussQuoteLine[]; total: number | null; invoiceDiscount: number | null; finalTotal: number | null };
 
-/** Rows 4–39: inventory + pricing; the quotes below row 55 are parked (purchase records). */
-export function readTruss(g: Grid): { inventory: TrussRow[]; quotes: { title: string; row: number }[]; notes: string[] } {
+const DA_MONTHS: Record<string, number> = { januar: 1, februar: 2, marts: 3, april: 4, maj: 5, juni: 6, juli: 7, august: 8, september: 9, oktober: 10, november: 11, december: 12 };
+
+/** "Ordrebekræftelse 303053885 d. 23. juli 2025" → { reference: "303053885", date: "2025-07-23" }. */
+export function parseQuoteTitle(title: string): { reference: string | null; date: string | null } {
+  const ref = title.match(/\b(\d{6,})\b/);
+  const d = title.match(/(\d{1,2})\.?\s+([a-zæøå]+)\.?\s+(\d{4})/i);
+  const month = d ? DA_MONTHS[d[2].toLowerCase()] : undefined;
+  return { reference: ref ? ref[1] : null, date: d && month ? `${d[3]}-${String(month).padStart(2, "0")}-${d[1].padStart(2, "0")}` : null };
+}
+
+/** Rows 4–39: inventory + pricing; below row 55 the supplier quotes, line by line (purchase records). */
+export function readTruss(g: Grid): { inventory: TrussRow[]; quotes: TrussQuote[]; notes: string[] } {
   const inventory: TrussRow[] = [];
-  const quotes: { title: string; row: number }[] = [];
+  const quotes: TrussQuote[] = [];
   const notes: string[] = [];
   let quoteSection = false;
   for (const r of g.rowNumbers) {
     const a = text(g, r, "A");
     if (/tilbud|ordrebekr/i.test(a)) {
       quoteSection = true;
-      quotes.push({ title: a, row: r });
+      quotes.push({ title: a, row: r, src: src(g, r, "A"), ...parseQuoteTitle(a), lines: [], total: null, invoiceDiscount: null, finalTotal: null });
       continue;
     }
     if (/^noter/i.test(a)) {
       notes.push([text(g, r, "B"), text(g, r + 1, "B")].filter(Boolean).join(" / "));
       continue;
     }
-    if (quoteSection || r < 4 || !a) continue;
+    if (quoteSection) {
+      const q = quotes[quotes.length - 1];
+      const j = text(g, r, "J");
+      if (/^samlet/i.test(j)) q.total = parseMoney(text(g, r, "L"));
+      else if (/rabat/i.test(j)) {
+        q.invoiceDiscount = parseMoney(j.replace(/^[^\d-]*/, ""));
+        q.finalTotal = parseMoney(text(g, r, "L"));
+      } else if (a && (text(g, r, "C") || text(g, r, "H"))) {
+        q.lines.push({ row: r, code: a, src: src(g, r, "A"), description: null, qty: parseQuantity(text(g, r, "C"))?.value ?? null, listPrice: parseMoney(text(g, r, "H")), discountPct: parseMoney(text(g, r, "I")), netPrice: parseMoney(text(g, r, "K")), total: parseMoney(text(g, r, "L")) });
+      } else if (a) {
+        const last = q.lines[q.lines.length - 1];
+        if (last && !last.description && last.row === r - 1) last.description = a;
+        else q.lines.push({ row: r, code: a, src: src(g, r, "A"), description: null, qty: null, listPrice: null, discountPct: null, netPrice: null, total: null });
+      }
+      continue;
+    }
+    if (r < 4 || !a) continue;
     const qty = parseQuantity(text(g, r, "C"));
     if (!qty && !text(g, r, "H")) {
       // description line under a code

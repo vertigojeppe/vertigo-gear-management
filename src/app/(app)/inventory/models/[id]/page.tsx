@@ -16,6 +16,7 @@ import { AttachmentsSection } from "@/modules/files";
 import { LabelsDialog, RenameFamilyDialog, inventoryActions, modelDetail, modelUsage } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 import { modelAvailabilityView } from "@/modules/projects";
+import { PurchasesSection } from "@/modules/purchases";
 import { StatusPill } from "@/components/status-pill";
 import { ITEM_STATUSES } from "../../../../../../config/app.config";
 
@@ -252,6 +253,8 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
           </p>
         )}
       </section>
+
+      {can(actor.role, "inventory.finance") && <PurchasesSection modelId={model.id} canEdit={canEdit} />}
 
       <AttachmentsSection entityType="model" entityId={model.id} returnTo={`/inventory/models/${model.id}`} canEdit={can(actor.role, "files.write")} />
 
