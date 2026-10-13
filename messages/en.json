@@ -207,7 +207,7 @@
     "rentalDayPrice": "Rental day price ({currency})",
     "rentalDayPriceHelp": "List price per day excl. VAT. Quotes multiply it by the rate-table factor.",
     "manufacturerHelp": "Leave empty for gear we build ourselves and for generic parts (cables, rods); the name alone is the label.",
-    "inUse": "Cannot delete: used by {what}. Archive it instead."
+    "inUse": "Cannot delete: used by {what}. Archive it instead.",
     "variant": "Variant",
     "variantHelp": "The size within the family: 5 m, 150 cm, 6 outputs. One model per variant, because stock, weight and price differ.",
     "modelNameHelp": "The family: \"DMX 5-pin\", \"16 mm rustfri rods\". Put the length or size in Variant.",
