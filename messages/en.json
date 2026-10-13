@@ -56,7 +56,8 @@
     "submit": "Sign in",
     "invalid": "Wrong email or password.",
     "error": "Something went wrong. Try again.",
-    "stale": "Your session is no longer valid (the account was removed or the database was reset). Sign in again."
+    "stale": "Your session is no longer valid (the account was removed or the database was reset). Sign in again.",
+    "rateLimited": "Too many attempts. Try again in {minutes, plural, one {# minute} other {# minutes}}."
   },
   "dashboard": {
     "title": "Dashboard",

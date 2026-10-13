@@ -31,6 +31,7 @@ test("seeded admin can sign in, navigate and sign out", async ({ page }) => {
   await expect(page).toHaveURL(/\/login/);
 });
 
+<<<<<<< HEAD
 test("an admin can download a backup; members cannot", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@vertigo.test");
@@ -45,6 +46,21 @@ test("an admin can download a backup; members cannot", async ({ page }) => {
   expect(data.version).toBe(1);
   expect(Array.isArray(data.tables.User)).toBe(true);
   expect(data.tables.Item.length).toBeGreaterThan(0);
+=======
+test("ten wrong passwords lock the form for a while", async ({ page }) => {
+  // A throwaway email, so the throttle never touches the seeded accounts other tests sign in with.
+  const email = `nobody-${Date.now().toString(36)}@vertigo.test`;
+  await page.goto("/login");
+  for (let i = 0; i < 10; i++) {
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password").fill("wrong");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page.getByText("Wrong email or password.")).toBeVisible();
+  }
+  await page.getByLabel("Password").fill("wrong");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByText(/Too many attempts/)).toBeVisible();
+>>>>>>> origin/main
 });
 
 test("wrong password shows an error", async ({ page }) => {
