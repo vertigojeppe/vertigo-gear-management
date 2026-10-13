@@ -317,6 +317,19 @@ a second entry that exports components only and never a service.
 - Set `OUTBOX_DISABLED=1` when running one-off scripts or tests that must
   not deliver anything.
 
+## Branches and pull requests
+
+- Every change is a branch off `main` with a pull request against `main`.
+  Stack on another branch only when the change cannot build without it,
+  and say so in the PR body.
+- The repository is public. The real spreadsheet (`*.xlsx`), `.env` and
+  uploads are ignored; keep client data out of seeds, fixtures and PR text.
+- A ruleset on `main` requires the CI job `test` (lint, typecheck, unit
+  and DB tests, build, browser tests) and an up-to-date branch. Auto-merge
+  is allowed: arm it per PR (`gh pr merge <n> --auto --merge`) and GitHub
+  merges when `test` is green. Auto-fix in the desktop app repairs failing
+  CI and merge conflicts before that.
+
 ## Adding a new entity end-to-end
 
 1. Model in `prisma/models/<module>.prisma`. Status-like fields are strings
