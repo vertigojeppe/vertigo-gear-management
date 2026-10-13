@@ -280,6 +280,19 @@ a second entry that exports components only and never a service.
   need `settings.manage`. PDFs: `/api/projects/[id]/quote.pdf`,
   `/api/rentals/[id]/agreement.pdf`.
 
+## Export and backup
+
+- `GET /api/export/<list>.csv?<filters>` (models, items, projects,
+  rentals, contacts) walks the list query's pages and writes CSV via
+  `src/lib/csv.ts` (BOM, semicolons, formula-safe). "Export CSV" links on
+  the list pages pass the page's search params through.
+- `src/modules/backup`: `TABLES` is every Prisma model in insert order
+  (a test compares it with `Prisma.ModelName`; add new models there),
+  `backup.export` dumps all rows, `backup.restore` deletes in reverse and
+  re-inserts in one transaction (self-referencing tables sorted parents
+  first, nullable Json nulls as `Prisma.DbNull`). Admin only; the
+  round-trip test runs when `BACKUP_RESTORE_TEST=1` (CI).
+
 ## Spreadsheet import (Phase 5a)
 
 - `src/modules/importer`: `parse.ts` (exceljs → plain rows per sheet, every

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { buttonVariants } from "@/components/ui/button";
 import { can, requirePermission } from "@/lib/auth/session";
 import { ContactDialog, DeleteContactButton, contactList } from "@/modules/contacts";
 
@@ -11,11 +12,20 @@ export default async function ContactsPage() {
   const actor = await requirePermission("contacts.read");
   const t = await getTranslations("contacts");
   const ts = await getTranslations("settings");
+  const tc = await getTranslations("common");
   const rows = await contactList();
   const canEdit = can(actor.role, "contacts.write");
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("title")} subtitle={ts("contactsHelp")} crumbs={[{ label: ts("title"), href: "/settings" }, { label: t("title") }]} actions={canEdit && <ContactDialog trigger="new" />} />
+      <PageHeader title={t("title")} subtitle={ts("contactsHelp")} crumbs={[{ label: ts("title"), href: "/settings" }, { label: t("title") }]} actions={
+          <>
+            <a href="/api/export/contacts.csv" className={buttonVariants({ variant: "outline" })}>
+              {tc("exportCsv")}
+            </a>
+            {canEdit && <ContactDialog trigger="new" />}
+          </>
+        }
+      />
       {rows.length === 0 ? (
         <EmptyState title={t("noContacts")} body={t("noContactsBody")} action={canEdit && <ContactDialog trigger="new" />} />
       ) : (

@@ -34,7 +34,8 @@
     "next": "Next",
     "forbidden": "You do not have permission to do that.",
     "activity": "Activity",
-    "noActivity": "No activity yet."
+    "noActivity": "No activity yet.",
+    "exportCsv": "Export CSV"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -376,7 +377,9 @@
     "import": "Import spreadsheet",
     "importHelp": "Load the gear spreadsheet: preview what will be created, decide the doubtful rows, then confirm.",
     "pricing": "Pricing",
-    "pricingHelp": "Rate tables (days → factor) used to price quotes and rental agreements."
+    "pricingHelp": "Rate tables (days → factor) used to price quotes and rental agreements.",
+    "backup": "Backup",
+    "backupHelp": "Download the whole database as a file, or restore one (admins)."
   },
   "roles": {
     "admin": "Admin",
@@ -976,5 +979,20 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "backup": {
+    "title": "Backup",
+    "subtitle": "The database as one JSON file: every table, every row. Uploaded files are not inside; scripts/backup.sh on the server takes both.",
+    "download": "Download a backup",
+    "downloadHelp": "Every row of all {tables} tables, with ids, so a restore puts everything back exactly. Keep the file somewhere safe: it holds client details and password hashes.",
+    "downloadButton": "Download backup (JSON)",
+    "filesNote": "Photos, drawings and 3D files live on the uploads volume. On the server, scripts/backup.sh bundles the database and the uploads into one archive every night.",
+    "restore": "Restore",
+    "restoreWarning": "Restoring replaces everything in the database with the file's contents. There is no undo. Download a backup first.",
+    "file": "Backup file",
+    "confirmLabel": "Confirmation",
+    "confirmHelp": "Type restore to confirm.",
+    "restoring": "Restoring…",
+    "restored": "Restored {rows} rows in {tables} tables. Reload the app."
   }
 }

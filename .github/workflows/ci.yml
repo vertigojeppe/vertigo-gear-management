@@ -9,6 +9,7 @@ env:
   AUTH_SECRET: ci-only-secret-not-for-production
   APP_URL: http://localhost:3000
   SEED_PASSWORD: vertigo123
+  BACKUP_RESTORE_TEST: "1"
 
 jobs:
   test:

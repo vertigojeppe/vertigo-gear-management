@@ -297,7 +297,10 @@ tables, rate table CRUD + rental and project quotes (DB), browser: rate
 table editor with live factor preview, project quote with discount, extra
 line and PDF.
 
-### Phase 5b — Export, labels, polish
+### Phase 5b — Export, labels, polish (in progress)
+Export and backup ✅ (2026-10-13): CSV of every list with its filters
+(`/api/export/<list>.csv`), Settings › Backup with a whole-database JSON
+download and a one-transaction restore.
 CSV export of any list, JSON backup/restore, Avery label sheets and single
 thermal labels, Danish translation hooks, empty states and inline help,
 deployment docs (Compose, Hetzner, Vercel), README complete.

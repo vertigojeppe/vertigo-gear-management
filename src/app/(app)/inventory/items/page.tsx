@@ -35,11 +35,16 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
       <PageHeader
         title={t("title")}
         actions={
-          canEdit && (
-            <Link href="/inventory/items/new" className={buttonVariants()}>
-              {t("newItem")}
-            </Link>
-          )
+          <>
+            <a href={`/api/export/items.csv${(() => { const q = new URLSearchParams(Object.entries(sp).filter(([k, v]) => v !== undefined && k !== "page") as [string, string][]).toString(); return q ? `?${q}` : ""; })()}`} className={buttonVariants({ variant: "outline" })}>
+              {tc("exportCsv")}
+            </a>
+            {canEdit && (
+              <Link href="/inventory/items/new" className={buttonVariants()}>
+                {t("newItem")}
+              </Link>
+            )}
+          </>
         }
       />
       <InventoryTabs />
