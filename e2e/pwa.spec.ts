@@ -20,6 +20,16 @@ test.describe("installable app", () => {
     expect(await offline.text()).toContain("offline");
   });
 
+  test("the service worker installs and caches the offline page", async ({ page, context, browserName }) => {
+    test.skip(browserName !== "chromium", "service workers are observable in Chromium only");
+    await page.goto("/login");
+    // Registered by hand: the layout only registers it in production builds.
+    const [worker] = await Promise.all([context.waitForEvent("serviceworker", { timeout: 15_000 }), page.evaluate(() => navigator.serviceWorker.register("/sw.js", { scope: "/" }))]);
+    expect(worker.url()).toContain("/sw.js");
+    await expect.poll(async () => page.evaluate(async () => (await caches.keys()).some((k) => k.startsWith("vg-shell")))).toBe(true);
+    await expect.poll(async () => page.evaluate(async () => Boolean(await caches.match("/offline")))).toBe(true);
+  });
+
   test("the page declares the manifest and the iOS home-screen icon", async ({ page }) => {
     await page.goto("/login");
     await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/manifest.webmanifest");
