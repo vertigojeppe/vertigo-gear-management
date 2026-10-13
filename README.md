@@ -176,7 +176,7 @@ Set in `.env`:
 
 | Variable | Value |
 |---|---|
-| `APP_DOMAIN` | the DNS name, e.g. `gear.vertigo.dk` |
+| `APP_DOMAIN` | the DNS name, e.g. `gear.vertigo.dk` (on a LAN: the machine name, see below) |
 | `APP_URL` | `https://gear.vertigo.dk` (encoded in QR labels and feeds) |
 | `AUTH_SECRET` | `openssl rand -base64 32` |
 | `POSTGRES_PASSWORD` | a long random password |
@@ -198,6 +198,37 @@ The database listens on the server only (127.0.0.1); the app container
 is not exposed except through Caddy. `GET /api/health` answers `{ "ok":
 true }` when the app reaches its database; Compose restarts the
 container when it does not.
+
+### Office server on the LAN (no public DNS name)
+
+The same stack runs on a machine in the office that is not reachable from
+the internet. Let's Encrypt cannot issue a certificate for a name the
+internet does not know, so Caddy signs one itself; phones need that
+certificate installed once, or the camera scanner stays off (browsers
+only open the camera on HTTPS).
+
+1. Give the machine a fixed name on the network (the router's DHCP
+   reservation plus its hostname, say `gear`; `gear.local` works on most
+   phones through mDNS).
+2. In `.env`: `APP_DOMAIN=gear.local`, `APP_URL=https://gear.local`,
+   `CADDYFILE=./Caddyfile.lan`. Then `docker compose --profile prod up -d
+   --build` as above.
+3. Export Caddy's root certificate and install it on every phone and
+   laptop (iOS: AirDrop or mail the file, install the profile under
+   Settings › General › VPN & Device Management, then enable it under
+   Settings › General › About › Certificate Trust Settings; Android:
+   Settings › Security › Install a certificate › CA certificate):
+
+   ```bash
+   docker compose --profile prod cp caddy:/data/caddy/pki/authorities/local/root.crt vertigo-gear-ca.crt
+   ```
+
+4. Print labels only after `APP_URL` is final: the QR codes carry it.
+
+Without HTTPS at all (fine for laptops, no camera scanning on phones):
+leave Caddy out, set `APP_BIND=0.0.0.0` and `APP_URL=http://gear.local:3000`,
+and start only the database and the app: `docker compose --profile prod
+up -d --build db app`.
 
 ### Updating
 
