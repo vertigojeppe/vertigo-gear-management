@@ -214,8 +214,18 @@
     "variantCount": "{count, plural, one {# variant} other {# variants}}",
     "newVariant": "New variant",
     "newVariantOf": "New variant of {name}",
-    "familiesCount": "{families, plural, one {# model} other {# models}} ({models} with variants counted)",
-    "inUse": "Cannot delete: used by {what}. Archive it instead."
+    "familiesCount": "{families, plural, one {# model} other {# models}} ({models} with variants counted)",
+    "inUse": "Cannot delete: used by {what}. Archive it instead.",
+    "selectAll": "Select all",
+    "selectedCount": "{count, plural, =0 {Nothing selected} one {# model selected} other {# models selected}}",
+    "bulkDeleteConfirm": "Delete {count, plural, one {this model} other {these # models}}? Models that are still in use are skipped and listed.",
+    "bulkDone": "{op, select, archive {Archived} unarchive {Unarchived} delete {Deleted} other {Done}}: {done}",
+    "bulkRefused": "{count, plural, one {# still in use} other {# still in use}}",
+    "deleteAnyway": "{count, plural, one {Delete anyway} other {Delete # anyway}}",
+    "deleteAnywayHelp": "Removes their reservations, rental lines, packing lines, template lines and items.",
+    "forceDeleteConfirm": "Delete {count, plural, one {this model} other {these # models}} and everything that uses them? Reservations, rental lines, packing lines and items are removed. This cannot be undone.",
+    "forceDeleteOneConfirm": "Delete this model and what uses it ({what})? This cannot be undone.",
+    "askAdmin": "An admin can delete these together with what uses them."
   },
   "itemStatus": {
     "in_house": "In house",

@@ -12,6 +12,8 @@ import { validateStatusChange } from "./status";
 import { descendantIds, wouldCycle } from "./tree";
 import { modelLabel } from "@/lib/format";
 
+type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 export class InventoryError extends Error {
   constructor(
     message: string,
@@ -257,14 +259,69 @@ export const models = {
     await prisma.model.update({ where: { id }, data: { defaultPhotoId: fileId } });
   },
 
-  async remove(actor: Actor, id: string) {
-    assertCan(actor, "inventory.write");
+  /**
+   * Delete a model. Refused while anything points at it, unless an admin
+   * forces it: then the reservations, rental lines, packing lines,
+   * template lines and items that use the model go with it.
+   */
+  async remove(actor: Actor, id: string, opts: { force?: boolean } = {}) {
+    assertCan(actor, opts.force ? "users.manage" : "inventory.write");
     const usage = await modelUsage(id);
-    if (usage.total > 0) throw new InventoryError(`This model is still used by ${usage.summary}. Archive it instead.`);
-    const m = await prisma.model.delete({ where: { id } });
-    await logActivity(actor, { entityType: "model", entityId: id, action: "deleted", summary: `Deleted model ${modelLabel(m)}` });
+    if (usage.total > 0 && !opts.force) throw new InventoryError(`This model is still used by ${usage.summary}. Archive it instead.`);
+    await prisma.$transaction(async (tx) => {
+      if (usage.total > 0) await cascadeModel(tx, id);
+      const m = await tx.model.delete({ where: { id } });
+      await logActivity(actor, { entityType: "model", entityId: id, action: "deleted", summary: `Deleted model ${modelLabel(m)}${usage.total > 0 ? ` and what used it (${usage.summary})` : ""}` }, tx);
+    });
+  },
+
+  /**
+   * Archive, unarchive or delete many models at once. Delete skips models
+   * that are still in use and reports them; "force" (admin) deletes those
+   * too, with everything that points at them.
+   */
+  async bulk(actor: Actor, ids: string[], op: "archive" | "unarchive" | "delete", opts: { force?: boolean } = {}): Promise<BulkResult> {
+    assertCan(actor, opts.force ? "users.manage" : "inventory.write");
+    const unique = [...new Set(ids)].filter(Boolean);
+    const rows = await prisma.model.findMany({ where: { id: { in: unique } } });
+    const result: BulkResult = { op, done: 0, refused: [] };
+    if (op !== "delete") {
+      const archived = op === "archive";
+      await prisma.$transaction(async (tx) => {
+        const r = await tx.model.updateMany({ where: { id: { in: rows.map((m) => m.id) } }, data: { archived } });
+        result.done = r.count;
+        await logActivity(actor, { entityType: "model", entityId: "bulk", action: archived ? "archived" : "unarchived", summary: `${archived ? "Archived" : "Unarchived"} ${r.count} models: ${rows.slice(0, 8).map(modelLabel).join(", ")}${rows.length > 8 ? ", …" : ""}` }, tx);
+      });
+      return result;
+    }
+    for (const m of rows) {
+      const usage = await modelUsage(m.id);
+      if (usage.total > 0 && !opts.force) {
+        result.refused.push({ id: m.id, label: modelLabel(m), summary: usage.summary });
+        continue;
+      }
+      await prisma.$transaction(async (tx) => {
+        if (usage.total > 0) await cascadeModel(tx, m.id);
+        await tx.model.delete({ where: { id: m.id } });
+        await logActivity(actor, { entityType: "model", entityId: m.id, action: "deleted", summary: `Deleted model ${modelLabel(m)}${usage.total > 0 ? ` and what used it (${usage.summary})` : ""}` }, tx);
+      });
+      result.done++;
+    }
+    return result;
   },
 };
+
+export type BulkResult = { op: "archive" | "unarchive" | "delete"; done: number; refused: { id: string; label: string; summary: string }[] };
+
+/** Remove everything that points at a model so it can be deleted (admin force delete). Items inside its kits are set loose. */
+async function cascadeModel(tx: Tx, modelId: string) {
+  await tx.packingLine.deleteMany({ where: { modelId } }); // their checks cascade
+  await tx.packingTemplateLine.deleteMany({ where: { modelId } });
+  await tx.rentalLine.deleteMany({ where: { modelId } }); // their allocations cascade
+  await tx.allocation.deleteMany({ where: { modelId } });
+  await tx.item.updateMany({ where: { parentItem: { modelId } }, data: { parentItemId: null } });
+  await tx.item.deleteMany({ where: { modelId } }); // status logs cascade
+}
 
 /** Everything that still points at a model; a model can only be deleted when this is empty. */
 export type ModelUsage = { items: number; reservations: number; rentalLines: number; packingLines: number; templateLines: number; total: number; summary: string };

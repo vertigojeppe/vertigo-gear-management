@@ -7,7 +7,7 @@ import { customFieldsFromForm, validateCustomFields, CF_PREFIX } from "@/lib/cus
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitions } from "@/modules/settings";
 import { categoryInput, itemBatchInput, itemInput, locationInput, modelInput, statusChangeInput } from "./schema";
-import { categories, items, locations, models, InventoryError } from "./service";
+import { categories, items, locations, models, InventoryError, type BulkResult } from "./service";
 
 function revalidateInventory() {
   revalidatePath("/inventory", "layout");
@@ -104,16 +104,44 @@ export async function setModelArchived(formData: FormData): Promise<void> {
 }
 
 export async function deleteModel(formData: FormData): Promise<void> {
-  const actor = await requirePermission("inventory.write");
+  const force = formData.get("force") === "on";
+  const actor = await requirePermission(force ? "users.manage" : "inventory.write");
   const id = String(formData.get("id"));
   try {
-    await models.remove(actor, id);
+    await models.remove(actor, id, { force });
   } catch (err) {
     if (err instanceof InventoryError) redirect(`/inventory/models/${id}?error=${encodeURIComponent(err.message)}`);
     throw err;
   }
   revalidateInventory();
   redirect("/inventory");
+}
+
+export type BulkState = FormState<BulkResult>;
+
+/** Bulk bar on the inventory list: ids[] + op (archive | unarchive | delete | force-delete, the last with forceIds[]). */
+export async function bulkModels(_prev: BulkState, formData: FormData): Promise<BulkState> {
+  const op = String(formData.get("op") ?? "");
+  const force = op === "force-delete";
+  const actor = await requirePermission(force ? "users.manage" : "inventory.write");
+  const ids = (force ? formData.getAll("forceIds") : formData.getAll("ids")).map(String);
+  if (ids.length === 0) return { ok: false, error: "Select at least one model." };
+  if (!["archive", "unarchive", "delete", "force-delete"].includes(op)) return { ok: false, error: "Unknown operation." };
+  let result: BulkResult;
+  try {
+    result = await models.bulk(actor, ids, force ? "delete" : (op as "archive" | "unarchive" | "delete"), { force });
+  } catch (err) {
+    return errorState(err);
+  }
+  revalidateInventory();
+  revalidatePath("/projects", "layout");
+  revalidatePath("/rentals", "layout");
+  // Models still in use stay on the page, so the list of refusals can be shown in place.
+  if (result.refused.length > 0) return { ok: true, data: result };
+  // Otherwise the rows just changed or vanished: reload the same view with the outcome in the URL.
+  const returnTo = String(formData.get("returnTo") ?? "/inventory");
+  const base = returnTo.startsWith("/inventory") ? returnTo.replace(/([?&])done=[^&]*/g, "$1").replace(/[?&]$/, "") : "/inventory";
+  redirect(`${base}${base.includes("?") ? "&" : "?"}done=${result.op}:${result.done}`);
 }
 
 /* Items --------------------------------------------------------------------- */
