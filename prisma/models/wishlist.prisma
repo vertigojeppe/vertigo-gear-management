@@ -1,0 +1,37 @@
+// wishlist module
+
+/// Gear we want to buy: a shopping list next to the inventory. A wish is
+/// not a model and has no items; "convert" opens the new-model form with
+/// the wish prefilled, and saving it marks the wish bought with a link to
+/// the model it became.
+model WishItem {
+  id           String    @id @default(cuid())
+  /// Same shape as a model so conversion is a straight copy.
+  manufacturer String    @default("")
+  name         String
+  variant      String?
+  categoryId   String?
+  category     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  quantity     Int       @default(1)
+  /// Expected purchase price per unit excl. VAT, if known.
+  price        Decimal?  @db.Decimal(12, 2)
+  /// Expected rental day price; copied to the model on conversion.
+  rentalDayPrice Decimal? @db.Decimal(12, 2)
+  /// Product page, webshop or quote.
+  link         String?
+  notes        String?
+  /// "open" | "bought"
+  status       String    @default("open")
+  /// The model this wish became, when it was converted.
+  modelId      String?
+  model        Model?    @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  createdById  String?
+  createdBy    User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  /// "Sheet!A1" of the spreadsheet row this came from, when imported.
+  importSource String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status])
+  @@index([categoryId])
+}

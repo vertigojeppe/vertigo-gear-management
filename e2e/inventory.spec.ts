@@ -119,7 +119,7 @@ test.describe("inventory", () => {
     expect(text.startsWith("\uFEFFAsset tag;Model;")).toBe(true);
     expect(text).toContain("Robe Pointe");
     expect(text).not.toContain("MAC Aura");
-    for (const list of ["models", "projects", "rentals", "contacts"]) expect((await page.request.get(`/api/export/${list}.csv`)).status(), list).toBe(200);
+    for (const list of ["models", "projects", "rentals", "contacts", "wishes"]) expect((await page.request.get(`/api/export/${list}.csv`)).status(), list).toBe(200);
     expect((await page.request.get("/api/export/nope.csv")).status()).toBe(404);
   });
 
@@ -141,11 +141,48 @@ test.describe("inventory", () => {
     expect(none.status()).toBe(404);
   });
 
+  test("a wish is added, converted to a model and shows as bought", async ({ page }) => {
+    await signIn(page, "member@vertigo.test");
+    await page.goto("/inventory/wishlist");
+    await page.getByRole("button", { name: "New wish" }).first().click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Manufacturer").fill("Testlight");
+    await dialog.getByLabel("Name", { exact: true }).fill(`Wish ${stamp}`);
+    await dialog.locator("#w-price").fill("1500");
+    await dialog.locator("#w-link").fill("https://example.test/wish");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toBeHidden();
+    const row = page.getByRole("listitem").filter({ hasText: `Testlight Wish ${stamp}` });
+    await expect(row).toBeVisible();
+    await expect(row.getByRole("link", { name: "open link" })).toHaveAttribute("href", "https://example.test/wish");
+
+    // Convert: the new-model form opens prefilled; saving lands on the model and marks the wish bought.
+    await row.getByRole("link", { name: "Convert to model" }).click();
+    await expect(page.getByRole("heading", { name: "New model from the wish list" })).toBeVisible();
+    await expect(page.getByLabel("Model name")).toHaveValue(`Wish ${stamp}`);
+    const category = page.getByLabel("Category");
+    const movingHeads = await category.locator("option", { hasText: "Moving heads" }).first().getAttribute("value");
+    await category.selectOption(movingHeads!);
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("heading", { name: `Testlight Wish ${stamp}` })).toBeVisible();
+
+    await page.goto("/inventory/wishlist");
+    await expect(page.getByRole("listitem").filter({ hasText: `Wish ${stamp}` })).toHaveCount(0);
+    await page.goto("/inventory/wishlist?status=bought");
+    const bought = page.getByRole("listitem").filter({ hasText: `Testlight Wish ${stamp}` });
+    await expect(bought).toContainText("Became model");
+    page.once("dialog", (d) => d.accept());
+    await bought.getByRole("button", { name: "Delete" }).click();
+    await expect(bought).toHaveCount(0);
+  });
+
   test("viewer sees inventory but no edit controls", async ({ page }) => {
     await signIn(page, "viewer@vertigo.test");
     await page.goto("/inventory");
     await expect(page.getByRole("heading", { name: "Inventory" })).toBeVisible();
     await expect(page.getByRole("link", { name: "New model" })).toHaveCount(0);
+    await page.goto("/inventory/wishlist");
+    await expect(page.getByRole("button", { name: "New wish" })).toHaveCount(0);
     // Search for the unit: a database with the real inventory imported has many pages.
     await page.goto("/inventory/items?q=VG-0001");
     await page.getByRole("link", { name: /VG-0001/ }).first().click();

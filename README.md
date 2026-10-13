@@ -9,7 +9,7 @@ warnings; external rentals; packing lists with check-out and check-in;
 production plans with documents, 3D viewers and markup; pricing with rate
 tables and quote PDFs; calendar feeds and Google push; the old
 spreadsheet importer; CSV export and whole-database backup. Danish and
-English. Still to come: sub-hire catalog, wish list and purchase records
+English. Still to come: sub-hire catalog and purchase records
 (`BACKLOG.md`). The roadmap and what is done is in `PLAN.md`; why things
 are the way they are in `DECISIONS.md`.
 
@@ -63,6 +63,9 @@ start, and help text under the fields that need it. The short version:
   LED controllers get IP and firmware, and so on).
 - **Settings › Contacts**: people and companies who are not users. A
   contact or a colleague can be a *person* location ("Mikkel has 2").
+- **Inventory › Wish list**: gear to buy, with quantity, expected price,
+  link and notes. When it arrives, *Convert to model* opens the new-model
+  form prefilled; the wish is marked bought and points at the model.
 - **Not for rental**: flag a model or a unit as own-projects-only; the
   rentals screens refuse it. Retiring an item asks whether it was sold,
   scrapped or lost; own-built fixtures can sit as *under construction*.

@@ -10,6 +10,7 @@ model Category {
   sortOrder Int        @default(0)
   models    Model[]
   customFieldDefinitions CustomFieldDefinition[]
+  wishItems WishItem[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -52,6 +53,7 @@ model Model {
   rentalLines  RentalLine[]
   packingLines PackingLine[]
   packingTemplateLines PackingTemplateLine[]
+  wishItems    WishItem[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -30,9 +30,9 @@ fields) is done; the rest waits until production plans have shipped.
 - **Purchase records** per model: supplier (a contact), date, quote/order
   number, list price, discount %, net price, attachment (the Urs quotes).
 - **Importer follow-ups** (the importer itself shipped as Phase 5a):
-  rate tables from `lejefaktor`, the Urs truss quotes, the GearGuys and
-  wish-list projector rows and the Dirverse castor references are shown as
-  *parked* in the preview; import them when their features exist. Computer
+  the Urs truss quotes and the GearGuys projector rows are shown as
+  *parked* in the preview; import them when their features exist (rate
+  tables, wish rows and the castor references are imported now). Computer
   parts are serialized units without serials; the two media servers'
   component prices are a model note. A CSV/XLSX import for arbitrary lists
   (not this spreadsheet) is still open.

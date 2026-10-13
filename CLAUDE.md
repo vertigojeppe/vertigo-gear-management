@@ -11,7 +11,7 @@ external rentals. Full spec: `SPEC.md`; the spreadsheet we migrate from and
 what it implies: `MIGRATION.md`. Plan and data model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **5b (deployment, labels, export, backup, polish) done**. Next: sub-hire catalog, wish list, purchase records (BACKLOG.md).
+Current phase: **wish list done** (after 5b). Next: purchase records, sub-hire catalog (BACKLOG.md).
 
 ## Stack
 
@@ -300,6 +300,23 @@ a second entry that exports components only and never a service.
   tests wipe and refill the database, so they only run alone:
   `npm run test:backup` with `BACKUP_RESTORE_TEST=1` (a separate CI
   step), never inside the parallel `npm run test`.
+
+## Wish list
+
+- `WishItem` (`src/modules/wishlist`) is gear to buy: the model fields
+  (manufacturer, name, variant, category) plus quantity, expected price,
+  expected rental day price, link and notes; status `open | bought`. A
+  wish is never a model and takes no part in availability or packing.
+- Converting: the list links to `/inventory/models/new?wish=<id>`, which
+  prefills `ModelForm` (prop `prefill: Partial<ModelDto>`, hidden
+  `wishId`); `saveModel` creates the model and calls
+  `wishes.markBought(actor, wishId, modelId)`. "Bought" without a model
+  (`wishes.setStatus`) is for reference material and consumables.
+- Permissions are the inventory ones (`inventory.read/write`); the page is
+  an inventory tab (`/inventory/wishlist`, `?status=bought`), and
+  `/api/export/wishes.csv` exports it.
+- The importer writes the projector "Ønsker" rows and the Dirverse castor
+  references as `WishOp`s (idempotent on `importSource` + name).
 
 ## Spreadsheet import (Phase 5a)
 

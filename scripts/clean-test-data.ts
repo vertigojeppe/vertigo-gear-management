@@ -9,6 +9,7 @@ import { prisma } from "../src/lib/db";
  */
 async function main() {
   const tokens = await prisma.apiToken.deleteMany({ where: { name: { startsWith: "e2e " } } });
+  const wishes = await prisma.wishItem.deleteMany({ where: { manufacturer: "Testlight" } });
   const models = await prisma.model.findMany({ where: { manufacturer: "Testlight" }, select: { id: true } });
   const ids = models.map((m) => m.id);
   const items = await prisma.item.findMany({ where: { modelId: { in: ids } }, select: { id: true } });
@@ -48,11 +49,12 @@ async function main() {
     await prisma.location.deleteMany({ where: { id: { in: ids("locations") } } });
     await prisma.contact.deleteMany({ where: { id: { in: ids("contacts") } } });
     await prisma.rateTable.deleteMany({ where: { id: { in: ids("rateTables") } } });
+    await prisma.wishItem.deleteMany({ where: { id: { in: ids("wishes") } } });
     for (const id of ids("categories").reverse()) await prisma.category.delete({ where: { id } }).catch(() => undefined);
     await prisma.activityLog.delete({ where: { id: log.id } });
   }
   await prisma.outbox.deleteMany({ where: { status: { in: ["done", "failed"] } } });
-  console.log(`Removed ${tokens.count} tokens, ${ids.length} models, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals, ${imports.length} test imports.`);
+  console.log(`Removed ${tokens.count} tokens, ${ids.length} models, ${wishes.count} wishes, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals, ${imports.length} test imports.`);
   await prisma.$disconnect();
 }
 
