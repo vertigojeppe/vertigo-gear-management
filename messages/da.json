@@ -948,5 +948,11 @@
     "projectQuoteHelp": "Udstyrslinjerne kommer fra reservationerne; brug {edit} på en reservation for at ændre dagspris eller rabat.",
     "dayWord": "dag",
     "daysWord": "dage"
+  },
+  "theme": {
+    "label": "Udseende",
+    "light": "Lys",
+    "dark": "Mørk",
+    "system": "System"
   }
 }

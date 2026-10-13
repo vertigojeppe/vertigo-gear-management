@@ -948,5 +948,11 @@
     "projectQuoteHelp": "Gear lines come from the reservations; use {edit} on a reservation to change its day price or discount.",
     "dayWord": "day",
     "daysWord": "days"
+  },
+  "theme": {
+    "label": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }
