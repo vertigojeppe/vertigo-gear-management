@@ -177,9 +177,8 @@ export type ItemListRow = ItemDto & {
   thumbUrl: string | null;
 };
 
-export async function listItems(
-  filters: ItemFilters & { customField?: { key: string; value: string } },
-): Promise<{ rows: ItemListRow[]; total: number; page: number; pages: number }> {
+/** The item list's filters as a Prisma where clause (also used for label printing). */
+export async function itemWhere(filters: ItemFilters & { customField?: { key: string; value: string } }): Promise<Prisma.ItemWhereInput> {
   const where: Prisma.ItemWhereInput = {};
   if (filters.q) {
     const q = filters.q;
@@ -200,6 +199,19 @@ export async function listItems(
   if (filters.customField) {
     where.customFields = { path: [filters.customField.key], equals: filters.customField.value };
   }
+  return where;
+}
+
+/** Items to print labels for: explicit ids, or whatever the list filters select, in tag order. */
+export async function itemsForLabels(pick: { ids: string[] } | { filters: ItemFilters }, max: number) {
+  const where = "ids" in pick ? { id: { in: pick.ids } } : await itemWhere(pick.filters);
+  return prisma.item.findMany({ where, orderBy: { assetTag: "asc" }, take: max, select: { id: true, assetTag: true, name: true, model: { select: { manufacturer: true, name: true, variant: true } } } });
+}
+
+export async function listItems(
+  filters: ItemFilters & { customField?: { key: string; value: string } },
+): Promise<{ rows: ItemListRow[]; total: number; page: number; pages: number }> {
+  const where = await itemWhere(filters);
 
   const [total, rows, cats] = await Promise.all([
     prisma.item.count({ where }),

@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can, requireActor } from "@/lib/auth/session";
-import { InventoryTabs, categoryOptions, itemFilters, listItems, locationOptions, modelOptions } from "@/modules/inventory";
+import { InventoryTabs, categoryOptions, itemFilters, listItems, locationOptions, modelOptions, LabelsDialog } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 import { ITEM_STATUSES } from "../../../../../config/app.config";
 import { modelLabel } from "@/lib/format";
@@ -35,11 +35,14 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
       <PageHeader
         title={t("title")}
         actions={
-          canEdit && (
-            <Link href="/inventory/items/new" className={buttonVariants()}>
-              {t("newItem")}
-            </Link>
-          )
+          <>
+            <LabelsDialog query={new URLSearchParams(Object.entries(sp).filter(([k, v]) => v !== undefined && k !== "page") as [string, string][]).toString()} count={result.total} />
+            {canEdit && (
+              <Link href="/inventory/items/new" className={buttonVariants()}>
+                {t("newItem")}
+              </Link>
+            )}
+          </>
         }
       />
       <InventoryTabs />
