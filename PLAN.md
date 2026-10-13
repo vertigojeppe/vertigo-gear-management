@@ -297,7 +297,10 @@ tables, rate table CRUD + rental and project quotes (DB), browser: rate
 table editor with live factor preview, project quote with discount, extra
 line and PDF.
 
-### Phase 5b — Export, labels, polish
+### Phase 5b — Export, labels, polish (in progress)
+Labels ✅ (2026-10-13): Avery sheets with an offset for used cells and
+single thermal labels, from the item list, a model or a unit
+(`/api/labels/sheet.pdf`); pure grid maths in `label-layout.ts`.
 CSV export of any list, JSON backup/restore, Avery label sheets and single
 thermal labels, Danish translation hooks, empty states and inline help,
 deployment docs (Compose, Hetzner, Vercel), README complete.

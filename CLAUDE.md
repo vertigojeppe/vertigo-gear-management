@@ -139,6 +139,12 @@ a second entry that exports components only and never a service.
   labels with `modelLabel(m)` from `src/lib/format.ts`, never
   `${manufacturer} ${name}`. Models match by (manufacturer, name) in the
   importer and seed, so "" is a real value there.
+- Labels: `LABEL_SIZES` in `config/app.config.ts` (sheet grids with gaps,
+  or `page: "single"` for thermal rolls); `label-layout.ts` is the pure
+  geometry (centred grid, offset, page count) and `labels.tsx` renders the
+  PDF with react-pdf + qrcode. `GET /api/labels/sheet.pdf` takes `ids=` or
+  the item list's filters plus `size` and `offset`; `LabelsDialog` builds
+  that URL (with the browser origin for the QR, like `QrImage`).
 - Asset tags come from `nextAssetTag(tx)` inside the creating transaction.
   The seed sets the counter past its highest tag.
 - Statuses include `under_construction` (exists, not usable, no reason

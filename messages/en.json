@@ -227,7 +227,15 @@
     "forceDeleteOneConfirm": "Delete this model and what uses it ({what})? This cannot be undone.",
     "askAdmin": "An admin can delete these together with what uses them.",
     "renameFamily": "Rename family",
-    "renameFamilyHelp": "Changes the manufacturer and name of {count, plural, one {this model} other {all # variants}} at once. Sizes stay as they are."
+    "renameFamilyHelp": "Changes the manufacturer and name of {count, plural, one {this model} other {all # variants}} at once. Sizes stay as they are.",
+    "printLabels": "Print labels",
+    "labelsHelp": "{count, plural, one {One label} other {# labels}} with the QR code, asset tag and model, as a PDF to print.",
+    "labelSize": "Label size",
+    "labelOffset": "Skip labels on the first sheet",
+    "labelOffsetHelp": "A sheet has {perSheet}; enter how many are already used so printing starts on the next free one.",
+    "labelsSheetNote": "{sheets, plural, one {# sheet} other {# sheets}}. Print at 100% (no scaling), feed the sheet as the printer manual says.",
+    "labelsSingleNote": "{count, plural, one {# page} other {# pages}} of one label each, sized for the roll. Set the printer's paper size to the label.",
+    "openLabelsPdf": "Open PDF"
   },
   "itemStatus": {
     "in_house": "In house",

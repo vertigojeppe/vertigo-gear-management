@@ -43,6 +43,11 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
   every unit gets an asset tag like `VG-0042` and a QR code.
 - **Item page**: change status (reason required for repair/missing/retired),
   move, put into a kit, attach photos/invoices/manuals, see history.
+- **Labels**: "Print labels" on the item list (whatever the filters show),
+  on a model (all its units) and on a unit. Avery L7160 sheets (21 per
+  A4, with a "skip the used ones" field) or 62 × 29 mm thermal labels,
+  one per page. Each label carries the QR code, the asset tag and the
+  model. Sizes live in `config/app.config.ts`.
 - **Scan** (phone): point the camera at a tag, or type it. Browsers only
   allow the camera over HTTPS (or localhost), so in production put the app
   behind HTTPS and in development use `npm run dev:https`.

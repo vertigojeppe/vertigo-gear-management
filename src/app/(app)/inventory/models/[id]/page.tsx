@@ -13,7 +13,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatNumber, formatMoney, modelLabel } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
-import { RenameFamilyDialog, inventoryActions, modelDetail, modelUsage } from "@/modules/inventory";
+import { LabelsDialog, RenameFamilyDialog, inventoryActions, modelDetail, modelUsage } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 import { modelAvailabilityView } from "@/modules/projects";
 import { StatusPill } from "@/components/status-pill";
@@ -61,6 +61,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
               <Link href={`/inventory/items/new?modelId=${model.id}`} className={buttonVariants()}>
                 {t("newItem")}
               </Link>
+              <LabelsDialog query={`modelId=${model.id}`} count={items.length} />
               <Link href={`/inventory/models/${model.id}/edit`} className={buttonVariants({ variant: "outline" })}>
                 {tc("edit")}
               </Link>

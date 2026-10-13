@@ -10,7 +10,7 @@ export {
   modelOptions,
   listModels,
   modelDetail,
-  listItems,
+  listItems, itemsForLabels,
   itemDetail,
   kitCandidates,
   dashboardStats,
@@ -37,6 +37,11 @@ export * as inventoryActions from "./actions";
 export { InventoryTabs } from "./components/inventory-tabs";
 export { FamilyList } from "./components/family-list";
 export { RenameFamilyDialog } from "./components/rename-family-dialog";
+export { LabelsDialog } from "./components/labels-dialog";
+export { renderLabels } from "./labels";
+export type { LabelItem } from "./labels";
+export { labelSize, isLabelSizeKey, cellFor, pageCount, perPage, pageMm } from "./label-layout";
+export type { LabelSize } from "./label-layout";
 export { ModelForm } from "./components/model-form";
 export { ItemForm } from "./components/item-form";
 export { StatusDialog, MoveDialog } from "./components/item-actions";
