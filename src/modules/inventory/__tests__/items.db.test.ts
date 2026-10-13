@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import type { Actor } from "@/lib/auth/session";
-import { InventoryError, items } from "../service";
+import { InventoryError, items, models, modelUsage } from "../service";
 
 /**
  * Integration tests against the dev/CI database. They create their own
@@ -109,5 +109,22 @@ describe("items service", () => {
 
   it("blocks viewers from writing", async () => {
     await expect(items.create(viewer, { ...base, modelId })).rejects.toThrow(/permission/i);
+  });
+});
+
+describe("deleting a model", () => {
+  it("refuses to delete a model that a reservation uses, and says so", async () => {
+    const project = await prisma.project.create({ data: { name: `Show ${marker}`, status: "quote" } });
+    const alloc = await prisma.allocation.create({ data: { holderType: "project", projectId: project.id, modelId: bulkModelId, quantity: 1, startDate: new Date("2034-01-01"), endDate: new Date("2034-01-02") } });
+    try {
+      const usage = await modelUsage(bulkModelId);
+      expect(usage.reservations).toBe(1);
+      expect(usage.summary).toContain("1 reservation");
+      await expect(models.remove(admin, bulkModelId)).rejects.toThrow(/used by .*1 reservation/);
+      expect(await prisma.model.findUnique({ where: { id: bulkModelId } })).not.toBeNull();
+    } finally {
+      await prisma.allocation.delete({ where: { id: alloc.id } });
+      await prisma.project.delete({ where: { id: project.id } });
+    }
   });
 });

@@ -206,7 +206,8 @@
     "contactsGroup": "Kontakter",
     "rentalDayPrice": "Dagspris ({currency})",
     "rentalDayPriceHelp": "Listepris pr. dag ekskl. moms. Tilbud ganger den med lejefaktoren.",
-    "manufacturerHelp": "Tom for udstyr vi selv bygger og for generiske dele (kabler, rør); navnet alene er etiketten."
+    "manufacturerHelp": "Tom for udstyr vi selv bygger og for generiske dele (kabler, rør); navnet alene er etiketten.",
+    "inUse": "Kan ikke slettes: bruges af {what}. Arkivér den i stedet."
   },
   "itemStatus": {
     "in_house": "På lager",

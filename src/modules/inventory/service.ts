@@ -256,12 +256,37 @@ export const models = {
 
   async remove(actor: Actor, id: string) {
     assertCan(actor, "inventory.write");
-    const count = await prisma.item.count({ where: { modelId: id } });
-    if (count > 0) throw new InventoryError("This model has items. Archive it instead.");
+    const usage = await modelUsage(id);
+    if (usage.total > 0) throw new InventoryError(`This model is still used by ${usage.summary}. Archive it instead.`);
     const m = await prisma.model.delete({ where: { id } });
     await logActivity(actor, { entityType: "model", entityId: id, action: "deleted", summary: `Deleted model ${modelLabel(m)}` });
   },
 };
+
+/** Everything that still points at a model; a model can only be deleted when this is empty. */
+export type ModelUsage = { items: number; reservations: number; rentalLines: number; packingLines: number; templateLines: number; total: number; summary: string };
+
+export async function modelUsage(id: string): Promise<ModelUsage> {
+  const [items, reservations, rentalLines, packingLines, templateLines] = await Promise.all([
+    prisma.item.count({ where: { modelId: id } }),
+    prisma.allocation.count({ where: { modelId: id, holderType: "project" } }),
+    prisma.rentalLine.count({ where: { modelId: id } }),
+    prisma.packingLine.count({ where: { modelId: id } }),
+    prisma.packingTemplateLine.count({ where: { modelId: id } }),
+  ]);
+  const parts = [
+    [items, "item", "items"],
+    [reservations, "reservation", "reservations"],
+    [rentalLines, "rental line", "rental lines"],
+    [packingLines, "packing list line", "packing list lines"],
+    [templateLines, "template line", "template lines"],
+  ] as const;
+  const summary = parts
+    .filter(([n]) => n > 0)
+    .map(([n, one, many]) => `${n} ${n === 1 ? one : many}`)
+    .join(", ");
+  return { items, reservations, rentalLines, packingLines, templateLines, total: items + reservations + rentalLines + packingLines + templateLines, summary };
+}
 
 /* ------------------------------------------------------------------------ */
 /* Items                                                                    */
