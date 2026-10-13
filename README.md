@@ -129,35 +129,95 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 
 ## Deployment
 
-### Docker Compose (recommended)
+The app is one container next to Postgres, with Caddy in front for HTTPS.
+Everything is configured through `.env`; nothing secret is in the
+repository. It is meant to be reachable from the internet (warehouse
+phones, venues, freelancers): every route is behind login except share
+links and iCal feeds, the login form is rate-limited, and Caddy serves
+HTTPS only.
+
+### Docker Compose with automatic HTTPS (recommended)
+
+On a server with Docker, a DNS name pointing at it, and ports 80 and 443
+open:
 
 ```bash
-cp .env.example .env            # set AUTH_SECRET, APP_URL, POSTGRES_PASSWORD
-docker compose --profile prod up -d --build
+git clone https://github.com/vertigojeppe/vertigo-gear-management.git /opt/vertigo-gear
+cd /opt/vertigo-gear
+cp .env.example .env
 ```
 
-Runs the app and Postgres with named volumes for the database and uploads.
-Migrations are applied automatically on container start. Put a reverse
-proxy with TLS (Caddy, nginx, Traefik) in front of port 3000.
+Set in `.env`:
 
-### Hetzner / any VPS
+| Variable | Value |
+|---|---|
+| `APP_DOMAIN` | the DNS name, e.g. `gear.vertigo.dk` |
+| `APP_URL` | `https://gear.vertigo.dk` (encoded in QR labels and feeds) |
+| `AUTH_SECRET` | `openssl rand -base64 32` |
+| `POSTGRES_PASSWORD` | a long random password |
+| `SEED_PASSWORD` | the first admin's password (used once, see below) |
 
-1. Install Docker (`curl -fsSL https://get.docker.com | sh`).
-2. Clone the repo, create `.env`, run the Compose command above.
-3. Point a DNS name at the server and add Caddy:
-   ```
-   gear.example.dk {
-     reverse_proxy localhost:3000
-   }
-   ```
-4. Backups: see below.
+Then:
+
+```bash
+docker compose --profile prod up -d --build
+docker compose exec app node node_modules/prisma/build/index.js db seed   # first time only: creates the admin
+```
+
+Caddy requests the certificate from Let's Encrypt on first start (give it a
+minute) and renews it by itself. Migrations run every time the app
+container starts. Sign in as `admin@vertigo.test` with `SEED_PASSWORD`,
+create your own user under Settings › Users, then delete the demo users.
+
+The database listens on the server only (127.0.0.1); the app container
+is not exposed except through Caddy. `GET /api/health` answers `{ "ok":
+true }` when the app reaches its database; Compose restarts the
+container when it does not.
+
+### Updating
+
+```bash
+cd /opt/vertigo-gear && git pull && docker compose --profile prod up -d --build
+```
+
+Or let GitHub do it: `.github/workflows/deploy.yml` runs after CI passes on
+`main` and performs the same commands over SSH. Add these repository
+secrets (Settings › Secrets and variables › Actions): `DEPLOY_HOST`,
+`DEPLOY_USER`, `DEPLOY_KEY` (a private key whose public half is in that
+user's `~/.ssh/authorized_keys`), `DEPLOY_PATH` (`/opt/vertigo-gear`). The
+workflow waits for the health check and prints the app log if it fails.
+
+### Hetzner (or any VPS), step by step
+
+1. Create a server (a CX22 with Ubuntu is plenty). In the firewall allow
+   22, 80 and 443. Point `gear.vertigo.dk` (an A record) at its address.
+2. SSH in and install Docker: `curl -fsSL https://get.docker.com | sh`.
+   Create a user for the app: `adduser deploy && usermod -aG docker deploy`.
+3. As `deploy`, clone the repository to `/opt/vertigo-gear`, create
+   `.env` as above, and run the Compose command.
+4. Enable backups (next section) with a cron line, and add the deploy
+   secrets to GitHub if you want pushes to `main` to deploy.
+5. Keep the server itself updated: `apt install unattended-upgrades`.
 
 ### Vercel + managed Postgres
 
-Works with limitations: set `DATABASE_URL` to a managed Postgres (Neon,
-Supabase, …), `STORAGE_DRIVER=s3` with R2/MinIO credentials, and run
-`npx prisma migrate deploy` as a build step. PDF thumbnails are unavailable
-there (no poppler). Detailed steps follow in Phase 5.
+The app runs on Vercel with a managed database and object storage, with
+two gaps: PDF thumbnails and PDF pages in plan exports need poppler, which
+Vercel does not have (documents are listed by name instead), and the
+outbox worker needs a scheduler.
+
+1. Create a Postgres database (Neon, Supabase, Vercel Postgres) and a
+   bucket on Cloudflare R2 or another S3-compatible store.
+2. Import the repository in Vercel. Set the environment variables from
+   `.env.example`: `DATABASE_URL`, `AUTH_SECRET`, `APP_URL` (the Vercel
+   domain), `STORAGE_DRIVER=s3` with the `S3_*` values, `CRON_SECRET`,
+   `OUTBOX_DISABLED=1`.
+3. Build command: `npx prisma generate && npx prisma migrate deploy && npm run build`.
+4. Add a Vercel cron (`vercel.json`) that calls `POST /api/cron/outbox`
+   every minute with `Authorization: Bearer <CRON_SECRET>` so webhooks and
+   calendar pushes go out.
+5. Seed once from your machine with `DATABASE_URL` pointing at the managed
+   database: `npm run db:seed`.
 
 ## Google Calendar push (optional)
 
@@ -204,16 +264,20 @@ long-running process (Vercel), set `CRON_SECRET` and have a scheduler call
 `POST /api/cron/outbox` with `Authorization: Bearer <secret>` every
 minute.
 
-## Backup
+## Backup and restore
 
-Database: `docker compose exec db pg_dump -U vertigo vertigo_gear > backup.sql`.
-Uploads: the `uploads` volume (`docker volume inspect` for the path).
-Full JSON backup/restore from the UI arrives in Phase 5.
+`scripts/backup.sh` writes one archive with the database dump and every
+upload to `backups/` (`BACKUP_DIR`), keeps `BACKUP_KEEP_DAYS` of them (14
+by default), and, when `BACKUP_REMOTE` is set, copies each archive off-site
+with [rclone](https://rclone.org) (Cloudflare R2, Backblaze B2, S3, Google
+Drive) and prunes the remote the same way. Run it nightly:
 
-## Project docs
+```
+10 3 * * * cd /opt/vertigo-gear && ./scripts/backup.sh >> backups/backup.log 2>&1
+```
 
-- `PLAN.md` — data model, phases, decisions taken
-- `CLAUDE.md` — conventions for working on the code
-- `DECISIONS.md` — why
-- `BACKLOG.md` — ideas
-- `docs/ARCHITECTURE.md` — architecture and data model diagram
+`scripts/restore.sh <archive>` stops the app, replaces the database and
+the uploads with the archive's contents, and starts the app again
+(migrations run if the code is newer than the backup). It asks for a
+typed `yes` first. Test it on a fresh server now and then; a backup that
+was never restored is a guess.

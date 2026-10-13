@@ -378,3 +378,25 @@ the app removes the reservations, rental lines, packing lines, template
 lines and items that point at it in the same transaction, logging what
 went. The confirmation names what will be removed. There is no undo; that
 is why it is admin-only and why Archive stays the default answer.
+
+## 2026-10-13 — Caddy lives in the Compose stack
+
+HTTPS is not optional (camera scanning, cookies, the public internet), so
+the reverse proxy is part of the stack rather than a step the README
+hopes the reader does: one `.env` value (`APP_DOMAIN`) and Caddy fetches
+and renews the certificate. The app and the database bind to localhost
+only. Anyone with their own proxy can drop the `caddy` service.
+
+## 2026-10-13 — Login throttling is in-process
+
+Ten failed sign-ins per email and address, then fifteen minutes off,
+kept in memory. A shared store would only matter with several app
+containers, which this deployment does not have; the limiter is a pure
+module with a test so it can be swapped for one later.
+
+## 2026-10-13 — Backups are one archive, restored by one script
+
+A database dump alone is not a backup of this app: the uploads volume
+holds the drawings and 3D files. The backup script bundles both, the
+restore script swaps both back in and lets the app run its migrations,
+and the README says to rehearse the restore.

@@ -25,7 +25,7 @@ export function LoginForm({ next }: { next?: string }) {
       </div>
       {state.error && (
         <p role="alert" className="text-sm text-destructive">
-          {t(state.error)}
+          {state.error === "rateLimited" ? t("rateLimited", { minutes: state.retryMinutes ?? 15 }) : t(state.error)}
         </p>
       )}
       <Button type="submit" disabled={pending} className="w-full">
