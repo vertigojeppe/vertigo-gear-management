@@ -11,7 +11,7 @@ external rentals. Full spec: `SPEC.md`; the spreadsheet we migrate from and
 what it implies: `MIGRATION.md`. Plan and data model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **6 (pricing engine, rate tables, quote PDF) done**. Next: Phase 5b (export, labels, polish, deployment), then sub-hire catalog, wish list, purchase records.
+Current phase: **5b (deployment, labels, export, backup, polish) done**. Next: sub-hire catalog, wish list, purchase records (BACKLOG.md).
 
 ## Stack
 

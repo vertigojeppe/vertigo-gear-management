@@ -3,11 +3,15 @@
 Gear inventory, packing lists and production plans for Vertigo. Self-hosted,
 multi-user, works on a phone in the warehouse and a laptop in the office.
 
-Status: **Phase 2 (projects, availability, rentals, calendar)**. Everything
-from Phase 1 plus clients, projects with phases and crew, gear reservations
-with conflict warnings, a calendar timeline, external rentals with
-agreement PDFs, iCal feeds, optional Google Calendar push, and webhooks.
-Packing lists arrive in Phase 3. See `PLAN.md` for the roadmap.
+Status: **in production use.** Inventory with families and variants,
+kits, asset tags and labels; projects with availability and conflict
+warnings; external rentals; packing lists with check-out and check-in;
+production plans with documents, 3D viewers and markup; pricing with rate
+tables and quote PDFs; calendar feeds and Google push; the old
+spreadsheet importer; CSV export and whole-database backup. Danish and
+English. Still to come: sub-hire catalog, wish list and purchase records
+(`BACKLOG.md`). The roadmap and what is done is in `PLAN.md`; why things
+are the way they are in `DECISIONS.md`.
 
 ## Quick start (development)
 
@@ -32,7 +36,10 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 | member@vertigo.test | member |
 | viewer@vertigo.test | viewer |
 
-## What you can do today
+## What you can do
+
+Every screen has an empty state that says what goes there and how to
+start, and help text under the fields that need it. The short version:
 
 - **Inventory › Categories / Locations**: build your category tree and
   warehouse zones.
