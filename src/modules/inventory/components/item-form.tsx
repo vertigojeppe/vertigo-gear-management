@@ -16,6 +16,7 @@ import type { FormState } from "@/lib/forms";
 import { appConfig } from "../../../../config/app.config";
 import { createItems, updateItem } from "../actions";
 import type { ItemDto } from "../service";
+import { modelLabel } from "@/lib/format";
 
 type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string; categoryId?: string };
 type LocationOption = { id: string; name: string; depth: number };
@@ -60,7 +61,7 @@ export function ItemForm({
             <option value="">—</option>
             {models.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.manufacturer} {m.name} ({t(m.trackingType === "bulk" ? "bulk" : "serialized")})
+                {modelLabel(m)} ({t(m.trackingType === "bulk" ? "bulk" : "serialized")})
               </option>
             ))}
           </NativeSelect>

@@ -11,7 +11,7 @@ import { QrImage } from "@/components/qr-image";
 import { StatusBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
-import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
+import { formatDate, formatDateTime, formatMoney, modelLabel } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
 import { KitSection, MoveDialog, StatusDialog, inventoryActions, itemDetail, locationOptions } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
@@ -32,13 +32,13 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
   const canEdit = can(actor.role, "inventory.write");
   const canSeeFinance = can(actor.role, "inventory.finance");
   const isAdmin = can(actor.role, "users.manage");
-  const modelLabel = `${model.manufacturer} ${model.name}`;
-  const title = item.name ? `${item.name}` : `${modelLabel}`;
+  const label = modelLabel(model);
+  const title = item.name ? `${item.name}` : label;
   const returnTo = `/inventory/items/${item.id}`;
 
   const facts: [string, React.ReactNode][] = [
     [t("assetTag"), <span key="tag" className="font-mono">{item.assetTag}</span>],
-    [t("model"), <Link key="model" href={`/inventory/models/${model.id}`} className="underline">{modelLabel}</Link>],
+    [t("model"), <Link key="model" href={`/inventory/models/${model.id}`} className="underline">{label}</Link>],
     [t("category"), detail.categoryPath.join(" › ")],
   ];
   if (model.trackingType === "bulk") facts.push([t("quantity"), String(item.quantity)]);
@@ -69,7 +69,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
             <StatusBadge status={item.status} className="text-sm" />
           </span>
         }
-        subtitle={item.name ? modelLabel : undefined}
+        subtitle={item.name ? label : undefined}
         crumbs={[{ label: t("title"), href: "/inventory" }, { label: t("items"), href: "/inventory/items" }, { label: item.assetTag }]}
         actions={
           canEdit && (
@@ -127,7 +127,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
           </a>
           {detail.photoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={detail.photoUrl} alt={modelLabel} className="mt-2 w-full rounded object-cover" />
+            <img src={detail.photoUrl} alt={label} className="mt-2 w-full rounded object-cover" />
           )}
         </div>
       </div>

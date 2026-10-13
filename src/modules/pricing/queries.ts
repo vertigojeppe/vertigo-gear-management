@@ -3,6 +3,7 @@ import { dateToString, daysBetween, type DateString } from "@/lib/dates";
 import { appConfig } from "../../../config/app.config";
 import { extraLinePrice, gearLinePrice, quoteTotals, type LinePrice, type QuoteTotals } from "./engine";
 import { rateTables, toRateTableDto, type HolderKind, type RateTableDto } from "./service";
+import { modelLabel } from "@/lib/format";
 
 const num = (v: { toNumber(): number } | number | null | undefined): number | null => (v === null || v === undefined ? null : typeof v === "number" ? v : v.toNumber());
 
@@ -65,7 +66,7 @@ export async function quoteFor(kind: HolderKind, id: string): Promise<Quote | nu
       terms: p.terms,
       deposit: null,
       notes: null,
-      gear: p.allocations.map((a) => ({ id: a.id, modelId: a.modelId, label: `${a.model.manufacturer} ${a.model.name}`, quantity: a.quantity, dayPrice: num(a.pricePerDay), listDayPrice: num(a.model.rentalDayPrice), discountPct: num(a.discountPct), note: a.note, itemTag: a.item?.assetTag ?? null })),
+      gear: p.allocations.map((a) => ({ id: a.id, modelId: a.modelId, label: `${modelLabel(a.model)}`, quantity: a.quantity, dayPrice: num(a.pricePerDay), listDayPrice: num(a.model.rentalDayPrice), discountPct: num(a.discountPct), note: a.note, itemTag: a.item?.assetTag ?? null })),
       extra: p.extraLines,
     });
   }
@@ -84,7 +85,7 @@ export async function quoteFor(kind: HolderKind, id: string): Promise<Quote | nu
     terms: r.terms,
     deposit: num(r.deposit),
     notes: r.notes,
-    gear: r.lines.map((l) => ({ id: l.id, modelId: l.modelId, label: `${l.model.manufacturer} ${l.model.name}`, quantity: l.quantity, dayPrice: num(l.pricePerDay), listDayPrice: num(l.model.rentalDayPrice), discountPct: num(l.discountPct), note: l.note, itemTag: l.item?.assetTag ?? null })),
+    gear: r.lines.map((l) => ({ id: l.id, modelId: l.modelId, label: `${modelLabel(l.model)}`, quantity: l.quantity, dayPrice: num(l.pricePerDay), listDayPrice: num(l.model.rentalDayPrice), discountPct: num(l.discountPct), note: l.note, itemTag: l.item?.assetTag ?? null })),
     extra: r.extraLines,
   });
 }

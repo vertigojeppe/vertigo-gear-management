@@ -344,3 +344,14 @@ is a rule on the table (`extraRule`, `extraFactor`), not more tiers, so
 a 230-day rental prices the same as the sheet's last row without listing
 every row. Revised has two copies on the sheet that differ at 30 days (3.3
 vs 3.4); 3.3 is used because the +0.5 series continues from it.
+
+## 2026-10-13 — Own-built gear has no manufacturer
+
+The importer had stamped "Vertigo" on everything we build (BlackLED,
+SplitLED, controllers, cases) and "Generic" on consumables, so every
+label read "Vertigo BlackLED 1 m". Only our own gear is in this
+inventory, so the manufacturer is now optional and empty for those; the
+label is the name alone (`modelLabel`). A data migration blanked the
+existing "Vertigo" and "Generic" values. Real manufacturers (Robe,
+Panasonic, Manfrotto) stay, because they matter for manuals, spares and
+sub-hire.

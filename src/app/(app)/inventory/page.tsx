@@ -10,6 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can, requireActor } from "@/lib/auth/session";
 import { InventoryTabs, categoryOptions, listModels, modelFilters, TRACKING_TYPES } from "@/modules/inventory";
+import { modelLabel } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Inventory" };
 
@@ -100,7 +101,7 @@ export default async function ModelsPage(props: { searchParams: Promise<Record<s
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">
-                    {m.manufacturer} {m.name}
+                    {modelLabel(m)}
                     {m.archived && <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">{t("archived")}</span>}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">

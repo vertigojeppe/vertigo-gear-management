@@ -205,7 +205,8 @@
     "staff": "Medarbejdere",
     "contactsGroup": "Kontakter",
     "rentalDayPrice": "Dagspris ({currency})",
-    "rentalDayPriceHelp": "Listepris pr. dag ekskl. moms. Tilbud ganger den med lejefaktoren."
+    "rentalDayPriceHelp": "Listepris pr. dag ekskl. moms. Tilbud ganger den med lejefaktoren.",
+    "manufacturerHelp": "Tom for udstyr vi selv bygger og for generiske dele (kabler, rør); navnet alene er etiketten."
   },
   "itemStatus": {
     "in_house": "På lager",
@@ -659,7 +660,16 @@
     "inTruck": "I bilen",
     "onSiteNote": "Udleveret udstyr er på projektets placering, indtil det modtages igen.",
     "inHouseHint": "Kun {count} af {owned} på lageret i dag",
-    "undoReturn": "Fortryd denne returnering"
+    "undoReturn": "Fortryd denne returnering",
+    "searchGear": "Søg udstyr",
+    "searchGearPlaceholder": "Model, kategori eller tag… Enter tilføjer første match",
+    "searchHint": "{count} modeller og kasser. Skriv for at søge; piletaster og Enter tilføjer uden mus, og et scannet tag finder sin model.",
+    "noMatches": "Intet matcher “{query}”.",
+    "added": "Tilføjet",
+    "onList": "{count} på listen",
+    "inHouseOf": "{inHouse} af {owned} hjemme",
+    "kitOnList": "På listen",
+    "addIntoCase": "I kasse"
   },
   "retiredReason": {
     "sold": "Solgt",
@@ -938,5 +948,11 @@
     "projectQuoteHelp": "Udstyrslinjerne kommer fra reservationerne; brug {edit} på en reservation for at ændre dagspris eller rabat.",
     "dayWord": "dag",
     "daysWord": "dage"
+  },
+  "theme": {
+    "label": "Udseende",
+    "light": "Lys",
+    "dark": "Mørk",
+    "system": "System"
   }
 }

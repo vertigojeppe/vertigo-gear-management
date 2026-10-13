@@ -59,7 +59,7 @@ describe("importer commit", () => {
     expect(ops.filter((o) => o.type === "unit").length).toBeGreaterThanOrEqual(11); // controllers, projectors, KITO, fobs (+ EclGallery when the model is new)
 
     const true1 = await prisma.model.findFirstOrThrow({ where: { name: `True1 ${M} kabler 5 m` }, include: { category: { include: { parent: true } }, items: { orderBy: { quantity: "desc" } } } });
-    expect(true1).toMatchObject({ manufacturer: "Generic", trackingType: "bulk", rentalDayPrice: expect.anything(), importSource: "LED - SCROLLER - BOX!F6" });
+    expect(true1).toMatchObject({ manufacturer: "", trackingType: "bulk", rentalDayPrice: expect.anything(), importSource: "LED - SCROLLER - BOX!F6" });
     expect(Number(true1.weightKg)).toBe(0.5);
     expect(Number(true1.rentalDayPrice)).toBe(25);
     expect(true1.category.name).toBe(`True1 ${M}`);
@@ -114,7 +114,7 @@ describe("importer commit", () => {
     const wb = await readWorkbook(await fixtureBytes(M), fileName);
     const ctx = await importer.context();
     expect(ctx.existingTags.has("W6-91")).toBe(true);
-    expect(ctx.existingModels.has(modelKey("Generic", `True1 ${M} kabler 5 m`))).toBe(true);
+    expect(ctx.existingModels.has(modelKey("", `True1 ${M} kabler 5 m`))).toBe(true);
     const plan = buildPlan(wb, ctx);
     expect(plan.rows.find((r) => r.key === "LED - SCROLLER - BOX:6")?.bucket).toBe("decision");
     const result = await applyOps(admin, resolveOps(plan, { "loan:1": "closed" }), fileName);
@@ -125,7 +125,7 @@ describe("importer commit", () => {
   it("adds units to an existing model when told to", async () => {
     const wb = await readWorkbook(await fixtureBytes(M), fileName);
     const plan = buildPlan(wb, await importer.context());
-    const key = modelKey("Generic", `True1 ${M} kabler 5 m`);
+    const key = modelKey("", `True1 ${M} kabler 5 m`);
     const ops = resolveOps(plan, { "LED - SCROLLER - BOX:6": "add", "loan:1": "closed" }).filter((o) => "modelKey" in o && o.modelKey === key);
     const result = await applyOps(admin, ops, fileName);
     created.push(result.created);

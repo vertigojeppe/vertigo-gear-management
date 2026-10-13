@@ -11,6 +11,7 @@ import { items as inventoryItems } from "@/modules/inventory/service";
 import { type CheckOutcome, type PackingStatus } from "../../../config/app.config";
 import { canCheckIn, canCheckOut, canEditLines, canPack, lineProgress, listProgress, outcomeItemStatus } from "./logic";
 import type { CheckInInput, LineInput, LineUpdateInput, PackingListInput, TemplateInput, TemplateLineInput, TickInput } from "./schema";
+import { modelLabel } from "@/lib/format";
 
 export class PackingError extends Error {
   constructor(
@@ -31,7 +32,7 @@ async function loadList(listId: string) {
 }
 
 function lineLabel(line: { quantity: number; model: { manufacturer: string; name: string } }) {
-  return `${line.quantity}× ${line.model.manufacturer} ${line.model.name}`;
+  return `${line.quantity}× ${modelLabel(line.model)}`;
 }
 
 /**
@@ -190,7 +191,7 @@ export const packingLines = {
     const room = owned - (already._sum.quantity ?? 0);
     let quantity = input.quantity;
     if (quantity > room) {
-      if (!opts.clamp) throw new PackingError(`Only ${owned} ${model.manufacturer} ${model.name} exist in the inventory${room < owned ? ` (${owned - room} already on this list)` : ""}.`, "quantity");
+      if (!opts.clamp) throw new PackingError(`Only ${owned} ${modelLabel(model)} exist in the inventory${room < owned ? ` (${owned - room} already on this list)` : ""}.`, "quantity");
       quantity = Math.max(0, room);
       if (quantity === 0) return null;
     }
@@ -232,7 +233,7 @@ export const packingLines = {
       const { owned } = await modelStock(line.modelId);
       const others = await prisma.packingLine.aggregate({ where: { listId: line.listId, modelId: line.modelId, itemId: null, id: { not: line.id } }, _sum: { quantity: true } });
       const room = owned - (others._sum.quantity ?? 0);
-      if (input.quantity > room) throw new PackingError(`Only ${owned} ${line.model.manufacturer} ${line.model.name} exist in the inventory${room < owned ? ` (${owned - room} on other lines)` : ""}.`, "quantity");
+      if (input.quantity > room) throw new PackingError(`Only ${owned} ${modelLabel(line.model)} exist in the inventory${room < owned ? ` (${owned - room} on other lines)` : ""}.`, "quantity");
     }
     const updated = await prisma.packingLine.update({
       where: { id: lineId },
@@ -338,10 +339,10 @@ export const packingChecks = {
     const bulk = item.model.trackingType === "bulk";
     const candidates = lines.filter((l) => l.modelId === item.modelId && (!l.itemId || l.itemId === item.id));
     const open = candidates.find((l) => lineProgress({ quantity: l.quantity, trackingType: bulk ? "bulk" : "serialized", checks: l.checks.map((c) => ({ phase: c.phase as "out" | "in", quantity: c.quantity, outcome: c.outcome })) }).toPack > 0);
-    if (!open) return { status: "not_on_list" as const, tag: item.assetTag, modelId: item.modelId, modelLabel: `${item.model.manufacturer} ${item.model.name}`, alreadyComplete: candidates.length > 0 };
+    if (!open) return { status: "not_on_list" as const, tag: item.assetTag, modelId: item.modelId, modelLabel: `${modelLabel(item.model)}`, alreadyComplete: candidates.length > 0 };
     try {
       const check = await packingChecks.tick(actor, { lineId: open.id, itemId: item.id, quantity: undefined });
-      return { status: "ticked" as const, tag: item.assetTag, lineId: open.id, quantity: check.quantity, modelLabel: `${item.model.manufacturer} ${item.model.name}` };
+      return { status: "ticked" as const, tag: item.assetTag, lineId: open.id, quantity: check.quantity, modelLabel: `${modelLabel(item.model)}` };
     } catch (err) {
       return { status: "error" as const, tag: item.assetTag, message: err instanceof Error ? err.message : String(err) };
     }
@@ -417,7 +418,7 @@ export const packingChecks = {
       entityType: "project",
       entityId: project.id,
       action: "checked_in_unit",
-      summary: `${out.line.list.name}: ${qty}× ${out.line.model.manufacturer} ${out.line.model.name}${out.item ? ` (${out.item.assetTag})` : ""} ${outcome}`,
+      summary: `${out.line.list.name}: ${qty}× ${modelLabel(out.line.model)}${out.item ? ` (${out.item.assetTag})` : ""} ${outcome}`,
     });
     return row;
   },
@@ -490,7 +491,7 @@ export async function undoCheckIn(actor: Actor, inCheckId: string) {
     });
   }
   await prisma.packingCheck.delete({ where: { id: inCheckId } });
-  await logActivity(actor, { entityType: "project", entityId: project.id, action: "check_in_undone", summary: `${row.line.list.name}: undid ${row.outcome} return of ${row.quantity}× ${row.line.model.manufacturer} ${row.line.model.name}` });
+  await logActivity(actor, { entityType: "project", entityId: project.id, action: "check_in_undone", summary: `${row.line.list.name}: undid ${row.outcome} return of ${row.quantity}× ${modelLabel(row.line.model)}` });
 }
 
 /* ------------------------------------------------------------------------ */

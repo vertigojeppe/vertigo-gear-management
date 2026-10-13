@@ -205,7 +205,8 @@
     "staff": "Staff",
     "contactsGroup": "Contacts",
     "rentalDayPrice": "Rental day price ({currency})",
-    "rentalDayPriceHelp": "List price per day excl. VAT. Quotes multiply it by the rate-table factor."
+    "rentalDayPriceHelp": "List price per day excl. VAT. Quotes multiply it by the rate-table factor.",
+    "manufacturerHelp": "Leave empty for gear we build ourselves and for generic parts (cables, rods); the name alone is the label."
   },
   "itemStatus": {
     "in_house": "In house",
@@ -659,7 +660,16 @@
     "inTruck": "In the truck",
     "onSiteNote": "Checked-out gear is at the project location until it is checked in.",
     "inHouseHint": "Only {count} of {owned} in house today",
-    "undoReturn": "Undo this return"
+    "undoReturn": "Undo this return",
+    "searchGear": "Search gear",
+    "searchGearPlaceholder": "Model, category or asset tag… Enter adds the first match",
+    "searchHint": "{count} models and kits. Type to search; arrow keys and Enter add without the mouse, and a scanned tag finds its model.",
+    "noMatches": "Nothing matches “{query}”.",
+    "added": "Added",
+    "onList": "{count} on the list",
+    "inHouseOf": "{inHouse} of {owned} in house",
+    "kitOnList": "On the list",
+    "addIntoCase": "Into case"
   },
   "retiredReason": {
     "sold": "Sold",
@@ -938,5 +948,11 @@
     "projectQuoteHelp": "Gear lines come from the reservations; use {edit} on a reservation to change its day price or discount.",
     "dayWord": "day",
     "daysWord": "days"
+  },
+  "theme": {
+    "label": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

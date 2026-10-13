@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { dateToString, addDays } from "@/lib/dates";
 import { appConfig, PHASE_DATES, PROJECT_PHASES, type ProjectPhase } from "../../../config/app.config";
 import { GoogleCalendar, googleConfig, type GoogleEvent } from "./google";
+import { modelLabel } from "@/lib/format";
 
 /**
  * One-way push of projects and rentals to shared Google calendars.
@@ -101,7 +102,7 @@ export async function syncRental(rentalId: string, client?: GoogleCalendar): Pro
     for (const id of Object.values(ids)) await google.delete(cfg.calendars.rentals, id);
     return "deleted";
   }
-  const lines = r.lines.map((l) => `${l.quantity}× ${l.model.manufacturer} ${l.model.name}`).join("\n");
+  const lines = r.lines.map((l) => `${l.quantity}× ${modelLabel(l.model)}`).join("\n");
   const event: GoogleEvent = {
     summary: `Rental – ${r.client.name}${r.status === "returned" ? " (returned)" : ""}`,
     description: `${lines}\n${appUrl(`/rentals/${r.id}`)}`,

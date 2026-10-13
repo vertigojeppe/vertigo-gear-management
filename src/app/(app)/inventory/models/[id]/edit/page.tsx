@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
 import { ModelForm, categoryOptions, modelDetail } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
+import { modelLabel } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Edit model" };
 
@@ -14,7 +15,7 @@ export default async function EditModelPage(props: { params: Promise<{ id: strin
   const t = await getTranslations("inventory");
   const [detail, cats, defs] = await Promise.all([modelDetail(id), categoryOptions(), customFieldDefinitions.forEntity("model")]);
   if (!detail) notFound();
-  const label = `${detail.model.manufacturer} ${detail.model.name}`;
+  const label = `${modelLabel(detail.model)}`;
   return (
     <div className="flex flex-col gap-6">
       <PageHeader

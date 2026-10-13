@@ -48,10 +48,11 @@ test.describe("packing lists", () => {
     const listUrl = page.url();
     const listId = listUrl.split("/").pop()!;
 
-    await page.getByRole("button", { name: "Add gear" }).click();
-    await pickOption(page, "Model", "Martin MAC Aura XB");
-    await page.getByLabel("Quantity").fill("1");
-    await page.getByRole("button", { name: "Add", exact: true }).click();
+    // Type to search, Enter adds the first match; the row then says it was added.
+    await page.getByLabel("Search gear").fill("aura xb");
+    await expect(page.getByText("Lighting › Moving heads", { exact: false }).first()).toBeVisible();
+    await page.getByLabel("Search gear").press("Enter");
+    await expect(page.getByRole("button", { name: "Add Martin MAC Aura XB" })).toHaveText(/Added/);
     await expect(page.getByRole("link", { name: "Martin MAC Aura XB" })).toBeVisible();
 
     // Packing mode: unknown tag is reported, choosing a unit ticks it.
@@ -121,10 +122,11 @@ test.describe("packing lists", () => {
     await page.getByRole("button", { name: "Save" }).click();
     // Creating a template opens it.
     await expect(page.getByRole("heading", { name: `E2E template ${stamp}` })).toBeVisible();
-    await pickOption(page, "Model", "GLP JDC1");
-    await page.getByLabel("Quantity").fill("4");
-    await page.getByRole("button", { name: "Add", exact: true }).click();
-    await expect(page.getByRole("listitem").getByText("GLP JDC1")).toBeVisible();
+    await page.getByLabel("Search gear").fill("jdc1");
+    await page.getByLabel("Quantity GLP JDC1").fill("4");
+    await page.getByRole("button", { name: "Add GLP JDC1" }).click();
+    await expect(page.getByRole("button", { name: "Add GLP JDC1" })).toHaveText(/Added/);
+    await expect(page.getByRole("listitem").getByText("4×")).toBeVisible();
     await page.getByRole("button", { name: "Delete" }).first().click();
     await expect(page).toHaveURL(/\/projects\/packing-templates$/);
   });

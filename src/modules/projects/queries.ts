@@ -6,6 +6,7 @@ import { appConfig, PROJECT_STATUSES } from "../../../config/app.config";
 import { checkRequest, overbookedDays, type AllocationLike } from "./availability";
 import type { ProjectFilters } from "./schema";
 import { allocationsFor, itemsForModel, toProjectDto, type ProjectDto } from "./service";
+import { modelLabel } from "@/lib/format";
 
 const PAGE = appConfig.pageSize;
 
@@ -95,7 +96,7 @@ export async function projectDetail(id: string) {
     reservations.push({
       id: a.id,
       modelId: a.modelId,
-      modelLabel: `${a.model.manufacturer} ${a.model.name}`,
+      modelLabel: `${modelLabel(a.model)}`,
       trackingType: a.model.trackingType,
       quantity: a.quantity,
       startDate: dateToString(a.startDate),
@@ -193,7 +194,7 @@ export async function timeline(from: DateString, to: DateString) {
     const days = overbookedDays(items, allocs, { from, to });
     if (days.length && model) {
       const holders = [...new Set(allocs.filter((a) => days.some((d) => a.startDate <= d.day && a.endDate >= d.day)).map((a) => a.holderName))];
-      conflicts.push({ modelId, modelLabel: `${model.manufacturer} ${model.name}`, days, holders });
+      conflicts.push({ modelId, modelLabel: `${modelLabel(model)}`, days, holders });
     }
   }
   return { bars, conflicts };

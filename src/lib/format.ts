@@ -27,6 +27,11 @@ export function formatMoney(n: number | null | undefined, currency: string = app
   return new Intl.NumberFormat("da-DK", { style: "currency", currency, maximumFractionDigits: 2 }).format(n);
 }
 
+/** "Robe Pointe", or just "BlackLED 1 m" for own-built gear without a manufacturer. */
+export function modelLabel(m: { manufacturer?: string | null; name: string }): string {
+  return [m.manufacturer?.trim(), m.name].filter(Boolean).join(" ");
+}
+
 export function formatNumber(n: number | null | undefined, digits = 2): string {
   if (n === null || n === undefined) return "";
   return new Intl.NumberFormat("da-DK", { maximumFractionDigits: digits }).format(n);

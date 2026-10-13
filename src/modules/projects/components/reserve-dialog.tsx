@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { reserve, type ReserveState } from "../actions";
 import { ConflictNotice } from "@/components/conflict-notice";
+import { modelLabel } from "@/lib/format";
 
 type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string; rentalDayPrice?: number | null };
 
@@ -67,7 +68,7 @@ export function ReserveDialog({
                 <option value="">—</option>
                 {models.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.manufacturer} {m.name}
+                    {modelLabel(m)}
                   </option>
                 ))}
               </NativeSelect>
