@@ -30,8 +30,8 @@ services:
       UPLOAD_DIR: /data/uploads
     ports:
       # Only on this machine: Caddy (below) is the public entrance. Remove the 127.0.0.1
-      # prefix if you run your own reverse proxy on another host.
-      - "127.0.0.1:${APP_PORT:-3000}:3000"
+      # prefix (APP_BIND=0.0.0.0) if you run your own reverse proxy on another host or serve plain HTTP on a LAN.
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000"
     volumes:
       - uploads:/data/uploads
     healthcheck:
@@ -57,7 +57,8 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # CADDYFILE=./Caddyfile.lan in .env for an office server without a public DNS name.
+      - ${CADDYFILE:-./Caddyfile}:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
     profiles: ["prod"]

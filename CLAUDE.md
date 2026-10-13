@@ -383,7 +383,10 @@ a second entry that exports components only and never a service.
 ## Deployment
 
 - `docker compose --profile prod` runs db + app + Caddy; Caddy (`Caddyfile`,
-  `APP_DOMAIN`) terminates HTTPS, the app listens on 127.0.0.1 only. The
+  `APP_DOMAIN`) terminates HTTPS, the app listens on 127.0.0.1 only
+  (`APP_BIND` widens it). `Caddyfile.lan` (`CADDYFILE=./Caddyfile.lan`) uses
+  Caddy's own CA for an office server without a public DNS name (README
+  has the recipe, including the root certificate for phones). The
   container healthcheck and `deploy.yml` poll `GET /api/health`.
 - `scripts/backup.sh` / `scripts/restore.sh`: one tar.gz with `db.sql` and
   `uploads.tar`, optional rclone off-site copy (`BACKUP_REMOTE`). Keep
