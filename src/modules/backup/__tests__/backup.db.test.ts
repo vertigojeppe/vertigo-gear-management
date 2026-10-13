@@ -12,7 +12,10 @@ import { TABLES } from "../tables";
  */
 const admin: Actor = { id: "", email: "", name: "Test Admin", role: "admin" };
 
-describe("backup", () => {
+// Both tests need the database to themselves: the restore wipes and refills it, and the export
+// compares live counts. They run in their own step (npm run test:backup) with BACKUP_RESTORE_TEST=1,
+// never inside the parallel `npm run test` run.
+describe.skipIf(process.env.BACKUP_RESTORE_TEST !== "1")("backup", () => {
   it("exports every table with its row count", async () => {
     admin.id = (await prisma.user.findFirst({ where: { role: "admin" } }))?.id ?? "";
     // Counts are taken before and after: the outbox worker and other sessions may insert rows meanwhile.
@@ -29,7 +32,7 @@ describe("backup", () => {
     await expect(backup.export({ ...admin, role: "member" })).rejects.toThrow();
   });
 
-  it.skipIf(process.env.BACKUP_RESTORE_TEST !== "1")("restores its own export to an identical database", async () => {
+  it("restores its own export to an identical database", async () => {
     admin.id = (await prisma.user.findFirst({ where: { role: "admin" } }))?.id ?? "";
     const before = await backup.export(admin);
     const counts = Object.fromEntries(Object.entries(before.tables).map(([k, v]) => [k, v.length]));

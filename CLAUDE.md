@@ -296,8 +296,10 @@ a second entry that exports components only and never a service.
   (a test compares it with `Prisma.ModelName`; add new models there),
   `backup.export` dumps all rows, `backup.restore` deletes in reverse and
   re-inserts in one transaction (self-referencing tables sorted parents
-  first, nullable Json nulls as `Prisma.DbNull`). Admin only; the
-  round-trip test runs when `BACKUP_RESTORE_TEST=1` (CI).
+  first, nullable Json nulls as `Prisma.DbNull`). Admin only. Its DB
+  tests wipe and refill the database, so they only run alone:
+  `npm run test:backup` with `BACKUP_RESTORE_TEST=1` (a separate CI
+  step), never inside the parallel `npm run test`.
 
 ## Spreadsheet import (Phase 5a)
 

@@ -9,7 +9,6 @@ env:
   AUTH_SECRET: ci-only-secret-not-for-production
   APP_URL: http://localhost:3000
   SEED_PASSWORD: vertigo123
-  BACKUP_RESTORE_TEST: "1"
 
 jobs:
   test:
@@ -47,6 +46,10 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test
+      # The backup round-trip replaces the whole database, so it runs alone, after the parallel suite.
+      - run: npm run test:backup
+        env:
+          BACKUP_RESTORE_TEST: "1"
 
       - run: npm run build
 
