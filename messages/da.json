@@ -1097,5 +1097,14 @@
     "item": "Emne",
     "noLines": "Intet lejet ind til dette projekt.",
     "removeLineConfirm": "Fjern denne indlejelinje?"
+  },
+  "pwa": {
+    "iosHint": "Læg appen på hjemmeskærmen: tryk Del, derefter \"Føj til hjemmeskærm\".",
+    "androidHint": "Installer appen på denne telefon og få fuld skærm med eget ikon.",
+    "install": "Installer",
+    "dismiss": "Luk",
+    "offlineTitle": "Du er offline",
+    "offlineBody": "Appen skal have forbindelse for at vise aktuelle data. Tjek signalet og prøv igen.",
+    "retry": "Prøv igen"
   }
 }

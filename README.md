@@ -57,6 +57,12 @@ start, and help text under the fields that need it. The short version:
 - **Scan** (phone): point the camera at a tag, or type it. Browsers only
   allow the camera over HTTPS (or localhost), so in production put the app
   behind HTTPS and in development use `npm run dev:https`.
+- **On the phone**: the app installs on the home screen. iPhone: open it
+  in Safari, Share › *Add to Home Screen*. Android: Chrome offers
+  *Install* (the app also shows the hint). It then opens full-screen with
+  its own icon, the camera scanner works, and the home-screen icon has
+  shortcuts to Scan, Projects and Inventory. Without a connection it
+  shows an offline page; data is never cached.
 - **Settings › Extra fields**: add your own fields to models and items,
   for every category or just one (projectors get lumen and throw ratio,
   LED controllers get IP and firmware, and so on).

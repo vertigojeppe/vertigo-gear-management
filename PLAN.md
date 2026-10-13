@@ -338,6 +338,10 @@ GearGuys projector rows; nothing on the spreadsheet is parked any more.
 **Tests:** links and forms, catalog → line → quote round-trip (DB),
 importer plan, browser flow.
 
+### Installable on phones ✅ (2026-10-13)
+Web manifest, icons, service worker with an offline page, iOS and
+Android install hints. Same app, installed on the home screen; no store.
+
 ### Next
 Whatever using the app at Vertigo turns up (see `BACKLOG.md`).
 

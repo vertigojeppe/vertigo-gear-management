@@ -1097,5 +1097,14 @@
     "item": "Item",
     "noLines": "Nothing rented in for this project.",
     "removeLineConfirm": "Remove this rent-in line?"
+  },
+  "pwa": {
+    "iosHint": "Put the app on your home screen: tap Share, then \"Add to Home Screen\".",
+    "androidHint": "Install the app on this phone for a full-screen view with its own icon.",
+    "install": "Install",
+    "dismiss": "Dismiss",
+    "offlineTitle": "You are offline",
+    "offlineBody": "The app needs a connection to show live data. Check the signal and try again.",
+    "retry": "Try again"
   }
 }
