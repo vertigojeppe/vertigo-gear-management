@@ -27,10 +27,14 @@ import {
   shareLinks,
   templateOptions,
   type LineProgress,
+  listTitle,
 } from "@/modules/packing";
 import { PACKING_STATUSES } from "../../../../../../../config/app.config";
 
-export const metadata: Metadata = { title: "Packing list" };
+export async function generateMetadata(props: { params: Promise<{ id: string; listId: string }> }): Promise<Metadata> {
+  const { listId } = await props.params;
+  return { title: (await listTitle(listId)) ?? "Packing list" };
+}
 
 function linePillColor(status: string, p: LineProgress): "green" | "amber" | "red" | "gray" {
   if (status === "draft") return p.toPack === 0 ? "green" : p.packed > 0 ? "amber" : "gray";

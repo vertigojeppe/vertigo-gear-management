@@ -1104,7 +1104,9 @@
     "install": "Installer",
     "dismiss": "Luk",
     "offlineTitle": "Du er offline",
-    "offlineBody": "Appen skal have forbindelse for at vise aktuelle data. Tjek signalet og prøv igen.",
-    "retry": "Prøv igen"
+    "offlineBody": "Appen skal have forbindelse for at vise aktuelle data. Pakkelister du har åbnet, ligger på telefonen og kan læses herunder.",
+    "retry": "Prøv igen",
+    "savedLists": "Pakkelister på denne telefon",
+    "savedListsHelp": "Som de så ud, da de sidst blev åbnet. Afkrydsning og indtjek kræver forbindelse."
   }
 }

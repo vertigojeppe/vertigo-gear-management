@@ -61,8 +61,10 @@ start, and help text under the fields that need it. The short version:
   in Safari, Share › *Add to Home Screen*. Android: Chrome offers
   *Install* (the app also shows the hint). It then opens full-screen with
   its own icon, the camera scanner works, and the home-screen icon has
-  shortcuts to Scan, Projects and Inventory. Without a connection it
-  shows an offline page; data is never cached.
+  shortcuts to Scan, Projects and Inventory. Packing lists you have
+  opened stay readable on the phone without a connection (as they were
+  when last opened; ticking needs a connection); everything else shows an
+  offline page that lists them. Nothing else is cached.
 - **Settings › Extra fields**: add your own fields to models and items,
   for every category or just one (projectors get lumen and throw ratio,
   LED controllers get IP and firmware, and so on).

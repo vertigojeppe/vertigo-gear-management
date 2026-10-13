@@ -402,10 +402,16 @@ a second entry that exports components only and never a service.
   light/dark `themeColor`.
 - `public/sw.js` is the service worker: navigations go to the network and
   fall back to `/offline` (a public page) when it is unreachable; only
-  `/_next/static` and the icons are cached. API responses, PDFs and
-  uploads are never cached. `RegisterServiceWorker` (root layout)
-  registers it in production only. Bump `VERSION` in `sw.js` when the
-  caching rules change.
+  `/_next/static` and the icons are cached. The one exception is packing
+  lists: every `/projects/<id>/packing/<listId>` page and its
+  `list.pdf` that was opened is kept in the pages cache (last 20, with
+  an index of titles at `/__offline-index`, built from the page's
+  `<title>`, which `generateMetadata` sets from `listTitle`), and
+  served when the network fails; `/offline` lists them (`SavedLists`).
+  Reading only: ticks, check-out and check-in are server actions and need
+  a connection. Other API responses and uploads are never cached.
+  `RegisterServiceWorker` (root layout) registers it in production only.
+  Bump `VERSION` in `sw.js` when the caching rules change.
 - `proxy.ts` lets `/manifest.webmanifest`, `/sw.js` and `/offline`
   through without a session. `InstallHint` (phone layout) shows the iOS
   "Share › Add to Home Screen" text or Android's install prompt until

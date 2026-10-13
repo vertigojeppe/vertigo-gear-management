@@ -23,11 +23,53 @@ test.describe("installable app", () => {
   test("the service worker installs and caches the offline page", async ({ page, context, browserName }) => {
     test.skip(browserName !== "chromium", "service workers are observable in Chromium only");
     await page.goto("/login");
-    // Registered by hand: the layout only registers it in production builds.
-    const [worker] = await Promise.all([context.waitForEvent("serviceworker", { timeout: 15_000 }), page.evaluate(() => navigator.serviceWorker.register("/sw.js", { scope: "/" }))]);
-    expect(worker.url()).toContain("/sw.js");
+    // Registered by hand: the layout only registers it in production builds (where it may already have done so).
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      await navigator.serviceWorker.ready;
+    });
+    await expect.poll(() => context.serviceWorkers().length).toBeGreaterThan(0);
+    expect(context.serviceWorkers()[0].url()).toContain("/sw.js");
     await expect.poll(async () => page.evaluate(async () => (await caches.keys()).some((k) => k.startsWith("vg-shell")))).toBe(true);
     await expect.poll(async () => page.evaluate(async () => Boolean(await caches.match("/offline")))).toBe(true);
+  });
+
+  test("a packing list that was opened stays readable offline", async ({ page, context, browserName }) => {
+    test.skip(browserName !== "chromium", "service workers are observable in Chromium only");
+    await page.goto("/login");
+    await page.getByLabel("Email").fill("member@vertigo.test");
+    await page.getByLabel("Password").fill(process.env.SEED_PASSWORD ?? "vertigo123");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page).toHaveURL(/\/dashboard/);
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      await navigator.serviceWorker.ready;
+    });
+    await expect.poll(() => context.serviceWorkers().length).toBeGreaterThan(0);
+
+    // A list of our own on a throwaway project.
+    const stamp = Date.now().toString(36);
+    await page.goto("/projects/new");
+    await page.getByLabel("Name").fill(`E2E show offline ${stamp}`);
+    await page.getByRole("button", { name: "Create" }).click();
+    await page.getByRole("link", { name: "New packing list" }).click();
+    await page.getByLabel("Name").fill(`Basement ${stamp}`);
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByRole("heading", { name: `Basement ${stamp}` })).toBeVisible();
+    await expect(page).toHaveTitle(new RegExp(`Basement ${stamp} · E2E show offline ${stamp}`));
+    // Loaded through the worker once so it is saved (the first load after registering can bypass it).
+    await page.reload();
+    await expect(page.getByRole("heading", { name: `Basement ${stamp}` })).toBeVisible();
+    const listUrl = page.url();
+    await expect.poll(async () => page.evaluate(async () => (await (await fetch("/__offline-index")).json()).length)).toBeGreaterThan(0);
+
+    await context.setOffline(true);
+    await page.goto(listUrl);
+    await expect(page.getByRole("heading", { name: `Basement ${stamp}` })).toBeVisible();
+    await page.goto("/dashboard");
+    await expect(page.getByRole("heading", { name: "You are offline" })).toBeVisible();
+    await expect(page.getByRole("link", { name: new RegExp(`Basement ${stamp}`) })).toBeVisible();
+    await context.setOffline(false);
   });
 
   test("the page declares the manifest and the iOS home-screen icon", async ({ page }) => {

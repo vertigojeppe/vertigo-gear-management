@@ -2,7 +2,7 @@
 export { packingLists, packingLines, packingChecks, packingTemplates, shareLinks, undoCheckIn, PackingError } from "./service";
 export { lineProgress, listProgress, listTotals, canEditLines, canPack, canCheckOut, canCheckIn, outcomeItemStatus, isOutcome } from "./logic";
 export type { LineProgress } from "./logic";
-export { listDetail, groupLines, listsForProject, kitOptions, templateOptions, templateDetail, otherListsForCopy, gearCatalog } from "./queries";
+export { listDetail, listTitle, groupLines, listsForProject, kitOptions, templateOptions, templateDetail, otherListsForCopy, gearCatalog } from "./queries";
 export { filterCatalog, groupCatalog } from "./picker";
 export type { CatalogEntry, CatalogGroup } from "./picker";
 export type { ListDetail, LineRow, CheckRow } from "./queries";

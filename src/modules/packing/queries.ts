@@ -171,6 +171,12 @@ export async function listDetail(listId: string) {
 }
 
 export type ListDetail = NonNullable<Awaited<ReturnType<typeof listDetail>>>;
+
+/** Name and project of a list, for the page title (and the offline index the service worker builds from it). */
+export async function listTitle(listId: string): Promise<string | null> {
+  const l = await prisma.packingList.findUnique({ where: { id: listId }, select: { name: true, project: { select: { name: true } } } });
+  return l ? `${l.name} · ${l.project.name}` : null;
+}
 export type SubHireRow = { id: string; label: string; ownerName: string; quantity: number; note: string | null };
 
 /** Lines grouped for display. */
