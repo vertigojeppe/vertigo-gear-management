@@ -1,0 +1,56 @@
+// subhire module
+
+/// Gear a partner company owns that we rent in for our own projects
+/// (GearGuys' Panasonic lenses). Not inventory: no items, no asset tags,
+/// no availability. A line on a project says "rent in N of this from X"
+/// and carries its cost and the price we charge, so the quote and the
+/// packing list are complete.
+model SubHireItem {
+  id             String    @id @default(cuid())
+  ownerContactId String
+  owner          Contact   @relation(fields: [ownerContactId], references: [id], onDelete: Restrict)
+  manufacturer   String    @default("")
+  name           String
+  variant        String?
+  categoryId     String?
+  category       Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  description    String?
+  /// What the owner charges us per day excl. VAT.
+  costPerDay     Decimal?  @db.Decimal(12, 2)
+  /// What we charge the client per day (list); the line snapshots it.
+  rentalDayPrice Decimal?  @db.Decimal(12, 2)
+  /// [{ label, url }] product pages, lens calculators
+  links          Json      @default("[]")
+  notes          String?
+  archived       Boolean   @default(false)
+  /// "Sheet!A1" of the spreadsheet row this came from, when imported.
+  importSource   String?
+  lines          SubHireLine[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([ownerContactId])
+  @@index([manufacturer, name, variant])
+}
+
+/// "Rent in N of this from X" on a project. Dates default to the
+/// project's window; cost and price are snapshots of the catalog item.
+model SubHireLine {
+  id            String      @id @default(cuid())
+  projectId     String
+  project       Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  subHireItemId String
+  item          SubHireItem @relation(fields: [subHireItemId], references: [id], onDelete: Restrict)
+  quantity      Int         @default(1)
+  startDate     DateTime    @db.Date
+  endDate       DateTime    @db.Date
+  costPerDay    Decimal?    @db.Decimal(12, 2)
+  pricePerDay   Decimal?    @db.Decimal(12, 2)
+  discountPct   Decimal?    @db.Decimal(5, 2)
+  note          String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([projectId])
+  @@index([subHireItemId])
+}

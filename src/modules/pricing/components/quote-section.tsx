@@ -66,9 +66,14 @@ export async function QuoteSection({ quote, tables, canEdit, showGear, pdfHref }
                 quote.gearLines.map((l) => (
                   <tr key={l.id}>
                     <td className="px-3 py-2">
-                      <Link href={`/inventory/models/${l.modelId}`} className="hover:underline">
-                        {l.label}
-                      </Link>
+                      {l.modelId ? (
+                        <Link href={`/inventory/models/${l.modelId}`} className="hover:underline">
+                          {l.label}
+                        </Link>
+                      ) : (
+                        <span>{l.label}</span>
+                      )}
+                      {l.subHire?.costPerDay !== null && l.subHire?.costPerDay !== undefined && <span className="ml-1 text-xs text-muted-foreground">({t("subHireCost", { amount: formatMoney(l.subHire.costPerDay) })})</span>}
                       {l.itemTag && <span className="ml-1 font-mono text-xs text-muted-foreground">{l.itemTag}</span>}
                       {l.dayPrice === null && <span className="ml-1 text-xs text-amber-700 dark:text-amber-300">{t("noDayPrice")}</span>}
                       <span className="block text-xs text-muted-foreground">{t("gearLineMath", { price: formatMoney(l.dayPrice ?? 0), factor: totals.factor, quantity: l.quantity })}</span>

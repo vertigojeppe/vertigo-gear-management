@@ -9,7 +9,8 @@ const num = (v: { toNumber(): number } | number | null | undefined): number | nu
 
 export type QuoteGearLine = {
   id: string;
-  modelId: string;
+  /** null for a sub-hire line (no model of ours). */
+  modelId: string | null;
   label: string;
   quantity: number;
   dayPrice: number | null;
@@ -18,6 +19,8 @@ export type QuoteGearLine = {
   discountPct: number | null;
   note: string | null;
   itemTag: string | null;
+  /** Set on lines we rent in: who owns the gear and what it costs us per day. */
+  subHire: { owner: string; costPerDay: number | null } | null;
 } & LinePrice;
 
 export type QuoteExtraLine = { id: string; description: string; quantity: number; unitPrice: number; discountPct: number | null } & LinePrice;
@@ -52,7 +55,7 @@ export async function quoteFor(kind: HolderKind, id: string): Promise<Quote | nu
   if (kind === "project") {
     const p = await prisma.project.findUnique({
       where: { id },
-      include: { client: true, rateTable: { include: { tiers: true } }, extraLines: { orderBy: { sortOrder: "asc" } }, allocations: { include: { model: { select: { manufacturer: true, name: true, variant: true, rentalDayPrice: true } }, item: { select: { assetTag: true } } }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }] } },
+      include: { client: true, rateTable: { include: { tiers: true } }, extraLines: { orderBy: { sortOrder: "asc" } }, allocations: { include: { model: { select: { manufacturer: true, name: true, variant: true, rentalDayPrice: true } }, item: { select: { assetTag: true } } }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }] }, subHireLines: { include: { item: { include: { owner: { select: { name: true } } } } }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }] } },
     });
     if (!p) return null;
     const window = p.reserveFrom && p.reserveTo ? { from: dateToString(p.reserveFrom), to: dateToString(p.reserveTo) } : null;
@@ -66,7 +69,11 @@ export async function quoteFor(kind: HolderKind, id: string): Promise<Quote | nu
       terms: p.terms,
       deposit: null,
       notes: null,
-      gear: p.allocations.map((a) => ({ id: a.id, modelId: a.modelId, label: `${modelLabel(a.model)}`, quantity: a.quantity, dayPrice: num(a.pricePerDay), listDayPrice: num(a.model.rentalDayPrice), discountPct: num(a.discountPct), note: a.note, itemTag: a.item?.assetTag ?? null })),
+      gear: [
+        ...p.allocations.map((a) => ({ id: a.id, modelId: a.modelId, label: `${modelLabel(a.model)}`, quantity: a.quantity, dayPrice: num(a.pricePerDay), listDayPrice: num(a.model.rentalDayPrice), discountPct: num(a.discountPct), note: a.note, itemTag: a.item?.assetTag ?? null, subHire: null })),
+        // Rented-in gear is charged like our own; the owner is named on the line.
+        ...p.subHireLines.map((l) => ({ id: l.id, modelId: null, label: `${modelLabel(l.item)} (rent in from ${l.item.owner.name})`, quantity: l.quantity, dayPrice: num(l.pricePerDay), listDayPrice: num(l.item.rentalDayPrice), discountPct: num(l.discountPct), note: l.note, itemTag: null, subHire: { owner: l.item.owner.name, costPerDay: num(l.costPerDay) } })),
+      ],
       extra: p.extraLines,
     });
   }
@@ -85,7 +92,7 @@ export async function quoteFor(kind: HolderKind, id: string): Promise<Quote | nu
     terms: r.terms,
     deposit: num(r.deposit),
     notes: r.notes,
-    gear: r.lines.map((l) => ({ id: l.id, modelId: l.modelId, label: `${modelLabel(l.model)}`, quantity: l.quantity, dayPrice: num(l.pricePerDay), listDayPrice: num(l.model.rentalDayPrice), discountPct: num(l.discountPct), note: l.note, itemTag: l.item?.assetTag ?? null })),
+    gear: r.lines.map((l) => ({ id: l.id, modelId: l.modelId, label: `${modelLabel(l.model)}`, quantity: l.quantity, dayPrice: num(l.pricePerDay), listDayPrice: num(l.model.rentalDayPrice), discountPct: num(l.discountPct), note: l.note, itemTag: l.item?.assetTag ?? null, subHire: null })),
     extra: r.extraLines,
   });
 }

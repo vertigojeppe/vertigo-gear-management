@@ -11,7 +11,7 @@ external rentals. Full spec: `SPEC.md`; the spreadsheet we migrate from and
 what it implies: `MIGRATION.md`. Plan and data model: `PLAN.md`. Why things are the way they are: `DECISIONS.md`. Ideas:
 `BACKLOG.md`. Data model diagram: `docs/ARCHITECTURE.md`.
 
-Current phase: **wish list and purchase records done** (after 5b). Next: sub-hire catalog (BACKLOG.md).
+Current phase: **October spec update done** (wish list, purchase records, sub-hire after 5b). Next: whatever use at Vertigo turns up (BACKLOG.md).
 
 ## Stack
 
@@ -318,6 +318,29 @@ a second entry that exports components only and never a service.
 - The importer writes the projector "Ønsker" rows and the Dirverse castor
   references as `WishOp`s (idempotent on `importSource` + name).
 
+## Sub-hire catalog
+
+- `SubHireItem` (`src/modules/subhire`) is gear a partner company owns
+  that we rent in: owner (a company contact, required), the model fields,
+  `costPerDay` (what they charge us) and `rentalDayPrice` (what we
+  charge), links, archived flag. Not inventory: no items, no availability.
+  Catalog page `/inventory/subhire` (inventory tab; `inventory.write`).
+- `SubHireLine` is "rent in N of this from X" on a project
+  (`projects.write`): dates default to the window, cost and price are
+  snapshots of the item (filled from it when left empty). Lines are
+  removed with the project; an item on a line cannot be deleted, only
+  archived.
+- Where they surface: `quoteFor("project")` adds them as gear lines with
+  `modelId: null`, the owner in the label and `subHire: { owner,
+  costPerDay }` for the internal view (`QuoteGearLine.modelId` is
+  nullable; link only when set). `listDetail` returns them as
+  `subHire` and the packing page, PDF and share page list them under
+  "Rented in"; they are never packing lines, so nothing is ticked or
+  checked in for them.
+- The importer writes the GearGuys projector rows as `SubHireOp`s (owner
+  contact GearGuys, the sheet's day price as our charge), idempotent on
+  `importSource` + name. Nothing on the current sheet is parked any more.
+
 ## Purchase records
 
 - `Purchase` (`src/modules/purchases`): one row per quote / order /
@@ -371,6 +394,31 @@ a second entry that exports components only and never a service.
 - Login is rate-limited in `src/app/(auth)/login/actions.ts` with the
   in-memory `loginLimiter` (`src/lib/rate-limit.ts`): ten failures per
   email + address, then fifteen minutes. One process, no store.
+
+## Installable on phones (PWA)
+
+- `src/app/manifest.ts` serves `/manifest.webmanifest` (standalone,
+  start at `/dashboard`, shortcuts to Scan / Projects / Inventory);
+  icons are PNGs in `public/icons/` rendered by
+  `npx tsx scripts/make-icons.ts` (committed, re-run after changing the
+  mark). The root layout sets `manifest`, `appleWebApp` and the
+  light/dark `themeColor`.
+- `public/sw.js` is the service worker: navigations go to the network and
+  fall back to `/offline` (a public page) when it is unreachable; only
+  `/_next/static` and the icons are cached. The one exception is packing
+  lists: every `/projects/<id>/packing/<listId>` page and its
+  `list.pdf` that was opened is kept in the pages cache (last 20, with
+  an index of titles at `/__offline-index`, built from the page's
+  `<title>`, which `generateMetadata` sets from `listTitle`), and
+  served when the network fails; `/offline` lists them (`SavedLists`).
+  Reading only: ticks, check-out and check-in are server actions and need
+  a connection. Other API responses and uploads are never cached.
+  `RegisterServiceWorker` (root layout) registers it in production only.
+  Bump `VERSION` in `sw.js` when the caching rules change.
+- `proxy.ts` lets `/manifest.webmanifest`, `/sw.js` and `/offline`
+  through without a session. `InstallHint` (phone layout) shows the iOS
+  "Share › Add to Home Screen" text or Android's install prompt until
+  installed or dismissed (localStorage).
 
 ## Events, outbox, integrations
 

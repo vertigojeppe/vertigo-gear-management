@@ -26,17 +26,18 @@ export type CommitResult = {
   rateTables: number;
   wishes: number;
   purchases: number;
+  subHireItems: number;
   skipped: string[];
   created: CreatedIds;
 };
-export type CreatedIds = { categories: string[]; models: string[]; items: string[]; contacts: string[]; locations: string[]; clients: string[]; rentals: string[]; rateTables: string[]; wishes: string[]; purchases: string[] };
+export type CreatedIds = { categories: string[]; models: string[]; items: string[]; contacts: string[]; locations: string[]; clients: string[]; rentals: string[]; rateTables: string[]; wishes: string[]; purchases: string[]; subHireItems: string[] };
 
 const SPLIT = /^([^|]*)\|([^|]*)\|(.*)$/;
 
 export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promise<CommitResult> {
   assertCan(actor, "settings.manage");
-  const created: CreatedIds = { categories: [], models: [], items: [], contacts: [], locations: [], clients: [], rentals: [], rateTables: [], wishes: [], purchases: [] };
-  const result: CommitResult = { categories: 0, models: 0, units: 0, bins: 0, kits: 0, contacts: 0, locations: 0, rentals: 0, rateTables: 0, wishes: 0, purchases: 0, skipped: [], created };
+  const created: CreatedIds = { categories: [], models: [], items: [], contacts: [], locations: [], clients: [], rentals: [], rateTables: [], wishes: [], purchases: [], subHireItems: [] };
+  const result: CommitResult = { categories: 0, models: 0, units: 0, bins: 0, kits: 0, contacts: 0, locations: 0, rentals: 0, rateTables: 0, wishes: 0, purchases: 0, subHireItems: 0, skipped: [], created };
   const reason = `Imported from ${fileName}`;
   await prisma.$transaction(
     async (tx) => {
@@ -256,6 +257,19 @@ export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promi
             result.wishes++;
             break;
           }
+          case "subhire": {
+            if (await tx.subHireItem.findFirst({ where: { importSource: op.importSource, name: { equals: op.name, mode: "insensitive" } }, select: { id: true } })) {
+              result.skipped.push(`${op.manufacturer} ${op.name} (sub-hire item exists)`.trim());
+              break;
+            }
+            const ownerContactId = await ensureContact(op.ownerName, "company", undefined, op.importSource);
+            const categoryId = op.categoryPath ? await ensureCategory(op.categoryPath) : null;
+            // The sheet's day price is what we charge; what GearGuys charges us is not on the sheet.
+            const item = await tx.subHireItem.create({ data: { ownerContactId, manufacturer: op.manufacturer, name: op.name, variant: op.variant, categoryId, description: op.description, rentalDayPrice: op.costPerDay, importSource: op.importSource } });
+            created.subHireItems.push(item.id);
+            result.subHireItems++;
+            break;
+          }
           case "purchase": {
             const modelId = await modelFor(op.modelKey).catch(() => null);
             if (!modelId) {
@@ -305,7 +319,7 @@ export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promi
           entityType: "settings",
           entityId: "import",
           action: "spreadsheet_imported",
-          summary: `Imported ${fileName}: ${result.categories} categories, ${result.models} models, ${result.units} units, ${result.bins} bins, ${result.kits} cases, ${result.contacts} contacts, ${result.locations} locations, ${result.rentals} rentals, ${result.rateTables} rate tables, ${result.wishes} wishes, ${result.purchases} purchase records`,
+          summary: `Imported ${fileName}: ${result.categories} categories, ${result.models} models, ${result.units} units, ${result.bins} bins, ${result.kits} cases, ${result.contacts} contacts, ${result.locations} locations, ${result.rentals} rentals, ${result.rateTables} rate tables, ${result.wishes} wishes, ${result.purchases} purchase records, ${result.subHireItems} sub-hire items`,
           details: { fileName, skipped: result.skipped, created },
         },
         tx,

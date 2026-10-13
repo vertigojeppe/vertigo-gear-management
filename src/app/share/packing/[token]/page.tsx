@@ -18,7 +18,7 @@ export default async function SharedPackingListPage(props: { params: Promise<{ t
   const detail = await listDetail(link.targetId);
   if (!detail) notFound();
   const t = await getTranslations("packing");
-  const { list, project, lines, totals, progress } = detail;
+  const { list, project, lines, totals, progress, subHire } = detail;
   const groups = groupLines(lines, list.groupBy);
 
   return (
@@ -56,6 +56,25 @@ export default async function SharedPackingListPage(props: { params: Promise<{ t
           </ul>
         </section>
       ))}
+      {subHire.length > 0 && (
+        <section className="mt-5">
+          <h2 className="border-b pb-1 text-sm font-medium">{t("rentedIn")}</h2>
+          <ul className="divide-y text-sm">
+            {subHire.map((l) => (
+              <li key={l.id} className="flex items-start gap-3 py-1.5">
+                <span className="w-10 shrink-0 text-right font-medium">{l.quantity}×</span>
+                <span className="min-w-0 flex-1">
+                  {l.label}
+                  <span className="block text-xs text-muted-foreground">
+                    {t("rentInFrom", { owner: l.ownerName })}
+                    {l.note ? ` · ${l.note}` : ""}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {list.notes && <p className="mt-6 whitespace-pre-line text-sm text-muted-foreground">{list.notes}</p>}
     </main>
   );

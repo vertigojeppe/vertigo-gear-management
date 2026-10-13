@@ -31,10 +31,10 @@ describe("buildPlan", () => {
     expect(byKey["ctl:4"]).toMatchObject({ bucket: "decision" });
     expect(byKey["ctl:4"].decision?.options.map((o) => o.key)).toEqual(["keep", "skip"]);
     expect(byKey["ctl:5"].assumption).toMatch(/unverified/);
-    // Projectors: loan + sold, GearGuys parked, the wish row goes on the wish list.
+    // Projectors: loan + sold, the GearGuys row goes in the sub-hire catalog, the wish row on the wish list.
     expect(byKey["proj:7"].assumption).toMatch(/with Lasse/);
     expect(byKey["proj:8"].assumption).toMatch(/retired, reason sold/);
-    expect(byKey["proj:10"]).toMatchObject({ bucket: "parked", parked: { feature: "Sub-hire catalog" } });
+    expect(byKey["proj:10"]).toMatchObject({ bucket: "assumption", ops: [{ type: "contact", name: "GearGuys", kind: "company" }, { type: "subhire", ownerName: "GearGuys", manufacturer: "Barco", name: "UDX-4K32", description: "throw 0.8:1 · 4K", categoryPath: ["Video", "Projectors"] }] });
     expect(byKey["proj:12"]).toMatchObject({ bucket: "assumption", ops: [{ type: "wish", manufacturer: "Epson", name: "EB-L1755U", rentalDayPrice: 1200, categoryPath: ["Video", "Projectors"] }] });
     // Fobs: user match, missing, contact.
     expect(byKey["fob:2"].assumption).toMatch(/matched to user Alex Admin/);
@@ -59,7 +59,7 @@ describe("buildPlan", () => {
     // Rate tables are imported with the rule beyond the last tier stated.
     expect(byKey["rate:Standard"]).toMatchObject({ bucket: "assumption", ops: [expect.objectContaining({ type: "rateTable", name: "Standard", isDefault: true, extraRule: "per_day", extraFactor: 0.1, tiers: [{ days: 1, factor: 1 }, { days: 2, factor: 1.5 }, { days: 5, factor: 2.7 }] })] });
     expect(byKey["rate:Theatre"].ops[0]).toMatchObject({ type: "rateTable", extraRule: "per_10_days", extraFactor: 0.5, isDefault: false });
-    expect(plan.counts.parked).toBe(1);
+    expect(plan.counts.parked).toBe(0);
     expect(plan.counts.decision).toBe(5);
     expect(plan.counts.import + plan.counts.assumption + plan.counts.decision + plan.counts.parked).toBe(plan.rows.length);
     expect(plan.fileName).toBe("fixture.xlsx");

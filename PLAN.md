@@ -329,9 +329,23 @@ quotes into purchase records line by line.
 **Tests:** net price rule and service round-trip (DB), quote title and
 line parsing, importer plan, browser flow.
 
+### Sub-hire catalog ✅ (2026-10-13)
+Inventory › Sub-hire: gear partners own, with owner, cost and our day
+price. "Rent in" lines on a project, priced on the quote like our own
+gear with the owner named, listed under "Rented in" on packing lists,
+their PDF and the shared view. The importer fills the catalog from the
+GearGuys projector rows; nothing on the spreadsheet is parked any more.
+**Tests:** links and forms, catalog → line → quote round-trip (DB),
+importer plan, browser flow.
+
+### Installable on phones ✅ (2026-10-13)
+Web manifest, icons, service worker with an offline page, iOS and
+Android install hints. Same app, installed on the home screen; no store.
+Packing lists that were opened stay readable offline (page and PDF, the
+last 20), listed on the offline page.
+
 ### Next
-The sub-hire catalog (the last item of the October spec update, see
-`BACKLOG.md`), then whatever using the app at Vertigo turns up.
+Whatever using the app at Vertigo turns up (see `BACKLOG.md`).
 
 ## 6. Decisions I will make unless you object
 

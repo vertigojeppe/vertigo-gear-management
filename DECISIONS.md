@@ -425,3 +425,36 @@ visible only with `inventory.finance`, the permission that already hides
 unit purchase prices from viewers, so the two never disagree. They are
 separate from the per-unit purchase fields on Item, which serve
 insurance value and age, not procurement.
+
+## 2026-10-13 — Rented-in gear is a catalog, not inventory
+
+Gear GearGuys owns never becomes a Model with Items: it has no asset
+tags, is never in our warehouse and must not count in availability. A
+sub-hire catalog item is a separate table with the same naming fields,
+and a line on a project says how many we rent in and for which dates.
+Lines reach the two documents that must be complete: the quote (priced
+like our own gear, the owner in the label, the cost kept for the
+internal view) and the packing list (a "Rented in" block, never ticked,
+since those boxes are collected at the partner's door, not packed from
+our shelves). Sub-hire is for own projects only; an external rental of
+someone else's gear is a different business.
+
+## 2026-10-13 — A phone app means the installed web app
+
+The phone app is the web app installed on the home screen (web manifest,
+service worker), not a store app. The phone layout, the camera scanner
+and HTTPS were already there, so installing is the only missing step;
+a wrapped store app (Capacitor) would add an Apple developer account, a
+Mac for the builds and review cycles for every release, for a team of
+five. The service worker caches only hashed build assets and the offline
+page: every screen shows live data behind login, so caching pages or API
+responses would show stale stock and reservations. If native features
+(NFC tags, offline packing) are wanted later, wrapping this same app is
+the path, not a second code base.
+
+Packing lists are the one thing kept offline: a crew in a basement needs
+to read what goes in the truck, and a list read a little stale is better
+than no list. Pages and PDFs that were opened are cached as they were;
+ticking and check-in stay online-only so progress is never recorded
+twice or lost. Everything else (stock, reservations) would mislead when
+stale, so it is not cached.

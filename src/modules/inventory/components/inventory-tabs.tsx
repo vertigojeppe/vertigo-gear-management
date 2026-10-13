@@ -11,6 +11,7 @@ const TABS = [
   { key: "categories", href: "/inventory/categories" },
   { key: "locations", href: "/inventory/locations" },
   { key: "wishlist", href: "/inventory/wishlist" },
+  { key: "subhire", href: "/inventory/subhire" },
 ] as const;
 
 /** Sub-navigation shared by the inventory list pages. */

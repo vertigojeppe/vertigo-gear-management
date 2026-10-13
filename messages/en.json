@@ -239,7 +239,8 @@
     "labelsSingleNote": "{count, plural, one {# page} other {# pages}} of one label each, sized for the roll. Set the printer's paper size to the label.",
     "openLabelsPdf": "Open PDF",
     "wishlist": "Wish list",
-    "newModelFromWish": "New model from the wish list"
+    "newModelFromWish": "New model from the wish list",
+    "subhire": "Sub-hire"
   },
   "itemStatus": {
     "in_house": "In house",
@@ -705,7 +706,9 @@
     "inHouseOf": "{inHouse} of {owned} in house",
     "kitOnList": "On the list",
     "addIntoCase": "Into case",
-    "variantCount": "{count, plural, one {# variant} other {# variants}}"
+    "variantCount": "{count, plural, one {# variant} other {# variants}}",
+    "rentedIn": "Rented in",
+    "rentInFrom": "rent in from {owner}"
   },
   "retiredReason": {
     "sold": "Sold",
@@ -888,7 +891,7 @@
     "reading": "Reading…",
     "howTitle": "How it works",
     "how1": "Every sheet is read: cables, LED, controllers, projectors, computers, truss, stands, rods, loans, key fobs.",
-    "how2": "The preview sorts rows into: will import, imported with an assumption (shown), needs a decision (you choose), and parked (sub-hire comes later).",
+    "how2": "The preview sorts rows into: will import, imported with an assumption (shown), needs a decision (you choose), and parked (kept for a later feature; nothing on the current sheet).",
     "how3": "Rows for models or tags that already exist are skipped unless you say otherwise, so re-running an export is safe.",
     "how4": "Every imported model, unit, contact and location remembers its cell (Sheet!A1).",
     "previewTitle": "Import preview",
@@ -907,7 +910,7 @@
     "confirm": "Import {count} rows",
     "importing": "Importing…",
     "done": "Import finished.",
-    "doneCounts": "{categories} categories, {models} models, {units} units, {bins} bulk bins, {kits} cases, {contacts} contacts, {locations} locations, {rentals} rentals, {rateTables} rate tables, {wishes} wishes, {purchases} purchase records created.",
+    "doneCounts": "{categories} categories, {models} models, {units} units, {bins} bulk bins, {kits} cases, {contacts} contacts, {locations} locations, {rentals} rentals, {rateTables} rate tables, {wishes} wishes, {purchases} purchase records, {subHireItems} sub-hire items created.",
     "skipped": "Skipped",
     "openInventory": "Open inventory",
     "another": "Import another spreadsheet"
@@ -983,7 +986,8 @@
     "gearLinesSummary": "{count, plural, one {# gear line} other {# gear lines}} (above)",
     "projectQuoteHelp": "Gear lines come from the reservations; use {edit} on a reservation to change its day price or discount.",
     "dayWord": "day",
-    "daysWord": "days"
+    "daysWord": "days",
+    "subHireCost": "costs us {amount}/day"
   },
   "theme": {
     "label": "Appearance",
@@ -1054,5 +1058,55 @@
     "addedBy": "Added by {name}, {date}",
     "backToModel": "Back to the model",
     "deleteConfirm": "Remove this purchase record and its attachments?"
+  },
+  "subhire": {
+    "title": "Rent in",
+    "help": "Gear partner companies own that we rent in for our own projects. Add it to a project as a \"rent in\" line and it appears on the quote and the packing list.",
+    "newItem": "New sub-hire item",
+    "editItem": "Edit sub-hire item",
+    "itemHelp": "A catalog entry, not inventory: no units, no asset tags.",
+    "owner": "Owned by",
+    "ownerHelp": "A company under Settings › Contacts.",
+    "name": "Name",
+    "costPerDay": "Cost per day",
+    "costPerDayHelp": "What they charge us, excl. VAT.",
+    "rentalDayPrice": "Our day price",
+    "rentalDayPriceHelp": "What we charge the client; defaults to the cost when empty.",
+    "description": "Description",
+    "descriptionHelp": "Throw ratio, lens shift, resolution, whatever helps pick it.",
+    "links": "Links",
+    "linksHelp": "One per line: \"Label | https://…\" or just the address.",
+    "notes": "Notes",
+    "archived": "Archived (hidden from the rent-in list)",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "showArchived": "Show archived",
+    "hideArchived": "Hide archived",
+    "noOwners": "Add the partner company as a contact first:",
+    "contacts": "Contacts",
+    "empty": "Nothing in the sub-hire catalog",
+    "emptyBody": "Add the gear you regularly rent in from partners, with who owns it and what it costs per day.",
+    "rentInFrom": "rent in from {owner}",
+    "costShort": "cost {amount}/day",
+    "priceShort": "our price {amount}/day",
+    "onProjects": "on {count} project lines",
+    "deleteConfirm": "Remove this item from the catalog?",
+    "rentIn": "Rent in",
+    "rentInHelp": "Rented-in gear is priced like our own on the quote; the cost is only shown to you.",
+    "editLine": "Edit rent-in line",
+    "item": "Item",
+    "noLines": "Nothing rented in for this project.",
+    "removeLineConfirm": "Remove this rent-in line?"
+  },
+  "pwa": {
+    "iosHint": "Put the app on your home screen: tap Share, then \"Add to Home Screen\".",
+    "androidHint": "Install the app on this phone for a full-screen view with its own icon.",
+    "install": "Install",
+    "dismiss": "Dismiss",
+    "offlineTitle": "You are offline",
+    "offlineBody": "The app needs a connection to show live data. Packing lists you opened are kept on this phone and can be read below.",
+    "retry": "Try again",
+    "savedLists": "Packing lists on this phone",
+    "savedListsHelp": "As they were when last opened. Ticks and check-in need a connection."
   }
 }

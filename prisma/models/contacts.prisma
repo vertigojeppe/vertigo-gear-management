@@ -15,6 +15,7 @@ model Contact {
   importSource String?
   locations    Location[]
   purchases    Purchase[]
+  subHireItems SubHireItem[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

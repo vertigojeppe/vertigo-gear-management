@@ -9,8 +9,7 @@ warnings; external rentals; packing lists with check-out and check-in;
 production plans with documents, 3D viewers and markup; pricing with rate
 tables and quote PDFs; calendar feeds and Google push; the old
 spreadsheet importer; CSV export and whole-database backup. Danish and
-English. Still to come: the sub-hire catalog
-(`BACKLOG.md`). The roadmap and what is done is in `PLAN.md`; why things
+English. Ideas and follow-ups live in `BACKLOG.md`. The roadmap and what is done is in `PLAN.md`; why things
 are the way they are in `DECISIONS.md`.
 
 ## Quick start (development)
@@ -58,6 +57,14 @@ start, and help text under the fields that need it. The short version:
 - **Scan** (phone): point the camera at a tag, or type it. Browsers only
   allow the camera over HTTPS (or localhost), so in production put the app
   behind HTTPS and in development use `npm run dev:https`.
+- **On the phone**: the app installs on the home screen. iPhone: open it
+  in Safari, Share › *Add to Home Screen*. Android: Chrome offers
+  *Install* (the app also shows the hint). It then opens full-screen with
+  its own icon, the camera scanner works, and the home-screen icon has
+  shortcuts to Scan, Projects and Inventory. Packing lists you have
+  opened stay readable on the phone without a connection (as they were
+  when last opened; ticking needs a connection); everything else shows an
+  offline page that lists them. Nothing else is cached.
 - **Settings › Extra fields**: add your own fields to models and items,
   for every category or just one (projectors get lumen and throw ratio,
   LED controllers get IP and firmware, and so on).
@@ -66,6 +73,10 @@ start, and help text under the fields that need it. The short version:
 - **Inventory › Wish list**: gear to buy, with quantity, expected price,
   link and notes. When it arrives, *Convert to model* opens the new-model
   form prefilled; the wish is marked bought and points at the model.
+- **Inventory › Sub-hire**: gear partners own that you rent in (the
+  GearGuys lenses), with owner, cost and your day price. *Rent in* on a
+  project puts it on the quote (priced like your own gear, owner named)
+  and under *Rented in* on the packing list, its PDF and the shared view.
 - **Purchases** on a model (admins and members with the finance
   permission): supplier, date, quote or order number, quantity, list
   price, discount and net price, with the quote PDF attached to the

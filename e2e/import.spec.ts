@@ -30,9 +30,10 @@ test.describe("spreadsheet import", () => {
     // Nothing has been written yet: the plan is only shown.
     await expect(page.getByText("Needs decision", { exact: false }).first()).toBeVisible();
     await expect(page.getByText(/31 here vs 30/)).toBeVisible();
-    // Parked rows are collapsed by default; open the group to see why they are parked.
-    await page.getByRole("button", { name: /Parked/ }).click();
-    await expect(page.getByText(/Sub-hire catalog/)).toBeVisible();
+    // Nothing is parked any more: the GearGuys row goes to the sub-hire catalog, the wish row to the wish list.
+    await expect(page.getByText(/Sub-hire: Barco UDX-4K32/)).toBeVisible();
+    await expect(page.getByText(/Wish list: Epson EB-L1755U/)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Parked \(0\)/ })).toBeVisible();
 
     // The loan was returned, so it must not become a rental.
     const loanRow = page.locator("li", { hasText: `Lånt af Testperson e2e-${stamp}` });

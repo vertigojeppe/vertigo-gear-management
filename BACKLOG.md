@@ -22,17 +22,17 @@ fields) is done; the rest waits until production plans have shipped.
   projects; per-day extra lines (crew per day); editable default terms in
   Settings instead of the translation text; weekly prices are gone (the
   rate table covers them).
-- **Sub-hire catalog**: gear partner companies own that we rent in
-  (GearGuys' Panasonic lenses); sub-hire lines on a packing list marked
-  "rent in from X" with their cost, so list and quote are complete.
+- **Sub-hire follow-ups**: rent-in lines are listed on packing lists but
+  not ticked or checked in (they never pass through our warehouse); a
+  "collected from partner / returned to partner" tick could come later.
+  Sub-hire on external rentals is not supported (own projects only).
 - **Wish list**: models we want to buy (price, link, note), convertible to
   a real model when bought; includes the Dirverse castor references.
 - **Purchase records** per model: supplier (a contact), date, quote/order
   number, list price, discount %, net price, attachment (the Urs quotes).
 - **Importer follow-ups** (the importer itself shipped as Phase 5a):
-  the GearGuys projector rows are shown as *parked* in the preview;
-  import them when sub-hire exists (rate tables, wish rows, the castor
-  references and the Urs truss quotes are imported now). The truss
+  nothing is parked any more (rate tables, wish rows, the castor
+  references, the Urs truss quotes and the GearGuys rows all import). The truss
   inventory rows' own list/discount/net columns stay a model note; only
   the quotes become purchase records. Computer
   parts are serialized units without serials; the two media servers'

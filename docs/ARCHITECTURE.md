@@ -27,6 +27,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | settings | CustomFieldDefinition | `customFieldDefinitions.*` |
 | inventory | Category, Model, Item, Location, StatusLog | `categories`, `locations`, `models`, `items`, list/detail queries, forms |
 | contacts | Contact | `contacts`, `contactList`, `personOptions`, contact dialog |
+| subhire | SubHireItem, SubHireLine | `subHireItems`, `subHireLines`, `subHireCatalog`, `subHireLinesFor`, catalog page, rent-in dialog; lines feed `quoteFor` and `listDetail` |
 | purchases | Purchase | `purchases` (create/update/remove), `purchasesForModel`, `purchaseList`, purchase dialog and section, record page with attachments |
 | wishlist | WishItem | `wishes` (create/update/setStatus/markBought/remove), `wishList`, wish dialog; converts through the model form |
 | files | File, Attachment | `files.*`, `AttachmentsSection` |
@@ -133,6 +134,9 @@ erDiagram
   Contact ||--o{ Location : "type=person"
   User ||--o{ Location : "type=person"
   Category ||--o{ CustomFieldDefinition : "scopes"
+  Contact ||--o{ SubHireItem : "owns"
+  SubHireItem ||--o{ SubHireLine : "rented in as"
+  Project ||--o{ SubHireLine : "rents in"
   Model ||--o{ Purchase : "bought as"
   Contact |o--o{ Purchase : "supplier"
   Category |o--o{ WishItem : "wished in"
@@ -142,6 +146,17 @@ erDiagram
     string kind "person | company"
     string name
     string organisation
+  }
+  SubHireItem {
+    string name "model fields; owner is a company contact"
+    decimal costPerDay "what they charge us"
+    decimal rentalDayPrice "what we charge"
+  }
+  SubHireLine {
+    int quantity
+    date startDate
+    date endDate
+    decimal pricePerDay "snapshot"
   }
   Purchase {
     date date

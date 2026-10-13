@@ -239,7 +239,8 @@
     "labelsSingleNote": "{count, plural, one {# side} other {# sider}} med én label hver, i rullens størrelse. Sæt printerens papirstørrelse til labelen.",
     "openLabelsPdf": "Åbn PDF",
     "wishlist": "Ønskeliste",
-    "newModelFromWish": "Ny model fra ønskelisten"
+    "newModelFromWish": "Ny model fra ønskelisten",
+    "subhire": "Indleje"
   },
   "itemStatus": {
     "in_house": "På lager",
@@ -705,7 +706,9 @@
     "inHouseOf": "{inHouse} af {owned} hjemme",
     "kitOnList": "På listen",
     "addIntoCase": "I kasse",
-    "variantCount": "{count, plural, one {# variant} other {# varianter}}"
+    "variantCount": "{count, plural, one {# variant} other {# varianter}}",
+    "rentedIn": "Indlejet",
+    "rentInFrom": "indlejes fra {owner}"
   },
   "retiredReason": {
     "sold": "Solgt",
@@ -888,7 +891,7 @@
     "reading": "Læser…",
     "howTitle": "Sådan virker det",
     "how1": "Alle faner læses: kabler, LED, controllere, projektorer, computere, truss, stativer, rør, udlån, nøglebrikker.",
-    "how2": "Forhåndsvisningen deler rækkerne op i: importeres, importeres med antagelse (vist), kræver beslutning (du vælger), og parkeret (sub-hire kommer senere).",
+    "how2": "Forhåndsvisningen deler rækkerne op i: importeres, importeres med antagelse (vist), kræver beslutning (du vælger), og parkeret (gemt til en senere funktion; intet i det nuværende ark).",
     "how3": "Rækker for modeller eller tags, der allerede findes, springes over, medmindre du vælger andet, så en ny eksport kan køres igen.",
     "how4": "Hver importeret model, enhed, kontakt og lokation husker sin celle (Fane!A1).",
     "previewTitle": "Forhåndsvisning af import",
@@ -907,7 +910,7 @@
     "confirm": "Importér {count} rækker",
     "importing": "Importerer…",
     "done": "Import gennemført.",
-    "doneCounts": "{categories} kategorier, {models} modeller, {units} enheder, {bins} bulk-beholdere, {kits} kasser, {contacts} kontakter, {locations} lokationer, {rentals} udlejninger, {rateTables} lejefaktor-tabeller, {wishes} ønsker, {purchases} indkøb oprettet.",
+    "doneCounts": "{categories} kategorier, {models} modeller, {units} enheder, {bins} bulk-beholdere, {kits} kasser, {contacts} kontakter, {locations} lokationer, {rentals} udlejninger, {rateTables} lejefaktor-tabeller, {wishes} ønsker, {purchases} indkøb, {subHireItems} indlejeemner oprettet.",
     "skipped": "Sprunget over",
     "openInventory": "Åbn lageret",
     "another": "Importér et andet regneark"
@@ -983,7 +986,8 @@
     "gearLinesSummary": "{count, plural, one {# udstyrslinje} other {# udstyrslinjer}} (ovenfor)",
     "projectQuoteHelp": "Udstyrslinjerne kommer fra reservationerne; brug {edit} på en reservation for at ændre dagspris eller rabat.",
     "dayWord": "dag",
-    "daysWord": "dage"
+    "daysWord": "dage",
+    "subHireCost": "koster os {amount}/dag"
   },
   "theme": {
     "label": "Udseende",
@@ -1054,5 +1058,55 @@
     "addedBy": "Tilføjet af {name}, {date}",
     "backToModel": "Tilbage til modellen",
     "deleteConfirm": "Fjern denne indkøbspost og dens vedhæftninger?"
+  },
+  "subhire": {
+    "title": "Indleje",
+    "help": "Udstyr som partnere ejer, og som vi lejer ind til egne projekter. Læg det på et projekt som en indlejelinje, så står det på tilbuddet og pakkelisten.",
+    "newItem": "Nyt indlejeemne",
+    "editItem": "Rediger indlejeemne",
+    "itemHelp": "En katalogpost, ikke lager: ingen enheder, ingen asset tags.",
+    "owner": "Ejes af",
+    "ownerHelp": "Et firma under Indstillinger › Kontakter.",
+    "name": "Navn",
+    "costPerDay": "Kostpris pr. dag",
+    "costPerDayHelp": "Hvad de tager fra os, ekskl. moms.",
+    "rentalDayPrice": "Vores dagspris",
+    "rentalDayPriceHelp": "Hvad vi tager fra kunden; tom = kostprisen.",
+    "description": "Beskrivelse",
+    "descriptionHelp": "Throw ratio, lens shift, opløsning, hvad der hjælper med at vælge.",
+    "links": "Links",
+    "linksHelp": "Ét pr. linje: \"Tekst | https://…\" eller bare adressen.",
+    "notes": "Noter",
+    "archived": "Arkiveret (skjult i indlejelisten)",
+    "archive": "Arkivér",
+    "unarchive": "Gendan",
+    "showArchived": "Vis arkiverede",
+    "hideArchived": "Skjul arkiverede",
+    "noOwners": "Opret partnerfirmaet som kontakt først:",
+    "contacts": "Kontakter",
+    "empty": "Intet i indlejekataloget",
+    "emptyBody": "Tilføj det udstyr I jævnligt lejer ind fra partnere, med ejer og kostpris pr. dag.",
+    "rentInFrom": "indlejes fra {owner}",
+    "costShort": "kost {amount}/dag",
+    "priceShort": "vores pris {amount}/dag",
+    "onProjects": "på {count} projektlinjer",
+    "deleteConfirm": "Fjern dette emne fra kataloget?",
+    "rentIn": "Lej ind",
+    "rentInHelp": "Indlejet udstyr prissættes som vores eget på tilbuddet; kostprisen ses kun af jer.",
+    "editLine": "Rediger indlejelinje",
+    "item": "Emne",
+    "noLines": "Intet lejet ind til dette projekt.",
+    "removeLineConfirm": "Fjern denne indlejelinje?"
+  },
+  "pwa": {
+    "iosHint": "Læg appen på hjemmeskærmen: tryk Del, derefter \"Føj til hjemmeskærm\".",
+    "androidHint": "Installer appen på denne telefon og få fuld skærm med eget ikon.",
+    "install": "Installer",
+    "dismiss": "Luk",
+    "offlineTitle": "Du er offline",
+    "offlineBody": "Appen skal have forbindelse for at vise aktuelle data. Pakkelister du har åbnet, ligger på telefonen og kan læses herunder.",
+    "retry": "Prøv igen",
+    "savedLists": "Pakkelister på denne telefon",
+    "savedListsHelp": "Som de så ud, da de sidst blev åbnet. Afkrydsning og indtjek kræver forbindelse."
   }
 }

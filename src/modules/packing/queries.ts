@@ -74,6 +74,14 @@ export async function listDetail(listId: string) {
   });
   if (!list) return null;
   const cats = await prisma.category.findMany({ select: { id: true, name: true, parentId: true } });
+  // What the project rents in: shown with the list so nothing is forgotten at the partner's door, never ticked or checked.
+  const subHire: SubHireRow[] = (await prisma.subHireLine.findMany({ where: { projectId: list.projectId }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }], include: { item: { include: { owner: { select: { name: true } } } } } })).map((l) => ({
+    id: l.id,
+    label: modelLabel(l.item),
+    ownerName: l.item.owner.name,
+    quantity: l.quantity,
+    note: l.note,
+  }));
   const packedUnitIds = new Set(list.lines.flatMap((l) => l.checks.filter((c) => c.phase === "out" && c.itemId).map((c) => c.itemId!)));
 
   const lines: LineRow[] = [];
@@ -156,12 +164,20 @@ export async function listDetail(listId: string) {
     list: { id: list.id, name: list.name, groupBy: list.groupBy as "category" | "case", status: list.status as PackingStatus, notes: list.notes, checkedOutAt: list.checkedOutAt, checkedInAt: list.checkedInAt },
     project: { id: list.project.id, name: list.project.name, clientName: list.project.client?.name ?? null, venueName: list.project.venueName, reserveFrom: list.project.reserveFrom, reserveTo: list.project.reserveTo },
     lines,
+    subHire,
     progress: listProgress(lines),
     totals,
   };
 }
 
 export type ListDetail = NonNullable<Awaited<ReturnType<typeof listDetail>>>;
+
+/** Name and project of a list, for the page title (and the offline index the service worker builds from it). */
+export async function listTitle(listId: string): Promise<string | null> {
+  const l = await prisma.packingList.findUnique({ where: { id: listId }, select: { name: true, project: { select: { name: true } } } });
+  return l ? `${l.name} · ${l.project.name}` : null;
+}
+export type SubHireRow = { id: string; label: string; ownerName: string; quantity: number; note: string | null };
 
 /** Lines grouped for display. */
 export function groupLines(lines: LineRow[], groupBy: "category" | "case"): { key: string; label: string; lines: LineRow[] }[] {
