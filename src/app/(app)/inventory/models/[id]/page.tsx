@@ -82,8 +82,17 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
                   </ConfirmButton>
                 </form>
               ) : (
-                <span className="self-center text-xs text-muted-foreground" title={usage.summary}>
+                <span className="flex items-center gap-2 self-center text-xs text-muted-foreground" title={usage.summary}>
                   {t("inUse", { what: usage.summary })}
+                  {can(actor.role, "users.manage") && (
+                    <form action={inventoryActions.deleteModel}>
+                      <input type="hidden" name="id" value={model.id} />
+                      <input type="hidden" name="force" value="on" />
+                      <ConfirmButton confirm={t("forceDeleteOneConfirm", { what: usage.summary })} variant="ghost" size="sm" className="text-destructive">
+                        {t("deleteAnyway", { count: 1 })}
+                      </ConfirmButton>
+                    </form>
+                  )}
                 </span>
               )}
             </>

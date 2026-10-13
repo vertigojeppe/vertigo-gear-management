@@ -113,6 +113,33 @@ describe("items service", () => {
 });
 
 describe("deleting a model", () => {
+  it("bulk archives, refuses in-use deletes, and an admin can delete anyway with the cascade", async () => {
+    const member: Actor = { id: admin.id, email: "", name: "Test Member", role: "member" };
+    const project = await prisma.project.create({ data: { name: `Bulk show ${marker}`, status: "quote" } });
+    const spare = await prisma.model.create({ data: { categoryId, manufacturer: "Test", name: `Spare ${marker}`, trackingType: "bulk" } });
+    await prisma.allocation.create({ data: { holderType: "project", projectId: project.id, modelId: spare.id, quantity: 2, startDate: new Date("2034-02-01"), endDate: new Date("2034-02-02") } });
+    await prisma.item.create({ data: { modelId: spare.id, assetTag: `BK-${marker}`, quantity: 5, status: "in_house" } });
+    const loose = await prisma.model.create({ data: { categoryId, manufacturer: "Test", name: `Loose ${marker}`, trackingType: "bulk" } });
+    try {
+      const archived = await models.bulk(member, [spare.id, loose.id], "archive");
+      expect(archived.done).toBe(2);
+      expect((await prisma.model.findUniqueOrThrow({ where: { id: loose.id } })).archived).toBe(true);
+      const del = await models.bulk(member, [spare.id, loose.id], "delete");
+      expect(del.done).toBe(1); // loose went, spare is in use
+      expect(del.refused).toEqual([{ id: spare.id, label: `Test Spare ${marker}`, summary: "1 item, 1 reservation" }]);
+      await expect(models.bulk(member, [spare.id], "delete", { force: true })).rejects.toThrow(); // members cannot force
+      const forced = await models.bulk(admin, [spare.id], "delete", { force: true });
+      expect(forced.done).toBe(1);
+      expect(await prisma.model.findUnique({ where: { id: spare.id } })).toBeNull();
+      expect(await prisma.allocation.count({ where: { projectId: project.id } })).toBe(0);
+      expect(await prisma.item.count({ where: { assetTag: `BK-${marker}` } })).toBe(0);
+    } finally {
+      await prisma.allocation.deleteMany({ where: { projectId: project.id } });
+      await prisma.project.delete({ where: { id: project.id } });
+      await prisma.activityLog.deleteMany({ where: { summary: { contains: marker } } });
+    }
+  });
+
   it("refuses to delete a model that a reservation uses, and says so", async () => {
     const project = await prisma.project.create({ data: { name: `Show ${marker}`, status: "quote" } });
     const alloc = await prisma.allocation.create({ data: { holderType: "project", projectId: project.id, modelId: bulkModelId, quantity: 1, startDate: new Date("2034-01-01"), endDate: new Date("2034-01-02") } });

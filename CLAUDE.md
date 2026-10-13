@@ -117,6 +117,12 @@ a second entry that exports components only and never a service.
 - REST: handlers under `src/app/api/v1/**` use `handler(permission, fn)`
   from `src/lib/api/respond.ts` and the module zod schemas. Add new
   endpoints to `src/lib/api/openapi.ts` so `/api/docs` stays complete.
+- Deleting a model is refused while items, reservations, rental lines,
+  packing lines or template lines point at it (`modelUsage`). Admins
+  (`users.manage`) can force it: `models.remove(.., { force })` and
+  `models.bulk(.., "delete", { force })` run `cascadeModel`, which removes
+  those rows first. The inventory list's `FamilyList` has the bulk bar
+  (archive / unarchive / delete, "delete anyway" for admins).
 - A model is one **variant** of a family: `name` is the family ("DMX
   5-pin", "16 mm rustfri rods"), `variant` the size ("5 m", "150 cm", or
   null). Stock, weight and price stay per model. The inventory list groups

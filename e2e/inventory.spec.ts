@@ -63,6 +63,27 @@ test.describe("inventory", () => {
     await expect(page.getByLabel("Model").locator("optgroup[label=\"DMX 5-pin\"] option")).toHaveCount(3);
   });
 
+  test("bulk bar archives a whole family and brings it back", async ({ page }) => {
+    page.on("dialog", (d) => d.accept());
+    await signIn(page, "member@vertigo.test");
+    await page.goto("/inventory?q=XLR+3-pin");
+    // Ticking the family selects both variants.
+    await page.getByRole("checkbox", { name: "XLR 3-pin" }).check();
+    await expect(page.getByText("2 models selected")).toBeVisible();
+    await page.getByRole("button", { name: "Archive", exact: true }).click();
+    await expect(page.getByText("Archived: 2")).toBeVisible();
+    await page.goto("/inventory?q=XLR+3-pin&archived=1");
+    await expect(page.locator("summary", { hasText: "XLR 3-pin" }).getByText("Archived")).toBeVisible();
+    await page.getByRole("checkbox", { name: "XLR 3-pin" }).check();
+    await page.getByRole("button", { name: "Unarchive" }).click();
+    await expect(page.getByText("Unarchived: 2")).toBeVisible();
+    // Deleting is refused for gear that has items, and a member sees who can override.
+    await page.getByRole("checkbox", { name: "XLR 3-pin" }).check();
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(page.getByText("2 still in use")).toBeVisible();
+    await expect(page.getByText("An admin can delete these together with what uses them.")).toBeVisible();
+  });
+
   test("viewer sees inventory but no edit controls", async ({ page }) => {
     await signIn(page, "viewer@vertigo.test");
     await page.goto("/inventory");

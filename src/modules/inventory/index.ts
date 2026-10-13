@@ -1,6 +1,6 @@
 // Public interface of the inventory module.
 export { categories, locations, models, items, modelUsage, InventoryError, redactFinance, actorCanSeeFinance } from "./service";
-export type { ModelUsage } from "./service";
+export type { ModelUsage, BulkResult } from "./service";
 export type { ModelDto, ItemDto, Link } from "./service";
 export {
   categoryOptions,
@@ -34,6 +34,7 @@ export { validateStatusChange, isAvailableStatus, manualStatuses } from "./statu
 export { buildTree, flattenTree, pathNames } from "./tree";
 export * as inventoryActions from "./actions";
 export { InventoryTabs } from "./components/inventory-tabs";
+export { FamilyList } from "./components/family-list";
 export { ModelForm } from "./components/model-form";
 export { ItemForm } from "./components/item-form";
 export { StatusDialog, MoveDialog } from "./components/item-actions";

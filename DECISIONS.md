@@ -368,3 +368,13 @@ models: it would double every form for what is a display and picking
 problem. A data migration split the existing combined names on their
 trailing size, output count or load; anything it could not read keeps
 its name and can be split by hand in the form.
+
+## 2026-10-13 — Admins can delete through the references
+
+A model that is reserved, on a packing list or has units cannot be
+deleted by a member: the references would dangle, and archiving keeps
+the history. An admin can delete anyway, one model or a selection, and
+the app removes the reservations, rental lines, packing lines, template
+lines and items that point at it in the same transaction, logging what
+went. The confirmation names what will be removed. There is no undo; that
+is why it is admin-only and why Archive stays the default answer.
