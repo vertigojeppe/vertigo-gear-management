@@ -412,3 +412,16 @@ converting is a straight prefill of the new-model form, and the model
 created there is linked back (`modelId`) so the history is visible.
 Wishes use the inventory permissions rather than their own: anyone who
 can edit models can edit the shopping list.
+
+## 2026-10-13 — Purchase records are per line, gated like prices
+
+A purchase record is one line of a quote, order or invoice for one model,
+not a whole order: that is what the spreadsheet holds (the Urs order
+lists each truss code with its own list price and discount) and what you
+want next to a model ("what did we pay for these"). The order-level
+facts (total, invoice discount, powder coating) go in the notes of each
+line rather than into an Order table nobody would open. Records are
+visible only with `inventory.finance`, the permission that already hides
+unit purchase prices from viewers, so the two never disagree. They are
+separate from the per-unit purchase fields on Item, which serve
+insurance value and age, not procurement.

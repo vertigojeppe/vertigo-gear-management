@@ -8,12 +8,13 @@ import { itemFilters, listItems, listModels, modelFilters, type ItemListRow, typ
 import { listProjects, projectFilters, type ProjectListRow } from "@/modules/projects";
 import { listRentals, rentalFilters, type RentalListRow } from "@/modules/rentals";
 import { wishList, type WishRow } from "@/modules/wishlist";
+import { purchaseList, type PurchaseRow } from "@/modules/purchases";
 
 const MAX_PAGES = 200;
 
 /**
  * CSV of a list page with its current filters: /api/export/<list>.csv?…
- * Lists: models, items, projects, rentals, contacts, wishes. Pages of the list
+ * Lists: models, items, projects, rentals, contacts, wishes, purchases. Pages of the list
  * query are walked until the end (or 200 pages), so the file matches
  * what the page shows, filters and all.
  */
@@ -142,6 +143,23 @@ const LISTS: Record<string, ListDef<any>> = {
       { key: "status", header: "Status", value: (w: WishRow) => w.status },
       { key: "model", header: "Became model", value: (w: WishRow) => w.modelLabel },
       { key: "id", header: "Id", value: (w: WishRow) => w.id },
+    ],
+  },
+  purchases: {
+    permission: "inventory.finance",
+    rows: () => purchaseList(),
+    columns: [
+      { key: "date", header: "Date", value: (p: PurchaseRow) => p.date },
+      { key: "model", header: "Model", value: (p: PurchaseRow) => p.modelLabel },
+      { key: "supplier", header: "Supplier", value: (p: PurchaseRow) => p.supplierName },
+      { key: "reference", header: "Reference", value: (p: PurchaseRow) => p.reference },
+      { key: "quantity", header: "Quantity", value: (p: PurchaseRow) => p.quantity },
+      { key: "listPrice", header: "List price", value: (p: PurchaseRow) => p.listPrice },
+      { key: "discountPct", header: "Discount %", value: (p: PurchaseRow) => p.discountPct },
+      { key: "netPrice", header: "Net price", value: (p: PurchaseRow) => p.netPrice },
+      { key: "total", header: "Total", value: (p: PurchaseRow) => p.total },
+      { key: "notes", header: "Notes", value: (p: PurchaseRow) => p.notes },
+      { key: "id", header: "Id", value: (p: PurchaseRow) => p.id },
     ],
   },
   contacts: {

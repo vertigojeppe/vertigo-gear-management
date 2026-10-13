@@ -25,17 +25,18 @@ export type CommitResult = {
   rentals: number;
   rateTables: number;
   wishes: number;
+  purchases: number;
   skipped: string[];
   created: CreatedIds;
 };
-export type CreatedIds = { categories: string[]; models: string[]; items: string[]; contacts: string[]; locations: string[]; clients: string[]; rentals: string[]; rateTables: string[]; wishes: string[] };
+export type CreatedIds = { categories: string[]; models: string[]; items: string[]; contacts: string[]; locations: string[]; clients: string[]; rentals: string[]; rateTables: string[]; wishes: string[]; purchases: string[] };
 
 const SPLIT = /^([^|]*)\|([^|]*)\|(.*)$/;
 
 export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promise<CommitResult> {
   assertCan(actor, "settings.manage");
-  const created: CreatedIds = { categories: [], models: [], items: [], contacts: [], locations: [], clients: [], rentals: [], rateTables: [], wishes: [] };
-  const result: CommitResult = { categories: 0, models: 0, units: 0, bins: 0, kits: 0, contacts: 0, locations: 0, rentals: 0, rateTables: 0, wishes: 0, skipped: [], created };
+  const created: CreatedIds = { categories: [], models: [], items: [], contacts: [], locations: [], clients: [], rentals: [], rateTables: [], wishes: [], purchases: [] };
+  const result: CommitResult = { categories: 0, models: 0, units: 0, bins: 0, kits: 0, contacts: 0, locations: 0, rentals: 0, rateTables: 0, wishes: 0, purchases: 0, skipped: [], created };
   const reason = `Imported from ${fileName}`;
   await prisma.$transaction(
     async (tx) => {
@@ -255,6 +256,23 @@ export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promi
             result.wishes++;
             break;
           }
+          case "purchase": {
+            const modelId = await modelFor(op.modelKey).catch(() => null);
+            if (!modelId) {
+              result.skipped.push(`${op.reference ?? op.importSource}: no model ${op.modelKey}`);
+              break;
+            }
+            // One record per sheet row and model: a second import of the same file adds nothing.
+            if (await tx.purchase.findFirst({ where: { modelId, importSource: op.importSource }, select: { id: true } })) {
+              result.skipped.push(`${op.importSource} (purchase record exists)`);
+              break;
+            }
+            const supplierContactId = op.supplierName ? await ensureContact(op.supplierName, "company", undefined, op.importSource) : null;
+            const p = await tx.purchase.create({ data: { modelId, supplierContactId, date: op.date ? dateFromString(op.date) : null, reference: op.reference, quantity: op.quantity, listPrice: op.listPrice, discountPct: op.discountPct, netPrice: op.netPrice ?? (op.listPrice === null ? null : Math.round(op.listPrice * (1 - (op.discountPct ?? 0) / 100) * 100) / 100), notes: op.notes, createdById: actor.id || null, importSource: op.importSource } });
+            created.purchases.push(p.id);
+            result.purchases++;
+            break;
+          }
           case "rental": {
             let client = await tx.client.findFirst({ where: { name: { equals: op.clientName, mode: "insensitive" } }, select: { id: true } });
             if (!client) {
@@ -287,7 +305,7 @@ export async function applyOps(actor: Actor, ops: Op[], fileName: string): Promi
           entityType: "settings",
           entityId: "import",
           action: "spreadsheet_imported",
-          summary: `Imported ${fileName}: ${result.categories} categories, ${result.models} models, ${result.units} units, ${result.bins} bins, ${result.kits} cases, ${result.contacts} contacts, ${result.locations} locations, ${result.rentals} rentals, ${result.rateTables} rate tables, ${result.wishes} wishes`,
+          summary: `Imported ${fileName}: ${result.categories} categories, ${result.models} models, ${result.units} units, ${result.bins} bins, ${result.kits} cases, ${result.contacts} contacts, ${result.locations} locations, ${result.rentals} rentals, ${result.rateTables} rate tables, ${result.wishes} wishes, ${result.purchases} purchase records`,
           details: { fileName, skipped: result.skipped, created },
         },
         tx,

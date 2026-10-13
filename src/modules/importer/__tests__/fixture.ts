@@ -86,6 +86,24 @@ export function buildFixtureWorkbook(marker: string): ExcelJS.Workbook {
   put(rates, 16, { A: "efterfølgende dage +10% af 1. dags leje" });
   put(rates, 17, { A: "Alle priser er excl. moms, fragt og forsikring" });
 
+  // Truss: A code (description on the row below), B length, C qty, F day price, H list, I discount %, K net;
+  // below row 55 the supplier quotes with the same columns plus L line total, J/L totals.
+  const truss = wb.addWorksheet("Truss");
+  put(truss, 3, { A: "Kode", B: "Længde", C: "Antal", F: "Pris/dag", H: "Liste", I: "Rabat", K: "Netto" });
+  put(truss, 4, { A: `HD24-200 ${marker}`, B: "2", C: "8", F: "60", H: "3016", I: "40", K: "1809.6" });
+  put(truss, 5, { A: "Box truss 2 m" });
+  put(truss, 6, { A: `CS1-CON ${marker}`, C: "20", F: "2", H: "83", I: "40", K: "49.8" });
+  put(truss, 7, { A: "Conical Connector" });
+  put(truss, 57, { A: "Tilbud fra Urs Ordrebekræftelse 303053885 d. 23. juli 2025" });
+  put(truss, 59, { A: `HD24-200 ${marker}`, C: "25", H: "3016", I: "40", K: "1809.6", L: "45240" });
+  put(truss, 60, { A: "Box truss 2 m" });
+  put(truss, 62, { A: `CS1-CON ${marker}`, C: "128", H: "83", I: "40", K: "49.8", L: "6374.4" });
+  put(truss, 63, { A: "Conical Connector HD/FD" });
+  put(truss, 65, { A: "40x40cm alu baseplate - mangler pris" });
+  put(truss, 67, { A: "Pulver lakering - Truss", H: "18744", K: "18744", L: "18744" });
+  put(truss, 70, { J: "Samlet", L: "70358.4" });
+  put(truss, 71, { J: "Fakturarabatbeløb -7.035,84", L: "63322.56" });
+
   // Rods recount: A label, D count, heading rows without a count.
   const rods = wb.addWorksheet("16mm rods");
   put(rods, 1, { A: "16mm", B: "rustfri rods" });

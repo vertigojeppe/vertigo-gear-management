@@ -888,7 +888,7 @@
     "reading": "Læser…",
     "howTitle": "Sådan virker det",
     "how1": "Alle faner læses: kabler, LED, controllere, projektorer, computere, truss, stativer, rør, udlån, nøglebrikker.",
-    "how2": "Forhåndsvisningen deler rækkerne op i: importeres, importeres med antagelse (vist), kræver beslutning (du vælger), og parkeret (sub-hire og indkøb kommer senere).",
+    "how2": "Forhåndsvisningen deler rækkerne op i: importeres, importeres med antagelse (vist), kræver beslutning (du vælger), og parkeret (sub-hire kommer senere).",
     "how3": "Rækker for modeller eller tags, der allerede findes, springes over, medmindre du vælger andet, så en ny eksport kan køres igen.",
     "how4": "Hver importeret model, enhed, kontakt og lokation husker sin celle (Fane!A1).",
     "previewTitle": "Forhåndsvisning af import",
@@ -907,7 +907,7 @@
     "confirm": "Importér {count} rækker",
     "importing": "Importerer…",
     "done": "Import gennemført.",
-    "doneCounts": "{categories} kategorier, {models} modeller, {units} enheder, {bins} bulk-beholdere, {kits} kasser, {contacts} kontakter, {locations} lokationer, {rentals} udlejninger, {rateTables} lejefaktor-tabeller, {wishes} ønsker oprettet.",
+    "doneCounts": "{categories} kategorier, {models} modeller, {units} enheder, {bins} bulk-beholdere, {kits} kasser, {contacts} kontakter, {locations} lokationer, {rentals} udlejninger, {rateTables} lejefaktor-tabeller, {wishes} ønsker, {purchases} indkøb oprettet.",
     "skipped": "Sprunget over",
     "openInventory": "Åbn lageret",
     "another": "Importér et andet regneark"
@@ -1031,5 +1031,28 @@
     "markBought": "Købt",
     "reopen": "Genåbn",
     "deleteConfirm": "Fjern dette ønske?"
+  },
+  "purchases": {
+    "title": "Indkøb",
+    "none": "Ingen indkøb registreret endnu. Tilføj ét pr. tilbuds-, ordre- eller fakturalinje; vedhæft dokumentet på posten.",
+    "newPurchase": "Tilføj indkøb",
+    "editPurchase": "Rediger indkøb",
+    "supplier": "Leverandør",
+    "supplierHelp": "Et firma under Indstillinger › Kontakter.",
+    "date": "Dato",
+    "reference": "Reference",
+    "referenceHelp": "Tilbuds-, ordre- eller fakturanummer.",
+    "quantity": "Antal",
+    "listPrice": "Listepris",
+    "discountPct": "Rabat %",
+    "netPrice": "Nettopris pr. stk.",
+    "netPriceHelp": "Ekskl. moms. Tom udregnes den fra listepris og rabat.",
+    "total": "I alt",
+    "notes": "Noter",
+    "listLess": "liste {price} minus {pct} %",
+    "totalPaid": "I alt på tværs af posterne: {amount}",
+    "addedBy": "Tilføjet af {name}, {date}",
+    "backToModel": "Tilbage til modellen",
+    "deleteConfirm": "Fjern denne indkøbspost og dens vedhæftninger?"
   }
 }

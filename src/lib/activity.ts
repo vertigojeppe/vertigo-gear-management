@@ -1,7 +1,7 @@
 import { prisma, type Db } from "@/lib/db";
 import type { Actor } from "@/lib/auth/session";
 
-export type ActivityEntity = "item" | "model" | "category" | "location" | "user" | "project" | "rental" | "settings" | "contact" | "wish";
+export type ActivityEntity = "item" | "model" | "category" | "location" | "user" | "project" | "rental" | "settings" | "contact" | "wish" | "purchase";
 
 export type ActivityInput = {
   entityType: ActivityEntity;
