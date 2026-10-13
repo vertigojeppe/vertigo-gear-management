@@ -225,7 +225,9 @@
     "deleteAnywayHelp": "Removes their reservations, rental lines, packing lines, template lines and items.",
     "forceDeleteConfirm": "Delete {count, plural, one {this model} other {these # models}} and everything that uses them? Reservations, rental lines, packing lines and items are removed. This cannot be undone.",
     "forceDeleteOneConfirm": "Delete this model and what uses it ({what})? This cannot be undone.",
-    "askAdmin": "An admin can delete these together with what uses them."
+    "askAdmin": "An admin can delete these together with what uses them.",
+    "renameFamily": "Rename family",
+    "renameFamilyHelp": "Changes the manufacturer and name of {count, plural, one {this model} other {all # variants}} at once. Sizes stay as they are."
   },
   "itemStatus": {
     "in_house": "In house",

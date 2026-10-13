@@ -28,6 +28,7 @@ export {
   itemBatchInput,
   statusChangeInput,
   moveInput,
+  familyRenameInput,
 } from "./schema";
 export type { ItemFilters, ModelFilters, TrackingType } from "./schema";
 export { validateStatusChange, isAvailableStatus, manualStatuses } from "./status";
@@ -35,6 +36,7 @@ export { buildTree, flattenTree, pathNames } from "./tree";
 export * as inventoryActions from "./actions";
 export { InventoryTabs } from "./components/inventory-tabs";
 export { FamilyList } from "./components/family-list";
+export { RenameFamilyDialog } from "./components/rename-family-dialog";
 export { ModelForm } from "./components/model-form";
 export { ItemForm } from "./components/item-form";
 export { StatusDialog, MoveDialog } from "./components/item-actions";

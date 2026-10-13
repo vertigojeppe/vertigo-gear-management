@@ -155,3 +155,24 @@ describe("deleting a model", () => {
     }
   });
 });
+
+describe("renaming a family", () => {
+  it("renames every variant at once and refuses a collision", async () => {
+    const a = await prisma.model.create({ data: { categoryId, manufacturer: "", name: `Rods ${marker}`, variant: "50 cm", trackingType: "bulk" } });
+    const b = await prisma.model.create({ data: { categoryId, manufacturer: "", name: `Rods ${marker}`, variant: "70 cm", trackingType: "bulk" } });
+    const other = await prisma.model.create({ data: { categoryId, manufacturer: "", name: `Stænger ${marker}`, variant: "70 cm", trackingType: "bulk" } });
+    const member: Actor = { ...admin, role: "member" };
+    await expect(models.renameFamily(member, a.id, { manufacturer: "", name: `Stænger ${marker}` })).rejects.toThrow();
+    // 70 cm already exists under the new name: refused, nothing changed.
+    await expect(models.renameFamily(admin, a.id, { manufacturer: "", name: `Stænger ${marker}` })).rejects.toThrow(/already exists/);
+    expect((await prisma.model.findUniqueOrThrow({ where: { id: b.id } })).name).toBe(`Rods ${marker}`);
+    const r = await models.renameFamily(admin, a.id, { manufacturer: "Vertigo", name: `Rør ${marker}` });
+    expect(r.count).toBe(2);
+    const after = await prisma.model.findMany({ where: { id: { in: [a.id, b.id] } }, orderBy: { variant: "asc" } });
+    expect(after.map((m) => [m.manufacturer, m.name, m.variant])).toEqual([
+      ["Vertigo", `Rør ${marker}`, "50 cm"],
+      ["Vertigo", `Rør ${marker}`, "70 cm"],
+    ]);
+    expect((await prisma.model.findUniqueOrThrow({ where: { id: other.id } })).name).toBe(`Stænger ${marker}`);
+  });
+});

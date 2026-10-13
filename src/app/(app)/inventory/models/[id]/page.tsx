@@ -13,7 +13,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatNumber, formatMoney, modelLabel } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
-import { inventoryActions, modelDetail, modelUsage } from "@/modules/inventory";
+import { RenameFamilyDialog, inventoryActions, modelDetail, modelUsage } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 import { modelAvailabilityView } from "@/modules/projects";
 import { StatusPill } from "@/components/status-pill";
@@ -157,9 +157,12 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
 
       {(detail.variants.length > 0 || model.variant) && (
         <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-medium">
-            {t("variants")} <span className="text-sm font-normal text-muted-foreground">({detail.variants.length + 1})</span>
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-medium">
+              {t("variants")} <span className="text-sm font-normal text-muted-foreground">({detail.variants.length + 1})</span>
+            </h2>
+            {can(actor.role, "users.manage") && <RenameFamilyDialog modelId={model.id} manufacturer={model.manufacturer} name={model.name} count={detail.variants.length + 1} />}
+          </div>
           <ul className="flex flex-wrap gap-2 text-sm">
             <li className="rounded-md border bg-muted px-2.5 py-1 font-medium">{model.variant ?? "—"}</li>
             {detail.variants.map((v) => (

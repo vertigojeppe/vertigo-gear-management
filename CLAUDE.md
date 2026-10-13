@@ -123,6 +123,9 @@ a second entry that exports components only and never a service.
   `models.bulk(.., "delete", { force })` run `cascadeModel`, which removes
   those rows first. The inventory list's `FamilyList` has the bulk bar
   (archive / unarchive / delete, "delete anyway" for admins).
+- Admins rename a family in one go (`models.renameFamily`, the dialog on
+  the model page): every model with the same manufacturer + name moves;
+  refused when a variant would collide with a model outside the family.
 - A model is one **variant** of a family: `name` is the family ("DMX
   5-pin", "16 mm rustfri rods"), `variant` the size ("5 m", "150 cm", or
   null). Stock, weight and price stay per model. The inventory list groups

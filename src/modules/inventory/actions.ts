@@ -6,7 +6,7 @@ import { requirePermission } from "@/lib/auth/session";
 import { customFieldsFromForm, validateCustomFields, CF_PREFIX } from "@/lib/custom-fields";
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitions } from "@/modules/settings";
-import { categoryInput, itemBatchInput, itemInput, locationInput, modelInput, statusChangeInput } from "./schema";
+import { categoryInput, itemBatchInput, itemInput, locationInput, modelInput, statusChangeInput, familyRenameInput } from "./schema";
 import { categories, items, locations, models, InventoryError, type BulkResult } from "./service";
 
 function revalidateInventory() {
@@ -93,6 +93,22 @@ export async function saveModel(_prev: FormState, formData: FormData): Promise<F
   }
   revalidateInventory();
   redirect(`/inventory/models/${modelId}`);
+}
+
+export async function renameFamily(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("users.manage");
+  const modelId = String(formData.get("modelId") ?? "");
+  const parsed = parseForm(familyRenameInput, formData);
+  if (!parsed.ok) return parsed.state;
+  try {
+    await models.renameFamily(actor, modelId, parsed.data);
+  } catch (err) {
+    return errorState(err, echoValues(formData));
+  }
+  revalidateInventory();
+  revalidatePath("/projects", "layout");
+  revalidatePath("/rentals", "layout");
+  return { ok: true };
 }
 
 export async function setModelArchived(formData: FormData): Promise<void> {
