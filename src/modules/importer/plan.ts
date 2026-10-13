@@ -12,8 +12,8 @@ import { readInventorySheet, readControllers, readProjectors, readComputers, rea
  *  - import      → will be written as read
  *  - assumption  → will be written, with a stated guess
  *  - decision    → written only after you pick an option
- *  - parked      → belongs to a feature that is not built yet (sub-hire);
- *                  shown, not written
+ *  - parked      → kept for a feature that does not exist yet; shown, not
+ *                  written (nothing in the current sheet lands here)
  */
 
 export type Bucket = "import" | "assumption" | "decision" | "parked";
@@ -59,9 +59,10 @@ export type LocationOp = { type: "location"; name: string; kind: "warehouse" | "
 export type RentalOp = { type: "rental"; clientName: string; startDate: string; endDate: string; notes: string; lines: { modelKey: string | null; quantity: number; text: string }[]; importSource: Src };
 export type NoteOp = { type: "modelNote"; modelKey: string; note: string };
 export type PurchaseOp = { type: "purchase"; modelKey: string; supplierName: string | null; date: string | null; reference: string | null; quantity: number; listPrice: number | null; discountPct: number | null; netPrice: number | null; notes: string | null; importSource: Src };
+export type SubHireOp = { type: "subhire"; ownerName: string; manufacturer: string; name: string; variant: string | null; categoryPath?: string[]; description: string | null; costPerDay: number | null; importSource: Src };
 export type WishOp = { type: "wish"; manufacturer: string; name: string; variant: string | null; categoryPath?: string[]; rentalDayPrice: number | null; notes: string | null; importSource: Src };
 export type RateTableOp = { type: "rateTable"; name: string; isDefault: boolean; extraRule: "none" | "per_day" | "per_10_days"; extraFactor: number; notes: string | null; tiers: { days: number; factor: number }[]; importSource: Src };
-export type Op = ModelOp | BinOp | UnitOp | KitOp | ContactOp | LocationOp | RentalOp | NoteOp | RateTableOp | WishOp | PurchaseOp;
+export type Op = ModelOp | BinOp | UnitOp | KitOp | ContactOp | LocationOp | RentalOp | NoteOp | RateTableOp | WishOp | PurchaseOp | SubHireOp;
 
 export type Decision = { question: string; options: { key: string; label: string; ops: Op[] }[]; defaultKey: string };
 
@@ -357,7 +358,21 @@ function projectorRows(rows: ProjectorRow[], ctx: PlanContext): PlanRow[] {
   for (const p of rows) {
     const key = `proj:${p.row}`;
     if (p.section === "gearguys") {
-      out.push({ key, sheet: "PROJEKTORE", src: p.modelSrc, bucket: "parked", summary: `GearGuys: ${p.model}${p.throwRatio ? ` · ${p.throwRatio}` : ""}${p.resolution ? ` · ${p.resolution}` : ""}`, ops: [], parked: { feature: "Sub-hire catalog", detail: "Gear GearGuys owns; goes into the partner / sub-hire catalog when that feature is built (backlog)." } });
+      // GearGuys' projectors and lenses: not ours, so they go in the sub-hire catalog with GearGuys as the owner.
+      const gm = p.model.split(/\s+/)[0];
+      const specs = [p.lumen ? `${p.lumen} lumen` : "", p.throwRatio ? `throw ${p.throwRatio}` : "", p.lensShift ? `lens shift ${p.lensShift}` : "", p.resolution, ...p.notes].filter(Boolean);
+      out.push({
+        key,
+        sheet: "PROJEKTORE",
+        src: p.modelSrc,
+        bucket: "assumption",
+        summary: `Sub-hire: ${p.model}${p.dayPrice ? ` · day price ${p.dayPrice}` : ""}`,
+        assumption: "Under \"GearGuys\" on the projector sheet, so it is gear we rent in from them, not inventory; the day price is kept as our charge. Skipped if the catalog already has this row.",
+        ops: [
+          { type: "contact", name: "GearGuys", kind: "company", notes: "Partner: projectors and lenses we rent in", importSource: p.modelSrc },
+          { type: "subhire", ownerName: "GearGuys", manufacturer: gm, name: p.model.slice(gm.length).trim() || p.model, variant: null, categoryPath: ["Video", "Projectors"], description: specs.length ? specs.join(" · ") : null, costPerDay: p.dayPrice, importSource: p.modelSrc },
+        ],
+      });
       continue;
     }
     if (p.section === "wish") {

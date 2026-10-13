@@ -425,3 +425,16 @@ visible only with `inventory.finance`, the permission that already hides
 unit purchase prices from viewers, so the two never disagree. They are
 separate from the per-unit purchase fields on Item, which serve
 insurance value and age, not procurement.
+
+## 2026-10-13 — Rented-in gear is a catalog, not inventory
+
+Gear GearGuys owns never becomes a Model with Items: it has no asset
+tags, is never in our warehouse and must not count in availability. A
+sub-hire catalog item is a separate table with the same naming fields,
+and a line on a project says how many we rent in and for which dates.
+Lines reach the two documents that must be complete: the quote (priced
+like our own gear, the owner in the label, the cost kept for the
+internal view) and the packing list (a "Rented in" block, never ticked,
+since those boxes are collected at the partner's door, not packed from
+our shelves). Sub-hire is for own projects only; an external rental of
+someone else's gear is a different business.

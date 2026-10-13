@@ -36,6 +36,7 @@ afterAll(async () => {
     await prisma.rateTable.deleteMany({ where: { id: { in: c.rateTables } } });
     await prisma.wishItem.deleteMany({ where: { id: { in: c.wishes } } });
     await prisma.purchase.deleteMany({ where: { id: { in: c.purchases } } });
+    await prisma.subHireItem.deleteMany({ where: { id: { in: c.subHireItems } } });
     for (const id of [...c.categories].reverse()) await prisma.category.delete({ where: { id } }).catch(() => undefined);
   }
   await prisma.activityLog.deleteMany({ where: { action: "spreadsheet_imported", summary: { contains: M } } });

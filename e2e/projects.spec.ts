@@ -24,6 +24,58 @@ async function pickOption(page: Page, label: string | RegExp, text: string) {
 }
 
 test.describe("projects and rentals", () => {
+  test("gear rented in from a partner shows on the project, the quote and the packing list", async ({ page }) => {
+    await signIn(page, "member@vertigo.test");
+    // The partner company and the catalog item.
+    await page.goto("/settings/contacts");
+    await page.getByRole("button", { name: "New contact" }).first().click();
+    let dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Type").selectOption("company");
+    await dialog.getByLabel("Name", { exact: true }).fill(`Partner ${stamp}`);
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toBeHidden();
+    await page.goto("/inventory/subhire");
+    await page.getByRole("button", { name: "New sub-hire item" }).first().click();
+    dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Owned by").selectOption({ label: `Partner ${stamp}` });
+    await dialog.locator("#sh-manufacturer").fill("Testlight");
+    await dialog.getByLabel("Name", { exact: true }).fill(`Lens ${stamp}`);
+    await dialog.locator("#sh-cost").fill("500");
+    await dialog.locator("#sh-price").fill("800");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("heading", { name: `rent in from Partner ${stamp}` })).toBeVisible();
+
+    // A project that rents it in.
+    await page.goto("/projects/new");
+    await page.getByLabel("Name", { exact: true }).fill(`E2E show sub-hire ${stamp}`);
+    await page.getByLabel("Prep start").fill("2033-04-01");
+    await page.getByLabel(/^Return/).fill("2033-04-03");
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByRole("heading", { name: `E2E show sub-hire ${stamp}` })).toBeVisible();
+    await page.getByRole("button", { name: "Rent in" }).click();
+    dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Item").selectOption({ label: `Testlight Lens ${stamp}` });
+    await expect(dialog.locator("#sh-line-price")).toHaveValue("800");
+    await dialog.locator("#sh-line-qty").fill("2");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toBeHidden();
+    const line = page.getByRole("listitem").filter({ hasText: `Testlight Lens ${stamp}` }).first();
+    await expect(line).toContainText(`rent in from Partner ${stamp}`);
+    // On the quote: priced like gear, owner named, cost shown.
+    const quoteRow = page.getByRole("row").filter({ hasText: `Lens ${stamp} (rent in from Partner ${stamp})` });
+    await expect(quoteRow).toContainText("costs us");
+    await expect(quoteRow).toContainText("800,00");
+
+    // On a packing list of the project.
+    await page.getByRole("link", { name: "New packing list" }).click();
+    await page.getByLabel("Name").fill(`List ${stamp}`);
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByRole("heading", { name: `List ${stamp}` })).toBeVisible();
+    await expect(page.getByText("Rented in")).toBeVisible();
+    await expect(page.getByRole("listitem").filter({ hasText: `Testlight Lens ${stamp}` })).toContainText(`rent in from Partner ${stamp}`);
+  });
+
   test("member creates a project, reserves gear, and sees a conflict warning", async ({ page }) => {
     await signIn(page, "member@vertigo.test");
 
