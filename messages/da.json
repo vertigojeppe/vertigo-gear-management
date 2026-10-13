@@ -214,7 +214,8 @@
     "variantCount": "{count, plural, one {# variant} other {# varianter}}",
     "newVariant": "Ny variant",
     "newVariantOf": "Ny variant af {name}",
-    "familiesCount": "{families, plural, one {# model} other {# modeller}} ({models} med varianter talt)"
+    "familiesCount": "{families, plural, one {# model} other {# modeller}} ({models} med varianter talt)",
+    "inUse": "Kan ikke slettes: bruges af {what}. Arkivér den i stedet."
   },
   "itemStatus": {
     "in_house": "På lager",

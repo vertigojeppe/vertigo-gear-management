@@ -214,7 +214,8 @@
     "variantCount": "{count, plural, one {# variant} other {# variants}}",
     "newVariant": "New variant",
     "newVariantOf": "New variant of {name}",
-    "familiesCount": "{families, plural, one {# model} other {# models}} ({models} with variants counted)"
+    "familiesCount": "{families, plural, one {# model} other {# models}} ({models} with variants counted)",
+    "inUse": "Cannot delete: used by {what}. Archive it instead."
   },
   "itemStatus": {
     "in_house": "In house",

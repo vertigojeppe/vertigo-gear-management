@@ -13,7 +13,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatNumber, formatMoney, modelLabel } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
-import { inventoryActions, modelDetail } from "@/modules/inventory";
+import { inventoryActions, modelDetail, modelUsage } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 import { modelAvailabilityView } from "@/modules/projects";
 import { StatusPill } from "@/components/status-pill";
@@ -21,12 +21,12 @@ import { ITEM_STATUSES } from "../../../../../../config/app.config";
 
 export const metadata: Metadata = { title: "Model" };
 
-export default async function ModelPage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string; to?: string }> }) {
+export default async function ModelPage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string; to?: string; error?: string }> }) {
   const actor = await requireActor();
   const { id } = await props.params;
   const sp = await props.searchParams;
   const ok = (s?: string) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : undefined);
-  const [detail, defs, availability] = await Promise.all([modelDetail(id), customFieldDefinitions.forEntity("model"), modelAvailabilityView(id, ok(sp.from), ok(sp.to))]);
+  const [detail, defs, availability, usage] = await Promise.all([modelDetail(id), customFieldDefinitions.forEntity("model"), modelAvailabilityView(id, ok(sp.from), ok(sp.to)), modelUsage(id)]);
   const tp = await getTranslations("projects");
   if (!detail) notFound();
   const { model, items } = detail;
@@ -46,6 +46,11 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
 
   return (
     <div className="flex flex-col gap-8">
+      {sp.error && (
+        <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {sp.error}
+        </p>
+      )}
       <PageHeader
         title={label}
         subtitle={`${detail.categoryPath.join(" › ")} · ${t(model.trackingType)}${model.notForRental ? ` · ${t("notForRental")}` : ""}${model.archived ? ` · ${t("archived")}` : ""}`}
@@ -69,13 +74,17 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
                   {model.archived ? t("unarchive") : t("archive")}
                 </Button>
               </form>
-              {items.length === 0 && (
+              {usage.total === 0 ? (
                 <form action={inventoryActions.deleteModel}>
                   <input type="hidden" name="id" value={model.id} />
                   <ConfirmButton confirm={t("deleteModelConfirm")} variant="ghost" className="text-destructive">
                     {tc("delete")}
                   </ConfirmButton>
                 </form>
+              ) : (
+                <span className="self-center text-xs text-muted-foreground" title={usage.summary}>
+                  {t("inUse", { what: usage.summary })}
+                </span>
               )}
             </>
           )
