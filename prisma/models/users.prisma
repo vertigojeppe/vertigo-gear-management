@@ -28,6 +28,7 @@ model User {
   planTasks   PlanTask[]
   markups     Markup[]
   uploadSessions UploadSession[]
+  wishItems   WishItem[]
 
   @@index([role])
 }

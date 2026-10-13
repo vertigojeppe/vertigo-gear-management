@@ -237,7 +237,9 @@
     "labelOffsetHelp": "A sheet has {perSheet}; enter how many are already used so printing starts on the next free one.",
     "labelsSheetNote": "{sheets, plural, one {# sheet} other {# sheets}}. Print at 100% (no scaling), feed the sheet as the printer manual says.",
     "labelsSingleNote": "{count, plural, one {# page} other {# pages}} of one label each, sized for the roll. Set the printer's paper size to the label.",
-    "openLabelsPdf": "Open PDF"
+    "openLabelsPdf": "Open PDF",
+    "wishlist": "Wish list",
+    "newModelFromWish": "New model from the wish list"
   },
   "itemStatus": {
     "in_house": "In house",
@@ -886,7 +888,7 @@
     "reading": "Reading…",
     "howTitle": "How it works",
     "how1": "Every sheet is read: cables, LED, controllers, projectors, computers, truss, stands, rods, loans, key fobs.",
-    "how2": "The preview sorts rows into: will import, imported with an assumption (shown), needs a decision (you choose), and parked (pricing, wish list, sub-hire, purchase records come later).",
+    "how2": "The preview sorts rows into: will import, imported with an assumption (shown), needs a decision (you choose), and parked (sub-hire and purchase records come later).",
     "how3": "Rows for models or tags that already exist are skipped unless you say otherwise, so re-running an export is safe.",
     "how4": "Every imported model, unit, contact and location remembers its cell (Sheet!A1).",
     "previewTitle": "Import preview",
@@ -905,7 +907,7 @@
     "confirm": "Import {count} rows",
     "importing": "Importing…",
     "done": "Import finished.",
-    "doneCounts": "{categories} categories, {models} models, {units} units, {bins} bulk bins, {kits} cases, {contacts} contacts, {locations} locations, {rentals} rentals, {rateTables} rate tables created.",
+    "doneCounts": "{categories} categories, {models} models, {units} units, {bins} bulk bins, {kits} cases, {contacts} contacts, {locations} locations, {rentals} rentals, {rateTables} rate tables, {wishes} wishes created.",
     "skipped": "Skipped",
     "openInventory": "Open inventory",
     "another": "Import another spreadsheet"
@@ -1003,5 +1005,31 @@
     "confirmHelp": "Type restore to confirm.",
     "restoring": "Restoring…",
     "restored": "Restored {rows} rows in {tables} tables. Reload the app."
+  },
+  "wishlist": {
+    "newWish": "New wish",
+    "editWish": "Edit wish",
+    "name": "Name",
+    "variantHelp": "Size or version, as on a model (\"5 m\", \"125 mm\").",
+    "quantity": "Quantity",
+    "price": "Price",
+    "priceHelp": "Expected purchase price per unit, excl. VAT.",
+    "rentalDayPrice": "Day price",
+    "rentalDayPriceHelp": "Rental day price it would get; copied to the model when converted.",
+    "link": "Link",
+    "notes": "Notes",
+    "open": "Open",
+    "bought": "Bought",
+    "help": "Gear to buy. Converting a wish opens the new-model form with its fields filled in.",
+    "noWishes": "Nothing on the wish list",
+    "noWishesBody": "Add gear you want to buy with a price and a link. When it arrives, convert it to a model and add the units.",
+    "noBought": "Nothing bought yet",
+    "addedBy": "added by {name}",
+    "openLink": "open link",
+    "becameModel": "Became model",
+    "convert": "Convert to model",
+    "markBought": "Bought",
+    "reopen": "Reopen",
+    "deleteConfirm": "Remove this wish?"
   }
 }

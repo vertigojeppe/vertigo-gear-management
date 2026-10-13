@@ -23,14 +23,17 @@ type Option = { id: string; name: string; depth: number };
 export function ModelForm({
   model,
   prefill,
+  wishId,
   categories,
   defs,
   defaultCategoryId,
   hasItems,
 }: {
   model?: ModelDto;
-  /** "New variant of …": defaults copied from a sibling, without its id or variant. */
-  prefill?: ModelDto;
+  /** "New variant of …": defaults copied from a sibling (without its variant), or the fields of a wish being converted. */
+  prefill?: Partial<ModelDto>;
+  /** Set when the form converts a wish: saving marks it bought and links the model. */
+  wishId?: string;
   categories: Option[];
   defs: CustomFieldDef[];
   defaultCategoryId?: string;
@@ -48,6 +51,7 @@ export function ModelForm({
   return (
     <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
       {model && <input type="hidden" name="id" value={model.id} />}
+      {wishId && <input type="hidden" name="wishId" value={wishId} />}
       <FormError message={state.error} />
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -58,7 +62,7 @@ export function ModelForm({
           <Input id="name" name="name" defaultValue={v("name", base?.name)} required />
         </Field>
         <Field id="variant" label={t("variant")} help={t("variantHelp")} optional error={err.variant}>
-          <Input id="variant" name="variant" defaultValue={v("variant", model?.variant)} autoFocus={Boolean(prefill)} />
+          <Input id="variant" name="variant" defaultValue={v("variant", model ? model.variant : wishId ? prefill?.variant : undefined)} autoFocus={Boolean(prefill) && !wishId} />
         </Field>
         <Field id="categoryId" label={t("category")} error={err.categoryId}>
           <NativeSelect id="categoryId" name="categoryId" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>

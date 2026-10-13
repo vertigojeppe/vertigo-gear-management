@@ -12,8 +12,8 @@ import { readInventorySheet, readControllers, readProjectors, readComputers, rea
  *  - import      → will be written as read
  *  - assumption  → will be written, with a stated guess
  *  - decision    → written only after you pick an option
- *  - parked      → belongs to a feature that is not built yet (pricing,
- *                  wish list, sub-hire, purchase records); shown, not written
+ *  - parked      → belongs to a feature that is not built yet (sub-hire,
+ *                  purchase records); shown, not written
  */
 
 export type Bucket = "import" | "assumption" | "decision" | "parked";
@@ -58,8 +58,9 @@ export type ContactOp = { type: "contact"; name: string; kind: "person" | "compa
 export type LocationOp = { type: "location"; name: string; kind: "warehouse" | "person"; contactName?: string; importSource: Src };
 export type RentalOp = { type: "rental"; clientName: string; startDate: string; endDate: string; notes: string; lines: { modelKey: string | null; quantity: number; text: string }[]; importSource: Src };
 export type NoteOp = { type: "modelNote"; modelKey: string; note: string };
+export type WishOp = { type: "wish"; manufacturer: string; name: string; variant: string | null; categoryPath?: string[]; rentalDayPrice: number | null; notes: string | null; importSource: Src };
 export type RateTableOp = { type: "rateTable"; name: string; isDefault: boolean; extraRule: "none" | "per_day" | "per_10_days"; extraFactor: number; notes: string | null; tiers: { days: number; factor: number }[]; importSource: Src };
-export type Op = ModelOp | BinOp | UnitOp | KitOp | ContactOp | LocationOp | RentalOp | NoteOp | RateTableOp;
+export type Op = ModelOp | BinOp | UnitOp | KitOp | ContactOp | LocationOp | RentalOp | NoteOp | RateTableOp | WishOp;
 
 export type Decision = { question: string; options: { key: string; label: string; ops: Op[] }[]; defaultKey: string };
 
@@ -359,7 +360,18 @@ function projectorRows(rows: ProjectorRow[], ctx: PlanContext): PlanRow[] {
       continue;
     }
     if (p.section === "wish") {
-      out.push({ key, sheet: "PROJEKTORE", src: p.modelSrc, bucket: "parked", summary: `Wish: ${p.model}${p.dayPrice ? ` · ${p.dayPrice} kr` : ""}${p.notes.length ? ` · ${p.notes[0]}` : ""}`, ops: [], parked: { feature: "Wish list", detail: "Models to buy; goes into the wish list when that feature is built (backlog)." } });
+      // "Ønsker" rows are projectors to buy: they go on the wish list, not into the inventory.
+      const wm = p.model.split(/\s+/)[0];
+      const specs = [p.lumen ? `${p.lumen} lumen` : "", p.throwRatio, p.lensShift, p.resolution, ...p.notes].filter(Boolean);
+      out.push({
+        key,
+        sheet: "PROJEKTORE",
+        src: p.modelSrc,
+        bucket: "assumption",
+        summary: `Wish list: ${p.model}${p.dayPrice ? ` · day price ${p.dayPrice}` : ""}`,
+        assumption: "Under \"Ønsker\" on the projector sheet, so it is a wish (gear to buy), not inventory. Skipped if the wish list already has this row.",
+        ops: [{ type: "wish", manufacturer: wm, name: p.model.slice(wm.length).trim() || p.model, variant: null, categoryPath: ["Video", "Projectors"], rentalDayPrice: p.dayPrice, notes: specs.length ? specs.join(" · ") : null, importSource: p.modelSrc }],
+      });
       continue;
     }
     const manufacturer = p.model.split(/\s+/)[0];
@@ -636,7 +648,21 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
     }
   }
   const div = sheet("Dirverse");
-  if (div) rows.push({ key: "div:tente", sheet: "Dirverse", src: "Dirverse!A8", bucket: "parked", summary: "TENTE castor reference (Alpha 3477UFR100P62 100 mm, 3477UFR125P62 125 mm)", ops: [], parked: { feature: "Wish list / reference", detail: "Reference material, not inventory; goes into the wish list when that feature is built (backlog)." } });
+  if (div) {
+    // Castor part numbers from the Dirverse sheet: reference material for the next case build, kept on the wish list.
+    rows.push({
+      key: "div:tente",
+      sheet: "Dirverse",
+      src: "Dirverse!A8",
+      bucket: "assumption",
+      summary: "Wish list: TENTE Alpha castors (3477UFR100P62 100 mm, 3477UFR125P62 125 mm)",
+      assumption: "Reference material, not inventory: kept as two wishes so the part numbers are at hand when cases are built. Skipped if the wish list already has them.",
+      ops: [
+        { type: "wish", manufacturer: "TENTE", name: "Alpha 3477UFR100P62", variant: "100 mm", rentalDayPrice: null, notes: "Castor for flight cases (Dirverse sheet).", importSource: "Dirverse!A8" },
+        { type: "wish", manufacturer: "TENTE", name: "Alpha 3477UFR125P62", variant: "125 mm", rentalDayPrice: null, notes: "Castor for flight cases (Dirverse sheet).", importSource: "Dirverse!A8" },
+      ],
+    });
+  }
 
   const counts: Record<Bucket, number> = { import: 0, assumption: 0, decision: 0, parked: 0 };
   for (const r of rows) counts[r.bucket]++;

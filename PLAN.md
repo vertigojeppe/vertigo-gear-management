@@ -313,10 +313,18 @@ texts were added phase by phase and audited here.
 and round-trip (CI), browser flows for labels, export, backup and the
 login lockout.
 
+### Wish list ✅ (2026-10-13)
+Inventory › Wish list: gear to buy with quantity, expected price, day
+price, link and notes; open / bought; "convert to model" opens the
+new-model form prefilled and links the model back to the wish. CSV
+export; the importer now writes the projector wish rows and the castor
+references instead of parking them.
+**Tests:** service round-trip (DB), importer plan, browser flow.
+
 ### Next
-Sub-hire catalog, wish list and purchase records (the rest of the
-October spec update, see `BACKLOG.md`), then whatever using the app at
-Vertigo turns up.
+Purchase records and the sub-hire catalog (the rest of the October spec
+update, see `BACKLOG.md`), then whatever using the app at Vertigo turns
+up.
 
 ## 6. Decisions I will make unless you object
 

@@ -6,6 +6,8 @@ import { requirePermission } from "@/lib/auth/session";
 import { customFieldsFromForm, validateCustomFields, CF_PREFIX } from "@/lib/custom-fields";
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitions } from "@/modules/settings";
+// eslint-disable-next-line no-restricted-imports -- the wishlist barrel re-exports client components; the service is all this action needs
+import { wishes } from "@/modules/wishlist/service";
 import { categoryInput, itemBatchInput, itemInput, locationInput, modelInput, statusChangeInput, familyRenameInput } from "./schema";
 import { categories, items, locations, models, InventoryError, type BulkResult } from "./service";
 
@@ -79,6 +81,7 @@ export async function deleteLocation(formData: FormData): Promise<FormState> {
 export async function saveModel(_prev: FormState, formData: FormData): Promise<FormState> {
   const actor = await requirePermission("inventory.write");
   const id = String(formData.get("id") ?? "");
+  const wishId = String(formData.get("wishId") ?? "");
   const parsed = parseForm(modelInput, formData);
   if (!parsed.ok) return parsed.state;
   const defs = await customFieldDefinitions.forEntity("model", parsed.data.categoryId);
@@ -87,11 +90,16 @@ export async function saveModel(_prev: FormState, formData: FormData): Promise<F
   let modelId = id;
   try {
     if (id) await models.update(actor, id, parsed.data, cf.values);
-    else modelId = (await models.create(actor, parsed.data, cf.values)).id;
+    else {
+      modelId = (await models.create(actor, parsed.data, cf.values)).id;
+      // Converting a wish: the model exists now, so the wish is bought and points at it.
+      if (wishId) await wishes.markBought(actor, wishId, modelId);
+    }
   } catch (err) {
     return errorState(err, echoValues(formData));
   }
   revalidateInventory();
+  revalidatePath("/inventory/wishlist");
   redirect(`/inventory/models/${modelId}`);
 }
 

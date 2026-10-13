@@ -27,6 +27,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | settings | CustomFieldDefinition | `customFieldDefinitions.*` |
 | inventory | Category, Model, Item, Location, StatusLog | `categories`, `locations`, `models`, `items`, list/detail queries, forms |
 | contacts | Contact | `contacts`, `contactList`, `personOptions`, contact dialog |
+| wishlist | WishItem | `wishes` (create/update/setStatus/markBought/remove), `wishList`, wish dialog; converts through the model form |
 | files | File, Attachment | `files.*`, `AttachmentsSection` |
 | projects | Client, Project, ProjectContact, ProjectCrew, Allocation | `clients`, `projects`, `allocations`, availability engine, timeline |
 | rentals | Rental, RentalLine | `rentals`, `rentalLines`, pricing, agreement PDF |
@@ -131,11 +132,19 @@ erDiagram
   Contact ||--o{ Location : "type=person"
   User ||--o{ Location : "type=person"
   Category ||--o{ CustomFieldDefinition : "scopes"
+  Category |o--o{ WishItem : "wished in"
+  Model |o--o{ WishItem : "became"
 
   Contact {
     string kind "person | company"
     string name
     string organisation
+  }
+  WishItem {
+    string name "model fields, copied on convert"
+    string status "open | bought"
+    decimal price
+    string link
   }
   Model {
     string name "the family"

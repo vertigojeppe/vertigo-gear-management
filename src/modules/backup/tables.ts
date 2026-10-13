@@ -21,6 +21,7 @@ export const TABLES: TableDef[] = [
   { name: "Category", delegate: "category", selfRef: "parentId" },
   { name: "CustomFieldDefinition", delegate: "customFieldDefinition" },
   { name: "Model", delegate: "model" },
+  { name: "WishItem", delegate: "wishItem" },
   { name: "Location", delegate: "location", selfRef: "parentId" },
   { name: "Item", delegate: "item", selfRef: "parentItemId" },
   { name: "StatusLog", delegate: "statusLog" },

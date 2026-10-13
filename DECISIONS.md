@@ -400,3 +400,15 @@ A database dump alone is not a backup of this app: the uploads volume
 holds the drawings and 3D files. The backup script bundles both, the
 restore script swaps both back in and lets the app run its migrations,
 and the README says to rehearse the restore.
+
+## 2026-10-13 — Wishes are not models
+
+A wish (gear we want to buy) is its own table, not a model with a
+"wished" flag. A model is something the inventory, availability, packing
+and pricing all count on; a flag would have to be checked in every one of
+those places, and a wish with zero units would still show up in pickers.
+Instead `WishItem` copies the model's identifying fields so that
+converting is a straight prefill of the new-model form, and the model
+created there is linked back (`modelId`) so the history is visible.
+Wishes use the inventory permissions rather than their own: anyone who
+can edit models can edit the shopping list.

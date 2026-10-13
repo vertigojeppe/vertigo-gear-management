@@ -7,12 +7,13 @@ import { contactList } from "@/modules/contacts";
 import { itemFilters, listItems, listModels, modelFilters, type ItemListRow, type ModelListRow } from "@/modules/inventory";
 import { listProjects, projectFilters, type ProjectListRow } from "@/modules/projects";
 import { listRentals, rentalFilters, type RentalListRow } from "@/modules/rentals";
+import { wishList, type WishRow } from "@/modules/wishlist";
 
 const MAX_PAGES = 200;
 
 /**
  * CSV of a list page with its current filters: /api/export/<list>.csv?…
- * Lists: models, items, projects, rentals, contacts. Pages of the list
+ * Lists: models, items, projects, rentals, contacts, wishes. Pages of the list
  * query are walked until the end (or 200 pages), so the file matches
  * what the page shows, filters and all.
  */
@@ -123,6 +124,24 @@ const LISTS: Record<string, ListDef<any>> = {
       { key: "returnedAt", header: "Returned", value: (r: RentalListRow) => r.returnedAt },
       { key: "notes", header: "Notes", value: (r: RentalListRow) => r.notes },
       { key: "id", header: "Id", value: (r: RentalListRow) => r.id },
+    ],
+  },
+  wishes: {
+    permission: "inventory.read",
+    rows: (sp) => wishList(sp.status === "bought" ? "bought" : sp.status === "all" ? "all" : "open"),
+    columns: [
+      { key: "manufacturer", header: "Manufacturer", value: (w: WishRow) => w.manufacturer },
+      { key: "name", header: "Name", value: (w: WishRow) => w.name },
+      { key: "variant", header: "Variant", value: (w: WishRow) => w.variant },
+      { key: "category", header: "Category", value: (w: WishRow) => w.categoryName },
+      { key: "quantity", header: "Quantity", value: (w: WishRow) => w.quantity },
+      { key: "price", header: "Price", value: (w: WishRow) => w.price },
+      { key: "rentalDayPrice", header: "Rental day price", value: (w: WishRow) => w.rentalDayPrice },
+      { key: "link", header: "Link", value: (w: WishRow) => w.link },
+      { key: "notes", header: "Notes", value: (w: WishRow) => w.notes },
+      { key: "status", header: "Status", value: (w: WishRow) => w.status },
+      { key: "model", header: "Became model", value: (w: WishRow) => w.modelLabel },
+      { key: "id", header: "Id", value: (w: WishRow) => w.id },
     ],
   },
   contacts: {

@@ -237,7 +237,9 @@
     "labelOffsetHelp": "Et ark har {perSheet}; skriv hvor mange der allerede er brugt, så printet starter på den næste ledige.",
     "labelsSheetNote": "{sheets, plural, one {# ark} other {# ark}}. Print i 100 % (ingen skalering), læg arket i som printerens manual siger.",
     "labelsSingleNote": "{count, plural, one {# side} other {# sider}} med én label hver, i rullens størrelse. Sæt printerens papirstørrelse til labelen.",
-    "openLabelsPdf": "Åbn PDF"
+    "openLabelsPdf": "Åbn PDF",
+    "wishlist": "Ønskeliste",
+    "newModelFromWish": "Ny model fra ønskelisten"
   },
   "itemStatus": {
     "in_house": "På lager",
@@ -886,7 +888,7 @@
     "reading": "Læser…",
     "howTitle": "Sådan virker det",
     "how1": "Alle faner læses: kabler, LED, controllere, projektorer, computere, truss, stativer, rør, udlån, nøglebrikker.",
-    "how2": "Forhåndsvisningen deler rækkerne op i: importeres, importeres med antagelse (vist), kræver beslutning (du vælger), og parkeret (priser, ønskeliste, sub-hire og indkøb kommer senere).",
+    "how2": "Forhåndsvisningen deler rækkerne op i: importeres, importeres med antagelse (vist), kræver beslutning (du vælger), og parkeret (sub-hire og indkøb kommer senere).",
     "how3": "Rækker for modeller eller tags, der allerede findes, springes over, medmindre du vælger andet, så en ny eksport kan køres igen.",
     "how4": "Hver importeret model, enhed, kontakt og lokation husker sin celle (Fane!A1).",
     "previewTitle": "Forhåndsvisning af import",
@@ -905,7 +907,7 @@
     "confirm": "Importér {count} rækker",
     "importing": "Importerer…",
     "done": "Import gennemført.",
-    "doneCounts": "{categories} kategorier, {models} modeller, {units} enheder, {bins} bulk-beholdere, {kits} kasser, {contacts} kontakter, {locations} lokationer, {rentals} udlejninger, {rateTables} lejefaktor-tabeller oprettet.",
+    "doneCounts": "{categories} kategorier, {models} modeller, {units} enheder, {bins} bulk-beholdere, {kits} kasser, {contacts} kontakter, {locations} lokationer, {rentals} udlejninger, {rateTables} lejefaktor-tabeller, {wishes} ønsker oprettet.",
     "skipped": "Sprunget over",
     "openInventory": "Åbn lageret",
     "another": "Importér et andet regneark"
@@ -1003,5 +1005,31 @@
     "confirmHelp": "Skriv restore for at bekræfte.",
     "restoring": "Gendanner…",
     "restored": "Gendannede {rows} rækker i {tables} tabeller. Genindlæs appen."
+  },
+  "wishlist": {
+    "newWish": "Nyt ønske",
+    "editWish": "Rediger ønske",
+    "name": "Navn",
+    "variantHelp": "Størrelse eller version, som på en model (\"5 m\", \"125 mm\").",
+    "quantity": "Antal",
+    "price": "Pris",
+    "priceHelp": "Forventet købspris pr. stk. ekskl. moms.",
+    "rentalDayPrice": "Dagspris",
+    "rentalDayPriceHelp": "Dagsprisen den ville få ved udlejning; kopieres til modellen ved konvertering.",
+    "link": "Link",
+    "notes": "Noter",
+    "open": "Åbne",
+    "bought": "Købt",
+    "help": "Udstyr vi vil købe. Konvertering åbner formularen til en ny model med felterne udfyldt.",
+    "noWishes": "Intet på ønskelisten",
+    "noWishesBody": "Tilføj udstyr I vil købe med pris og link. Når det kommer, konverterer du det til en model og tilføjer enhederne.",
+    "noBought": "Intet købt endnu",
+    "addedBy": "tilføjet af {name}",
+    "openLink": "åbn link",
+    "becameModel": "Blev til model",
+    "convert": "Konvertér til model",
+    "markBought": "Købt",
+    "reopen": "Genåbn",
+    "deleteConfirm": "Fjern dette ønske?"
   }
 }
