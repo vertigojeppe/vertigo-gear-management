@@ -58,7 +58,7 @@ export async function deleteRental(formData: FormData): Promise<void> {
   redirect("/rentals");
 }
 
-export type LineState = FormState<{ conflict?: { available: number; requested: number; shortfall: number; conflicts: AllocationLike[] } }>;
+export type LineState = FormState<{ conflict?: { available: number; requested: number; shortfall: number; notRentable?: number; conflicts: AllocationLike[] } }>;
 
 export async function saveRentalLine(_prev: LineState, formData: FormData): Promise<LineState> {
   const actor = await requirePermission("rentals.write");
@@ -71,7 +71,7 @@ export async function saveRentalLine(_prev: LineState, formData: FormData): Prom
     else await rentalLines.add(actor, rentalId, parsed.data);
   } catch (err) {
     if (err instanceof ConflictError) {
-      return { ok: false, values: echoValues(formData), data: { conflict: { available: err.check.available, requested: err.check.requested, shortfall: err.check.shortfall, conflicts: err.check.conflicts } } };
+      return { ok: false, values: echoValues(formData), data: { conflict: { available: err.check.available, requested: err.check.requested, shortfall: err.check.shortfall, notRentable: err.check.notRentable, conflicts: err.check.conflicts } } };
     }
     return errorState(err, echoValues(formData));
   }

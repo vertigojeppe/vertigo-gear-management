@@ -23,6 +23,20 @@ const alloc = (over: Partial<AllocationLike>): AllocationLike => ({
 });
 
 describe("computeAvailability", () => {
+  it("leaves own-projects-only units out when the request is for a rental", () => {
+    const mixed: ItemLike[] = [...items, { id: "p6", quantity: 1, status: "in_house", notForRental: true }, { id: "bin", quantity: 10, status: "in_house", notForRental: true }];
+    const forProject = computeAvailability(mixed, [], { from: "2026-11-01", to: "2026-11-02" });
+    expect(forProject.owned).toBe(15);
+    expect(forProject.notRentable).toBe(0);
+    const forRental = computeAvailability(mixed, [], { from: "2026-11-01", to: "2026-11-02" }, undefined, { forRental: true });
+    expect(forRental.owned).toBe(4);
+    expect(forRental.notRentable).toBe(11);
+    expect(forRental.available).toBe(3);
+    // A rental asking for more than the rentable units falls short even though the shelf is full.
+    expect(checkRequest(mixed, [], { from: "2026-11-01", to: "2026-11-02" }, 4, undefined, { forRental: true })).toMatchObject({ ok: false, shortfall: 1 });
+    expect(checkRequest(mixed, [], { from: "2026-11-01", to: "2026-11-02" }, 4)).toMatchObject({ ok: true });
+  });
+
   it("counts owned minus out-of-service when nothing is reserved", () => {
     const a = computeAvailability(items, [], { from: "2026-11-01", to: "2026-11-02" });
     expect(a.owned).toBe(4); // retired excluded

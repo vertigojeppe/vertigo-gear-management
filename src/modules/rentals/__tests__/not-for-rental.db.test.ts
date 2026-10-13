@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import type { Actor } from "@/lib/auth/session";
 import { RentalError, rentalLines } from "../service";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls in server actions, which do not load under Vitest
+import { ConflictError } from "@/modules/projects/service";
 
 /** Gear flagged "not for rental" cannot go on a rental, at model or unit level. */
 const marker = `nfr-${Date.now()}`;
@@ -47,5 +49,15 @@ describe("not for rental", () => {
     const { line: row } = await rentalLines.add(admin, rentalId, { ...line, modelId: rentableModelId });
     await expect(rentalLines.assignItem(admin, row.id, flaggedUnitId)).rejects.toThrow(/not for rental/);
     await expect(rentalLines.update(admin, row.id, { ...line, modelId: ownOnlyModelId })).rejects.toBeInstanceOf(RentalError);
+  });
+
+  it("does not count the flagged unit as available for a rental", async () => {
+    // Two units exist, one is own-projects-only, and the line above holds the other: nothing left for a rental.
+    const err = await rentalLines.add(admin, rentalId, { ...line, modelId: rentableModelId }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ConflictError);
+    expect((err as ConflictError).check).toMatchObject({ owned: 1, notRentable: 1, allocated: 1, available: 0, shortfall: 1 });
+    // "Reserve anyway" still works, as everywhere else.
+    const forced = await rentalLines.add(admin, rentalId, { ...line, modelId: rentableModelId, force: true });
+    expect(forced.line.quantity).toBe(1);
   });
 });

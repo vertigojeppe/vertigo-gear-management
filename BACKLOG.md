@@ -26,10 +26,6 @@ fields) is done; the rest waits until production plans have shipped.
   not ticked or checked in (they never pass through our warehouse); a
   "collected from partner / returned to partner" tick could come later.
   Sub-hire on external rentals is not supported (own projects only).
-- **Wish list**: models we want to buy (price, link, note), convertible to
-  a real model when bought; includes the Dirverse castor references.
-- **Purchase records** per model: supplier (a contact), date, quote/order
-  number, list price, discount %, net price, attachment (the Urs quotes).
 - **Importer follow-ups** (the importer itself shipped as Phase 5a):
   nothing is parked any more (rate tables, wish rows, the castor
   references, the Urs truss quotes and the GearGuys rows all import). The truss
@@ -38,16 +34,11 @@ fields) is done; the rest waits until production plans have shipped.
   parts are serialized units without serials; the two media servers'
   component prices are a model note. A CSV/XLSX import for arbitrary lists
   (not this spreadsheet) is still open.
-- Exclude not-for-rental units from rental availability counts (today the
-  flag refuses the line or unit, but the availability number still counts
-  them).
 - Unify `Client` (renter) with `Contact`, or link them, so a renter is a
   contact too.
 
 ## Not scheduled
 
-- Sub-hire: track gear rented *in* from other companies for a project
-  (an "external" item or a per-project rented-in line).
 - Magic-link login and password reset (needs SMTP; env vars already
   reserved in `.env.example`).
 - Google login (add provider to `src/lib/auth/index.ts`).

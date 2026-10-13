@@ -7,7 +7,7 @@ import { rangesOverlap, type DateString } from "@/lib/dates";
  * dashboard agree. Dates are inclusive YYYY-MM-DD strings.
  */
 
-export type ItemLike = { id: string; quantity: number; status: string };
+export type ItemLike = { id: string; quantity: number; status: string; /** Own projects only; a rental can never have it. */ notForRental?: boolean };
 
 export type AllocationLike = {
   id: string;
@@ -25,6 +25,9 @@ export type Window = { from: DateString; to: DateString };
 
 export type Exclude = { allocationId?: string; holderType?: "project" | "rental"; holderId?: string };
 
+/** `forRental`: units flagged not-for-rental are left out of `owned` (they count as `notRentable` instead). */
+export type Options = { forRental?: boolean };
+
 export type Availability = {
   /** Units owned (everything not retired). */
   owned: number;
@@ -34,6 +37,8 @@ export type Availability = {
   allocated: number;
   /** owned - unavailable - allocated; can be negative when over-booked. */
   available: number;
+  /** Units left out because the request is for a rental and they are own-projects-only (0 otherwise). */
+  notRentable: number;
   /** The overlapping allocations that count towards `allocated`. */
   conflicts: AllocationLike[];
 };
@@ -45,25 +50,30 @@ export function isExcluded(a: AllocationLike, exclude?: Exclude): boolean {
   return false;
 }
 
-export function computeAvailability(items: ItemLike[], allocations: AllocationLike[], window: Window, exclude?: Exclude): Availability {
+export function computeAvailability(items: ItemLike[], allocations: AllocationLike[], window: Window, exclude?: Exclude, options: Options = {}): Availability {
   let owned = 0;
   let unavailable = 0;
+  let notRentable = 0;
   for (const i of items) {
     if (i.status === "retired") continue;
+    if (options.forRental && i.notForRental) {
+      notRentable += i.quantity;
+      continue;
+    }
     owned += i.quantity;
     if (!(itemStatus(i.status)?.available ?? false)) unavailable += i.quantity;
   }
   const conflicts = allocations.filter((a) => !isExcluded(a, exclude) && rangesOverlap(a.startDate, a.endDate, window.from, window.to));
   const allocated = conflicts.reduce((sum, a) => sum + a.quantity, 0);
-  return { owned, unavailable, allocated, available: owned - unavailable - allocated, conflicts };
+  return { owned, unavailable, allocated, available: owned - unavailable - allocated, notRentable, conflicts };
 }
 
 /**
  * Result of asking for `quantity` units in a window.
  * `shortfall` > 0 means the request cannot be fully covered.
  */
-export function checkRequest(items: ItemLike[], allocations: AllocationLike[], window: Window, quantity: number, exclude?: Exclude) {
-  const availability = computeAvailability(items, allocations, window, exclude);
+export function checkRequest(items: ItemLike[], allocations: AllocationLike[], window: Window, quantity: number, exclude?: Exclude, options?: Options) {
+  const availability = computeAvailability(items, allocations, window, exclude, options);
   const shortfall = Math.max(0, quantity - availability.available);
   return { ...availability, requested: quantity, shortfall, ok: shortfall === 0 };
 }
