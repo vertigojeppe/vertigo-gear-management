@@ -45,11 +45,11 @@ export const importer = {
 
   async context(): Promise<PlanContext> {
     const [models, items, users] = await Promise.all([
-      prisma.model.findMany({ select: { manufacturer: true, name: true } }),
+      prisma.model.findMany({ select: { manufacturer: true, name: true, variant: true } }),
       prisma.item.findMany({ select: { assetTag: true } }),
       prisma.user.findMany({ where: { active: true }, select: { id: true, name: true } }),
     ]);
-    return { existingModels: new Set(models.map((m) => modelKey(m.manufacturer, m.name))), existingTags: new Set(items.map((i) => i.assetTag)), users };
+    return { existingModels: new Set(models.map((m) => modelKey(m.manufacturer, m.name, m.variant))), existingTags: new Set(items.map((i) => i.assetTag)), users };
   },
 
   /** The recorded result when this import has already been applied. */

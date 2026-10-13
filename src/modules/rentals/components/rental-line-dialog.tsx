@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import { Field, FormError } from "@/components/form/field";
+import { ModelSelect } from "@/components/form/model-select";
 import { NativeSelect } from "@/components/form/native-select";
 import { SubmitButton } from "@/components/form/submit-button";
 import { ConfirmButton } from "@/components/form/confirm-button";
@@ -15,9 +16,8 @@ import type { FormState } from "@/lib/forms";
 import { ConflictNotice } from "@/components/conflict-notice";
 import { appConfig } from "../../../../config/app.config";
 import { assignRentalItem, removeRentalLine, saveRentalLine, type LineState } from "../actions";
-import { modelLabel } from "@/lib/format";
 
-type ModelOption = { id: string; manufacturer: string; name: string; trackingType: string; rentalDayPrice?: number | null };
+type ModelOption = { id: string; manufacturer: string; name: string; variant?: string | null; trackingType: string; rentalDayPrice?: number | null };
 type LineEdit = { id: string; modelId: string; quantity: number; pricePerDay: number | null; discountPct: number | null; note: string | null };
 
 export function RentalLineDialog({ rentalId, models, existing }: { rentalId: string; models: ModelOption[]; existing?: LineEdit }) {
@@ -51,14 +51,7 @@ export function RentalLineDialog({ rentalId, models, existing }: { rentalId: str
             {existing && <input type="hidden" name="lineId" value={existing.id} />}
             <FormError message={state.error} />
             <Field id="line-model" label={t("model")} error={err.modelId}>
-              <NativeSelect id="line-model" name="modelId" value={modelId} onChange={(e) => pickModel(e.target.value)} required>
-                <option value="">—</option>
-                {models.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {modelLabel(m)}
-                  </option>
-                ))}
-              </NativeSelect>
+              <ModelSelect id="line-model" name="modelId" value={modelId} onChange={(e) => pickModel(e.target.value)} models={models} required />
             </Field>
             <div className="grid grid-cols-3 gap-3">
               <Field id="line-qty" label={t("quantity")} error={err.quantity}>

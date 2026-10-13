@@ -32,6 +32,8 @@ export const modelInput = z.object({
   /** Empty for own-built gear (BlackLED, SplitLED, cases): the label is then just the name. */
   manufacturer: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().max(100).optional()).transform((v) => v ?? ""),
   name: z.string().trim().min(1, "Model name is required.").max(150),
+  /** Size within the family ("5 m", "150 cm"); one model per variant. */
+  variant: optionalText,
   trackingType: z.enum(TRACKING_TYPES),
   description: optionalText,
   weightKg: optionalNumber,

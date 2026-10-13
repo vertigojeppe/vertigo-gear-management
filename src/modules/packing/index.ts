@@ -3,8 +3,8 @@ export { packingLists, packingLines, packingChecks, packingTemplates, shareLinks
 export { lineProgress, listProgress, listTotals, canEditLines, canPack, canCheckOut, canCheckIn, outcomeItemStatus, isOutcome } from "./logic";
 export type { LineProgress } from "./logic";
 export { listDetail, groupLines, listsForProject, kitOptions, templateOptions, templateDetail, otherListsForCopy, gearCatalog } from "./queries";
-export { filterCatalog } from "./picker";
-export type { CatalogEntry } from "./picker";
+export { filterCatalog, groupCatalog } from "./picker";
+export type { CatalogEntry, CatalogGroup } from "./picker";
 export type { ListDetail, LineRow, CheckRow } from "./queries";
 export { packingListInput, lineInput, lineUpdateInput, tickInput, scanInput, checkInInput, templateInput, templateLineInput, LIST_SOURCES } from "./schema";
 export { renderPackingList } from "./packing-pdf";

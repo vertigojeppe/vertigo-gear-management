@@ -65,7 +65,7 @@ describe("buildPlan", () => {
     const refs = [...ofType(ops, "bin"), ...ofType(ops, "unit"), ...ofType(ops, "kit")].map((o) => o.modelKey);
     for (const k of refs) expect(keys).toContain(k);
 
-    const true1 = models.find((m) => m.name === `True1 ${M} kabler 5 m`)!;
+    const true1 = models.find((m) => m.name === `True1 ${M} kabler` && m.variant === "5 m")!;
     expect(true1).toMatchObject({ manufacturer: "", categoryPath: ["Cables", `True1 ${M}`], tracking: "bulk", weightKg: 0.5, rentalDayPrice: 25 });
     const bins = ofType(ops, "bin").filter((b) => b.modelKey === true1.key);
     expect(bins.map((b) => [b.quantity, b.status])).toEqual([
@@ -75,10 +75,10 @@ describe("buildPlan", () => {
     const lent = ofType(ops, "bin").find((b) => b.personName === "ukirke");
     expect(lent).toMatchObject({ quantity: 2, status: "in_house" });
     expect(ofType(ops, "contact").some((c) => c.name === "ukirke")).toBe(true);
-    const split = models.find((m) => m.name === `SplitLED ${M} 60cm`)!;
+    const split = models.find((m) => m.name === `SplitLED ${M}` && m.variant === "60cm")!;
     expect(split).toMatchObject({ manufacturer: "", powerDrawW: 1150, categoryPath: ["Lighting", "LED"] });
     expect(ofType(ops, "kit")).toEqual([expect.objectContaining({ name: "SplitLED flightcase", count: 2 })]);
-    expect(models.find((m) => m.name === "BlackLED controller 4 udgange (200w)")).toMatchObject({ weightKg: 2, powerDrawW: 200 });
+    expect(models.find((m) => m.name === "BlackLED controller" && m.variant === "4 udgange (200w)")).toMatchObject({ weightKg: 2, powerDrawW: 200 });
     const units = ofType(ops, "unit");
     expect(units.find((u) => u.assetTag === "N4-91")).toMatchObject({ status: "in_repair", customFields: { ip_address: "192.168.1.20", board_type: "Teensy 3.2" } });
     expect(units.find((u) => u.assetTag === "W6-92")?.notes).toBe("Sheet column M: ID: N4-91");
@@ -86,7 +86,7 @@ describe("buildPlan", () => {
     expect(units.find((u) => u.assetTag === "ZP2")).toMatchObject({ status: "retired", retiredReason: "sold", notForRental: true });
     expect(units.find((u) => u.assetTag === "U99901")).toMatchObject({ personName: "Alex Admin" });
     expect(units.find((u) => u.assetTag === "U99902")).toMatchObject({ status: "missing" });
-    expect(units.filter((u) => u.modelKey === modelKey("KITO", `KITO ${M} 500 kg`))).toHaveLength(2);
+    expect(units.filter((u) => u.modelKey === modelKey("KITO", `KITO ${M}`, "500 kg"))).toHaveLength(2);
     const rental = ofType(ops, "rental")[0];
     expect(rental).toMatchObject({ clientName: `Testperson ${M}`, startDate: "2021-10-12" });
     expect(rental.lines[0]).toMatchObject({ modelKey: modelKey("ETC", "EclGalleryProfile FC 60W RGBW"), quantity: 4 });
@@ -102,7 +102,7 @@ describe("buildPlan", () => {
     expect(ofType(chosen, "unit").some((u) => u.assetTag === "W6-92")).toBe(false);
     expect(ofType(chosen, "rental")).toHaveLength(0);
 
-    const ctx: PlanContext = { ...empty, existingModels: new Set([modelKey("", `True1 ${M} kabler 5 m`)]), existingTags: new Set(["W6-91", "ZP1"]) };
+    const ctx: PlanContext = { ...empty, existingModels: new Set([modelKey("", `True1 ${M} kabler`, "5 m")]), existingTags: new Set(["W6-91", "ZP1"]) };
     const again = buildPlan(wb, ctx);
     const byKey = Object.fromEntries(again.rows.map((r) => [r.key, r]));
     expect(byKey["LED - SCROLLER - BOX:6"].bucket).toBe("decision");
@@ -114,6 +114,6 @@ describe("buildPlan", () => {
     expect(ofType(ops, "unit").some((u) => u.assetTag === "W6-91" || u.assetTag === "ZP1")).toBe(false);
     // "Add to the existing model" keeps the bins but not the model.
     const add = resolveOps(again, { "LED - SCROLLER - BOX:6": "add" });
-    expect(ofType(add, "bin").filter((b) => b.modelKey === modelKey("", `True1 ${M} kabler 5 m`))).toHaveLength(2);
+    expect(ofType(add, "bin").filter((b) => b.modelKey === modelKey("", `True1 ${M} kabler`, "5 m"))).toHaveLength(2);
   });
 });

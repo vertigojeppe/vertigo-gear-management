@@ -355,3 +355,16 @@ label is the name alone (`modelLabel`). A data migration blanked the
 existing "Vertigo" and "Generic" values. Real manufacturers (Robe,
 Panasonic, Manfrotto) stay, because they matter for manuals, spares and
 sub-hire.
+
+## 2026-10-13 — Variants are models, families are a name
+
+47 of the first rows in the inventory were four things in different
+lengths. A length is still its own stock (you own 30 × 150 cm and 8 ×
+200 cm, and they weigh and cost differently), so the unit of stock,
+availability, packing and pricing stays the model. What changed is the
+name: `Model.name` is the family and `Model.variant` the size, and every
+list, dropdown and picker groups by family. No "product" entity above
+models: it would double every form for what is a display and picking
+problem. A data migration split the existing combined names on their
+trailing size, output count or load; anything it could not read keeps
+its name and can be split by hand in the form.

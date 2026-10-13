@@ -48,6 +48,21 @@ test.describe("inventory", () => {
     await expect(page.getByRole("cell", { name: "Fan rattles" })).toBeVisible();
   });
 
+  test("families group their variants in the list and in the model dropdown", async ({ page }) => {
+    await signIn(page, "member@vertigo.test");
+    // The seeded DMX 5-pin cables come in 5, 10 and 25 m: one family row that opens to three variants.
+    await page.goto("/inventory?q=DMX+5-pin");
+    const family = page.locator("summary", { hasText: "DMX 5-pin" });
+    await expect(family).toBeVisible();
+    await expect(family.getByText("3 variants")).toBeVisible();
+    await expect(page.getByRole("link", { name: /^25 m/ })).toBeHidden();
+    await family.click();
+    await expect(page.getByRole("link", { name: /^25 m/ })).toBeVisible();
+    // The item form groups the same family in an optgroup.
+    await page.goto("/inventory/items/new");
+    await expect(page.getByLabel("Model").locator("optgroup[label=\"DMX 5-pin\"] option")).toHaveCount(3);
+  });
+
   test("viewer sees inventory but no edit controls", async ({ page }) => {
     await signIn(page, "viewer@vertigo.test");
     await page.goto("/inventory");

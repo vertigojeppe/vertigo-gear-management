@@ -14,7 +14,7 @@ export {
   kitCandidates,
   dashboardStats,
 } from "./queries";
-export type { ModelListRow, ItemListRow } from "./queries";
+export type { ModelFamily, ModelListRow, ItemListRow } from "./queries";
 export {
   itemFilters,
   modelFilters,

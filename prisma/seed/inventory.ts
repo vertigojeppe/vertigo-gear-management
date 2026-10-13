@@ -1,5 +1,6 @@
 import type { PrismaClient } from "../../src/generated/prisma/client";
 import { formatAssetTag, nextAssetTag } from "../../src/lib/asset-tag";
+import { splitVariant } from "../../src/lib/variant";
 
 /**
  * Realistic demo inventory for a Copenhagen light/laser/projection studio.
@@ -212,11 +213,14 @@ export async function seedInventory(prisma: PrismaClient) {
   for (const m of MODELS) {
     const categoryId = catIds.get(m.cat);
     if (!categoryId) throw new Error(`Unknown category path ${m.cat}`);
-    const existing = await prisma.model.findFirst({ where: { manufacturer: m.mfr, name: m.name } });
+    // "DMX 5-pin 5 m" is the family "DMX 5-pin" in the "5 m" variant.
+    const { name, variant } = splitVariant(m.name);
+    const existing = await prisma.model.findFirst({ where: { manufacturer: m.mfr, name, variant } });
     const data = {
       categoryId,
       manufacturer: m.mfr,
-      name: m.name,
+      name,
+      variant,
       trackingType: m.tracking ?? "serialized",
       description: m.desc ?? null,
       weightKg: m.kg ?? null,
@@ -293,7 +297,7 @@ export async function seedInventory(prisma: PrismaClient) {
     for (const b of k.bulk ?? []) {
       // The seed's own model (same manufacturer + name), not an imported one that happens to share the name.
       const seedModel = MODELS.find((x) => x.name === b.modelName);
-      const model = await prisma.model.findFirst({ where: { manufacturer: seedModel?.mfr ?? "", name: b.modelName } });
+      const model = await prisma.model.findFirst({ where: { manufacturer: seedModel?.mfr ?? "", ...splitVariant(b.modelName) } });
       if (!model) continue;
       const existingBin = await prisma.item.findFirst({ where: { modelId: model.id, parentItemId: kit.id } });
       if (existingBin) continue;

@@ -22,7 +22,10 @@ model Model {
   categoryId   String
   category     Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   manufacturer String
+  /// The family ("DMX 5-pin", "16 mm rustfri rods"); the size lives in variant.
   name         String
+  /// "5 m", "150 cm", "6 udgange (450w)": one Model per variant, since stock, weight and price differ.
+  variant      String?
   /// "serialized" (one Item per physical unit) or "bulk" (Item = bin with quantity).
   trackingType String   @default("serialized")
   description  String?
@@ -54,6 +57,7 @@ model Model {
 
   @@index([categoryId])
   @@index([manufacturer, name])
+  @@index([manufacturer, name, variant])
 }
 
 /// A physical unit (serialized) or a bin of a bulk model with a quantity.

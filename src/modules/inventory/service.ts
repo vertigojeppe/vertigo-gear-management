@@ -135,6 +135,7 @@ export type ModelDto = {
   categoryId: string;
   manufacturer: string;
   name: string;
+  variant: string | null;
   trackingType: "serialized" | "bulk";
   description: string | null;
   weightKg: number | null;
@@ -161,6 +162,7 @@ export function toModelDto(m: ModelRow): ModelDto {
     categoryId: m.categoryId,
     manufacturer: m.manufacturer,
     name: m.name,
+    variant: m.variant,
     trackingType: m.trackingType === "bulk" ? "bulk" : "serialized",
     description: m.description,
     weightKg: num(m.weightKg),
@@ -185,6 +187,7 @@ function modelData(input: ModelInput, customFields: CustomFieldValues) {
     categoryId: input.categoryId,
     manufacturer: input.manufacturer,
     name: input.name,
+    variant: input.variant ?? null,
     trackingType: input.trackingType,
     description: input.description ?? null,
     weightKg: input.weightKg ?? null,

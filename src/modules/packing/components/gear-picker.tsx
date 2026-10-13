@@ -7,17 +7,18 @@ import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { addKitLine, addLine, addTemplateLine } from "../actions";
-import { filterCatalog, type CatalogEntry } from "../picker";
+import { filterCatalog, groupCatalog, type CatalogEntry } from "../picker";
 
 type Target = { kind: "list"; projectId: string; listId: string } | { kind: "template"; templateId: string };
 type Option = { id: string; label: string };
 type RowState = { type: "pending" } | { type: "added"; count: number } | { type: "error"; message: string };
 
 /**
- * Type-to-add: one search box over every model and kit, results with
- * stock and "already on the list", a quantity per row and an Add button.
- * Enter adds the highlighted row, so a list can be built without leaving
- * the keyboard (or a barcode scanner, which types the tag and Enter).
+ * Type-to-add: one search box over every model and kit. Matches are shown
+ * by family ("16 mm rustfri rods") with one row per variant ("50 cm",
+ * "70 cm"), each with stock, "already on the list", a quantity and an Add
+ * button. Enter adds the highlighted row and keeps the focus, so a list is
+ * built from the keyboard (or a barcode scanner typing a tag + Enter).
  */
 export function GearPicker({ target, catalog, cases = [] }: { target: Target; catalog: CatalogEntry[]; cases?: Option[] }) {
   const t = useTranslations("packing");
@@ -32,6 +33,9 @@ export function GearPicker({ target, catalog, cases = [] }: { target: Target; ca
   const inputRef = useRef<HTMLInputElement>(null);
 
   const results = useMemo(() => filterCatalog(catalog, query), [catalog, query]);
+  const groups = useMemo(() => groupCatalog(results), [results]);
+  // The flat order (for arrow keys / Enter) follows the grouped display.
+  const flat = useMemo(() => groups.flatMap((g) => g.entries), [groups]);
   // A new query highlights the first match again (state derived during render, no effect).
   const [prevQuery, setPrevQuery] = useState(query);
   if (prevQuery !== query) {
@@ -77,18 +81,19 @@ export function GearPicker({ target, catalog, cases = [] }: { target: Target; ca
   const onKey = (ev: React.KeyboardEvent) => {
     if (ev.key === "ArrowDown") {
       ev.preventDefault();
-      setActive((a) => Math.min(results.length - 1, a + 1));
+      setActive((a) => Math.min(flat.length - 1, a + 1));
     } else if (ev.key === "ArrowUp") {
       ev.preventDefault();
       setActive((a) => Math.max(0, a - 1));
     } else if (ev.key === "Enter") {
       ev.preventDefault();
-      if (results[active]) add(results[active]);
+      if (flat[active]) add(flat[active]);
     } else if (ev.key === "Escape") {
       setQuery("");
     }
   };
 
+  let index = -1;
   return (
     <div className="flex flex-col gap-2 rounded-lg border p-3">
       <div className="flex flex-wrap items-end gap-2">
@@ -115,38 +120,50 @@ export function GearPicker({ target, catalog, cases = [] }: { target: Target; ca
       ) : results.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noMatches", { query: query.trim() })}</p>
       ) : (
-        <ul className="divide-y rounded-md border text-sm" role="list">
-          {results.map((e, i) => {
-            const state = rows[e.id];
-            const n = quantityOf(e);
-            const short = e.kind === "model" && n + onListNow(e) > e.inHouse;
-            const kitTaken = e.kind === "kit" && onListNow(e) > 0;
-            return (
-              <li key={`${e.kind}:${e.id}`} className={`flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3 ${i === active ? "bg-muted/60" : ""}`} onMouseEnter={() => setActive(i)}>
-                <span className="min-w-0 flex-1">
-                  <span className="font-medium">{e.label}</span>
-                  {e.kind === "kit" && (
-                    <StatusPill color="purple" className="ml-2">
-                      {t("kit")}
-                    </StatusPill>
-                  )}
-                  <span className="block text-xs text-muted-foreground">
-                    {e.category}
-                    {e.kind === "model" ? ` · ${t("inHouseOf", { inHouse: e.inHouse, owned: e.owned })}` : ""}
-                    {onListNow(e) > 0 ? ` · ${t("onList", { count: onListNow(e) })}` : ""}
-                  </span>
-                  {state?.type === "error" && <span className="block text-xs text-destructive">{state.message}</span>}
-                </span>
-                {e.kind === "model" && (
-                  <Input type="number" min="1" step="1" value={qty[e.id] ?? "1"} onChange={(ev) => setQty((q) => ({ ...q, [e.id]: ev.target.value }))} onKeyDown={(ev) => ev.key === "Enter" && (ev.preventDefault(), add(e))} aria-label={`${t("quantity")} ${e.label}`} className={`h-8 w-20 ${short ? "border-amber-500" : ""}`} />
+        <div className="flex flex-col gap-2">
+          {groups.map((g) => (
+            <section key={g.key} className="rounded-md border">
+              <header className="flex flex-wrap items-baseline gap-2 border-b bg-muted/30 px-3 py-1.5 text-sm">
+                <span className="font-medium">{g.family}</span>
+                {g.kind === "kit" && (
+                  <StatusPill color="purple">
+                    {t("kit")}
+                  </StatusPill>
                 )}
-                <Button size="sm" variant={state?.type === "added" ? "outline" : "default"} disabled={state?.type === "pending" || kitTaken} onClick={() => add(e)} aria-label={`${tc("add")} ${e.label}`}>
-                  {state?.type === "pending" ? tc("loading") : kitTaken ? t("kitOnList") : state?.type === "added" ? `✓ ${t("added")}` : tc("add")}
-                </Button>
-              </li>
-            );
-          })}
-        </ul>
+                <span className="text-xs text-muted-foreground">{g.category}</span>
+                {g.entries.length > 1 && <span className="text-xs text-muted-foreground">· {t("variantCount", { count: g.entries.length })}</span>}
+              </header>
+              <ul className="divide-y text-sm" role="list">
+                {g.entries.map((e) => {
+                  index++;
+                  const i = index;
+                  const state = rows[e.id];
+                  const n = quantityOf(e);
+                  const short = e.kind === "model" && n + onListNow(e) > e.inHouse;
+                  const kitTaken = e.kind === "kit" && onListNow(e) > 0;
+                  return (
+                    <li key={`${e.kind}:${e.id}`} className={`flex flex-col gap-1 px-3 py-1.5 sm:flex-row sm:items-center sm:gap-3 ${i === active ? "bg-muted/60" : ""}`} onMouseEnter={() => setActive(i)}>
+                      <span className="min-w-0 flex-1">
+                        <span className={e.variant ? "font-medium" : "text-muted-foreground"}>{e.variant ?? (g.entries.length > 1 ? "—" : e.label)}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {e.kind === "model" ? t("inHouseOf", { inHouse: e.inHouse, owned: e.owned }) : e.category}
+                          {onListNow(e) > 0 ? ` · ${t("onList", { count: onListNow(e) })}` : ""}
+                        </span>
+                        {state?.type === "error" && <span className="block text-xs text-destructive">{state.message}</span>}
+                      </span>
+                      {e.kind === "model" && (
+                        <Input type="number" min="1" step="1" value={qty[e.id] ?? "1"} onChange={(ev) => setQty((q) => ({ ...q, [e.id]: ev.target.value }))} onKeyDown={(ev) => ev.key === "Enter" && (ev.preventDefault(), add(e))} aria-label={`${t("quantity")} ${e.label}`} className={`h-8 w-20 ${short ? "border-amber-500" : ""}`} />
+                      )}
+                      <Button size="sm" variant={state?.type === "added" ? "outline" : "default"} disabled={state?.type === "pending" || kitTaken} onClick={() => add(e)} aria-label={`${tc("add")} ${e.label}`}>
+                        {state?.type === "pending" ? tc("loading") : kitTaken ? t("kitOnList") : state?.type === "added" ? `✓ ${t("added")}` : tc("add")}
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
     </div>
   );

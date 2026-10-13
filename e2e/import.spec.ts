@@ -50,7 +50,9 @@ test.describe("spreadsheet import", () => {
     await page.goto("/inventory");
     await page.getByPlaceholder(/search/i).fill(`SplitLED e2e-${stamp}`);
     await page.keyboard.press("Enter");
-    await expect(page.getByText(`SplitLED e2e-${stamp} 60cm`).first()).toBeVisible();
+    // The family row shows the name; its 60cm variant sits inside it.
+    await expect(page.getByText(`SplitLED e2e-${stamp}`).first()).toBeVisible();
+    await expect(page.getByText("60cm").first()).toBeVisible();
   });
 
   test("members cannot open the import page", async ({ page }) => {
