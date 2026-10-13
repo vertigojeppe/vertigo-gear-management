@@ -18,6 +18,7 @@ describe("splitVariant", () => {
     expect(splitVariant("PT-RZ120")).toEqual({ name: "PT-RZ120", variant: null });
     expect(splitVariant("Half coupler 50 mm")).toEqual({ name: "Half coupler", variant: "50 mm" });
     expect(splitVariant("5 m")).toEqual({ name: "5 m", variant: null }); // nothing left for a name
+    expect(splitVariant("387XBU Wind Up Stativ (max højde = 3,66m")).toEqual({ name: "387XBU Wind Up Stativ (max højde = 3,66m", variant: null }); // unbalanced bracket
   });
 });
 

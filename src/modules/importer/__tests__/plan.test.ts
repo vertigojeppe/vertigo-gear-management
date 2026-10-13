@@ -86,7 +86,7 @@ describe("buildPlan", () => {
     expect(units.find((u) => u.assetTag === "ZP2")).toMatchObject({ status: "retired", retiredReason: "sold", notForRental: true });
     expect(units.find((u) => u.assetTag === "U99901")).toMatchObject({ personName: "Alex Admin" });
     expect(units.find((u) => u.assetTag === "U99902")).toMatchObject({ status: "missing" });
-    expect(units.filter((u) => u.modelKey === modelKey("KITO", `KITO ${M}`, "500 kg"))).toHaveLength(2);
+    expect(units.filter((u) => u.modelKey === modelKey("KITO", M, "500 kg"))).toHaveLength(2);
     const rental = ofType(ops, "rental")[0];
     expect(rental).toMatchObject({ clientName: `Testperson ${M}`, startDate: "2021-10-12" });
     expect(rental.lines[0]).toMatchObject({ modelKey: modelKey("ETC", "EclGalleryProfile FC 60W RGBW"), quantity: 4 });

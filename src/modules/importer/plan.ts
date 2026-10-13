@@ -99,10 +99,13 @@ function cleanLabel(s: string): string {
 }
 
 /** The sheet's system column is the family, its size column the variant: "Scroller" + "1,5 m. (tynd)" → { name: "Scroller", variant: "1,5 m (tynd)" }. */
-function splitName(system: string, variant: string): { name: string; variant: string | null } {
+function splitName(system: string, variant: string, manufacturer = ""): { name: string; variant: string | null } {
   const { label, note } = parseVariant(variant);
   const v = cleanLabel([label, note ? `(${note})` : ""].filter(Boolean).join(" "));
-  return { name: cleanLabel(system), variant: v || null };
+  let name = cleanLabel(system);
+  // "Manfrotto 122B …" under manufacturer Manfrotto: the brand is not part of the family name.
+  if (manufacturer && name.toLowerCase().startsWith(manufacturer.toLowerCase() + " ")) name = name.slice(manufacturer.length).trim();
+  return { name, variant: v || null };
 }
 const labelOf = (x: { manufacturer: string; name: string; variant: string | null }) => modelLabel(x);
 
@@ -155,7 +158,7 @@ function inventoryRows(rows: InventoryRow[], ctx: PlanContext, opts: { preferQle
     const system = r.system || r.category;
     const isAlu = /^alu$/i.test(r.category) && !/hjørner/i.test(system);
     const manufacturer = manufacturerFor(system);
-    const { name: famName, variant } = splitName(isAlu ? "35×35 mm alu profile" : system, r.variant);
+    const { name: famName, variant } = splitName(isAlu ? "35×35 mm alu profile" : system, r.variant, manufacturer);
     const name = labelOf({ manufacturer, name: famName, variant });
     const mkey = modelKey(manufacturer, famName, variant);
     const categoryPath = categoryFor(r);
@@ -534,7 +537,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
       const match = standRows.find((s) => low(s.variant).replace(/\s/g, "") === low(r.label).replace(/\s/g, "").replace(/!$/, "") && (/16mm/i.test(r.group) ? /16mm|122B/i.test(s.system) : /28mm/i.test(s.system)));
       const other = match?.total?.value ?? null;
       if (match && other !== null && other !== r.qty) {
-        const sp = splitName(match.system, match.variant);
+        const sp = splitName(match.system, match.variant, manufacturerFor(match.system));
         const mkey = modelKey(manufacturerFor(match.system), sp.name, sp.variant);
         rows.push({ key: `rods:${r.row}`, sheet: "16mm rods", src: r.src, bucket: "decision", summary: `${r.group} ${r.label}: ${r.qty} here vs ${other} on "Stativer & Support"`, decision: { question: "Which count is right?", defaultKey: "stands", options: [{ key: "stands", label: `Keep ${other} (Stativer & Support is newer)`, ops: [] }, { key: "rods", label: `Use ${r.qty} from this sheet instead`, ops: [{ type: "bin", modelKey: mkey, quantity: (r.qty ?? 0) - other, status: "in_house", notes: "Adjusted per 16mm rods sheet", importSource: r.src }] }] }, ops: [] });
       } else if (!match) {

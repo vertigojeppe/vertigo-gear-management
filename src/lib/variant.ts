@@ -24,7 +24,8 @@ export function splitVariant(fullName: string): { name: string; variant: string 
   for (const re of PATTERNS) {
     const m = s.match(re);
     // "1,5 m. (tynd)" → "1,5 m (tynd)": the sheet wrote the unit with a full stop.
-    if (m && m[1].trim()) return { name: m[1].trim(), variant: m[2].replace(/\.(?=\s*(?:\(|$))/, "").trim() };
+    // Never cut inside a parenthesis ("Wind Up Stativ (max højde = 3,66m" lost its bracket on the sheet).
+    if (m && m[1].trim() && (m[1].match(/\(/g) ?? []).length === (m[1].match(/\)/g) ?? []).length) return { name: m[1].trim(), variant: m[2].replace(/\.(?=\s*(?:\(|$))/, "").trim() };
   }
   return { name: s, variant: null };
 }
