@@ -65,10 +65,11 @@ describe("myDay", () => {
     const d = await myDay(userId);
     expect(d.today).toBe(t);
 
-    const titles = d.schedule.map((e) => e.title.replace(` ${marker}`, ""));
-    expect(titles).toEqual(["Rig", "Mine by name", "Focus"]);
-    expect(d.schedule[0]).toMatchObject({ projectId: mineId, day: t, time: "10:00", endTime: "12:00", location: "Stage", mine: false });
-    expect(d.schedule[1]).toMatchObject({ projectId: otherId, mine: true });
+    // Only this test's rows: the seed (fresh in CI) may put the same person on entries today as well.
+    const schedule = d.schedule.filter((e) => e.title.includes(marker));
+    expect(schedule.map((e) => e.title.replace(` ${marker}`, ""))).toEqual(["Rig", "Mine by name", "Focus"]);
+    expect(schedule[0]).toMatchObject({ projectId: mineId, day: t, time: "10:00", endTime: "12:00", location: "Stage", mine: false });
+    expect(schedule[1]).toMatchObject({ projectId: otherId, mine: true });
 
     const tasks = d.tasks.filter((x) => x.title.includes(marker)).map((x) => ({ title: x.title.replace(` ${marker}`, ""), overdue: x.overdue, dueSoon: x.dueSoon }));
     expect(tasks).toEqual([
