@@ -17,6 +17,9 @@ describe("splitVariant", () => {
     expect(splitVariant("Ethercon-LP12(F-F) Granat")).toEqual({ name: "Ethercon-LP12", variant: "(F-F) Granat" });
     expect(splitVariant("Ethercon-LP12(F-M)")).toEqual({ name: "Ethercon-LP12", variant: "(F-M)" });
     expect(splitVariant("True1 under 2 m")).toEqual({ name: "True1", variant: "under 2 m" });
+    expect(splitVariant("SplitLED wieland kabler 2,5m")).toEqual({ name: "SplitLED wieland", variant: "2,5m" });
+    expect(splitVariant("lp12 5pin NEMA kabler")).toEqual({ name: "lp12 5pin NEMA", variant: null });
+    expect(splitVariant("Kabler")).toEqual({ name: "Kabler", variant: null }); // nothing would be left
     expect(splitVariant("Stativ max. 3,5 m (tung)")).toEqual({ name: "Stativ", variant: "max. 3,5 m (tung)" });
   });
   it("leaves names without a size alone", () => {
