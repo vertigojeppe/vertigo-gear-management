@@ -11,6 +11,11 @@ describe("splitVariant", () => {
     expect(splitVariant("BlackLED controller 6 udgange (450w) (Wieland)")).toEqual({ name: "BlackLED controller", variant: "6 udgange (450w) (Wieland)" });
     expect(splitVariant("LASER spejle 76 x 76 mm · Mirror 4-6 Wave")).toEqual({ name: "LASER spejle", variant: "76 x 76 mm · Mirror 4-6 Wave" });
     expect(splitVariant("KITO 500 kg")).toEqual({ name: "KITO", variant: "500 kg" });
+    expect(splitVariant("Alu hjørner 30° grader")).toEqual({ name: "Alu hjørner", variant: "30° grader" });
+    expect(splitVariant("Alu hjørner kube corner 3 x 90°")).toEqual({ name: "Alu hjørner kube corner", variant: "3 x 90°" });
+    expect(splitVariant("Ethercon-LP12(M-M) 20cm")).toEqual({ name: "Ethercon-LP12", variant: "(M-M) 20cm" });
+    expect(splitVariant("Ethercon-LP12(F-F) Granat")).toEqual({ name: "Ethercon-LP12", variant: "(F-F) Granat" });
+    expect(splitVariant("Ethercon-LP12(F-M)")).toEqual({ name: "Ethercon-LP12", variant: "(F-M)" });
   });
   it("leaves names without a size alone", () => {
     expect(splitVariant("Pointe")).toEqual({ name: "Pointe", variant: null });

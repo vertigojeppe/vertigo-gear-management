@@ -1,4 +1,5 @@
 import { modelLabel } from "@/lib/format";
+import { splitVariant } from "@/lib/variant";
 import type { Workbook, Src, InventoryRow, ProjectorRow, ControllerRow } from "./parse";
 import { readInventorySheet, readControllers, readProjectors, readComputers, readTruss, readRods, readFobs, readLoans, readQled, readRateTables, parseVariant } from "./parse";
 
@@ -105,7 +106,9 @@ function splitName(system: string, variant: string, manufacturer = ""): { name: 
   let name = cleanLabel(system);
   // "Manfrotto 122B …" under manufacturer Manfrotto: the brand is not part of the family name.
   if (manufacturer && name.toLowerCase().startsWith(manufacturer.toLowerCase() + " ")) name = name.slice(manufacturer.length).trim();
-  return { name, variant: v || null };
+  // The system column itself may end in a variation ("Alu hjørner 30° grader", "Ethercon-LP12(M-M)"): same splitter as the migrations.
+  const base = splitVariant(name);
+  return { name: base.name, variant: [base.variant, v].filter(Boolean).join(" ") || null };
 }
 const labelOf = (x: { manufacturer: string; name: string; variant: string | null }) => modelLabel(x);
 
