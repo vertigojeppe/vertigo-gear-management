@@ -16,6 +16,8 @@ describe("splitVariant", () => {
     expect(splitVariant("Ethercon-LP12(M-M) 20cm")).toEqual({ name: "Ethercon-LP12", variant: "(M-M) 20cm" });
     expect(splitVariant("Ethercon-LP12(F-F) Granat")).toEqual({ name: "Ethercon-LP12", variant: "(F-F) Granat" });
     expect(splitVariant("Ethercon-LP12(F-M)")).toEqual({ name: "Ethercon-LP12", variant: "(F-M)" });
+    expect(splitVariant("True1 under 2 m")).toEqual({ name: "True1", variant: "under 2 m" });
+    expect(splitVariant("Stativ max. 3,5 m (tung)")).toEqual({ name: "Stativ", variant: "max. 3,5 m (tung)" });
   });
   it("leaves names without a size alone", () => {
     expect(splitVariant("Pointe")).toEqual({ name: "Pointe", variant: null });

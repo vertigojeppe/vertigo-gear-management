@@ -10,7 +10,11 @@
  */
 
 const SIZE = String.raw`\d+(?:[.,]\d+)?\s*(?:cm|mm|m)\b\.?`;
+/** "under 2 m", "max 3 m", "op til 5 m": the qualifier is part of the variation, not of the family name. */
+const QUALIFIER = String.raw`(?:under|over|max\.?|min\.?|op til|mindst|højst|ca\.?)`;
 const PATTERNS: RegExp[] = [
+  // "True1 under 2 m", "Stativ max 3 m"
+  new RegExp(String.raw`^(.*?\S)\s+(${QUALIFIER}\s+${SIZE}(?:\s*\([^)]*\))*)$`, "i"),
   // "Ethercon-LP12(M-M) 20cm", "Ethercon-LP12(F-F) Granat": the connector genders and what follows are the variation
   /^(.*?\S)\s*(\([FMfm]-[FMfm]\).*)$/,
   // "Alu hjørner 30° grader", "kube corner 3 x 90°", "45 grader"
