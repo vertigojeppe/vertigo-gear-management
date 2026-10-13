@@ -10,6 +10,8 @@ import { prisma } from "../src/lib/db";
 async function main() {
   const tokens = await prisma.apiToken.deleteMany({ where: { name: { startsWith: "e2e " } } });
   const wishes = await prisma.wishItem.deleteMany({ where: { manufacturer: "Testlight" } });
+  await prisma.subHireLine.deleteMany({ where: { item: { manufacturer: "Testlight" } } });
+  await prisma.subHireItem.deleteMany({ where: { manufacturer: "Testlight" } });
   const models = await prisma.model.findMany({ where: { manufacturer: "Testlight" }, select: { id: true } });
   const ids = models.map((m) => m.id);
   const items = await prisma.item.findMany({ where: { modelId: { in: ids } }, select: { id: true } });
@@ -51,6 +53,7 @@ async function main() {
     await prisma.rateTable.deleteMany({ where: { id: { in: ids("rateTables") } } });
     await prisma.wishItem.deleteMany({ where: { id: { in: ids("wishes") } } });
     await prisma.purchase.deleteMany({ where: { id: { in: ids("purchases") } } });
+    await prisma.subHireItem.deleteMany({ where: { id: { in: ids("subHireItems") } } });
     for (const id of ids("categories").reverse()) await prisma.category.delete({ where: { id } }).catch(() => undefined);
     await prisma.activityLog.delete({ where: { id: log.id } });
   }

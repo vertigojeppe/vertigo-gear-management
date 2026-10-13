@@ -45,7 +45,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
   const { id, listId } = await props.params;
   const detail = await listDetail(listId);
   if (!detail || detail.project.id !== id) notFound();
-  const { list, project, lines, totals, progress } = detail;
+  const { list, project, lines, totals, progress, subHire } = detail;
   const t = await getTranslations("packing");
   const tp = await getTranslations("projects");
   const ts = await getTranslations("packingStatus");
@@ -165,6 +165,26 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
             </ul>
           </section>
         ))
+      )}
+
+      {subHire.length > 0 && (
+        <section className="flex flex-col gap-1">
+          <h2 className="text-sm font-medium text-muted-foreground">{t("rentedIn")}</h2>
+          <ul className="divide-y rounded-md border text-sm">
+            {subHire.map((l) => (
+              <li key={l.id} className="flex items-center gap-3 px-3 py-2">
+                <span className="w-10 shrink-0 font-medium">{l.quantity}×</span>
+                <span className="min-w-0 flex-1">
+                  {l.label}
+                  <span className="block text-xs text-muted-foreground">
+                    {t("rentInFrom", { owner: l.ownerName })}
+                    {l.note ? ` · ${l.note}` : ""}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {list.notes && <p className="whitespace-pre-line text-sm text-muted-foreground">{list.notes}</p>}

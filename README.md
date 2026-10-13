@@ -9,8 +9,7 @@ warnings; external rentals; packing lists with check-out and check-in;
 production plans with documents, 3D viewers and markup; pricing with rate
 tables and quote PDFs; calendar feeds and Google push; the old
 spreadsheet importer; CSV export and whole-database backup. Danish and
-English. Still to come: the sub-hire catalog
-(`BACKLOG.md`). The roadmap and what is done is in `PLAN.md`; why things
+English. Ideas and follow-ups live in `BACKLOG.md`. The roadmap and what is done is in `PLAN.md`; why things
 are the way they are in `DECISIONS.md`.
 
 ## Quick start (development)
@@ -66,6 +65,10 @@ start, and help text under the fields that need it. The short version:
 - **Inventory › Wish list**: gear to buy, with quantity, expected price,
   link and notes. When it arrives, *Convert to model* opens the new-model
   form prefilled; the wish is marked bought and points at the model.
+- **Inventory › Sub-hire**: gear partners own that you rent in (the
+  GearGuys lenses), with owner, cost and your day price. *Rent in* on a
+  project puts it on the quote (priced like your own gear, owner named)
+  and under *Rented in* on the packing list, its PDF and the shared view.
 - **Purchases** on a model (admins and members with the finance
   permission): supplier, date, quote or order number, quantity, list
   price, discount and net price, with the quote PDF attached to the

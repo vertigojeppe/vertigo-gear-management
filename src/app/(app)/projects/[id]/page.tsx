@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { modelOptions } from "@/modules/inventory";
 import {
   ContactDialog,
@@ -26,6 +26,7 @@ import { customFieldDefinitions } from "@/modules/settings";
 import { listsForProject } from "@/modules/packing";
 import { CreatePlanDialog, defaultAnchor, planSummary, planTemplateOptions } from "@/modules/plans";
 import { QuoteSection, quoteFor, rateTableOptions } from "@/modules/pricing";
+import { RemoveSubHireLineButton, RentInDialog, subHireLinesFor, subHireOptions } from "@/modules/subhire";
 import { today } from "@/lib/dates";
 import { PACKING_STATUSES, PROJECT_STATUSES } from "../../../../../config/app.config";
 
@@ -34,7 +35,8 @@ export const metadata: Metadata = { title: "Project" };
 export default async function ProjectPage(props: { params: Promise<{ id: string }> }) {
   const actor = await requireActor();
   const { id } = await props.params;
-  const [detail, defs, models, users, packingLists, plan, planTemplates, quote, rateTables] = await Promise.all([projectDetail(id), customFieldDefinitions.forEntity("project"), modelOptions(), crewOptions(), listsForProject(id), planSummary(id), planTemplateOptions(), quoteFor("project", id), rateTableOptions()]);
+  const [detail, defs, models, users, packingLists, plan, planTemplates, quote, rateTables, subHire, subHireChoices] = await Promise.all([projectDetail(id), customFieldDefinitions.forEntity("project"), modelOptions(), crewOptions(), listsForProject(id), planSummary(id), planTemplateOptions(), quoteFor("project", id), rateTableOptions(), subHireLinesFor(id), subHireOptions()]);
+  const tsh = await getTranslations("subhire");
   const tpack = await getTranslations("packing");
   const tplan = await getTranslations("plans");
   const tps = await getTranslations("packingStatus");
@@ -183,6 +185,42 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
           </ul>
         )}
       </section>
+
+      {(subHire.length > 0 || subHireChoices.length > 0) && (
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-medium">
+              {tsh("title")} <span className="text-sm font-normal text-muted-foreground">({subHire.length})</span>
+            </h2>
+            {canEdit && subHireChoices.length > 0 && <RentInDialog projectId={project.id} options={subHireChoices} defaultFrom={project.reserveFrom} defaultTo={project.reserveTo} />}
+          </div>
+          {subHire.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{tsh("noLines")}</p>
+          ) : (
+            <ul className="divide-y rounded-md border text-sm">
+              {subHire.map((l) => (
+                <li key={l.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
+                  <span className="w-10 shrink-0 font-medium">{l.quantity}×</span>
+                  <span className="min-w-0 flex-1">
+                    {l.label}
+                    <span className="block text-xs text-muted-foreground">
+                      {tsh("rentInFrom", { owner: l.ownerName })} · {formatDate(l.startDate)} – {formatDate(l.endDate)}
+                      {l.costPerDay !== null ? ` · ${tsh("costShort", { amount: formatMoney(l.costPerDay) })}` : ""}
+                      {l.note ? ` · ${l.note}` : ""}
+                    </span>
+                  </span>
+                  {canEdit && (
+                    <span className="flex shrink-0 items-center gap-1">
+                      <RentInDialog projectId={project.id} options={subHireChoices} defaultFrom={project.reserveFrom} defaultTo={project.reserveTo} existing={l} />
+                      <RemoveSubHireLineButton id={l.id} projectId={project.id} />
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {quote && <QuoteSection quote={quote} tables={rateTables} canEdit={canEdit} showGear pdfHref={`/api/projects/${project.id}/quote.pdf`} />}
 

@@ -54,6 +54,7 @@ model Project {
   crew         ProjectCrew[]
   allocations  Allocation[]
   packingLists PackingList[]
+  subHireLines SubHireLine[]
   plan         ProductionPlan?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

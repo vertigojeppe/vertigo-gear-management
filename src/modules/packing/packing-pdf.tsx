@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
 
 /** Printable packing list: one checkbox row per line, grouped like the screen. */
 export async function renderPackingList(detail: ListDetail): Promise<Buffer> {
-  const { list, project, lines, totals, progress } = detail;
+  const { list, project, lines, totals, progress, subHire } = detail;
   const groups = groupLines(lines, list.groupBy);
   const doc = (
     <Document title={`${project.name} – ${list.name}`} author={appConfig.name}>
@@ -56,6 +56,26 @@ export async function renderPackingList(detail: ListDetail): Promise<Buffer> {
             ))}
           </View>
         ))}
+        {subHire.length > 0 && (
+          <View wrap={false}>
+            <Text style={styles.group}>Rented in</Text>
+            {subHire.map((l) => (
+              <View key={l.id} style={styles.row}>
+                <View style={styles.box} />
+                <Text style={styles.qty}>{l.quantity}×</Text>
+                <View style={styles.name}>
+                  <Text>
+                    {l.label}
+                    {l.note ? ` (${l.note})` : ""}
+                  </Text>
+                  <Text style={styles.muted}>rent in from {l.ownerName}</Text>
+                </View>
+                <Text style={styles.tags}></Text>
+                <Text style={styles.weight}></Text>
+              </View>
+            ))}
+          </View>
+        )}
         {list.notes && (
           <View style={{ marginTop: 12 }}>
             <Text style={{ fontFamily: "Helvetica-Bold" }}>Notes</Text>

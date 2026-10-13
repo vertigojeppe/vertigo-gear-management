@@ -11,6 +11,7 @@ model Category {
   models    Model[]
   customFieldDefinitions CustomFieldDefinition[]
   wishItems WishItem[]
+  subHireItems SubHireItem[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
