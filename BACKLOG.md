@@ -9,7 +9,7 @@ when something ships or stops mattering.
 - Phase 2: projects, availability engine, rentals, calendar
 - Phase 4b: documents with versions, resumable upload, image / PDF / 3D
   viewers, markup layer, files pinned to schedule entries and tasks
-- Phase 5b: export, labels, polish, deployment docs (the importer shipped as 5a)
+- (Phases 1 to 5b have shipped; see PLAN.md)
 
 ## After Phase 4 (from the October 2026 spec update, see SPEC.md and MIGRATION.md)
 

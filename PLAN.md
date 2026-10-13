@@ -297,21 +297,26 @@ tables, rate table CRUD + rental and project quotes (DB), browser: rate
 table editor with live factor preview, project quote with discount, extra
 line and PDF.
 
-### Phase 5b — Deployment, export, labels, polish (in progress)
-Deployment ✅ (2026-10-13): Caddy with automatic HTTPS in the Compose
-stack, health endpoint and container healthcheck, login rate limit,
-nightly backup script with off-site copy and a tested restore script,
-GitHub Actions deploy after CI, README with Compose, Hetzner and Vercel
-step by step.
-Labels ✅ (2026-10-13): Avery sheets with an offset for used cells and
-single thermal labels, from the item list, a model or a unit
-(`/api/labels/sheet.pdf`); pure grid maths in `label-layout.ts`.
-Export and backup ✅ (2026-10-13): CSV of every list with its filters
+### Phase 5b — Deployment, export, labels, polish ✅ (2026-10-13)
+Deployment: Caddy with automatic HTTPS in the Compose stack, health
+endpoint and container healthcheck, login rate limit, nightly backup
+script with off-site copy and a tested restore script, GitHub Actions
+deploy after CI, README with Compose, Hetzner and Vercel step by step.
+Labels: Avery sheets with an offset for used cells and single thermal
+labels, from the item list, a model or a unit (`/api/labels/sheet.pdf`).
+Export and backup: CSV of every list with its filters
 (`/api/export/<list>.csv`), Settings › Backup with a whole-database JSON
 download and a one-transaction restore.
-Still to do: empty states and inline help, README polish.
+Polish: README rewritten for the finished product; empty states and help
+texts were added phase by phase and audited here.
 **Tests:** rate limiter, health route, label layout, CSV, backup tables
-and round-trip (CI).
+and round-trip (CI), browser flows for labels, export, backup and the
+login lockout.
+
+### Next
+Sub-hire catalog, wish list and purchase records (the rest of the
+October spec update, see `BACKLOG.md`), then whatever using the app at
+Vertigo turns up.
 
 ## 6. Decisions I will make unless you object
 
