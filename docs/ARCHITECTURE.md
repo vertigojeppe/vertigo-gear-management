@@ -137,6 +137,8 @@ erDiagram
     string organisation
   }
   Model {
+    string name "the family"
+    string variant "the size; null when the family has one"
     boolean notForRental
     decimal rentalDayPrice "from the sheet; pricing engine later"
     string importSource "Sheet!A1 when imported"

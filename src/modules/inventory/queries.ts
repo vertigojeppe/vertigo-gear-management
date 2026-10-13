@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { compareVariants } from "@/lib/variant";
 import type { Prisma } from "@/generated/prisma/client";
 import { activityFor } from "@/lib/activity";
 import { appConfig, ITEM_STATUSES } from "../../../config/app.config";
@@ -41,9 +42,11 @@ export async function modelOptions() {
   const rows = await prisma.model.findMany({
     where: { archived: false },
     orderBy: [{ manufacturer: "asc" }, { name: "asc" }],
-    select: { id: true, manufacturer: true, name: true, trackingType: true, categoryId: true, notForRental: true, rentalDayPrice: true },
+    select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true, categoryId: true, notForRental: true, rentalDayPrice: true },
   });
-  return rows.map((r) => ({ ...r, rentalDayPrice: r.rentalDayPrice === null ? null : r.rentalDayPrice.toNumber() }));
+  return rows
+    .map((r) => ({ ...r, rentalDayPrice: r.rentalDayPrice === null ? null : r.rentalDayPrice.toNumber() }))
+    .sort((a, b) => a.manufacturer.localeCompare(b.manufacturer) || a.name.localeCompare(b.name) || compareVariants(a.variant, b.variant));
 }
 
 /* Models list */
@@ -55,11 +58,26 @@ export type ModelListRow = ModelDto & {
   thumbUrl: string | null;
 };
 
-export async function listModels(filters: ModelFilters): Promise<{ rows: ModelListRow[]; total: number; page: number; pages: number }> {
+/** Models that share a manufacturer and name: one row in the list, the variants inside it. */
+export type ModelFamily = {
+  key: string;
+  manufacturer: string;
+  name: string;
+  categoryPath: string[];
+  trackingType: "serialized" | "bulk" | "mixed";
+  archived: boolean;
+  owned: number;
+  inHouse: number;
+  thumbUrl: string | null;
+  variants: ModelListRow[];
+};
+
+export async function listModels(filters: ModelFilters): Promise<{ families: ModelFamily[]; total: number; models: number; page: number; pages: number }> {
   const where: Prisma.ModelWhereInput = { archived: filters.archived ? undefined : false };
   if (filters.q) {
     where.OR = [
       { name: { contains: filters.q, mode: "insensitive" } },
+      { variant: { contains: filters.q, mode: "insensitive" } },
       { manufacturer: { contains: filters.q, mode: "insensitive" } },
       { description: { contains: filters.q, mode: "insensitive" } },
     ];
@@ -67,26 +85,13 @@ export async function listModels(filters: ModelFilters): Promise<{ rows: ModelLi
   if (filters.categoryId) where.categoryId = { in: await categoryIdsIncludingChildren(filters.categoryId) };
   if (filters.trackingType) where.trackingType = filters.trackingType;
 
-  const [total, models, cats] = await Promise.all([
-    prisma.model.count({ where }),
-    prisma.model.findMany({
-      where,
-      orderBy: [{ manufacturer: "asc" }, { name: "asc" }],
-      skip: (filters.page - 1) * PAGE,
-      take: PAGE,
-      include: { defaultPhoto: { select: { id: true, thumbKey: true } } },
-    }),
+  // Every matching model, grouped into families, then paginated by family (a few hundred rows at most).
+  const [models, cats] = await Promise.all([
+    prisma.model.findMany({ where, orderBy: [{ manufacturer: "asc" }, { name: "asc" }], include: { defaultPhoto: { select: { id: true, thumbKey: true } } } }),
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
   ]);
-
   const ids = models.map((m) => m.id);
-  const counts = ids.length
-    ? await prisma.item.groupBy({
-        by: ["modelId", "status"],
-        where: { modelId: { in: ids } },
-        _sum: { quantity: true },
-      })
-    : [];
+  const counts = ids.length ? await prisma.item.groupBy({ by: ["modelId", "status"], where: { modelId: { in: ids } }, _sum: { quantity: true } }) : [];
   const owned = new Map<string, number>();
   const inHouse = new Map<string, number>();
   for (const c of counts) {
@@ -94,19 +99,35 @@ export async function listModels(filters: ModelFilters): Promise<{ rows: ModelLi
     if (c.status !== "retired") owned.set(c.modelId, (owned.get(c.modelId) ?? 0) + q);
     if (c.status === "in_house") inHouse.set(c.modelId, (inHouse.get(c.modelId) ?? 0) + q);
   }
+  const rows: ModelListRow[] = models.map((m) => ({
+    ...toModelDto(m),
+    categoryPath: pathNames(cats, m.categoryId),
+    owned: owned.get(m.id) ?? 0,
+    inHouse: inHouse.get(m.id) ?? 0,
+    thumbUrl: m.defaultPhoto?.thumbKey ? `/api/files/${m.defaultPhoto.id}?thumb=1` : null,
+  }));
+  const families = groupFamilies(rows);
+  const total = families.length;
+  return { families: families.slice((filters.page - 1) * PAGE, filters.page * PAGE), total, models: rows.length, page: filters.page, pages: Math.max(1, Math.ceil(total / PAGE)) };
+}
 
-  return {
-    rows: models.map((m) => ({
-      ...toModelDto(m),
-      categoryPath: pathNames(cats, m.categoryId),
-      owned: owned.get(m.id) ?? 0,
-      inHouse: inHouse.get(m.id) ?? 0,
-      thumbUrl: m.defaultPhoto?.thumbKey ? `/api/files/${m.defaultPhoto.id}?thumb=1` : null,
-    })),
-    total,
-    page: filters.page,
-    pages: Math.max(1, Math.ceil(total / PAGE)),
-  };
+/** Pure: rows → families (manufacturer + name, case-insensitive), variants sorted by size, totals summed. */
+export function groupFamilies(rows: ModelListRow[]): ModelFamily[] {
+  const map = new Map<string, ModelFamily>();
+  for (const r of rows) {
+    const key = `${r.manufacturer}|${r.name}`.toLowerCase();
+    const fam = map.get(key);
+    if (fam) {
+      fam.variants.push(r);
+      fam.owned += r.owned;
+      fam.inHouse += r.inHouse;
+      if (fam.trackingType !== r.trackingType) fam.trackingType = "mixed";
+      fam.archived = fam.archived && r.archived;
+      fam.thumbUrl ??= r.thumbUrl;
+    } else map.set(key, { key, manufacturer: r.manufacturer, name: r.name, categoryPath: r.categoryPath, trackingType: r.trackingType, archived: r.archived, owned: r.owned, inHouse: r.inHouse, thumbUrl: r.thumbUrl, variants: [r] });
+  }
+  for (const fam of map.values()) fam.variants.sort((a, b) => compareVariants(a.variant, b.variant));
+  return [...map.values()];
 }
 
 /* Model detail */
@@ -121,12 +142,17 @@ export async function modelDetail(id: string) {
     },
   });
   if (!m) return null;
-  const cats = await prisma.category.findMany({ select: { id: true, name: true, parentId: true } });
+  const [cats, siblings] = await Promise.all([
+    prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
+    prisma.model.findMany({ where: { id: { not: id }, manufacturer: { equals: m.manufacturer, mode: "insensitive" }, name: { equals: m.name, mode: "insensitive" } }, select: { id: true, variant: true, archived: true } }),
+  ]);
   const byStatus: Record<string, number> = {};
   for (const s of ITEM_STATUSES) byStatus[s.key] = 0;
   for (const i of m.items) byStatus[i.status] = (byStatus[i.status] ?? 0) + i.quantity;
   return {
     model: toModelDto(m),
+    /** Other sizes of the same family, by size. */
+    variants: siblings.sort((a, b) => compareVariants(a.variant, b.variant)),
     categoryPath: pathNames(cats, m.categoryId),
     photoUrl: m.defaultPhoto ? `/api/files/${m.defaultPhoto.id}` : null,
     thumbUrl: m.defaultPhoto?.thumbKey ? `/api/files/${m.defaultPhoto.id}?thumb=1` : null,
@@ -183,7 +209,7 @@ export async function listItems(
       skip: (filters.page - 1) * PAGE,
       take: PAGE,
       include: {
-        model: { select: { id: true, manufacturer: true, name: true, trackingType: true, categoryId: true, defaultPhoto: { select: { id: true, thumbKey: true } } } },
+        model: { select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true, categoryId: true, defaultPhoto: { select: { id: true, thumbKey: true } } } },
         location: { select: { name: true } },
         parentItem: { select: { name: true, assetTag: true } },
       },
@@ -215,7 +241,7 @@ export async function itemDetail(id: string) {
       model: { include: { category: true, defaultPhoto: { select: { id: true, thumbKey: true } } } },
       location: true,
       parentItem: { select: { id: true, name: true, assetTag: true } },
-      contents: { orderBy: { assetTag: "asc" }, include: { model: { select: { manufacturer: true, name: true } } } },
+      contents: { orderBy: { assetTag: "asc" }, include: { model: { select: { manufacturer: true, name: true, variant: true } } } },
       statusLogs: { orderBy: { createdAt: "desc" }, take: 50, include: { user: { select: { name: true } } } },
     },
   });
@@ -257,7 +283,7 @@ export async function kitCandidates(kitId: string, q: string | undefined) {
     where,
     take: 20,
     orderBy: { assetTag: "asc" },
-    include: { model: { select: { manufacturer: true, name: true } } },
+    include: { model: { select: { manufacturer: true, name: true, variant: true } } },
   });
   return rows.map((r) => ({ id: r.id, assetTag: r.assetTag, label: `${modelLabel(r.model)}${r.name ? ` · ${r.name}` : ""}${r.serialNumber ? ` · SN ${r.serialNumber}` : ""}` }));
 }
@@ -270,13 +296,13 @@ export async function dashboardStats() {
     prisma.model.count({ where: { archived: false } }),
     prisma.item.findMany({
       where: { status: { in: ["on_project", "rented_out"] }, parentItemId: null },
-      include: { model: { select: { manufacturer: true, name: true } }, location: { select: { id: true, name: true, type: true } } },
+      include: { model: { select: { manufacturer: true, name: true, variant: true } }, location: { select: { id: true, name: true, type: true } } },
       orderBy: { updatedAt: "desc" },
       take: 200,
     }),
     prisma.item.findMany({
       where: { status: { in: ["in_repair", "missing"] } },
-      include: { model: { select: { manufacturer: true, name: true } }, statusLogs: { orderBy: { createdAt: "desc" }, take: 1 } },
+      include: { model: { select: { manufacturer: true, name: true, variant: true } }, statusLogs: { orderBy: { createdAt: "desc" }, take: 1 } },
       orderBy: { updatedAt: "desc" },
       take: 50,
     }),

@@ -1,11 +1,12 @@
 import type { PrismaClient } from "../../src/generated/prisma/client";
+import { splitVariant } from "../../src/lib/variant";
 
 /**
  * One reusable packing template and one draft packing list on the Roskilde
  * project, so the packing screens have something to show straight away.
  */
 export async function seedPacking(prisma: PrismaClient) {
-  const modelId = async (name: string) => (await prisma.model.findFirst({ where: { name } }))?.id;
+  const modelId = async (name: string) => (await prisma.model.findFirst({ where: splitVariant(name) }))?.id;
 
   const TEMPLATES = [
     {

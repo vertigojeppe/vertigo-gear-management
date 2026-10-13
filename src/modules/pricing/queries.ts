@@ -52,7 +52,7 @@ export async function quoteFor(kind: HolderKind, id: string): Promise<Quote | nu
   if (kind === "project") {
     const p = await prisma.project.findUnique({
       where: { id },
-      include: { client: true, rateTable: { include: { tiers: true } }, extraLines: { orderBy: { sortOrder: "asc" } }, allocations: { include: { model: { select: { manufacturer: true, name: true, rentalDayPrice: true } }, item: { select: { assetTag: true } } }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }] } },
+      include: { client: true, rateTable: { include: { tiers: true } }, extraLines: { orderBy: { sortOrder: "asc" } }, allocations: { include: { model: { select: { manufacturer: true, name: true, variant: true, rentalDayPrice: true } }, item: { select: { assetTag: true } } }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }] } },
     });
     if (!p) return null;
     const window = p.reserveFrom && p.reserveTo ? { from: dateToString(p.reserveFrom), to: dateToString(p.reserveTo) } : null;
@@ -72,7 +72,7 @@ export async function quoteFor(kind: HolderKind, id: string): Promise<Quote | nu
   }
   const r = await prisma.rental.findUnique({
     where: { id },
-    include: { client: true, rateTable: { include: { tiers: true } }, extraLines: { orderBy: { sortOrder: "asc" } }, lines: { include: { model: { select: { manufacturer: true, name: true, rentalDayPrice: true } }, item: { select: { assetTag: true } } }, orderBy: { createdAt: "asc" } } },
+    include: { client: true, rateTable: { include: { tiers: true } }, extraLines: { orderBy: { sortOrder: "asc" } }, lines: { include: { model: { select: { manufacturer: true, name: true, variant: true, rentalDayPrice: true } }, item: { select: { assetTag: true } } }, orderBy: { createdAt: "asc" } } },
   });
   if (!r) return null;
   return build({

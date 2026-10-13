@@ -84,7 +84,7 @@ export async function projectDetail(id: string) {
       client: true,
       contacts: { orderBy: { name: "asc" } },
       crew: { include: { user: { select: { id: true, name: true, email: true, phone: true } } }, orderBy: { user: { name: "asc" } } },
-      allocations: { include: { model: { select: { id: true, manufacturer: true, name: true, trackingType: true } }, item: { select: { assetTag: true } } }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }] },
+      allocations: { include: { model: { select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true } }, item: { select: { assetTag: true } } }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }] },
     },
   });
   if (!p) return null;
@@ -190,7 +190,7 @@ export async function timeline(from: DateString, to: DateString) {
   const modelIds = [...new Set((await prisma.allocation.findMany({ where: { startDate: { lte: new Date(`${to}T00:00:00Z`) }, endDate: { gte: new Date(`${from}T00:00:00Z`) } }, select: { modelId: true } })).map((a) => a.modelId))];
   const conflicts: { modelId: string; modelLabel: string; days: { day: DateString; shortfall: number }[]; holders: string[] }[] = [];
   for (const modelId of modelIds) {
-    const [items, allocs, model] = await Promise.all([itemsForModel(modelId), allocationsFor(modelId), prisma.model.findUnique({ where: { id: modelId }, select: { manufacturer: true, name: true } })]);
+    const [items, allocs, model] = await Promise.all([itemsForModel(modelId), allocationsFor(modelId), prisma.model.findUnique({ where: { id: modelId }, select: { manufacturer: true, name: true, variant: true } })]);
     const days = overbookedDays(items, allocs, { from, to });
     if (days.length && model) {
       const holders = [...new Set(allocs.filter((a) => days.some((d) => a.startDate <= d.day && a.endDate >= d.day)).map((a) => a.holderName))];

@@ -184,7 +184,7 @@ export const rentals = {
 
 /** Models flagged "not for rental" stay on our own projects. */
 async function assertRentable(modelId: string) {
-  const model = await prisma.model.findUnique({ where: { id: modelId }, select: { manufacturer: true, name: true, notForRental: true } });
+  const model = await prisma.model.findUnique({ where: { id: modelId }, select: { manufacturer: true, name: true, variant: true, notForRental: true } });
   if (model?.notForRental) throw new RentalError(`${modelLabel(model)} is not for rental.`, "modelId");
 }
 

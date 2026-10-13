@@ -49,7 +49,7 @@ export async function rentalDetail(id: string) {
       where: { id },
       include: {
         client: true,
-        lines: { include: { model: { select: { id: true, manufacturer: true, name: true, trackingType: true } }, item: { select: { id: true, assetTag: true } } }, orderBy: { createdAt: "asc" } },
+        lines: { include: { model: { select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true } }, item: { select: { id: true, assetTag: true } } }, orderBy: { createdAt: "asc" } },
       },
     }),
     quoteFor("rental", id),
