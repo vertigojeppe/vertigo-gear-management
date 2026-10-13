@@ -139,6 +139,12 @@ a second entry that exports components only and never a service.
   labels with `modelLabel(m)` from `src/lib/format.ts`, never
   `${manufacturer} ${name}`. Models match by (manufacturer, name) in the
   importer and seed, so "" is a real value there.
+- Labels: `LABEL_SIZES` in `config/app.config.ts` (sheet grids with gaps,
+  or `page: "single"` for thermal rolls); `label-layout.ts` is the pure
+  geometry (centred grid, offset, page count) and `labels.tsx` renders the
+  PDF with react-pdf + qrcode. `GET /api/labels/sheet.pdf` takes `ids=` or
+  the item list's filters plus `size` and `offset`; `LabelsDialog` builds
+  that URL (with the browser origin for the QR, like `QrImage`).
 - Asset tags come from `nextAssetTag(tx)` inside the creating transaction.
   The seed sets the counter past its highest tag.
 - Statuses include `under_construction` (exists, not usable, no reason
@@ -328,6 +334,19 @@ a second entry that exports components only and never a service.
   `/api/calendar/<token>.ics`.
 - Set `OUTBOX_DISABLED=1` when running one-off scripts or tests that must
   not deliver anything.
+
+## Branches and pull requests
+
+- Every change is a branch off `main` with a pull request against `main`.
+  Stack on another branch only when the change cannot build without it,
+  and say so in the PR body.
+- The repository is public. The real spreadsheet (`*.xlsx`), `.env` and
+  uploads are ignored; keep client data out of seeds, fixtures and PR text.
+- A ruleset on `main` requires the CI job `test` (lint, typecheck, unit
+  and DB tests, build, browser tests) and an up-to-date branch. Auto-merge
+  is allowed: arm it per PR (`gh pr merge <n> --auto --merge`) and GitHub
+  merges when `test` is green. Auto-fix in the desktop app repairs failing
+  CI and merge conflicts before that.
 
 ## Adding a new entity end-to-end
 

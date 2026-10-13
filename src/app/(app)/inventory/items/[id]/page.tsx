@@ -13,7 +13,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatMoney, modelLabel } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
-import { KitSection, MoveDialog, StatusDialog, inventoryActions, itemDetail, locationOptions } from "@/modules/inventory";
+import { KitSection, MoveDialog, StatusDialog, inventoryActions, itemDetail, locationOptions, LabelsDialog } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 
 export const metadata: Metadata = { title: "Item" };
@@ -125,6 +125,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
           <a href={`/t/${encodeURIComponent(item.assetTag)}`} className="text-xs underline">
             {t("openTag")}
           </a>
+          <LabelsDialog query={`ids=${item.id}`} count={1} variant="ghost" />
           {detail.photoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={detail.photoUrl} alt={label} className="mt-2 w-full rounded object-cover" />
