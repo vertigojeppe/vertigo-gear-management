@@ -298,9 +298,21 @@ table editor with live factor preview, project quote with discount, extra
 line and PDF.
 
 ### Phase 5b — Export, labels, polish (in progress)
+### Phase 5b — Deployment, export, labels, polish (in progress)
+Deployment ✅ (2026-10-13): Caddy with automatic HTTPS in the Compose
+stack, health endpoint and container healthcheck, login rate limit,
+nightly backup script with off-site copy and a tested restore script,
+GitHub Actions deploy after CI, README with Compose, Hetzner and Vercel
+step by step.
+Labels ✅ (2026-10-13): Avery sheets with an offset for used cells and
+single thermal labels, from the item list, a model or a unit
+(`/api/labels/sheet.pdf`); pure grid maths in `label-layout.ts`.
 Export and backup ✅ (2026-10-13): CSV of every list with its filters
 (`/api/export/<list>.csv`), Settings › Backup with a whole-database JSON
 download and a one-transaction restore.
+Still to do: empty states and inline help, README polish.
+**Tests:** rate limiter, health route, label layout, CSV, backup tables
+and round-trip (CI).
 CSV export of any list, JSON backup/restore, Avery label sheets and single
 thermal labels, Danish translation hooks, empty states and inline help,
 deployment docs (Compose, Hetzner, Vercel), README complete.

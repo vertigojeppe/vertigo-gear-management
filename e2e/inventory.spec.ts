@@ -121,6 +121,22 @@ test.describe("inventory", () => {
     expect(text).not.toContain("MAC Aura");
     for (const list of ["models", "projects", "rentals", "contacts"]) expect((await page.request.get(`/api/export/${list}.csv`)).status(), list).toBe(200);
     expect((await page.request.get("/api/export/nope.csv")).status()).toBe(404);
+  test("labels print as a PDF for a filtered list and for one unit", async ({ page }) => {
+    await signIn(page, "member@vertigo.test");
+    await page.goto("/inventory/items?q=Pointe");
+    await page.getByRole("button", { name: "Print labels" }).click();
+    await page.getByLabel("Label size").selectOption("avery_l7160");
+    await page.getByLabel("Skip labels on the first sheet").fill("3");
+    // The link opens the PDF in a new tab; its address carries the filters, size and offset.
+    const href = await page.getByRole("link", { name: "Open PDF" }).getAttribute("href");
+    expect(href).toMatch(/^\/api\/labels\/sheet\.pdf\?.*q=Pointe.*size=avery_l7160.*offset=3/);
+    const sheet = await page.request.get(href!);
+    expect(sheet.status()).toBe(200);
+    expect(sheet.headers()["content-type"]).toContain("application/pdf");
+    const single = await page.request.get("/api/labels/sheet.pdf?q=VG-0001&size=thermal_62x29");
+    expect(single.status()).toBe(200);
+    const none = await page.request.get("/api/labels/sheet.pdf?q=nothing-like-this-zzz&size=thermal_62x29");
+    expect(none.status()).toBe(404);
   });
 
   test("viewer sees inventory but no edit controls", async ({ page }) => {

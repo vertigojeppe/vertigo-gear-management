@@ -232,6 +232,9 @@ export const LABEL_SIZES = [
     rows: 7,
     widthMm: 63.5,
     heightMm: 38.1,
+    /** Space between labels; the grid is centred on the page, which gives Avery's own margins. */
+    gapXMm: 2.5,
+    gapYMm: 0,
   },
   {
     key: "thermal_62x29",
@@ -241,6 +244,8 @@ export const LABEL_SIZES = [
     rows: 1,
     widthMm: 62,
     heightMm: 29,
+    gapXMm: 0,
+    gapYMm: 0,
   },
 ] as const;
 
