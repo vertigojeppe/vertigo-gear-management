@@ -1,0 +1,45 @@
+name: Deploy
+
+# Deploys main to the server after CI has passed on it. Needs these repository secrets:
+#   DEPLOY_HOST  server address (gear.vertigo.dk or an IP)
+#   DEPLOY_USER  SSH user with Docker rights (e.g. deploy)
+#   DEPLOY_KEY   private key for that user (the public key goes in ~/.ssh/authorized_keys)
+#   DEPLOY_PATH  checkout on the server (e.g. /opt/vertigo-gear)
+# The server pulls the commit, rebuilds the image and restarts the app; migrations run on start.
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script_stop: true
+          script: |
+            cd "${{ secrets.DEPLOY_PATH }}"
+            git fetch --prune origin
+            git checkout --force main
+            git reset --hard origin/main
+            docker compose --profile prod up -d --build --remove-orphans
+            docker image prune -f
+            for i in $(seq 1 20); do
+              if docker compose exec -T app wget -qO- http://127.0.0.1:3000/api/health | grep -q '"ok":true'; then echo "healthy"; exit 0; fi
+              sleep 5
+            done
+            echo "app did not become healthy"; docker compose logs --tail=100 app; exit 1

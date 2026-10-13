@@ -1,0 +1,16 @@
+# Reverse proxy with automatic HTTPS (Let's Encrypt). APP_DOMAIN comes from .env.
+# Caddy answers on 80 (redirects to https) and 443 and forwards to the app container.
+{$APP_DOMAIN} {
+	encode zstd gzip
+	# Large uploads (3D files, drawings) go through in chunks; keep the body limit generous.
+	request_body {
+		max_size 600MB
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+	reverse_proxy app:3000
+}

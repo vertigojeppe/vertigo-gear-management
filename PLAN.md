@@ -297,14 +297,19 @@ tables, rate table CRUD + rental and project quotes (DB), browser: rate
 table editor with live factor preview, project quote with discount, extra
 line and PDF.
 
-### Phase 5b — Export, labels, polish (in progress)
+### Phase 5b — Deployment, export, labels, polish (in progress)
+Deployment ✅ (2026-10-13): Caddy with automatic HTTPS in the Compose
+stack, health endpoint and container healthcheck, login rate limit,
+nightly backup script with off-site copy and a tested restore script,
+GitHub Actions deploy after CI, README with Compose, Hetzner and Vercel
+step by step.
 Labels ✅ (2026-10-13): Avery sheets with an offset for used cells and
 single thermal labels, from the item list, a model or a unit
 (`/api/labels/sheet.pdf`); pure grid maths in `label-layout.ts`.
-CSV export of any list, JSON backup/restore, Avery label sheets and single
-thermal labels, Danish translation hooks, empty states and inline help,
-deployment docs (Compose, Hetzner, Vercel), README complete.
-**Tests:** backup round-trip.
+Still to do: CSV export of any list, JSON backup/restore from Settings,
+empty states and inline help, README polish.
+**Tests:** rate limiter, health route, label layout; backup round-trip
+when the JSON backup lands.
 
 ## 6. Decisions I will make unless you object
 

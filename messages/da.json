@@ -55,7 +55,8 @@
     "submit": "Log ind",
     "invalid": "Forkert e-mail eller adgangskode.",
     "error": "Noget gik galt. Prøv igen.",
-    "stale": "Din session gælder ikke længere (kontoen er fjernet, eller databasen er nulstillet). Log ind igen."
+    "stale": "Din session gælder ikke længere (kontoen er fjernet, eller databasen er nulstillet). Log ind igen.",
+    "rateLimited": "For mange forsøg. Prøv igen om {minutes, plural, one {# minut} other {# minutter}}."
   },
   "dashboard": {
     "title": "Oversigt",

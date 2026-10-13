@@ -306,6 +306,18 @@ a second entry that exports components only and never a service.
   names and column layouts; extend it when a reader changes.
 - Server actions accept 25 MB bodies (`next.config.ts`) for the upload.
 
+## Deployment
+
+- `docker compose --profile prod` runs db + app + Caddy; Caddy (`Caddyfile`,
+  `APP_DOMAIN`) terminates HTTPS, the app listens on 127.0.0.1 only. The
+  container healthcheck and `deploy.yml` poll `GET /api/health`.
+- `scripts/backup.sh` / `scripts/restore.sh`: one tar.gz with `db.sql` and
+  `uploads.tar`, optional rclone off-site copy (`BACKUP_REMOTE`). Keep
+  them POSIX sh and LF.
+- Login is rate-limited in `src/app/(auth)/login/actions.ts` with the
+  in-memory `loginLimiter` (`src/lib/rate-limit.ts`): ten failures per
+  email + address, then fifteen minutes. One process, no store.
+
 ## Events, outbox, integrations
 
 - Services call `emitEvent(type, data, { calendar })` (`src/lib/events.ts`)

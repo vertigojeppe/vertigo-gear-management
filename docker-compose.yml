@@ -7,7 +7,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vertigo}
       POSTGRES_DB: ${POSTGRES_DB:-vertigo_gear}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # Dev only reaches it from this machine; in production nothing but the app needs it.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -28,11 +29,40 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-vertigo}:${POSTGRES_PASSWORD:-vertigo}@db:5432/${POSTGRES_DB:-vertigo_gear}
       UPLOAD_DIR: /data/uploads
     ports:
-      - "${APP_PORT:-3000}:3000"
+      # Only on this machine: Caddy (below) is the public entrance. Remove the 127.0.0.1
+      # prefix if you run your own reverse proxy on another host.
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
     volumes:
       - uploads:/data/uploads
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    profiles: ["prod"]
+
+  # HTTPS in front of the app: Caddy gets and renews the Let's Encrypt certificate for
+  # APP_DOMAIN by itself. Needs ports 80 and 443 open and the DNS name pointing here.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?set APP_DOMAIN in .env, e.g. gear.vertigo.dk}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
     profiles: ["prod"]
 
 volumes:
   db-data:
   uploads:
+  caddy-data:
+  caddy-config:
