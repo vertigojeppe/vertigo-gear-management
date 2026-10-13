@@ -1104,7 +1104,9 @@
     "install": "Install",
     "dismiss": "Dismiss",
     "offlineTitle": "You are offline",
-    "offlineBody": "The app needs a connection to show live data. Check the signal and try again.",
-    "retry": "Try again"
+    "offlineBody": "The app needs a connection to show live data. Packing lists you opened are kept on this phone and can be read below.",
+    "retry": "Try again",
+    "savedLists": "Packing lists on this phone",
+    "savedListsHelp": "As they were when last opened. Ticks and check-in need a connection."
   }
 }

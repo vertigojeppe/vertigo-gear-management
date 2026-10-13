@@ -341,6 +341,8 @@ importer plan, browser flow.
 ### Installable on phones ✅ (2026-10-13)
 Web manifest, icons, service worker with an offline page, iOS and
 Android install hints. Same app, installed on the home screen; no store.
+Packing lists that were opened stay readable offline (page and PDF, the
+last 20), listed on the offline page.
 
 ### Next
 Whatever using the app at Vertigo turns up (see `BACKLOG.md`).

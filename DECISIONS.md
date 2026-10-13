@@ -451,3 +451,10 @@ page: every screen shows live data behind login, so caching pages or API
 responses would show stale stock and reservations. If native features
 (NFC tags, offline packing) are wanted later, wrapping this same app is
 the path, not a second code base.
+
+Packing lists are the one thing kept offline: a crew in a basement needs
+to read what goes in the truck, and a list read a little stale is better
+than no list. Pages and PDFs that were opened are cached as they were;
+ticking and check-in stay online-only so progress is never recorded
+twice or lost. Everything else (stock, reservations) would mislead when
+stale, so it is not cached.
