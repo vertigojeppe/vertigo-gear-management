@@ -1108,5 +1108,23 @@
     "retry": "Try again",
     "savedLists": "Packing lists on this phone",
     "savedListsHelp": "As they were when last opened. Ticks and check-in need a connection."
+  },
+  "myDay": {
+    "title": "My day",
+    "nothing": "Nothing on your plate: no schedule today, no open tasks, no projects this week.",
+    "today": "Today",
+    "todayEmpty": "Nothing scheduled today on your projects.",
+    "tomorrow": "Tomorrow",
+    "tasks": "My tasks",
+    "tasksEmpty": "No open tasks assigned to you.",
+    "overdue": "Overdue",
+    "dueSoon": "This week",
+    "moreTasks": "{count} more on the plans",
+    "thisWeek": "This week",
+    "thisWeekEmpty": "You are not booked on a project this week.",
+    "callTime": "Call {when}",
+    "youAreResponsible": "you",
+    "openPlan": "Plan",
+    "myPlanPdf": "My plan (PDF)"
   }
 }

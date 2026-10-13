@@ -344,6 +344,12 @@ Android install hints. Same app, installed on the home screen; no store.
 Packing lists that were opened stay readable offline (page and PDF, the
 last 20), listed on the offline page.
 
+### My day ✅ (2026-10-13)
+Per-person view on the dashboard: today's and tomorrow's schedule on my
+projects, my open tasks with overdue and due-this-week flags and a done
+button, this week's projects with my call time, and a "my plan" PDF.
+Rentals also stopped counting own-projects-only units (the backlog fix).
+
 ### Next
 Whatever using the app at Vertigo turns up (see `BACKLOG.md`).
 

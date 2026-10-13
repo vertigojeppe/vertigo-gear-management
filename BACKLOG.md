@@ -56,10 +56,8 @@ fields) is done; the rest waits until production plans have shipped.
 - Low-stock warnings for bulk items (consumables like gaffer, cable ties).
 - Barcode (Code128) as an alternative to QR on labels.
 - Share links with an expiry date (the column exists, no UI yet).
-- Tasks on the dashboard: "my open tasks" and "due this week" across plans.
 - Call times per crew member straight from the plan (today: on the project).
 - Reorder schedule entries by drag; today ties sort by creation.
-- Plan PDF with per-user pages (only my schedule and tasks).
 - S3/R2 storage driver with multipart upload (the adapter interface is
   ready; local disk only today).
 - Markup on 3D models (today: images and PDFs) and on preview images.
