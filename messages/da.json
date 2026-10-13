@@ -512,7 +512,8 @@
     "planTemplates": "Planskabeloner",
     "dayPrice": "Dagspris",
     "dayPriceHelp": "Udfyldes fra modellens listepris; ret den kun for dette projekt.",
-    "lineDiscount": "Linjerabat %"
+    "lineDiscount": "Linjerabat %",
+    "notRentableNote": "{count, plural, one {# enhed er} other {# enheder er}} kun til egne projekter og tælles ikke med til udlejning."
   },
   "rentals": {
     "title": "Udlejning",

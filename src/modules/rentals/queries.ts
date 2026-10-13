@@ -60,7 +60,7 @@ export async function rentalDetail(id: string) {
   for (const l of r.lines) {
     const [items, allocs] = await Promise.all([itemsForModel(l.modelId), allocationsFor(l.modelId)]);
     const alloc = allocs.find((a) => a.holderType === "rental" && a.holderId === id && a.modelId === l.modelId);
-    const check = checkRequest(items, allocs, { from: dto.startDate, to: dto.endDate }, l.quantity, alloc ? { allocationId: alloc.id } : undefined);
+    const check = checkRequest(items, allocs, { from: dto.startDate, to: dto.endDate }, l.quantity, alloc ? { allocationId: alloc.id } : undefined, { forRental: true });
     const priced = quote.gearLines.find((g) => g.id === l.id);
     lines.push({
       id: l.id,

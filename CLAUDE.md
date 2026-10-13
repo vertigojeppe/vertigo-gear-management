@@ -172,7 +172,10 @@ a second entry that exports components only and never a service.
   model, quantity, optional unit, inclusive dates) are the only source for
   availability. `computeAvailability` / `checkRequest` in
   `src/modules/projects/availability.ts` are pure and unit-tested; services
-  load items + allocations with `itemsForModel` / `allocationsFor`.
+  load items + allocations with `itemsForModel` / `allocationsFor`. The
+  rentals service and rental pages pass `{ forRental: true }`, which
+  leaves units flagged not-for-rental out of `owned` (reported as
+  `notRentable`), so a rental can never be promised gear it cannot have.
 - A reservation that does not fit throws `ConflictError` with the check;
   actions return it as `state.data.conflict` and the dialog offers
   "reserve anyway" (`force`). Rentals use the same engine.
