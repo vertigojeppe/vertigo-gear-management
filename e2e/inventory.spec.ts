@@ -84,6 +84,29 @@ test.describe("inventory", () => {
     await expect(page.getByText("An admin can delete these together with what uses them.")).toBeVisible();
   });
 
+  test("admin renames a whole family", async ({ page }) => {
+    await signIn(page, "admin@vertigo.test");
+    await page.goto("/inventory?q=XLR+3-pin");
+    await page.locator("summary", { hasText: "XLR 3-pin" }).click();
+    await page.getByRole("link", { name: /^5 m/ }).click();
+    await expect(page.getByRole("heading", { name: "XLR 3-pin 5 m" })).toBeVisible();
+    await page.getByRole("button", { name: "Rename family" }).click();
+    await page.getByLabel("Model name").fill(`XLR 3-pin ${stamp}`);
+    await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(page.getByRole("heading", { name: `XLR 3-pin ${stamp} 5 m` })).toBeVisible();
+    // Every variant followed; put the name back for the next run.
+    await page.goto(`/inventory?q=XLR+3-pin+${stamp}`);
+    await expect(page.locator("summary", { hasText: `XLR 3-pin ${stamp}` }).getByText("2 variants")).toBeVisible();
+    await page.locator("summary", { hasText: `XLR 3-pin ${stamp}` }).click();
+    await page.getByRole("link", { name: /^5 m/ }).click();
+    await page.getByRole("button", { name: "Rename family" }).click();
+    await page.getByLabel("Model name").fill("XLR 3-pin");
+    await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(page.getByRole("heading", { name: "XLR 3-pin 5 m" })).toBeVisible();
+  });
+
   test("viewer sees inventory but no edit controls", async ({ page }) => {
     await signIn(page, "viewer@vertigo.test");
     await page.goto("/inventory");

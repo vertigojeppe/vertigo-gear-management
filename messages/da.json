@@ -225,7 +225,9 @@
     "deleteAnywayHelp": "Fjerner deres reservationer, udlejningslinjer, pakkelistelinjer, skabelonlinjer og enheder.",
     "forceDeleteConfirm": "Slet {count, plural, one {denne model} other {disse # modeller}} og alt, der bruger dem? Reservationer, udlejningslinjer, pakkelinjer og enheder fjernes. Kan ikke fortrydes.",
     "forceDeleteOneConfirm": "Slet denne model og det, der bruger den ({what})? Kan ikke fortrydes.",
-    "askAdmin": "En admin kan slette disse sammen med det, der bruger dem."
+    "askAdmin": "En admin kan slette disse sammen med det, der bruger dem.",
+    "renameFamily": "Omdøb familie",
+    "renameFamilyHelp": "Ændrer producent og navn på {count, plural, one {denne model} other {alle # varianter}} på én gang. Størrelserne bevares."
   },
   "itemStatus": {
     "in_house": "På lager",

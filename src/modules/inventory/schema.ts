@@ -51,6 +51,13 @@ export const modelInput = z.object({
 });
 export type ModelInput = z.infer<typeof modelInput>;
 
+/** Admin: rename a whole family; every model sharing the old manufacturer + name follows. */
+export const familyRenameInput = z.object({
+  manufacturer: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().max(100).optional()).transform((v) => v ?? ""),
+  name: z.string().trim().min(1, "Model name is required.").max(150),
+});
+export type FamilyRenameInput = z.infer<typeof familyRenameInput>;
+
 export function parseLinksText(text: string | undefined): { label: string; url: string }[] {
   if (!text) return [];
   const out: { label: string; url: string }[] = [];

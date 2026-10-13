@@ -6,11 +6,11 @@ import { nextAssetTag, normaliseAssetTag } from "@/lib/asset-tag";
 import { emitEvent } from "@/lib/events";
 import type { CustomFieldValues } from "@/lib/custom-fields";
 import { itemStatus, type ItemStatus } from "../../../config/app.config";
-import type { CategoryInput, ItemInput, LocationInput, ModelInput, StatusChangeInput } from "./schema";
+import type { CategoryInput, ItemInput, LocationInput, ModelInput, StatusChangeInput, FamilyRenameInput } from "./schema";
 import { parseLinksText } from "./schema";
 import { validateStatusChange } from "./status";
 import { descendantIds, wouldCycle } from "./tree";
-import { modelLabel } from "@/lib/format";
+import { modelLabel, familyLabel } from "@/lib/format";
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
@@ -240,6 +240,27 @@ export const models = {
       details: diffFields(toModelDto(before) as unknown as Record<string, unknown>, toModelDto(m) as unknown as Record<string, unknown>),
     });
     return toModelDto(m);
+  },
+
+  /**
+   * Admin: rename a family. Every model with the same manufacturer + name
+   * as the given one gets the new manufacturer + name; variants stay.
+   * Refused when any variant would collide with a model outside the family.
+   */
+  async renameFamily(actor: Actor, modelId: string, input: FamilyRenameInput): Promise<{ count: number }> {
+    assertCan(actor, "users.manage");
+    const anchor = await prisma.model.findUniqueOrThrow({ where: { id: modelId } });
+    const family = await prisma.model.findMany({ where: { manufacturer: { equals: anchor.manufacturer, mode: "insensitive" }, name: { equals: anchor.name, mode: "insensitive" } } });
+    const ids = family.map((m) => m.id);
+    const clash = await prisma.model.findFirst({
+      where: { id: { notIn: ids }, manufacturer: { equals: input.manufacturer, mode: "insensitive" }, name: { equals: input.name, mode: "insensitive" }, OR: family.map((m) => ({ variant: m.variant === null ? null : { equals: m.variant, mode: "insensitive" as const } })) },
+    });
+    if (clash) throw new InventoryError(`"${modelLabel(clash)}" already exists; merge or rename that model first.`, "name");
+    await prisma.$transaction(async (tx) => {
+      await tx.model.updateMany({ where: { id: { in: ids } }, data: { manufacturer: input.manufacturer, name: input.name } });
+      await logActivity(actor, { entityType: "model", entityId: anchor.id, action: "family_renamed", summary: `Renamed family "${familyLabel(anchor)}" to "${familyLabel(input)}" (${ids.length} ${ids.length === 1 ? "model" : "variants"})` }, tx);
+    });
+    return { count: ids.length };
   },
 
   async setArchived(actor: Actor, id: string, archived: boolean) {
