@@ -186,6 +186,20 @@ export async function seedInventory(prisma: PrismaClient) {
   }
   await upsertCats(CATEGORIES, null, null);
 
+  // Colour coding: defaults for the top categories (kept once someone changed them) and the tape colours by cable length.
+  const defaultColors: Record<string, string> = { Video: "blue", Lighting: "amber", Laser: "green", Audio: "purple", Rigging: "brown", Cables: "orange", "Cases & storage": "teal", "Computers & networking": "indigo" };
+  for (const [name, color] of Object.entries(defaultColors)) {
+    await prisma.category.updateMany({ where: { name, parentId: null, color: null }, data: { color, lengthColors: name === "Cables" ? true : undefined } });
+  }
+  for (const [metres, color] of [
+    [2.5, "blue"],
+    [5, "red"],
+    [7.5, "purple"],
+    [10, "white"],
+  ] as const) {
+    await prisma.lengthColor.upsert({ where: { metres }, create: { metres, color }, update: {} });
+  }
+
   // Locations
   const locIds = new Map<string, string>();
   for (const l of LOCATIONS) {

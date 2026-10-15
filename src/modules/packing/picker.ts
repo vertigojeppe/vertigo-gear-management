@@ -14,6 +14,9 @@ export type CatalogEntry = {
   variant: string | null;
   /** "Lighting › Moving heads"; for a kit, its model. */
   category: string;
+  /** Top category colour and cable length tape colour (palette keys), when any. */
+  color: string | null;
+  lengthColor: string | null;
   trackingType: "serialized" | "bulk" | "kit";
   owned: number;
   inHouse: number;

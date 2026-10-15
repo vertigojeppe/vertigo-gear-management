@@ -158,6 +158,20 @@ a second entry that exports components only and never a service.
   are not locations (kit membership via `parentItemId` already covers it).
 - Contacts (`src/modules/contacts`) are people and companies who are not
   users; permissions `contacts.read/write`. Clients stay separate for now.
+- Colour coding (screen only): `Category.color` is a palette key from
+  `COLOR_PALETTE` (`src/lib/colors.ts`, hex rendered inline, never
+  Tailwind classes), set on top-level categories by admins
+  (`categories.setColor`, swatches on the categories page) and inherited
+  downwards (`categoryColorMap` in `color-map.ts`, pure). A top-level
+  category with `lengthColors` on means its models are cables with tape
+  by length: `LengthColor` rows (metres → colour, `lengthColors`
+  service, table on the categories page) give a variant that parses to
+  that length (`variantMetres`) a dot (`lengthColorFor`).
+  `loadColorMaps()` loads both maps once per page; rows carry `color` /
+  `lengthColor` and the `ColorBar` / `ColorDot` atoms
+  (`src/components/color-marks.tsx`) draw them in the inventory list, on
+  the model page, in the gear picker and on packing list groups and lines.
+  Never on labels, PDFs or the calendar.
 - Custom field definitions can be scoped to a category
   (`categoryId`, applies to sub-categories). `forEntity(entity)` returns
   every definition with `categoryIds` resolved; `forEntity(entity,

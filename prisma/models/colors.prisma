@@ -1,0 +1,14 @@
+// inventory module — colour coding
+
+/// Tape colour by cable length: "2.5 m = blue, 5 m = red". One row per
+/// length; models in a category with lengthColors on show the dot next to
+/// a variant that parses to that length. Screen only.
+model LengthColor {
+  id        String  @id @default(cuid())
+  /// Length in metres (2.5, 5, 7.5, 10).
+  metres    Decimal @unique @db.Decimal(6, 2)
+  /// Palette key from CATEGORY_COLORS.
+  color     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

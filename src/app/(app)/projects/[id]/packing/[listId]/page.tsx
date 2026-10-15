@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
+import { ColorBar, ColorDot } from "@/components/color-marks";
 import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
@@ -133,7 +134,10 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
       ) : (
         groups.map((g) => (
           <section key={g.key} className="flex flex-col gap-1">
-            <h2 className="text-sm font-medium text-muted-foreground">{g.label}</h2>
+            <h2 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <ColorBar color={g.color} className="h-4" />
+              {g.label}
+            </h2>
             <ul className="divide-y rounded-md border text-sm">
               {g.lines.map((l) => (
                 <li key={l.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
@@ -142,6 +146,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
                     <Link href={`/inventory/models/${l.modelId}`} className="hover:underline">
                       {l.modelLabel}
                     </Link>
+                    <ColorDot color={l.lengthColor} className="ml-1.5" />
                     {l.itemName ? <span className="text-muted-foreground"> – {l.itemName}</span> : null}
                     <span className="block text-xs text-muted-foreground">
                       {[l.note && l.note !== l.itemName ? l.note : null, l.itemTag && !l.isKit ? l.itemTag : null, l.caseLabel && !l.isKit ? `${t("case")}: ${l.caseLabel}` : null].filter(Boolean).join(" · ")}

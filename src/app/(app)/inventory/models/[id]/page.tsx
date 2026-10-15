@@ -18,6 +18,7 @@ import { customFieldDefinitions } from "@/modules/settings";
 import { modelAvailabilityView } from "@/modules/projects";
 import { PurchasesSection } from "@/modules/purchases";
 import { StatusPill } from "@/components/status-pill";
+import { ColorBar, ColorDot } from "@/components/color-marks";
 import { ITEM_STATUSES } from "../../../../../../config/app.config";
 
 export const metadata: Metadata = { title: "Model" };
@@ -53,7 +54,13 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
         </p>
       )}
       <PageHeader
-        title={label}
+        title={
+          <span className="flex items-center gap-2">
+            <ColorBar color={detail.categoryColor} className="h-6" />
+            {label}
+            <ColorDot color={detail.lengthColor} className="size-3" />
+          </span>
+        }
         subtitle={`${detail.categoryPath.join(" › ")} · ${t(model.trackingType)}${model.notForRental ? ` · ${t("notForRental")}` : ""}${model.archived ? ` · ${t("archived")}` : ""}`}
         crumbs={[{ label: t("title"), href: "/inventory" }, { label }]}
         actions={
@@ -166,10 +173,14 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
             {can(actor.role, "users.manage") && <RenameFamilyDialog modelId={model.id} manufacturer={model.manufacturer} name={model.name} count={detail.variants.length + 1} />}
           </div>
           <ul className="flex flex-wrap gap-2 text-sm">
-            <li className="rounded-md border bg-muted px-2.5 py-1 font-medium">{model.variant ?? "—"}</li>
+            <li className="flex items-center gap-1.5 rounded-md border bg-muted px-2.5 py-1 font-medium">
+              <ColorDot color={detail.lengthColor} />
+              {model.variant ?? "—"}
+            </li>
             {detail.variants.map((v) => (
               <li key={v.id}>
-                <Link href={`/inventory/models/${v.id}`} className={`rounded-md border px-2.5 py-1 hover:bg-muted/50 ${v.archived ? "text-muted-foreground line-through" : ""}`}>
+                <Link href={`/inventory/models/${v.id}`} className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 hover:bg-muted/50 ${v.archived ? "text-muted-foreground line-through" : ""}`}>
+                  <ColorDot color={v.lengthColor} />
                   {v.variant ?? "—"}
                 </Link>
               </li>

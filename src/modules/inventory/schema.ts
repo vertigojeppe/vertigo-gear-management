@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isColorKey } from "@/lib/colors";
 import { ITEM_STATUS_KEYS, LOCATION_TYPES, RETIREMENT_REASONS } from "../../../config/app.config";
 import { checkbox, optionalDate, optionalId, optionalNumber, optionalText } from "@/lib/forms";
 
@@ -9,6 +10,13 @@ export const categoryInput = z.object({
   sortOrder: optionalNumber.transform((v) => v ?? 0),
 });
 export type CategoryInput = z.infer<typeof categoryInput>;
+
+/** One row of the tape-colour table: length in metres and a palette key. */
+export const lengthColorInput = z.object({
+  metres: z.coerce.number().positive("Enter the length in metres.").max(1000),
+  color: z.string().refine(isColorKey, "Pick a colour."),
+});
+export type LengthColorInput = z.infer<typeof lengthColorInput>;
 
 /* Locations */
 export const locationInput = z.object({

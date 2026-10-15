@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { filterCatalog, type CatalogEntry } from "../picker";
 
-const e = (kind: CatalogEntry["kind"], label: string, category: string, tags: string[] = [], extra: Partial<CatalogEntry> = {}): CatalogEntry => ({ kind, id: label, label, family: label, variant: null, category, trackingType: kind === "kit" ? "kit" : "serialized", owned: 1, inHouse: 1, onList: 0, tags, ...extra });
+const e = (kind: CatalogEntry["kind"], label: string, category: string, tags: string[] = [], extra: Partial<CatalogEntry> = {}): CatalogEntry => ({ kind, id: label, label, family: label, variant: null, category, trackingType: kind === "kit" ? "kit" : "serialized", owned: 1, inHouse: 1, onList: 0, color: null, lengthColor: null, tags, ...extra });
 const catalog = [
   e("model", "Robe Pointe", "Lighting › Moving heads", ["VG-0001", "VG-0002"]),
   e("model", "Robe Esprite", "Lighting › Moving heads"),

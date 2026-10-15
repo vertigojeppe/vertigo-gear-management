@@ -240,7 +240,8 @@
     "openLabelsPdf": "Open PDF",
     "wishlist": "Wish list",
     "newModelFromWish": "New model from the wish list",
-    "subhire": "Sub-hire"
+    "subhire": "Sub-hire",
+    "colorsHelp": "Colours are set on top-level categories and show as a bar in lists, on the model page, in the gear picker and on packing lists. Screen only, never printed."
   },
   "itemStatus": {
     "in_house": "In house",
@@ -1127,5 +1128,34 @@
     "youAreResponsible": "you",
     "openPlan": "Plan",
     "myPlanPdf": "My plan (PDF)"
+  },
+  "colors": {
+    "pickColor": "Category colour",
+    "none": "No colour",
+    "red": "Red",
+    "orange": "Orange",
+    "amber": "Amber",
+    "yellow": "Yellow",
+    "lime": "Lime",
+    "green": "Green",
+    "teal": "Teal",
+    "cyan": "Cyan",
+    "blue": "Blue",
+    "indigo": "Indigo",
+    "purple": "Purple",
+    "pink": "Pink",
+    "brown": "Brown",
+    "gray": "Grey",
+    "white": "White",
+    "black": "Black",
+    "lengthColorsOn": "Tape colours by length: on",
+    "lengthColorsOff": "Tape colours by length: off",
+    "lengthColorsHelp": "Cables in this category carry tape in the colour of their length; show the dot next to the size.",
+    "lengthTitle": "Tape colours by length",
+    "lengthHelp": "The colour of the tape near the connector, per cable length. Shown as a dot next to the size wherever cables are listed, in the categories that have tape colours switched on.",
+    "metres": "Length (m)",
+    "color": "Colour",
+    "addLength": "Add or change",
+    "removeConfirm": "Remove the colour for {length}?"
   }
 }

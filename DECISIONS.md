@@ -458,3 +458,14 @@ than no list. Pages and PDFs that were opened are cached as they were;
 ticking and check-in stay online-only so progress is never recorded
 twice or lost. Everything else (stock, reservations) would mislead when
 stale, so it is not cached.
+
+## 2026-10-15 — Colour means two things, on screen only
+
+Vertigo colour-codes exactly one thing in the warehouse: cable length,
+with tape near the connector. So the app has two colour systems that
+never share a surface: a colour per top-level category (admin-set, a
+fixed palette, inherited by subcategories, drawn as a bar) to make mixed
+lists scannable, and a colour per cable length (one table, drawn as a dot
+next to the size) that matches the tape. Colours are never printed:
+labels and PDFs stay black and white to save ink, and the calendar keeps
+its status colours so no screen carries two meanings of colour at once.
