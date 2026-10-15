@@ -1,5 +1,6 @@
 "use client";
 
+import { ColorBar, ColorDot } from "@/components/color-marks";
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -99,7 +100,9 @@ export function FamilyList({ families, canEdit, isAdmin, returnTo }: { families:
             const v = f.variants[0];
             return (
               <li key={f.key} className="flex items-center">
+                <ColorBar color={f.color} className="ml-1" />
                 {canEdit && <Check checked={selected.has(v.id)} onChange={(on) => toggle([v.id], on)} label={modelLabel(v)} />}
+                <ColorDot color={v.lengthColor} className="ml-3" />
                 <ModelRow m={v} label={modelLabel(v)} sub={`${f.categoryPath.join(" › ")} · ${t(v.trackingType)}`} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} />
               </li>
             );
@@ -108,6 +111,7 @@ export function FamilyList({ families, canEdit, isAdmin, returnTo }: { families:
             <li key={f.key}>
               <details className="group">
                 <summary className="flex cursor-pointer list-none items-center hover:bg-muted/50 [&::-webkit-details-marker]:hidden">
+                  <ColorBar color={f.color} className="ml-1" />
                   {canEdit && <Check checked={picked === ids.length} indeterminate={picked > 0 && picked < ids.length} onChange={(on) => toggle(ids, on)} label={familyLabel(f)} />}
                   <span className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2">
                     <Thumb url={f.thumbUrl} />
@@ -137,6 +141,7 @@ export function FamilyList({ families, canEdit, isAdmin, returnTo }: { families:
                   {f.variants.map((v) => (
                     <li key={v.id} className="flex items-center pl-6">
                       {canEdit && <Check checked={selected.has(v.id)} onChange={(on) => toggle([v.id], on)} label={modelLabel(v)} />}
+                      <ColorDot color={v.lengthColor} className="ml-3" />
                       <ModelRow m={v} label={v.variant ?? modelLabel(v)} sub={v.trackingType !== f.trackingType ? t(v.trackingType) : ""} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} compact />
                     </li>
                   ))}

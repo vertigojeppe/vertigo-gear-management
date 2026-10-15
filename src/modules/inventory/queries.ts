@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { categoryColorMap, lengthColorFor } from "./color-map";
 import { compareVariants } from "@/lib/variant";
 import type { Prisma } from "@/generated/prisma/client";
 import { activityFor } from "@/lib/activity";
@@ -15,6 +16,16 @@ const PAGE = appConfig.pageSize;
 export async function categoryOptions() {
   const rows = await prisma.category.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
   return flattenTree(buildTree(rows)).map((c) => ({ id: c.id, name: c.name, depth: c.depth, parentId: c.parentId }));
+}
+
+/** Both maps the colour marks need, loaded once per page: category → top colour / length flag, and metres → colour. */
+export async function loadColorMaps() {
+  const [cats, lengths] = await Promise.all([prisma.category.findMany({ select: { id: true, parentId: true, color: true, lengthColors: true } }), prisma.lengthColor.findMany()]);
+  return { byCategory: categoryColorMap(cats), lengths: new Map(lengths.map((l) => [l.metres.toNumber(), l.color])) };
+}
+
+export async function lengthColorRows() {
+  return (await prisma.lengthColor.findMany({ orderBy: { metres: "asc" } })).map((r) => ({ id: r.id, metres: r.metres.toNumber(), color: r.color }));
 }
 
 export async function categoryTree() {
@@ -53,6 +64,9 @@ export async function modelOptions() {
 
 export type ModelListRow = ModelDto & {
   categoryPath: string[];
+  /** Top category's colour (palette key) and the cable length tape colour, when any. */
+  color: string | null;
+  lengthColor: string | null;
   owned: number;
   inHouse: number;
   thumbUrl: string | null;
@@ -64,6 +78,7 @@ export type ModelFamily = {
   manufacturer: string;
   name: string;
   categoryPath: string[];
+  color: string | null;
   trackingType: "serialized" | "bulk" | "mixed";
   archived: boolean;
   owned: number;
@@ -86,9 +101,10 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
   if (filters.trackingType) where.trackingType = filters.trackingType;
 
   // Every matching model, grouped into families, then paginated by family (a few hundred rows at most).
-  const [models, cats] = await Promise.all([
+  const [models, cats, colors] = await Promise.all([
     prisma.model.findMany({ where, orderBy: [{ manufacturer: "asc" }, { name: "asc" }], include: { defaultPhoto: { select: { id: true, thumbKey: true } } } }),
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
+    loadColorMaps(),
   ]);
   const ids = models.map((m) => m.id);
   const counts = ids.length ? await prisma.item.groupBy({ by: ["modelId", "status"], where: { modelId: { in: ids } }, _sum: { quantity: true } }) : [];
@@ -102,6 +118,8 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
   const rows: ModelListRow[] = models.map((m) => ({
     ...toModelDto(m),
     categoryPath: pathNames(cats, m.categoryId),
+    color: colors.byCategory.get(m.categoryId)?.color ?? null,
+    lengthColor: lengthColorFor(m.variant, colors.byCategory.get(m.categoryId), colors.lengths),
     owned: owned.get(m.id) ?? 0,
     inHouse: inHouse.get(m.id) ?? 0,
     thumbUrl: m.defaultPhoto?.thumbKey ? `/api/files/${m.defaultPhoto.id}?thumb=1` : null,
@@ -124,7 +142,7 @@ export function groupFamilies(rows: ModelListRow[]): ModelFamily[] {
       if (fam.trackingType !== r.trackingType) fam.trackingType = "mixed";
       fam.archived = fam.archived && r.archived;
       fam.thumbUrl ??= r.thumbUrl;
-    } else map.set(key, { key, manufacturer: r.manufacturer, name: r.name, categoryPath: r.categoryPath, trackingType: r.trackingType, archived: r.archived, owned: r.owned, inHouse: r.inHouse, thumbUrl: r.thumbUrl, variants: [r] });
+    } else map.set(key, { key, manufacturer: r.manufacturer, name: r.name, categoryPath: r.categoryPath, color: r.color, trackingType: r.trackingType, archived: r.archived, owned: r.owned, inHouse: r.inHouse, thumbUrl: r.thumbUrl, variants: [r] });
   }
   for (const fam of map.values()) fam.variants.sort((a, b) => compareVariants(a.variant, b.variant));
   return [...map.values()];
@@ -142,18 +160,22 @@ export async function modelDetail(id: string) {
     },
   });
   if (!m) return null;
-  const [cats, siblings] = await Promise.all([
+  const [cats, siblings, colors] = await Promise.all([
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
-    prisma.model.findMany({ where: { id: { not: id }, manufacturer: { equals: m.manufacturer, mode: "insensitive" }, name: { equals: m.name, mode: "insensitive" } }, select: { id: true, variant: true, archived: true } }),
+    prisma.model.findMany({ where: { id: { not: id }, manufacturer: { equals: m.manufacturer, mode: "insensitive" }, name: { equals: m.name, mode: "insensitive" } }, select: { id: true, variant: true, archived: true, categoryId: true } }),
+    loadColorMaps(),
   ]);
+  const coloring = colors.byCategory.get(m.categoryId);
   const byStatus: Record<string, number> = {};
   for (const s of ITEM_STATUSES) byStatus[s.key] = 0;
   for (const i of m.items) byStatus[i.status] = (byStatus[i.status] ?? 0) + i.quantity;
   return {
     model: toModelDto(m),
     /** Other sizes of the same family, by size. */
-    variants: siblings.sort((a, b) => compareVariants(a.variant, b.variant)),
+    variants: siblings.sort((a, b) => compareVariants(a.variant, b.variant)).map((s) => ({ ...s, lengthColor: lengthColorFor(s.variant, colors.byCategory.get(s.categoryId), colors.lengths) })),
     categoryPath: pathNames(cats, m.categoryId),
+    categoryColor: coloring?.color ?? null,
+    lengthColor: lengthColorFor(m.variant, coloring, colors.lengths),
     photoUrl: m.defaultPhoto ? `/api/files/${m.defaultPhoto.id}` : null,
     thumbUrl: m.defaultPhoto?.thumbKey ? `/api/files/${m.defaultPhoto.id}?thumb=1` : null,
     items: m.items.map((i) => ({

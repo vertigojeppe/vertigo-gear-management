@@ -1,5 +1,6 @@
 "use client";
 
+import { ColorBar, ColorDot } from "@/components/color-marks";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { NativeSelect } from "@/components/form/native-select";
@@ -123,7 +124,8 @@ export function GearPicker({ target, catalog, cases = [] }: { target: Target; ca
         <div className="flex flex-col gap-2">
           {groups.map((g) => (
             <section key={g.key} className="rounded-md border">
-              <header className="flex flex-wrap items-baseline gap-2 border-b bg-muted/30 px-3 py-1.5 text-sm">
+              <header className="flex flex-wrap items-center gap-2 border-b bg-muted/30 px-3 py-1.5 text-sm">
+                <ColorBar color={g.entries[0]?.color} className="h-4" />
                 <span className="font-medium">{g.family}</span>
                 {g.kind === "kit" && (
                   <StatusPill color="purple">
@@ -144,6 +146,7 @@ export function GearPicker({ target, catalog, cases = [] }: { target: Target; ca
                   return (
                     <li key={`${e.kind}:${e.id}`} className={`flex flex-col gap-1 px-3 py-1.5 sm:flex-row sm:items-center sm:gap-3 ${i === active ? "bg-muted/60" : ""}`} onMouseEnter={() => setActive(i)}>
                       <span className="min-w-0 flex-1">
+                        <ColorDot color={e.lengthColor} className="mr-1.5" />
                         <span className={e.variant ? "font-medium" : "text-muted-foreground"}>{e.variant ?? (g.entries.length > 1 ? "—" : e.label)}</span>
                         <span className="block text-xs text-muted-foreground">
                           {e.kind === "model" ? t("inHouseOf", { inHouse: e.inHouse, owned: e.owned }) : e.category}

@@ -70,6 +70,11 @@ start, and help text under the fields that need it. The short version:
   LED controllers get IP and firmware, and so on).
 - **Settings › Contacts**: people and companies who are not users. A
   contact or a colleague can be a *person* location ("Mikkel has 2").
+- **Colours**: admins give each top category a colour under Inventory ›
+  Categories; it shows as a bar in the inventory list, the gear picker and
+  packing lists. Cables carry tape by length, so the same page has a
+  length → colour table (2,5 m blue, 5 m red, …) and the matching dot
+  appears next to each cable size. Screen only, never printed.
 - **Inventory › Wish list**: gear to buy, with quantity, expected price,
   link and notes. When it arrives, *Convert to model* opens the new-model
   form prefilled; the wish is marked bought and points at the model.

@@ -1,10 +1,12 @@
 // Public interface of the inventory module.
-export { categories, locations, models, items, modelUsage, InventoryError, redactFinance, actorCanSeeFinance } from "./service";
+export { categories, locations, models, items, lengthColors, modelUsage, InventoryError, redactFinance, actorCanSeeFinance } from "./service";
 export type { ModelUsage, BulkResult } from "./service";
 export type { ModelDto, ItemDto, Link } from "./service";
 export {
   categoryOptions,
   categoryTree,
+  loadColorMaps,
+  lengthColorRows,
   locationOptions,
   locationList,
   modelOptions,
@@ -38,6 +40,8 @@ export { InventoryTabs } from "./components/inventory-tabs";
 export { FamilyList } from "./components/family-list";
 export { RenameFamilyDialog } from "./components/rename-family-dialog";
 export { LabelsDialog } from "./components/labels-dialog";
+export { CategoryColorPicker, LengthColorsToggle, LengthColorsTable } from "./components/color-controls";
+export { categoryColorMap, lengthColorFor } from "./color-map";
 export { renderLabels } from "./labels";
 export type { LabelItem } from "./labels";
 export { labelSize, isLabelSizeKey, cellFor, pageCount, perPage, pageMm } from "./label-layout";

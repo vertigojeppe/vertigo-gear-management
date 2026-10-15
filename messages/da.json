@@ -240,7 +240,8 @@
     "openLabelsPdf": "Åbn PDF",
     "wishlist": "Ønskeliste",
     "newModelFromWish": "Ny model fra ønskelisten",
-    "subhire": "Indleje"
+    "subhire": "Indleje",
+    "colorsHelp": "Farver sættes på topkategorier og vises som en bjælke i lister, på modelsiden, i udstyrsvælgeren og på pakkelister. Kun på skærmen, aldrig på print."
   },
   "itemStatus": {
     "in_house": "På lager",
@@ -1127,5 +1128,34 @@
     "youAreResponsible": "dig",
     "openPlan": "Plan",
     "myPlanPdf": "Min plan (PDF)"
+  },
+  "colors": {
+    "pickColor": "Kategorifarve",
+    "none": "Ingen farve",
+    "red": "Rød",
+    "orange": "Orange",
+    "amber": "Ravgul",
+    "yellow": "Gul",
+    "lime": "Limegrøn",
+    "green": "Grøn",
+    "teal": "Blågrøn",
+    "cyan": "Cyan",
+    "blue": "Blå",
+    "indigo": "Indigo",
+    "purple": "Lilla",
+    "pink": "Pink",
+    "brown": "Brun",
+    "gray": "Grå",
+    "white": "Hvid",
+    "black": "Sort",
+    "lengthColorsOn": "Tapefarver efter længde: til",
+    "lengthColorsOff": "Tapefarver efter længde: fra",
+    "lengthColorsHelp": "Kabler i denne kategori har tape i længdens farve; vis prikken ved størrelsen.",
+    "lengthTitle": "Tapefarver efter længde",
+    "lengthHelp": "Farven på tapen ved stikket, pr. kabellængde. Vises som en prik ved størrelsen overalt hvor kabler står på en liste, i de kategorier hvor tapefarver er slået til.",
+    "metres": "Længde (m)",
+    "color": "Farve",
+    "addLength": "Tilføj eller ret",
+    "removeConfirm": "Fjern farven for {length}?"
   }
 }

@@ -350,6 +350,11 @@ projects, my open tasks with overdue and due-this-week flags and a done
 button, this week's projects with my call time, and a "my plan" PDF.
 Rentals also stopped counting own-projects-only units (the backlog fix).
 
+### Colour coding ✅ (2026-10-15)
+Top-category colours (admin, fixed palette, inherited) as bars in the
+inventory list, model page, gear picker and packing lists; tape colours
+by cable length as dots next to the size. Screen only.
+
 ### Next
 Whatever using the app at Vertigo turns up (see `BACKLOG.md`).
 

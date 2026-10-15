@@ -8,6 +8,10 @@ model Category {
   parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
   children  Category[] @relation("CategoryTree")
   sortOrder Int        @default(0)
+  /// Palette key from CATEGORY_COLORS (top-level categories; children inherit). Screen only.
+  color     String?
+  /// Variants of models in here are cables with tape by length: show the LengthColor dot.
+  lengthColors Boolean @default(false)
   models    Model[]
   customFieldDefinitions CustomFieldDefinition[]
   wishItems WishItem[]

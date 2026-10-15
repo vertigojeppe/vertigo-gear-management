@@ -8,8 +8,8 @@ import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitions } from "@/modules/settings";
 // eslint-disable-next-line no-restricted-imports -- the wishlist barrel re-exports client components; the service is all this action needs
 import { wishes } from "@/modules/wishlist/service";
-import { categoryInput, itemBatchInput, itemInput, locationInput, modelInput, statusChangeInput, familyRenameInput } from "./schema";
-import { categories, items, locations, models, InventoryError, type BulkResult } from "./service";
+import { categoryInput, itemBatchInput, itemInput, lengthColorInput, locationInput, modelInput, statusChangeInput, familyRenameInput } from "./schema";
+import { categories, items, lengthColors, locations, models, InventoryError, type BulkResult } from "./service";
 
 function revalidateInventory() {
   revalidatePath("/inventory", "layout");
@@ -262,4 +262,42 @@ export async function deleteItem(formData: FormData): Promise<void> {
   await items.remove(actor, id);
   revalidateInventory();
   redirect(modelId ? `/inventory/models/${modelId}` : "/inventory/items");
+}
+
+/* Colour coding (admins) ------------------------------------------------- */
+
+export async function setCategoryColor(formData: FormData): Promise<void> {
+  const actor = await requirePermission("users.manage");
+  const color = String(formData.get("color") ?? "");
+  await categories.setColor(actor, String(formData.get("id") ?? ""), color || null);
+  revalidateInventory();
+  revalidatePath("/projects", "layout");
+}
+
+export async function setCategoryLengthColors(formData: FormData): Promise<void> {
+  const actor = await requirePermission("users.manage");
+  await categories.setLengthColors(actor, String(formData.get("id") ?? ""), formData.get("on") === "true");
+  revalidateInventory();
+  revalidatePath("/projects", "layout");
+}
+
+export async function saveLengthColor(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("users.manage");
+  const parsed = parseForm(lengthColorInput, formData);
+  if (!parsed.ok) return parsed.state;
+  try {
+    await lengthColors.save(actor, parsed.data);
+  } catch (err) {
+    return errorState(err, echoValues(formData));
+  }
+  revalidateInventory();
+  revalidatePath("/projects", "layout");
+  return { ok: true };
+}
+
+export async function removeLengthColor(formData: FormData): Promise<void> {
+  const actor = await requirePermission("users.manage");
+  await lengthColors.remove(actor, String(formData.get("id") ?? ""));
+  revalidateInventory();
+  revalidatePath("/projects", "layout");
 }

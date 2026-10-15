@@ -19,6 +19,7 @@ export const TABLES: TableDef[] = [
   { name: "File", delegate: "file" },
   { name: "Attachment", delegate: "attachment" },
   { name: "Category", delegate: "category", selfRef: "parentId" },
+  { name: "LengthColor", delegate: "lengthColor" },
   { name: "CustomFieldDefinition", delegate: "customFieldDefinition" },
   { name: "Model", delegate: "model" },
   { name: "WishItem", delegate: "wishItem" },

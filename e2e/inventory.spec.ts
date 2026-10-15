@@ -209,6 +209,20 @@ test.describe("inventory", () => {
     await expect(page.getByText("No purchase records yet")).toBeVisible();
   });
 
+  test("admin colours a top-level category and the bar shows in the list", async ({ page }) => {
+    await signIn(page, "admin@vertigo.test");
+    await page.goto("/inventory/categories");
+    const video = page.getByRole("listitem").filter({ has: page.getByRole("link", { name: "Video", exact: true }) }).first();
+    await video.getByRole("button", { name: "Cyan" }).click();
+    await expect(video.getByRole("button", { name: "Cyan" })).toHaveAttribute("aria-pressed", "true");
+    await page.goto("/inventory?q=PT-RZ120");
+    await expect(page.locator('li:has-text("PT-RZ120") span[style*="background-color"]').first()).toBeVisible();
+    // Back to the seeded colour so the next run starts the same way.
+    await page.goto("/inventory/categories");
+    await video.getByRole("button", { name: "Blue" }).click();
+    await expect(video.getByRole("button", { name: "Blue" })).toHaveAttribute("aria-pressed", "true");
+  });
+
   test("viewer sees inventory but no edit controls", async ({ page }) => {
     await signIn(page, "viewer@vertigo.test");
     await page.goto("/inventory");

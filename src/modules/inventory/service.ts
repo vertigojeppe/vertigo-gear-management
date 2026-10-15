@@ -2,12 +2,13 @@ import { prisma } from "@/lib/db";
 import { logActivity, diffFields } from "@/lib/activity";
 import { assertCan } from "@/lib/auth/permissions";
 import type { Actor } from "@/lib/auth/session";
+import { isColorKey } from "@/lib/colors";
 import { nextAssetTag, normaliseAssetTag } from "@/lib/asset-tag";
 import { emitEvent } from "@/lib/events";
 import type { CustomFieldValues } from "@/lib/custom-fields";
 import { itemStatus, type ItemStatus } from "../../../config/app.config";
 import type { CategoryInput, ItemInput, LocationInput, ModelInput, StatusChangeInput, FamilyRenameInput } from "./schema";
-import { parseLinksText } from "./schema";
+import { parseLinksText, LengthColorInput } from "./schema";
 import { validateStatusChange } from "./status";
 import { descendantIds, wouldCycle } from "./tree";
 import { modelLabel, familyLabel } from "@/lib/format";
@@ -34,6 +35,25 @@ const num = (v: { toNumber(): number } | number | null | undefined): number | nu
 export const categories = {
   async list() {
     return prisma.category.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
+  },
+
+  /** Colour of a top-level category (children inherit it). Admins only; null clears it. */
+  async setColor(actor: Actor, id: string, color: string | null) {
+    assertCan(actor, "users.manage");
+    if (color !== null && !isColorKey(color)) throw new InventoryError("Pick a colour from the palette.", "color");
+    const cat = await prisma.category.findUniqueOrThrow({ where: { id }, select: { parentId: true, name: true } });
+    if (cat.parentId) throw new InventoryError("Colours are set on top-level categories; the ones inside inherit it.");
+    await prisma.category.update({ where: { id }, data: { color } });
+    await logActivity(actor, { entityType: "category", entityId: id, action: "color_set", summary: `${color ? `Coloured ${cat.name} ${color}` : `Cleared the colour of ${cat.name}`}` });
+  },
+
+  /** Whether models in a top-level category are cables with tape by length. Admins only. */
+  async setLengthColors(actor: Actor, id: string, on: boolean) {
+    assertCan(actor, "users.manage");
+    const cat = await prisma.category.findUniqueOrThrow({ where: { id }, select: { parentId: true, name: true } });
+    if (cat.parentId) throw new InventoryError("Tape colours are switched on for a top-level category.");
+    await prisma.category.update({ where: { id }, data: { lengthColors: on } });
+    await logActivity(actor, { entityType: "category", entityId: id, action: on ? "length_colors_on" : "length_colors_off", summary: `${on ? "Switched on" : "Switched off"} tape colours by length for ${cat.name}` });
   },
 
   async create(actor: Actor, input: CategoryInput) {
@@ -69,6 +89,29 @@ export const categories = {
     if (models > 0) throw new InventoryError("Move its models to another category first.");
     const cat = await prisma.category.delete({ where: { id } });
     await logActivity(actor, { entityType: "category", entityId: id, action: "deleted", summary: `Deleted category ${cat.name}` });
+  },
+};
+
+/** The tape-colour table: one colour per cable length, for every category that uses it. */
+export const lengthColors = {
+  async list() {
+    const rows = await prisma.lengthColor.findMany({ orderBy: { metres: "asc" } });
+    return rows.map((r) => ({ id: r.id, metres: r.metres.toNumber(), color: r.color }));
+  },
+
+  /** Adding an existing length changes its colour. Admins only. */
+  async save(actor: Actor, input: LengthColorInput) {
+    assertCan(actor, "users.manage");
+    const metres = Math.round(input.metres * 100) / 100;
+    const row = await prisma.lengthColor.upsert({ where: { metres }, create: { metres, color: input.color }, update: { color: input.color } });
+    await logActivity(actor, { entityType: "settings", entityId: "length-colors", action: "length_color_set", summary: `Tape colour for ${metres} m set to ${input.color}` });
+    return row;
+  },
+
+  async remove(actor: Actor, id: string) {
+    assertCan(actor, "users.manage");
+    const row = await prisma.lengthColor.delete({ where: { id } });
+    await logActivity(actor, { entityType: "settings", entityId: "length-colors", action: "length_color_removed", summary: `Tape colour for ${row.metres.toNumber()} m removed` });
   },
 };
 
