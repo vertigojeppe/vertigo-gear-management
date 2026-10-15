@@ -10,7 +10,11 @@
  */
 
 const SIZE = String.raw`\d+(?:[.,]\d+)?\s*(?:cm|mm|m)\b\.?`;
+/** "under 2 m", "max 3 m", "op til 5 m": the qualifier is part of the variation, not of the family name. */
+const QUALIFIER = String.raw`(?:under|over|max\.?|min\.?|op til|mindst|højst|ca\.?)`;
 const PATTERNS: RegExp[] = [
+  // "True1 under 2 m", "Stativ max 3 m"
+  new RegExp(String.raw`^(.*?\S)\s+(${QUALIFIER}\s+${SIZE}(?:\s*\([^)]*\))*)$`, "i"),
   // "Ethercon-LP12(M-M) 20cm", "Ethercon-LP12(F-F) Granat": the connector genders and what follows are the variation
   /^(.*?\S)\s*(\([FMfm]-[FMfm]\).*)$/,
   // "Alu hjørner 30° grader", "kube corner 3 x 90°", "45 grader"
@@ -25,6 +29,9 @@ const PATTERNS: RegExp[] = [
   /^(.*?\S)\s+(\d+(?:[.,]\d+)?\s*(?:kg|t))$/i,
 ];
 
+/** "SplitLED wieland kabler" → "SplitLED wieland": a trailing "kabler" only says it is a cable, which the category already does. */
+const CABLE_SUFFIX = /\s+kabler$/i;
+
 /** "DMX 5-pin 5 m" → { name: "DMX 5-pin", variant: "5 m" }; a name without a size keeps variant null. */
 export function splitVariant(fullName: string): { name: string; variant: string | null } {
   const s = fullName.replace(/\s+/g, " ").trim();
@@ -33,10 +40,15 @@ export function splitVariant(fullName: string): { name: string; variant: string 
     // Never cut inside a parenthesis ("Wind Up Stativ (max højde = 3,66m" lost its bracket on the sheet).
     if (m && m[1].trim() && (m[1].match(/\(/g) ?? []).length === (m[1].match(/\)/g) ?? []).length) {
       // "1,5 m. (tynd)" → "1,5 m (tynd)": the sheet wrote the unit with a full stop.
-      return { name: m[1].trim(), variant: m[2].replace(/\.(?=\s*(?:\(|$))/, "").trim() };
+      return { name: familyName(m[1]), variant: m[2].replace(/\.(?=\s*(?:\(|$))/, "").trim() };
     }
   }
-  return { name: s, variant: null };
+  return { name: familyName(s), variant: null };
+}
+
+function familyName(s: string): string {
+  const name = s.trim().replace(CABLE_SUFFIX, "").trim();
+  return name || s.trim();
 }
 
 /** Sorts "50 cm" < "70 cm" < "100 cm" < "1,5 m" < "2 m" (metres after centimetres), text variants last, alphabetically. */

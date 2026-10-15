@@ -61,7 +61,7 @@ describe("importer commit", () => {
     expect(result.units).toBe(ops.filter((o) => o.type === "unit").length);
     expect(ops.filter((o) => o.type === "unit").length).toBeGreaterThanOrEqual(11); // controllers, projectors, KITO, fobs (+ EclGallery when the model is new)
 
-    const true1 = await prisma.model.findFirstOrThrow({ where: { name: `True1 ${M} kabler`, variant: "5 m" }, include: { category: { include: { parent: true } }, items: { orderBy: { quantity: "desc" } } } });
+    const true1 = await prisma.model.findFirstOrThrow({ where: { name: `True1 ${M}`, variant: "5 m" }, include: { category: { include: { parent: true } }, items: { orderBy: { quantity: "desc" } } } });
     expect(true1).toMatchObject({ manufacturer: "", trackingType: "bulk", rentalDayPrice: expect.anything(), importSource: "LED - SCROLLER - BOX!F6" });
     expect(Number(true1.weightKg)).toBe(0.5);
     expect(Number(true1.rentalDayPrice)).toBe(25);
@@ -75,7 +75,7 @@ describe("importer commit", () => {
 
     const ukirke = await prisma.contact.findFirstOrThrow({ where: { name: "ukirke", locations: { some: {} } }, include: { locations: true } });
     expect(ukirke.locations[0]).toMatchObject({ type: "person", name: "ukirke" });
-    const lent = await prisma.item.findFirstOrThrow({ where: { locationId: ukirke.locations[0].id, model: { name: `True1 ${M} kabler`, variant: "10 m" } } });
+    const lent = await prisma.item.findFirstOrThrow({ where: { locationId: ukirke.locations[0].id, model: { name: `True1 ${M}`, variant: "10 m" } } });
     expect(lent.quantity).toBe(2);
 
     const split = await prisma.model.findFirstOrThrow({ where: { name: `SplitLED ${M}`, variant: "60cm" } });
@@ -117,7 +117,7 @@ describe("importer commit", () => {
     const wb = await readWorkbook(await fixtureBytes(M), fileName);
     const ctx = await importer.context();
     expect(ctx.existingTags.has("W6-91")).toBe(true);
-    expect(ctx.existingModels.has(modelKey("", `True1 ${M} kabler`, "5 m"))).toBe(true);
+    expect(ctx.existingModels.has(modelKey("", `True1 ${M}`, "5 m"))).toBe(true);
     const plan = buildPlan(wb, ctx);
     expect(plan.rows.find((r) => r.key === "LED - SCROLLER - BOX:6")?.bucket).toBe("decision");
     const result = await applyOps(admin, resolveOps(plan, { "loan:1": "closed" }), fileName);
@@ -128,11 +128,11 @@ describe("importer commit", () => {
   it("adds units to an existing model when told to", async () => {
     const wb = await readWorkbook(await fixtureBytes(M), fileName);
     const plan = buildPlan(wb, await importer.context());
-    const key = modelKey("", `True1 ${M} kabler`, "5 m");
+    const key = modelKey("", `True1 ${M}`, "5 m");
     const ops = resolveOps(plan, { "LED - SCROLLER - BOX:6": "add", "loan:1": "closed" }).filter((o) => "modelKey" in o && o.modelKey === key);
     const result = await applyOps(admin, ops, fileName);
     created.push(result.created);
     expect(result).toMatchObject({ models: 0, bins: 2 });
-    expect(await prisma.item.count({ where: { model: { name: `True1 ${M} kabler`, variant: "5 m" } } })).toBe(4);
+    expect(await prisma.item.count({ where: { model: { name: `True1 ${M}`, variant: "5 m" } } })).toBe(4);
   });
 });
