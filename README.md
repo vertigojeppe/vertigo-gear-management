@@ -181,6 +181,136 @@ phones, venues, freelancers): every route is behind login except share
 links and iCal feeds, the login form is rate-limited, and Caddy serves
 HTTPS only.
 
+Our chosen route is the first section below: a mini PC at the office
+behind a Cloudflare Tunnel. The VPS and Vercel sections after it still
+work and stay documented.
+
+### Self-hosting at the office (mini PC + Cloudflare Tunnel) — our chosen route
+
+A small always-on PC at the office runs the same Compose stack. It stays
+reachable from the internet over HTTPS without opening a single port on
+the office network: `cloudflared` makes outbound connections to
+Cloudflare, Cloudflare terminates TLS for `gear.vertigo.dk` (our DNS is
+there already) and forwards requests through the tunnel to the app
+container. The tunnel is free.
+
+**Hardware.** A mini PC with 8 GB RAM (4 GB is the minimum), a 256 GB or
+larger SSD and a wired network port. In the BIOS set "power on after
+power loss" (often under power management or ACPI) so it comes back
+after an outage; a small UPS is worth it, since a load-in does not wait
+for a reboot. Add swap: the Next.js build during `--build` can run out
+of memory on 4 GB.
+
+1. Install Ubuntu Server 24.04 LTS (OpenSSH on, nothing else), then
+   Docker and automatic security updates:
+
+   ```bash
+   curl -fsSL https://get.docker.com | sh
+   sudo adduser deploy && sudo usermod -aG docker deploy
+   sudo apt install -y unattended-upgrades && sudo dpkg-reconfigure -plow unattended-upgrades
+   ```
+
+   Swap (4 GB; use 2G on a 4 GB machine with a small disk):
+
+   ```bash
+   sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+   ```
+
+2. As `deploy`, clone to `/opt/vertigo-gear` and create `.env` with the
+   same variables as the VPS section (`AUTH_SECRET`, `POSTGRES_PASSWORD`,
+   `SEED_PASSWORD`), except: `APP_URL=https://gear.vertigo.dk`, no
+   `APP_DOMAIN` (Caddy is not used), and `CLOUDFLARE_TUNNEL_TOKEN` from
+   the next step. Leave `APP_BIND` at its default: the app port stays on
+   127.0.0.1, the tunnel reaches it over the Compose network.
+3. Create the tunnel in the Cloudflare dashboard: Zero Trust › Networks ›
+   Tunnels › Create a tunnel › Cloudflared, give it a name, and copy the
+   token from the install command it shows (the long string after
+   `--token`) into `.env` as `CLOUDFLARE_TUNNEL_TOKEN`. Under *Public
+   Hostname* add `gear` on `vertigo.dk` with service type **HTTP** and
+   URL `app:3000`. Cloudflare creates the DNS record for the hostname by
+   itself. Never commit the token; it is the whole credential.
+4. Start the stack with the tunnel profile instead of the Caddy one:
+
+   ```bash
+   docker compose --profile tunnel up -d --build
+   docker compose exec app node node_modules/prisma/build/index.js db seed   # first time only
+   ```
+
+   The tunnel shows *Healthy* in the dashboard within a minute, and
+   https://gear.vertigo.dk answers. In Cloudflare, switch on *Always Use
+   HTTPS* and HSTS (SSL/TLS › Edge Certificates) to replace the headers
+   Caddy used to add.
+
+**HTTPS and proxy headers.** Cloudflare terminates TLS, so Caddy's
+Let's Encrypt setup cannot be used as is; the `tunnel` profile therefore
+runs `cloudflared` straight to the app on plain HTTP inside the Compose
+network, and the `prod` profile (Caddy) is unchanged. The app was
+checked for life behind a proxy:
+
+- Scheme and host come from `X-Forwarded-Proto` / `X-Forwarded-Host`
+  (`src/lib/request-origin.ts`), which Cloudflare sets, so login
+  redirects go to `https://gear.vertigo.dk`.
+- Auth.js runs with `trustHost` and reads the same headers, so the
+  session cookie is marked *Secure*. No `AUTH_URL` is needed.
+- The login rate limiter keys on the first address in `X-Forwarded-For`,
+  which Cloudflare sets to the visitor, so one locked-out phone does not
+  lock the whole internet out. The app container is not reachable except
+  through the tunnel, so the header cannot be forged from outside.
+- Cloudflare's free plan caps a request body at 100 MB. Document uploads
+  go up in small chunks and the other forms accept 25 MB, so nothing hits
+  it; keep that in mind before raising `MAX_UPLOAD_MB` elsewhere.
+- QR codes and share links use the address the page was opened on, so
+  they carry `https://gear.vertigo.dk` whether printed at the office or
+  at a venue.
+
+**Backups.** Copies must leave the building. Set `BACKUP_REMOTE` to an
+rclone remote (Cloudflare R2 or Backblaze B2 are cheap; `rclone config`
+once as `deploy`) and run `scripts/backup.sh` nightly from cron:
+
+```
+10 3 * * * cd /opt/vertigo-gear && ./scripts/backup.sh >> backups/backup.log 2>&1
+```
+
+On a small disk keep `BACKUP_KEEP_DAYS` low (3 to 7); the remote keeps
+the history. Restore one archive on a laptop with `scripts/restore.sh`
+every few months so the procedure is known before it is needed.
+
+**Updating.**
+
+```bash
+cd /opt/vertigo-gear && git pull && docker compose --profile tunnel up -d --build
+```
+
+The GitHub Actions deploy workflow (`deploy.yml`) needs to reach the
+server over SSH, which it cannot behind a tunnel, so it does not apply
+here: update by hand as above, or leave the `DEPLOY_*` secrets unset and
+the workflow simply fails to connect and does nothing.
+
+**Checklist for the IT team.**
+
+- Is outbound HTTPS (443) and port 7844 (TCP and UDP) to Cloudflare
+  allowed from the server? That is the only network permission the tunnel
+  needs; nothing inbound.
+- Can the server get a wired port and a reserved internal IP?
+- Can it sit on its own network segment (VLAN), separate from the office
+  computers?
+- Is a UPS or other power protection available, and are power outages
+  or maintenance windows planned?
+- Who is responsible for security and updates of the server (OS updates
+  are automatic; Docker and the app are updated by us)?
+- If a tunnel is refused: can ports 80 and 443 be forwarded to the server
+  instead, and is the office IP public and fixed (not behind CGNAT)? Then
+  the VPS section applies unchanged, with `--profile prod`.
+
+**Trade-offs.** Self-hosting saves the monthly VPS, and nothing of ours
+runs on someone else's machine. In return the mini PC is a single point
+of failure during load-ins: uptime, backups and security are our
+responsibility, and a dead disk or a power cut at the office takes the
+app down until someone is there. The off-site backup plus a spare
+machine that can be restored in an hour is the mitigation; a VPS stays
+the fallback and is a one-line change.
+
 ### Docker Compose with automatic HTTPS (recommended)
 
 On a server with Docker, a DNS name pointing at it, and ports 80 and 443
@@ -262,10 +392,14 @@ secrets (Settings › Secrets and variables › Actions): `DEPLOY_HOST`,
 `DEPLOY_USER`, `DEPLOY_KEY` (a private key whose public half is in that
 user's `~/.ssh/authorized_keys`), `DEPLOY_PATH` (`/opt/vertigo-gear`). The
 workflow waits for the health check and prints the app log if it fails.
+It needs SSH access to the server, so it does not apply to the office
+setup behind a Cloudflare Tunnel (see above).
 
 ### Hetzner (or any VPS), step by step
 
-1. Create a server (a CX22 with Ubuntu is plenty). In the firewall allow
+1. Create a server with Ubuntu: a CX23 (2 vCPU, 4 GB, 40 GB) is plenty;
+   CX33 (4 vCPU, 8 GB, 80 GB) or the CPX22 / CPX32 are the alternatives,
+   and a plan can be sold out in some locations. In the firewall allow
    22, 80 and 443. Point `gear.vertigo.dk` (an A record) at its address.
 2. SSH in and install Docker: `curl -fsSL https://get.docker.com | sh`.
    Create a user for the app: `adduser deploy && usermod -aG docker deploy`.

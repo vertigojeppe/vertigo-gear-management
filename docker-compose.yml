@@ -40,7 +40,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
-    profiles: ["prod"]
+    # "prod": behind Caddy on a server with a public address. "tunnel": behind a Cloudflare
+    # Tunnel on a machine with no open ports (README: Self-hosting at the office).
+    profiles: ["prod", "tunnel"]
 
   # HTTPS in front of the app: Caddy gets and renews the Let's Encrypt certificate for
   # APP_DOMAIN by itself. Needs ports 80 and 443 open and the DNS name pointing here.
@@ -62,6 +64,19 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     profiles: ["prod"]
+
+  # Cloudflare Tunnel instead of Caddy (docker compose --profile tunnel): only outbound
+  # connections to Cloudflare, which terminates HTTPS and forwards to the app over the
+  # Compose network. The public hostname in the Zero Trust dashboard points at
+  # http://app:3000. The token comes from .env (CLOUDFLARE_TUNNEL_TOKEN) and is never committed.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    profiles: ["tunnel"]
 
 volumes:
   db-data:
