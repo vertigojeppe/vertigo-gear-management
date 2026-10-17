@@ -410,8 +410,13 @@ a second entry that exports components only and never a service.
   `APP_DOMAIN`) terminates HTTPS, the app listens on 127.0.0.1 only
   (`APP_BIND` widens it). `Caddyfile.lan` (`CADDYFILE=./Caddyfile.lan`) uses
   Caddy's own CA for an office server without a public DNS name (README
-  has the recipe, including the root certificate for phones). The
-  container healthcheck and `deploy.yml` poll `GET /api/health`.
+  has the recipe, including the root certificate for phones).
+  `docker compose --profile tunnel` is the office setup behind a
+  Cloudflare Tunnel: `cloudflared` (token in `CLOUDFLARE_TUNNEL_TOKEN`)
+  forwards to `app:3000` over the Compose network, Cloudflare terminates
+  HTTPS and sets the `X-Forwarded-*` headers the app already honours; no
+  Caddy, no open ports, `deploy.yml` does not apply. The container
+  healthcheck and `deploy.yml` poll `GET /api/health`.
 - `scripts/backup.sh` / `scripts/restore.sh`: one tar.gz with `db.sql` and
   `uploads.tar`, optional rclone off-site copy (`BACKUP_REMOTE`). Keep
   them POSIX sh and LF.
