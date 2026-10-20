@@ -58,7 +58,10 @@
     "invalid": "Forkert e-mail eller adgangskode.",
     "error": "Noget gik galt. Prøv igen.",
     "stale": "Din session gælder ikke længere (kontoen er fjernet, eller databasen er nulstillet). Log ind igen.",
-    "rateLimited": "For mange forsøg. Prøv igen om {minutes, plural, one {# minut} other {# minutter}}."
+    "rateLimited": "For mange forsøg. Prøv igen om {minutes, plural, one {# minut} other {# minutter}}.",
+    "invalidCode": "Koden virkede ikke. Skriv den nyeste kode fra appen eller en gendannelseskode.",
+    "code": "Kode fra din godkendelsesapp",
+    "codeHelp": "Mistet telefonen? Skriv en af dine gendannelseskoder i stedet."
   },
   "dashboard": {
     "title": "Oversigt",
@@ -402,7 +405,22 @@
     "pricing": "Priser",
     "pricingHelp": "Lejefaktor-tabeller (dage → faktor) til tilbud og lejeaftaler.",
     "backup": "Backup",
-    "backupHelp": "Download hele databasen som en fil, eller gendan en (admins)."
+    "backupHelp": "Download hele databasen som en fil, eller gendan en (admins).",
+    "twoFactor": "Totrinslogin",
+    "twoFactorHelp": "Ud over adgangskoden beder login om en kode fra en godkendelsesapp på din telefon (Google Authenticator, Microsoft Authenticator, 1Password …).",
+    "twoFactorSetUp": "Slå totrinslogin til",
+    "twoFactorOn": "Slået til siden {since}. {count, plural, =0 {Ingen gendannelseskoder tilbage: lav nye.} one {# gendannelseskode tilbage.} other {# gendannelseskoder tilbage.}}",
+    "twoFactorRequired": "Din rolle kræver totrinslogin, så det kan ikke slås fra. Mister du telefonen, så brug en gendannelseskode eller bed en admin om at nulstille det.",
+    "twoFactorCode": "Nuværende kode (app eller gendannelseskode)",
+    "recoveryCodesRenew": "Lav nye gendannelseskoder",
+    "recoveryCodesTitle": "Dine gendannelseskoder",
+    "recoveryCodesHelp": "Hver kode logger dig ind én gang uden appen. Gem dem et sikkert sted (en password manager eller på papir); de vises kun nu. Ældre koder virker ikke længere.",
+    "twoFactorTurnOff": "Slå fra",
+    "twoFactorTurnedOff": "Totrinslogin er slået fra.",
+    "twoFactorOnFor": "Totrinslogin er slået til for denne bruger.",
+    "twoFactorOffFor": "Totrinslogin er slået fra for denne bruger.",
+    "twoFactorReset": "Nulstil totrinslogin",
+    "twoFactorResetConfirm": "Nulstil totrinslogin for {name}? Brugeren logger ind med adgangskoden alene og sætter det op igen (krævet for admins)."
   },
   "roles": {
     "admin": "Administrator",
@@ -1228,5 +1246,20 @@
     "runningLowHelp": "Forbrugsvarer under deres minimum.",
     "onWishList": "på ønskelisten",
     "addToWishList": "Sæt på ønskelisten"
+  },
+  "twoFactor": {
+    "title": "Totrinslogin",
+    "intro": "Tilføj en kode fra din telefon til hvert login.",
+    "requiredIntro": "Admins skal bruge totrinslogin. Sæt det op nu; det tager et minut.",
+    "step1": "Installér en godkendelsesapp på din telefon (Google Authenticator, Microsoft Authenticator, 1Password …).",
+    "step2": "Tilføj en konto i appen og scan QR-koden, eller skriv nøglen nedenfor.",
+    "step3": "Skriv den 6-cifrede kode, appen viser.",
+    "qrAlt": "QR-kode til godkendelsesappen",
+    "manualKey": "Kan du ikke scanne? Nøgle:",
+    "code": "6-cifret kode",
+    "confirm": "Slå til",
+    "done": "Totrinslogin er slået til.",
+    "continue": "Jeg har gemt koderne, fortsæt",
+    "signOut": "Log ud"
   }
 }

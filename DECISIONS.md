@@ -513,3 +513,21 @@ extra columns to keep in sync, one tested function for every list and the
 picker. If the inventory grows past tens of thousands of rows, move the
 exact step to a squashed generated column and keep the fallback here.
 
+## Two-factor sign-in: authenticator app, required for admins (October 2026)
+
+The app is on the internet (Cloudflare Tunnel) and admins can delete
+gear, export everything and restore backups, so a leaked password must
+not be enough. TOTP codes from an authenticator app work on every phone
+without per-domain setup (passkeys are tied to the exact hostname and the
+device, awkward with a LAN name plus a public one), need no SMS provider,
+and RFC 6238 is fifty lines on node:crypto, so no dependency. Admins must
+use it; members and viewers may (`TWO_FACTOR_REQUIRED_ROLES` changes
+that). Lockout paths, in order: a recovery code, an admin reset, then
+`create-admin.mjs` on the server. Secrets are encrypted with a key from
+`AUTH_SECRET` so a database dump or backup alone cannot mint codes; the
+price is that a new `AUTH_SECRET` invalidates them (recovery codes are
+hashes and keep working). Login stays one Credentials provider: the
+second step re-posts email and password with the code rather than
+keeping a half-signed-in session, which would need its own cookie and
+expiry rules.
+

@@ -11,6 +11,14 @@ model User {
   /// Google account email used when adding the user as a calendar attendee.
   googleEmail  String?
   active       Boolean  @default(true)
+  /// Two-factor sign-in (authenticator app). The TOTP secret is encrypted with a key derived
+  /// from AUTH_SECRET (src/lib/auth/two-factor.ts); null = 2FA off.
+  totpSecret    String?
+  totpEnabledAt DateTime?
+  /// Last accepted 30-second step, so every code works only once.
+  totpLastStep  Int?
+  /// sha256 hashes of the recovery codes not used yet.
+  recoveryCodes Json     @default("[]")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
