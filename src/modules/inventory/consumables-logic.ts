@@ -44,7 +44,7 @@ export type SuggestionInput = {
   fits: { partId: string; modelId: string; perUnits: number; minQty: number }[];
   /** What is already on the list of each part (part id → quantity). */
   onList: Map<string, number>;
-  /** Parts in house right now (part id → quantity). */
+  /** Parts in house right now (part id → quantity). In a draft list the lines are still on the shelf, so what is on the list counts against it. */
   inHouse: Map<string, number>;
 };
 
@@ -84,7 +84,7 @@ export function suggestSpares(input: SuggestionInput): Suggestion[] {
     const onList = input.onList.get(partId) ?? 0;
     const missing = Math.max(0, wanted - onList);
     if (missing === 0) continue;
-    const available = Math.max(0, input.inHouse.get(partId) ?? 0);
+    const available = Math.max(0, (input.inHouse.get(partId) ?? 0) - onList);
     const add = Math.min(missing, available);
     out.push({ partId, wanted, onList, add, short: missing - add, forModels });
   }

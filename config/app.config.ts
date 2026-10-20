@@ -213,6 +213,8 @@ export const CHECK_OUTCOMES = [
   { key: "ok", label: "checkOutcome.ok", itemStatus: "in_house", color: "green" },
   { key: "damaged", label: "checkOutcome.damaged", itemStatus: "in_repair", color: "amber" },
   { key: "missing", label: "checkOutcome.missing", itemStatus: "missing", color: "red" },
+  // Consumables only (spare lamps and the like): used up on the show, comes off the stock for good.
+  { key: "used", label: "checkOutcome.used", itemStatus: "in_house", color: "gray" },
 ] as const;
 export type CheckOutcome = (typeof CHECK_OUTCOMES)[number]["key"];
 

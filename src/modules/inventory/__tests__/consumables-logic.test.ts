@@ -26,6 +26,11 @@ describe("consumables logic", () => {
     expect(sparesFor(3, { perUnits: 0, minQty: 0 })).toBe(3);
   });
 
+  it("counts what is already on the list against what is in house", () => {
+    const s = suggestSpares({ units: new Map([["rz120", 6]]), fits: [{ partId: "lamp", modelId: "rz120", perUnits: 4, minQty: 1 }], onList: new Map([["lamp", 1]]), inHouse: new Map([["lamp", 1]]) });
+    expect(s).toEqual([{ partId: "lamp", wanted: 2, onList: 1, add: 0, short: 1, forModels: ["rz120"] }]);
+  });
+
   it("suggests spares for the list, capped by what is in house", () => {
     const s = suggestSpares({
       units: new Map([

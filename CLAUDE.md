@@ -250,6 +250,17 @@ a second entry that exports components only and never a service.
   Phase 3 consumers. Public pages live under `src/app/share/` outside the
   app shell, and `proxy.ts` lets `/share/` through without a session.
 - Templates (`PackingTemplate`) hold model lines only, no units or kits.
+- Spare suggestions: `spareSuggestions(listId)` applies the `PartFit`
+  rules to the models on a draft list (`suggestSpares`, pure; in-house
+  stock minus what the list already holds, since draft lines are still on
+  the shelf) and `SpareSuggestions` shows them under the picker: *Add*
+  posts an ordinary line, a shortfall goes to the wish list, *Not this
+  time* stores the part id in `PackingList.dismissedSpares`. Metre
+  consumables are never suggested. Check-in has a fourth outcome,
+  `used` (consumable bulk lines only): the quantity leaves the travel
+  bin for good and a `StockMovement` linked by `packingCheckId` records
+  it on the project; `undoCheckIn` deletes that row and puts the
+  quantity back. `LineProgress.used` counts it as answered.
 - Lines are added with the `GearPicker` (one search box over
   `gearCatalog()`: models with stock and asset tags, kits in house, and
   what is already on the list); `filterCatalog` in `picker.ts` is pure

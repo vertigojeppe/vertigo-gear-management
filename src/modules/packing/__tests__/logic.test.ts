@@ -27,6 +27,22 @@ describe("lineProgress", () => {
     expect(p.toReturn).toBe(1);
   });
 
+  it("counts consumables used up on the show as answered", () => {
+    const p = lineProgress({
+      quantity: 3,
+      trackingType: "bulk",
+      checks: [
+        { phase: "out", quantity: 3, outcome: "ok" },
+        { phase: "in", quantity: 1, outcome: "used" },
+        { phase: "in", quantity: 1, outcome: "ok" },
+      ],
+    });
+    expect(p.used).toBe(1);
+    expect(p.returnedOk).toBe(1);
+    expect(p.toReturn).toBe(1);
+    expect(listProgress([{ quantity: 3, trackingType: "bulk", checks: [{ phase: "out", quantity: 3, outcome: "ok" }, { phase: "in", quantity: 2, outcome: "used" }] }]).used).toBe(2);
+  });
+
   it("never goes negative when more was packed than planned", () => {
     const p = lineProgress({ quantity: 1, trackingType: "serialized", checks: [{ phase: "out", quantity: 1, outcome: "ok" }, { phase: "out", quantity: 1, outcome: "ok" }] });
     expect(p.toPack).toBe(0);
