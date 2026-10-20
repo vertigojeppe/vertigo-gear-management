@@ -7,6 +7,7 @@ import { checkRequest, overbookedDays, type AllocationLike } from "./availabilit
 import type { ProjectFilters } from "./schema";
 import { allocationsFor, itemsForModel, toProjectDto, type ProjectDto } from "./service";
 import { modelLabel } from "@/lib/format";
+import { bestMatches } from "@/lib/search";
 
 const PAGE = appConfig.pageSize;
 
@@ -22,21 +23,22 @@ export async function crewOptions() {
 
 export type ProjectListRow = ProjectDto & { clientName: string | null; crewCount: number; reservationCount: number };
 
-export async function listProjects(filters: ProjectFilters): Promise<{ rows: ProjectListRow[]; total: number; page: number; pages: number }> {
+export async function listProjects(filters: ProjectFilters): Promise<{ rows: ProjectListRow[]; total: number; page: number; pages: number; closeMatches: boolean }> {
   const where: Prisma.ProjectWhereInput = {};
-  if (filters.q) {
-    where.OR = [
-      { name: { contains: filters.q, mode: "insensitive" } },
-      { venueName: { contains: filters.q, mode: "insensitive" } },
-      { client: { name: { contains: filters.q, mode: "insensitive" } } },
-    ];
-  }
   if (filters.status) where.status = filters.status;
   if (filters.clientId) where.clientId = filters.clientId;
   const when = filters.when ?? "upcoming";
   const t = today();
   if (when === "upcoming") where.AND = [{ OR: [{ reserveTo: { gte: new Date(`${t}T00:00:00Z`) } }, { reserveTo: null }] }, { status: { notIn: ["done", "cancelled"] } }];
-  if (when === "past") where.OR = [...(where.OR ?? []), { reserveTo: { lt: new Date(`${t}T00:00:00Z`) } }, { status: { in: ["done", "cancelled"] } }];
+  if (when === "past") where.OR = [{ reserveTo: { lt: new Date(`${t}T00:00:00Z`) } }, { status: { in: ["done", "cancelled"] } }];
+  // Forgiving search over the projects the other filters allow (spaces, case, typos).
+  let closeMatches = false;
+  if (filters.q) {
+    const candidates = await prisma.project.findMany({ where, select: { id: true, name: true, venueName: true, client: { select: { name: true } } } });
+    const found = bestMatches(candidates, (p) => [p.name, p.venueName, p.client?.name], filters.q);
+    where.id = { in: found.rows.map((p) => p.id) };
+    closeMatches = found.close;
+  }
 
   const [total, rows] = await Promise.all([
     prisma.project.count({ where }),
@@ -53,6 +55,7 @@ export async function listProjects(filters: ProjectFilters): Promise<{ rows: Pro
     total,
     page: filters.page,
     pages: Math.max(1, Math.ceil(total / PAGE)),
+    closeMatches,
   };
 }
 

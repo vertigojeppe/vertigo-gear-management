@@ -498,3 +498,18 @@ calendar phase keys stay `load_in` / `load_out` because the Google
 event ids are stored under them; only the labels changed. The migration
 turns each old moment into a one-day range on its Copenhagen day with the
 time as the call time, and ends prep the day before build-up.
+
+## Forgiving search in the app, not in Postgres (October 2026)
+
+People type gear names the way they say them ("qbase" for "Q Base",
+"pinte" for "Pointe"), and Prisma's `contains` needs the exact spelling
+and spacing. The search now squashes both sides (no spaces, punctuation,
+case or accents) and, only when nothing matches, accepts a typo per word,
+saying on the page that these are close matches so a wrong hit is not
+taken for an exact one. It runs in Node over the id and text fields of the
+rows the other filters allow (hundreds of models, a few thousand items)
+and hands Postgres an `id in (...)` list: no extension (`pg_trgm`), no
+extra columns to keep in sync, one tested function for every list and the
+picker. If the inventory grows past tens of thousands of rows, move the
+exact step to a squashed generated column and keep the fallback here.
+
