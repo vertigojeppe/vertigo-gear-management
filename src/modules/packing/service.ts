@@ -381,7 +381,6 @@ export const packingChecks = {
       // and the ledger row (linked to this check-in) says where it went.
       if (!out.line.model.consumable || !bulk) throw new PackingError("Only consumables can be checked in as used.");
       return prisma.$transaction(async (tx) => {
-        let travelGone = false;
         if (out.item) {
           const travel = await tx.item.findUniqueOrThrow({ where: { id: out.item.id } });
           const left = travel.quantity - qty;
