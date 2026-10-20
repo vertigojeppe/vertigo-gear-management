@@ -172,6 +172,21 @@ a second entry that exports components only and never a service.
   (`src/components/color-marks.tsx`) draw them in the inventory list, on
   the model page, in the gear picker and on packing list groups and lines.
   Never on labels, PDFs or the calendar.
+- Consumables (`src/modules/inventory/consumables.ts`, pure helpers in
+  `consumables-logic.ts`): `Model.consumable` + `unit` (`pcs` | `m`) +
+  `minStock`. Pieces (lamps) keep stock in bulk bins as before; metres
+  (LED strip, alu profile) have no items and keep stock in the
+  `StockMovement` ledger (sum of `quantity`; `received` / `used` /
+  `count`). `consumables.use` takes from the fullest bins (pieces) or the
+  ledger (metres), writes a `used` row with the optional unit
+  (`itemId`, so the unit's activity shows "part used") and project;
+  `receive` / `count` are metres only. `stockByModel` is the one stock
+  answer; `lowStock()` feeds the dashboard's "Running low" with a
+  wish-list button (`wishes.fromModel`). `PartFit` links a part to the
+  models it fits with the spare rule (`perUnits`, `minQty`;
+  `sparesFor` / `suggestSpares` are pure). A model's unit cannot change
+  once it has items or ledger rows. Metre consumables are left out of the
+  gear picker and have no items, labels or reservations on their page.
 - Custom field definitions can be scoped to a category
   (`categoryId`, applies to sub-categories). `forEntity(entity)` returns
   every definition with `categoryIds` resolved; `forEntity(entity,

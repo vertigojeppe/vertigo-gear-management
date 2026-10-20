@@ -8,6 +8,7 @@ import { seedPacking } from "./packing";
 import { seedContacts } from "./contacts";
 import { seedPlans } from "./plans";
 import { seedPricing } from "./pricing";
+import { seedConsumables } from "./consumables";
 
 // Re-runnable demo data. Every seeder upserts on a stable key so running
 // `npm run db:seed` twice leaves the database in the same state.
@@ -22,6 +23,8 @@ async function main() {
   console.log(`  contacts: ${contacts}`);
   const inv = await seedInventory(prisma);
   console.log(`  categories: ${inv.categories}, locations: ${inv.locations}, models: ${inv.models}, items: ${inv.items}, kits: ${inv.kits}`);
+  const cons = await seedConsumables(prisma);
+  console.log(`  consumables: ${cons.models}`);
   // Custom fields are scoped to categories, so they come after the inventory.
   const cf = await seedCustomFields(prisma);
   console.log(`  custom fields: ${cf}`);

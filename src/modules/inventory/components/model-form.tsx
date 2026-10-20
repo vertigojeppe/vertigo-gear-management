@@ -47,6 +47,8 @@ export function ModelForm({
     state.values && name in state.values ? state.values[name] : fallback === null || fallback === undefined ? "" : String(fallback);
   const err = state.fieldErrors ?? {};
   const [categoryId, setCategoryId] = useState(v("categoryId", base?.categoryId ?? defaultCategoryId));
+  const [consumable, setConsumable] = useState(state.values ? state.values.consumable === "on" : Boolean(base?.consumable));
+  const [unit, setUnit] = useState(v("unit", base?.unit ?? "pcs"));
 
   return (
     <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
@@ -130,6 +132,29 @@ export function ModelForm({
           <span className="block text-xs text-muted-foreground">{t("notForRentalHelp")}</span>
         </span>
       </label>
+
+      <fieldset className="flex flex-col gap-3 rounded-md border p-3">
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" name="consumable" className="mt-0.5 size-4" checked={consumable} onChange={(e) => setConsumable(e.target.checked)} />
+          <span>
+            {t("consumable")}
+            <span className="block text-xs text-muted-foreground">{t("consumableHelp")}</span>
+          </span>
+        </label>
+        {consumable && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field id="unit" label={t("unit")} help={unit === "m" ? t("unitMetresHelp") : t("unitPiecesHelp")} error={err.unit}>
+              <NativeSelect id="unit" name="unit" value={unit} onChange={(e) => setUnit(e.target.value)}>
+                <option value="pcs">{t("unitPcs")}</option>
+                <option value="m">{t("unitM")}</option>
+              </NativeSelect>
+            </Field>
+            <Field id="minStock" label={t("minStock")} help={t("minStockHelp")} optional error={err.minStock}>
+              <Input id="minStock" name="minStock" type="number" min="0" step={unit === "m" ? "0.01" : "1"} defaultValue={v("minStock", base?.minStock)} />
+            </Field>
+          </div>
+        )}
+      </fieldset>
 
       <CustomFieldInputs defs={applicableDefs(defs, categoryId || null)} values={base?.customFields} echoed={state.values} errors={err} title={t("customFields")} />
 

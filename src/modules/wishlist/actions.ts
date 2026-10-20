@@ -49,3 +49,11 @@ export async function deleteWish(_prev: FormState, formData: FormData): Promise<
   revalidate();
   return { ok: true };
 }
+
+/** Dashboard button: put a running-low consumable on the wish list. */
+export async function wishFromModel(formData: FormData): Promise<void> {
+  const actor = await requirePermission("inventory.write");
+  await wishes.fromModel(actor, String(formData.get("modelId") ?? ""), Number(formData.get("quantity") ?? 1));
+  revalidatePath("/dashboard");
+  revalidatePath("/inventory/wishlist");
+}

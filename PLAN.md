@@ -355,8 +355,16 @@ Top-category colours (admin, fixed palette, inherited) as bars in the
 inventory list, model page, gear picker and packing lists; tape colours
 by cable length as dots next to the size. Screen only.
 
+### Consumables and spare parts ✅ (2026-10-20)
+Consumables counted in pieces or metres, a usage ledger with the unit and
+project, receive and count for metres, "fits" links with a spare rule,
+running low on the dashboard with a wish-list button. Packing list
+spare suggestions and "used" at check-in follow in the next pull
+request.
+
 ### Next
-Whatever using the app at Vertigo turns up (see `BACKLOG.md`).
+Packing list spare suggestions, then whatever using the app at Vertigo
+turns up (see `BACKLOG.md`).
 
 ## 6. Decisions I will make unless you object
 

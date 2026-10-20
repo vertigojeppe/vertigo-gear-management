@@ -72,6 +72,19 @@ export const wishes = {
     return w;
   },
 
+  /** From the dashboard's running-low list: a wish with the model's fields, unless an open one exists already. */
+  async fromModel(actor: Actor, modelId: string, quantity: number) {
+    assertCan(actor, "inventory.write");
+    const m = await prisma.model.findUniqueOrThrow({ where: { id: modelId } });
+    const existing = await prisma.wishItem.findFirst({ where: { status: "open", manufacturer: { equals: m.manufacturer, mode: "insensitive" }, name: { equals: m.name, mode: "insensitive" }, variant: m.variant === null ? null : { equals: m.variant, mode: "insensitive" } } });
+    if (existing) return existing;
+    const w = await prisma.wishItem.create({
+      data: { manufacturer: m.manufacturer, name: m.name, variant: m.variant, categoryId: m.categoryId, quantity: Math.max(1, Math.ceil(quantity)), notes: "Running low", createdById: actor.id || null },
+    });
+    await logActivity(actor, { entityType: "wish", entityId: w.id, action: "created", summary: `Added ${modelLabel(w)} to the wish list (running low)` });
+    return w;
+  },
+
   async remove(actor: Actor, id: string) {
     assertCan(actor, "inventory.write");
     const w = await prisma.wishItem.delete({ where: { id } });

@@ -30,6 +30,7 @@ model User {
   uploadSessions UploadSession[]
   wishItems   WishItem[]
   purchases   Purchase[]
+  stockMovements StockMovement[]
 
   @@index([role])
 }

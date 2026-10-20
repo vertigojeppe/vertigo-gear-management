@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { categoryColorMap, lengthColorFor } from "./color-map";
+import { stockByModel } from "./consumables";
 import { compareVariants } from "@/lib/variant";
 import type { Prisma } from "@/generated/prisma/client";
 import { activityFor } from "@/lib/activity";
@@ -108,6 +109,8 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
   ]);
   const ids = models.map((m) => m.id);
   const counts = ids.length ? await prisma.item.groupBy({ by: ["modelId", "status"], where: { modelId: { in: ids } }, _sum: { quantity: true } }) : [];
+  // Metre consumables have no bins: their stock is the ledger, shown as both "in house" and "owned".
+  const metreStock = await stockByModel(models.filter((m) => m.consumable && m.unit === "m"));
   const owned = new Map<string, number>();
   const inHouse = new Map<string, number>();
   for (const c of counts) {
@@ -120,8 +123,8 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
     categoryPath: pathNames(cats, m.categoryId),
     color: colors.byCategory.get(m.categoryId)?.color ?? null,
     lengthColor: lengthColorFor(m.variant, colors.byCategory.get(m.categoryId), colors.lengths),
-    owned: owned.get(m.id) ?? 0,
-    inHouse: inHouse.get(m.id) ?? 0,
+    owned: metreStock.get(m.id) ?? owned.get(m.id) ?? 0,
+    inHouse: metreStock.get(m.id) ?? inHouse.get(m.id) ?? 0,
     thumbUrl: m.defaultPhoto?.thumbKey ? `/api/files/${m.defaultPhoto.id}?thumb=1` : null,
   }));
   const families = groupFamilies(rows);
