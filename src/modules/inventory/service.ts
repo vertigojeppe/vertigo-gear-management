@@ -195,6 +195,9 @@ export type ModelDto = {
   archived: boolean;
   notForRental: boolean;
   rentalDayPrice: number | null;
+  consumable: boolean;
+  unit: "pcs" | "m";
+  minStock: number | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -222,6 +225,9 @@ export function toModelDto(m: ModelRow): ModelDto {
     archived: m.archived,
     notForRental: m.notForRental,
     rentalDayPrice: num(m.rentalDayPrice),
+    consumable: m.consumable,
+    unit: m.unit === "m" ? "m" : "pcs",
+    minStock: num(m.minStock),
     createdAt: m.createdAt,
     updatedAt: m.updatedAt,
   };
@@ -233,7 +239,8 @@ function modelData(input: ModelInput, customFields: CustomFieldValues) {
     manufacturer: input.manufacturer,
     name: input.name,
     variant: input.variant ?? null,
-    trackingType: input.trackingType,
+    // Metre consumables have no units of their own; their stock is the ledger.
+    trackingType: input.consumable && input.unit === "m" ? "bulk" : input.trackingType,
     description: input.description ?? null,
     weightKg: input.weightKg ?? null,
     widthCm: input.widthCm ?? null,
@@ -244,6 +251,9 @@ function modelData(input: ModelInput, customFields: CustomFieldValues) {
     links: parseLinksText(input.linksText),
     notForRental: input.notForRental,
     rentalDayPrice: input.rentalDayPrice ?? null,
+    consumable: input.consumable,
+    unit: input.consumable ? input.unit : "pcs",
+    minStock: input.consumable ? (input.minStock ?? null) : null,
     customFields,
   };
 }
@@ -269,11 +279,16 @@ export const models = {
   async update(actor: Actor, id: string, input: ModelInput, customFields: CustomFieldValues = {}) {
     assertCan(actor, "inventory.write");
     const before = await prisma.model.findUniqueOrThrow({ where: { id } });
-    if (before.trackingType !== input.trackingType) {
+    const data = modelData(input, customFields);
+    if (before.trackingType !== data.trackingType) {
       const count = await prisma.item.count({ where: { modelId: id } });
       if (count > 0) throw new InventoryError("Tracking type cannot change once items exist.", "trackingType");
     }
-    const data = modelData(input, customFields);
+    if (before.unit !== data.unit) {
+      // Pieces live in bins, metres in the ledger: switching once either holds stock would lose it.
+      const [itemCount, movements] = await Promise.all([prisma.item.count({ where: { modelId: id } }), prisma.stockMovement.count({ where: { modelId: id } })]);
+      if (itemCount > 0 || movements > 0) throw new InventoryError("The unit cannot change once the model has stock or a usage history.", "unit");
+    }
     const m = await prisma.model.update({ where: { id }, data });
     await logActivity(actor, {
       entityType: "model",

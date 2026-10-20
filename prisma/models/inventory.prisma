@@ -49,6 +49,12 @@ model Model {
   archived     Boolean  @default(false)
   /// Usable on our own projects only; never on a rental.
   notForRental Boolean  @default(false)
+  /// Used up rather than returned: lamps, LED strip, alu profile. Uses are logged in StockMovement.
+  consumable   Boolean  @default(false)
+  /// "pcs" | "m". Metre consumables keep their stock in the StockMovement ledger, not in bins.
+  unit         String   @default("pcs")
+  /// Running low below this (in the model's unit); null = no warning.
+  minStock     Decimal? @db.Decimal(10, 2)
   /// List rental price per day (excl. VAT); the pricing engine (backlog) multiplies it by a rate-table factor.
   rentalDayPrice Decimal? @db.Decimal(12, 2)
   /// "Sheet!A1" of the spreadsheet row this came from, when imported.
@@ -60,6 +66,11 @@ model Model {
   packingTemplateLines PackingTemplateLine[]
   wishItems    WishItem[]
   purchases    Purchase[]
+  stockMovements StockMovement[]
+  /// As a spare part: the models it fits.
+  fitsModels   PartFit[] @relation("PartFitPart")
+  /// As gear: the spare parts that fit it.
+  spareParts   PartFit[] @relation("PartFitModel")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -114,6 +125,7 @@ model Item {
   packingLineCases PackingLine[] @relation("PackingLineCase")
   packingChecks    PackingCheck[] @relation("PackingCheckItem")
   packingCheckResults PackingCheck[] @relation("PackingCheckResult")
+  partsUsed        StockMovement[] @relation("StockMovementItem")
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
