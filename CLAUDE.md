@@ -120,6 +120,16 @@ a second entry that exports components only and never a service.
   dropped, empty fields left out). Fields follow navigations it did not
   make (Clear, back). Keep a submit button with `group-data-[live]:hidden`
   as the no-JS fallback.
+- Search is forgiving everywhere (`src/lib/search.ts`, pure): spaces,
+  case, punctuation and accents never matter (`squash`: "qbase" finds
+  "Q Base", "vg12" finds "VG-12"), every word must appear in any order,
+  and when nothing matches, close matches (one typo per word from four
+  letters, two from eight) come back with `close: true`. The list
+  queries (models, items, kit candidates, projects, rentals) load the
+  id + text fields of the rows the other filters allow, run
+  `bestMatches` and filter by `id in`; lists return `closeMatches`
+  and the pages say so. The gear picker uses `searchCatalog`. New
+  searchable lists go the same way, not through Prisma `contains`.
 - REST: handlers under `src/app/api/v1/**` use `handler(permission, fn)`
   from `src/lib/api/respond.ts` and the module zod schemas. Add new
   endpoints to `src/lib/api/openapi.ts` so `/api/docs` stays complete.

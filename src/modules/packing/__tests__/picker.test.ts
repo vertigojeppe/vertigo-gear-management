@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterCatalog, type CatalogEntry } from "../picker";
+import { filterCatalog, searchCatalog, type CatalogEntry } from "../picker";
 
 const e = (kind: CatalogEntry["kind"], label: string, category: string, tags: string[] = [], extra: Partial<CatalogEntry> = {}): CatalogEntry => ({ kind, id: label, label, family: label, variant: null, category, trackingType: kind === "kit" ? "kit" : "serialized", owned: 1, inHouse: 1, onList: 0, color: null, lengthColor: null, tags, ...extra });
 const catalog = [
@@ -26,6 +26,14 @@ describe("filterCatalog", () => {
     expect(filterCatalog(catalog, "TRUE1 5").map((x) => x.label)).toEqual(["Generic True1 5 m"]);
     expect(filterCatalog(catalog, "splitléd").map((x) => x.label)).toEqual(["Vertigo SplitLED 60cm"]);
     expect(filterCatalog(catalog, "robe cable")).toEqual([]);
+  });
+  it("ignores spaces and punctuation, and falls back to close matches", () => {
+    expect(filterCatalog(catalog, "robepointe").map((x) => x.label)).toEqual(["Robe Pointe"]);
+    expect(filterCatalog(catalog, "true 15m").map((x) => x.label)).toEqual(["Generic True1 5 m"]);
+    expect(filterCatalog(catalog, "vg0200")[0].label).toBe("Pointe case 1");
+    expect(searchCatalog(catalog, "esprit")).toEqual({ results: [catalog.find((e) => e.label === "Robe Esprite")], close: false });
+    expect(searchCatalog(catalog, "espirte").close).toBe(true);
+    expect(searchCatalog(catalog, "espirte").results.map((x) => x.label)).toEqual(["Robe Esprite"]);
   });
   it("puts an exact asset tag first (what a scanner types)", () => {
     expect(filterCatalog(catalog, "VG-0200")[0].label).toBe("Pointe case 1");

@@ -10,19 +10,27 @@ import { quoteFor, rentalSubtotals } from "@/modules/pricing/queries";
 import type { RentalFilters } from "./schema";
 import { toRentalDto, type RentalDto, type RentalLineDto } from "./service";
 import { modelLabel } from "@/lib/format";
+import { bestMatches } from "@/lib/search";
 
 const PAGE = appConfig.pageSize;
 const num = (v: { toNumber(): number } | null) => (v === null ? null : v.toNumber());
 
 export type RentalListRow = RentalDto & { clientName: string; lineCount: number; total: number };
 
-export async function listRentals(filters: RentalFilters): Promise<{ rows: RentalListRow[]; total: number; page: number; pages: number }> {
+export async function listRentals(filters: RentalFilters): Promise<{ rows: RentalListRow[]; total: number; page: number; pages: number; closeMatches: boolean }> {
   const where: Prisma.RentalWhereInput = {};
-  if (filters.q) where.OR = [{ client: { name: { contains: filters.q, mode: "insensitive" } } }, { notes: { contains: filters.q, mode: "insensitive" } }];
   if (filters.status === "overdue") {
     where.status = "out";
     where.endDate = { lt: new Date(`${today()}T00:00:00Z`) };
   } else if (filters.status) where.status = filters.status;
+  // Forgiving search over the rentals the status filter allows (spaces, case, typos).
+  let closeMatches = false;
+  if (filters.q) {
+    const candidates = await prisma.rental.findMany({ where, select: { id: true, notes: true, client: { select: { name: true } } } });
+    const found = bestMatches(candidates, (r) => [r.client.name, r.notes], filters.q);
+    where.id = { in: found.rows.map((r) => r.id) };
+    closeMatches = found.close;
+  }
 
   const [total, rows] = await Promise.all([
     prisma.rental.count({ where }),
@@ -40,6 +48,7 @@ export async function listRentals(filters: RentalFilters): Promise<{ rows: Renta
     total,
     page: filters.page,
     pages: Math.max(1, Math.ceil(total / PAGE)),
+    closeMatches,
   };
 }
 

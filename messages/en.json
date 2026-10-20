@@ -35,7 +35,8 @@
     "forbidden": "You do not have permission to do that.",
     "activity": "Activity",
     "noActivity": "No activity yet.",
-    "exportCsv": "Export CSV"
+    "exportCsv": "Export CSV",
+    "closeMatches": "No exact match for “{query}”, so these are close matches."
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -719,6 +720,7 @@
     "searchGearPlaceholder": "Model, category or asset tag… Enter adds the first match",
     "searchHint": "{count} models and kits. Type to search; arrow keys and Enter add without the mouse, and a scanned tag finds its model.",
     "noMatches": "Nothing matches “{query}”.",
+    "closeMatches": "No exact match for “{query}”, so these are close matches.",
     "added": "Added",
     "onList": "{count} on the list",
     "inHouseOf": "{inHouse} of {owned} in house",

@@ -9,6 +9,7 @@ import type { ItemFilters, ModelFilters } from "./schema";
 import { categoryIdsIncludingChildren, toItemDto, toModelDto, type ItemDto, type ModelDto } from "./service";
 import { buildTree, flattenTree, pathNames } from "./tree";
 import { modelLabel } from "@/lib/format";
+import { bestMatches } from "@/lib/search";
 
 const PAGE = appConfig.pageSize;
 
@@ -88,25 +89,18 @@ export type ModelFamily = {
   variants: ModelListRow[];
 };
 
-export async function listModels(filters: ModelFilters): Promise<{ families: ModelFamily[]; total: number; models: number; page: number; pages: number }> {
+export async function listModels(filters: ModelFilters): Promise<{ families: ModelFamily[]; total: number; models: number; page: number; pages: number; closeMatches: boolean }> {
   const where: Prisma.ModelWhereInput = { archived: filters.archived ? undefined : false };
-  if (filters.q) {
-    where.OR = [
-      { name: { contains: filters.q, mode: "insensitive" } },
-      { variant: { contains: filters.q, mode: "insensitive" } },
-      { manufacturer: { contains: filters.q, mode: "insensitive" } },
-      { description: { contains: filters.q, mode: "insensitive" } },
-    ];
-  }
   if (filters.categoryId) where.categoryId = { in: await categoryIdsIncludingChildren(filters.categoryId) };
   if (filters.trackingType) where.trackingType = filters.trackingType;
 
-  // Every matching model, grouped into families, then paginated by family (a few hundred rows at most).
-  const [models, cats, colors] = await Promise.all([
+  // Every model the other filters allow, searched here (forgiving: spaces, case, typos), grouped into families, then paginated by family (a few hundred rows at most).
+  const [candidates, cats, colors] = await Promise.all([
     prisma.model.findMany({ where, orderBy: [{ manufacturer: "asc" }, { name: "asc" }], include: { defaultPhoto: { select: { id: true, thumbKey: true } } } }),
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
     loadColorMaps(),
   ]);
+  const { rows: models, close: closeMatches } = bestMatches(candidates, (m) => [m.manufacturer, m.name, m.variant, m.description], filters.q);
   const ids = models.map((m) => m.id);
   const counts = ids.length ? await prisma.item.groupBy({ by: ["modelId", "status"], where: { modelId: { in: ids } }, _sum: { quantity: true } }) : [];
   // Metre consumables have no bins: their stock is the ledger, shown as both "in house" and "owned".
@@ -129,7 +123,7 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
   }));
   const families = groupFamilies(rows);
   const total = families.length;
-  return { families: families.slice((filters.page - 1) * PAGE, filters.page * PAGE), total, models: rows.length, page: filters.page, pages: Math.max(1, Math.ceil(total / PAGE)) };
+  return { families: families.slice((filters.page - 1) * PAGE, filters.page * PAGE), total, models: rows.length, page: filters.page, pages: Math.max(1, Math.ceil(total / PAGE)), closeMatches };
 }
 
 /** Pure: rows → families (manufacturer + name, case-insensitive), variants sorted by size, totals summed. */
@@ -202,20 +196,18 @@ export type ItemListRow = ItemDto & {
   thumbUrl: string | null;
 };
 
+const ITEM_SEARCH_SELECT = { id: true, assetTag: true, serialNumber: true, name: true, notes: true, model: { select: { manufacturer: true, name: true, variant: true } } } as const;
+type ItemSearchRow = { id: string; assetTag: string; serialNumber: string | null; name: string | null; notes?: string | null; model: { manufacturer: string; name: string; variant: string | null } };
+const itemSearchFields = (i: ItemSearchRow) => [i.assetTag, i.serialNumber, i.name, i.notes, i.model.manufacturer, i.model.name, i.model.variant];
+
 /** The item list's filters as a Prisma where clause (also used for label printing). */
 export async function itemWhere(filters: ItemFilters & { customField?: { key: string; value: string } }): Promise<Prisma.ItemWhereInput> {
+  return (await itemSearch(filters)).where;
+}
+
+/** The item filters, with the search run forgivingly over the rows the other filters allow; `close` when only close matches were found. */
+async function itemSearch(filters: ItemFilters & { customField?: { key: string; value: string } }): Promise<{ where: Prisma.ItemWhereInput; close: boolean }> {
   const where: Prisma.ItemWhereInput = {};
-  if (filters.q) {
-    const q = filters.q;
-    where.OR = [
-      { assetTag: { contains: q, mode: "insensitive" } },
-      { serialNumber: { contains: q, mode: "insensitive" } },
-      { name: { contains: q, mode: "insensitive" } },
-      { notes: { contains: q, mode: "insensitive" } },
-      { model: { name: { contains: q, mode: "insensitive" } } },
-      { model: { manufacturer: { contains: q, mode: "insensitive" } } },
-    ];
-  }
   if (filters.status) where.status = filters.status;
   if (filters.locationId) where.locationId = filters.locationId;
   if (filters.modelId) where.modelId = filters.modelId;
@@ -224,7 +216,10 @@ export async function itemWhere(filters: ItemFilters & { customField?: { key: st
   if (filters.customField) {
     where.customFields = { path: [filters.customField.key], equals: filters.customField.value };
   }
-  return where;
+  if (!filters.q) return { where, close: false };
+  const candidates = await prisma.item.findMany({ where, select: ITEM_SEARCH_SELECT });
+  const found = bestMatches(candidates, itemSearchFields, filters.q);
+  return { where: { ...where, id: { in: found.rows.map((i) => i.id) } }, close: found.close };
 }
 
 /** Items to print labels for: explicit ids, or whatever the list filters select, in tag order. */
@@ -235,8 +230,8 @@ export async function itemsForLabels(pick: { ids: string[] } | { filters: ItemFi
 
 export async function listItems(
   filters: ItemFilters & { customField?: { key: string; value: string } },
-): Promise<{ rows: ItemListRow[]; total: number; page: number; pages: number }> {
-  const where = await itemWhere(filters);
+): Promise<{ rows: ItemListRow[]; total: number; page: number; pages: number; closeMatches: boolean }> {
+  const { where, close: closeMatches } = await itemSearch(filters);
 
   const [total, rows, cats] = await Promise.all([
     prisma.item.count({ where }),
@@ -266,6 +261,7 @@ export async function listItems(
     total,
     page: filters.page,
     pages: Math.max(1, Math.ceil(total / PAGE)),
+    closeMatches,
   };
 }
 
@@ -308,13 +304,8 @@ export async function itemDetail(id: string) {
 export async function kitCandidates(kitId: string, q: string | undefined) {
   const where: Prisma.ItemWhereInput = { id: { not: kitId }, parentItemId: null, status: { not: "retired" } };
   if (q) {
-    where.OR = [
-      { assetTag: { contains: q, mode: "insensitive" } },
-      { serialNumber: { contains: q, mode: "insensitive" } },
-      { name: { contains: q, mode: "insensitive" } },
-      { model: { name: { contains: q, mode: "insensitive" } } },
-      { model: { manufacturer: { contains: q, mode: "insensitive" } } },
-    ];
+    const candidates = await prisma.item.findMany({ where, select: { ...ITEM_SEARCH_SELECT, notes: false } });
+    where.id = { in: bestMatches(candidates, itemSearchFields, q).rows.map((i) => i.id) };
   }
   const rows = await prisma.item.findMany({
     where,

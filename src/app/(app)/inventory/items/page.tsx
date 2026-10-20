@@ -111,6 +111,7 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
           </div>
         )}
       </LiveFilterForm>
+      {result.closeMatches && filters.q && <p className="text-sm text-muted-foreground">{tc("closeMatches", { query: filters.q })}</p>}
 
       {result.total === 0 ? (
         <EmptyState title={t("noItems")} body={t("noItemsBody")} />

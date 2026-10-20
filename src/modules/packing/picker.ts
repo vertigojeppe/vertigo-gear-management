@@ -3,6 +3,8 @@
  * pages show while you type. Entries are models (add N) and kits (add the
  * case). No database here; `gearCatalog` in queries.ts builds the entries.
  */
+import { haystack, matchLevel, searchWords, squash } from "@/lib/search";
+
 export type CatalogEntry = {
   kind: "model" | "kit";
   id: string;
@@ -35,30 +37,45 @@ const norm = (s: string) =>
     .replace(/[̀-ͯ]/g, "");
 
 /**
- * Every query word must match the label, category or a tag; results are
- * ranked: label starts with the query, then label contains it, then the
- * rest (category / tag matches). Ties keep catalog order.
+ * Every query word must match the label, category or a tag, ignoring
+ * spaces, case, punctuation and accents ("qbase" finds "Q Base"). Results
+ * are ranked: label starts with the query, then label contains it, then the
+ * rest (category / tag matches). Ties keep catalog order. When nothing
+ * matches, close matches (a typo per word) are returned with `close`.
  */
-export function filterCatalog(entries: CatalogEntry[], query: string, limit = 60): CatalogEntry[] {
-  const q = norm(query.trim());
-  if (!q) return [];
-  const words = q.split(/\s+/).filter(Boolean);
+export function searchCatalog(entries: CatalogEntry[], query: string, limit = 60): { results: CatalogEntry[]; close: boolean } {
+  const words = searchWords(query);
+  if (words.length === 0) return { results: [], close: false };
+  const q = squash(query);
+  const hays = entries.map((e) => haystack([e.label, e.category, ...e.tags]));
   const scored: { e: CatalogEntry; score: number; i: number }[] = [];
   entries.forEach((e, i) => {
-    const label = norm(e.label);
-    const hay = `${label} ${norm(e.category)} ${e.tags.map(norm).join(" ")}`;
-    if (!words.every((w) => hay.includes(w))) return;
+    if (!words.every((w) => hays[i].includes(w))) return;
+    const label = squash(e.label);
     let score = 2;
     if (label.startsWith(q)) score = 0;
     else if (label.includes(q)) score = 1;
     else if (words.every((w) => label.includes(w))) score = 1;
-    if (e.tags.some((t) => norm(t) === q)) score = -1; // an exact tag is what a scanner sends
+    if (e.tags.some((t) => squash(t) === q)) score = -1; // an exact tag is what a scanner sends
     scored.push({ e, score, i });
   });
-  return scored
+  let close = false;
+  if (scored.length === 0) {
+    entries.forEach((e, i) => {
+      if (matchLevel(hays[i], words) === 1) scored.push({ e, score: 3, i });
+    });
+    close = scored.length > 0;
+  }
+  const results = scored
     .sort((a, b) => a.score - b.score || a.i - b.i)
     .slice(0, limit)
     .map((x) => x.e);
+  return { results, close };
+}
+
+/** `searchCatalog` without the close-match flag. */
+export function filterCatalog(entries: CatalogEntry[], query: string, limit = 60): CatalogEntry[] {
+  return searchCatalog(entries, query, limit).results;
 }
 
 /** Groups ranked results by family, in order of each family's best match; variants keep catalog order inside the group. */

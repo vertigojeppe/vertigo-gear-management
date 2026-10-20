@@ -8,7 +8,7 @@ import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { addKitLine, addLine, addTemplateLine } from "../actions";
-import { filterCatalog, groupCatalog, type CatalogEntry } from "../picker";
+import { groupCatalog, searchCatalog, type CatalogEntry } from "../picker";
 
 type Target = { kind: "list"; projectId: string; listId: string } | { kind: "template"; templateId: string };
 type Option = { id: string; label: string };
@@ -33,7 +33,7 @@ export function GearPicker({ target, catalog, cases = [] }: { target: Target; ca
   const [, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const results = useMemo(() => filterCatalog(catalog, query), [catalog, query]);
+  const { results, close } = useMemo(() => searchCatalog(catalog, query), [catalog, query]);
   const groups = useMemo(() => groupCatalog(results), [results]);
   // The flat order (for arrow keys / Enter) follows the grouped display.
   const flat = useMemo(() => groups.flatMap((g) => g.entries), [groups]);
@@ -122,6 +122,7 @@ export function GearPicker({ target, catalog, cases = [] }: { target: Target; ca
         <p className="text-sm text-muted-foreground">{t("noMatches", { query: query.trim() })}</p>
       ) : (
         <div className="flex flex-col gap-2">
+          {close && <p className="text-xs text-muted-foreground">{t("closeMatches", { query: query.trim() })}</p>}
           {groups.map((g) => (
             <section key={g.key} className="rounded-md border">
               <header className="flex flex-wrap items-center gap-2 border-b bg-muted/30 px-3 py-1.5 text-sm">
