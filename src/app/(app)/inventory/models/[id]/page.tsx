@@ -1,3 +1,4 @@
+import { LiveFilterForm } from "@/components/form/live-filter-form";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -234,7 +235,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
       {!metres && (
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">{tp("reservations")}</h2>
-        <form method="get" className="flex flex-wrap items-end gap-2 text-sm">
+        <LiveFilterForm className="flex flex-wrap items-end gap-2 text-sm">
           <label className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">{tp("from")}</span>
             <input type="date" name="from" defaultValue={availability.window.from} className="h-8 rounded-md border bg-background px-2" />
@@ -243,7 +244,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
             <span className="text-xs text-muted-foreground">{tp("to")}</span>
             <input type="date" name="to" defaultValue={availability.window.to} className="h-8 rounded-md border bg-background px-2" />
           </label>
-          <Button type="submit" variant="outline" size="sm">
+          <Button type="submit" variant="outline" size="sm" className="group-data-[live]:hidden">
             {tc("filter")}
           </Button>
           <StatusPill color={availability.available > 0 ? "green" : "red"} className="ml-2 text-sm">
@@ -252,7 +253,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
           <span className="text-xs text-muted-foreground">
             {t("owned")} {availability.owned} · {ts("in_repair")}/{ts("missing")} {availability.unavailable} · {tp("reservations").toLowerCase()} {availability.allocated}
           </span>
-        </form>
+        </LiveFilterForm>
         {availability.upcoming.length === 0 ? (
           <p className="text-sm text-muted-foreground">{tp("noReservations")}</p>
         ) : (

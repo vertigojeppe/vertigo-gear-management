@@ -264,6 +264,27 @@ test.describe("inventory", () => {
     await expect(page.getByRole("listitem").filter({ hasText: `Testlight Strip ${stamp}` }).getByRole("link", { name: "on the wish list" })).toBeVisible();
   });
 
+  test("filters apply while typing, keep focus, and Clear empties them", async ({ page }) => {
+    await signIn(page, "viewer@vertigo.test");
+    await page.goto("/inventory");
+    // The Filter button is only a fallback without JavaScript.
+    await expect(page.getByRole("button", { name: "Filter" })).toBeHidden();
+    const search = page.getByRole("textbox", { name: "Search" });
+    await search.pressSequentially("Pointe", { delay: 40 });
+    await expect(page).toHaveURL(/\/inventory\?q=Pointe$/);
+    await expect(page.getByText("Robe Pointe").first()).toBeVisible();
+    await expect(search).toBeFocused();
+    await expect(search).toHaveValue("Pointe");
+    // A checkbox applies at once.
+    await page.getByLabel("Show archived").check();
+    await expect(page).toHaveURL(/archived=1/);
+    // Clear navigates away from the filters and the fields follow.
+    await page.getByRole("link", { name: "Clear" }).click();
+    await expect(page).toHaveURL(/\/inventory$/);
+    await expect(search).toHaveValue("");
+    await expect(page.getByLabel("Show archived")).not.toBeChecked();
+  });
+
   test("viewer sees inventory but no edit controls", async ({ page }) => {
     await signIn(page, "viewer@vertigo.test");
     await page.goto("/inventory");
