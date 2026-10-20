@@ -12,10 +12,12 @@ beforeAll(async () => {
     data: {
       name: `Feed ${marker}`,
       status: "confirmed",
-      loadIn: new Date("2030-07-01T06:00:00Z"),
+      buildStart: new Date("2030-06-29T00:00:00Z"),
+      buildEnd: new Date("2030-07-01T00:00:00Z"),
+      buildCall: "08:00",
       showStart: new Date("2030-07-01T18:00:00Z"),
       showEnd: new Date("2030-07-01T21:00:00Z"),
-      reserveFrom: new Date("2030-07-01T00:00:00Z"),
+      reserveFrom: new Date("2030-06-29T00:00:00Z"),
       reserveTo: new Date("2030-07-01T00:00:00Z"),
       crew: { create: { userId, role: "Op" } },
     },
@@ -42,7 +44,11 @@ describe("iCal feeds", () => {
   it("renders project phases as VEVENTs with a link back", async () => {
     const ics = await buildFeed("projects", null);
     expect(ics).toContain("BEGIN:VCALENDAR");
-    expect(ics).toContain(`SUMMARY:Feed ${marker} – load-in`);
+    expect(ics).toContain(`SUMMARY:Feed ${marker} – build-up (call 08:00)`);
+    // One all-day event over the three build-up days (end exclusive).
+    const build = ics.split("BEGIN:VEVENT").find((e) => e.includes(`${projectId}-load_in@`))!;
+    expect(build).toMatch(/DTSTART;VALUE=DATE:20300629/);
+    expect(build).toMatch(/DTEND;VALUE=DATE:20300702/);
     expect(ics).toContain(`SUMMARY:Feed ${marker} – show`);
     expect(ics).toContain(`/projects/${projectId}`);
   });

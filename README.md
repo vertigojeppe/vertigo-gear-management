@@ -120,8 +120,9 @@ start, and help text under the fields that need it. The short version:
 - **Settings › Users**: invite colleagues as admin, member or viewer.
 - **Settings › Your account › API tokens**: call the REST API from other
   tools. Docs at `/api/docs`.
-- **Projects**: a project has a client, venue, phase dates (prep, load-in,
-  show, load-out, return), crew and contacts. **Reserve gear** per model for
+- **Projects**: a project has a client, venue, phase dates (prep, build-up,
+  show, pack-down, return; build-up and pack-down can run over several days
+  with one call time), crew and contacts. **Reserve gear** per model for
   the project's dates; the app warns when not enough is available and shows
   who holds the rest. You can reserve anyway.
 - **Calendar**: a timeline of projects and rentals; days where a model is
@@ -156,7 +157,7 @@ start, and help text under the fields that need it. The short version:
   hotels. Print a **day sheet** per day or the whole plan, and share a
   read-only link with the crew.
 - **Plan templates** (Projects › Plan templates): a whole plan relative to
-  the load-in day, applied to a project in one go; any plan can be saved
+  the first build-up day, applied to a project in one go; any plan can be saved
   as one.
 - **Documents on the plan**: riders, stage plots, drawings, risk
   assessments and 3D models. Upload anything (chunked, so large files from

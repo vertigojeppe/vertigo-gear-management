@@ -23,10 +23,15 @@ export function projectPhaseEvents(p: {
   venueName: string | null;
   venueAddress: string | null;
   prepStart: Date | null;
-  loadIn: Date | null;
+  prepEnd: Date | null;
+  buildStart: Date | null;
+  buildEnd: Date | null;
+  buildCall: string | null;
   showStart: Date | null;
   showEnd: Date | null;
-  loadOut: Date | null;
+  packStart: Date | null;
+  packEnd: Date | null;
+  packCall: string | null;
   returnDate: Date | null;
   client: { name: string } | null;
   crew: { user: { googleEmail: string | null } }[];
@@ -38,7 +43,6 @@ export function projectPhaseEvents(p: {
     source: { title: "Vertigo Gear", url: appUrl(`/projects/${p.id}`) },
     attendees: attendees.length ? attendees : undefined,
   };
-  const label = (phase: ProjectPhase) => PROJECT_PHASES.find((x) => x.key === phase)!.label.split(".")[1].replace("_", "-");
   const description = (phase: string) => `${phase} · ${p.client?.name ?? "No client"}${p.venueName ? ` · ${p.venueName}` : ""}\n${appUrl(`/projects/${p.id}`)}`;
   const get = (k: string) => p[k as keyof typeof p] as Date | null;
 
@@ -47,18 +51,19 @@ export function projectPhaseEvents(p: {
     const start = get(spec.start);
     if (!start) continue;
     const end = spec.end ? get(spec.end) : null;
-    const summary = `${p.name} – ${label(phase)}`;
-    if (phase === "prep" || phase === "return") {
-      // Date-only phases become all-day events (end exclusive in Google).
+    const call = spec.call ? (p[spec.call as keyof typeof p] as string | null) : null;
+    const summary = `${p.name} – ${spec.title}${call ? ` (call ${call})` : ""}`;
+    if (spec.allDay) {
+      // Day ranges become one all-day event over every day (end exclusive in Google).
       const startDay = dateToString(start);
-      const endDay = end ? dateToString(end) : startDay;
-      out[phase] = { ...base, summary, description: description(label(phase)), start: { date: startDay }, end: { date: addDays(endDay, 1) } };
+      const endDay = end && end > start ? dateToString(end) : startDay;
+      out[phase] = { ...base, summary, description: description(spec.title), start: { date: startDay }, end: { date: addDays(endDay, 1) } };
     } else {
       const endTime = end && end > start ? end : new Date(start.getTime() + 2 * 3600_000);
       out[phase] = {
         ...base,
         summary,
-        description: description(label(phase)),
+        description: description(spec.title),
         start: { dateTime: start.toISOString(), timeZone: TZ },
         end: { dateTime: endTime.toISOString(), timeZone: TZ },
       };

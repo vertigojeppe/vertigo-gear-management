@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { zonedInputToDate } from "@/lib/dates";
-import { dayOffset, defaultAnchor, defaultModelUnit, endTime, formatDistance, groupByDay, materialiseTemplate, sortTasks, taskProgress, templateFromPlan, timeOfDay } from "../logic";
+import { formatDateTime } from "@/lib/format";
+import { datesLine, dayOffset, defaultAnchor, defaultModelUnit, endTime, formatDistance, groupByDay, materialiseTemplate, sortTasks, taskProgress, templateFromPlan, timeOfDay } from "../logic";
 
 const entries = [
   { kind: "schedule", dayOffset: -1, time: "08:00", durationMin: 120, title: "Load truck", location: "Warehouse", phase: null, logisticsKind: null, notes: null, sortOrder: 0 },
@@ -54,9 +55,16 @@ describe("schedule helpers", () => {
   it("computes day offsets and the default anchor", () => {
     expect(dayOffset("2030-06-10", "2030-06-12")).toBe(2);
     expect(dayOffset("2030-06-10", "2030-06-08")).toBe(-2);
-    expect(defaultAnchor({ loadIn: zonedInputToDate("2030-06-10T08:00"), showStart: null, prepStart: null }, "2030-01-01")).toBe("2030-06-10");
-    expect(defaultAnchor({ loadIn: null, showStart: zonedInputToDate("2030-06-12T20:00"), prepStart: null }, "2030-01-01")).toBe("2030-06-12");
-    expect(defaultAnchor({ loadIn: null, showStart: null, prepStart: null }, "2030-01-01")).toBe("2030-01-01");
+    expect(defaultAnchor({ buildStart: "2030-06-10", showStart: zonedInputToDate("2030-06-12T20:00"), prepStart: null }, "2030-01-01")).toBe("2030-06-10");
+    expect(defaultAnchor({ buildStart: new Date("2030-06-10T00:00:00Z"), showStart: null, prepStart: null }, "2030-01-01")).toBe("2030-06-10");
+    expect(defaultAnchor({ buildStart: null, showStart: zonedInputToDate("2030-06-12T20:00"), prepStart: null }, "2030-01-01")).toBe("2030-06-12");
+    expect(defaultAnchor({ buildStart: null, showStart: null, prepStart: null }, "2030-01-01")).toBe("2030-01-01");
+  });
+
+  it("writes the plan header from build-up, show and pack-down", () => {
+    const p = { buildStart: "2030-06-10", buildEnd: "2030-06-11", buildCall: "08:00", showStart: zonedInputToDate("2030-06-12T20:00"), packStart: "2030-06-13", packEnd: "2030-06-13", packCall: null };
+    expect(datesLine(p)).toBe(`Build-up 10.06.2030 – 11.06.2030, call 08:00 · Show ${formatDateTime(p.showStart)} · Pack-down 13.06.2030`);
+    expect(datesLine({ ...p, buildStart: null, buildEnd: null, showStart: null, packStart: null, packEnd: null })).toBe("");
   });
 });
 

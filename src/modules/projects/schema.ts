@@ -2,6 +2,11 @@ import { z } from "zod";
 import { PROJECT_STATUSES } from "../../../config/app.config";
 import { checkbox, optionalDate, optionalId, optionalNumber, optionalText } from "@/lib/forms";
 
+const optionalTime = z.preprocess(
+  (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+  z.string().regex(/^\d{2}:\d{2}$/, "Use HH:MM.").optional(),
+);
+
 const optionalDateTime = z.preprocess(
   (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
   z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/, "Use the date and time picker.").optional(),
@@ -27,11 +32,18 @@ export const projectInput = z.object({
   venueName: optionalText,
   venueAddress: optionalText,
   status: z.enum(PROJECT_STATUS_KEYS as [string, ...string[]]).default("quote"),
+  /** Day ranges (YYYY-MM-DD, inclusive); one end alone means a single day. */
   prepStart: optionalDate,
-  loadIn: optionalDateTime,
+  prepEnd: optionalDate,
+  buildStart: optionalDate,
+  buildEnd: optionalDate,
+  /** Call time (HH:MM) for every build-up day. */
+  buildCall: optionalTime,
   showStart: optionalDateTime,
   showEnd: optionalDateTime,
-  loadOut: optionalDateTime,
+  packStart: optionalDate,
+  packEnd: optionalDate,
+  packCall: optionalTime,
   returnDate: optionalDate,
   notes: optionalText,
   /** One per line: Label | https://url */

@@ -50,7 +50,7 @@ export async function seedPlans(prisma: PrismaClient) {
   let plans = 0;
   const roskilde = await prisma.project.findFirst({ where: { name: "Roskilde Festival – Orange stage" }, include: { crew: true } });
   if (roskilde && !(await prisma.productionPlan.findUnique({ where: { projectId: roskilde.id } }))) {
-    const anchor = dayInZone(roskilde.loadIn ?? roskilde.showStart ?? new Date());
+    const anchor = dayInZone(roskilde.buildStart ?? roskilde.showStart ?? new Date());
     const plan = await prisma.productionPlan.create({ data: { projectId: roskilde.id, notes: "Laser zones agreed with festival safety on the phone; written confirmation pending." } });
     const responsible = roskilde.crew[0]?.userId ?? null;
     let i = 0;

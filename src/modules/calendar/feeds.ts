@@ -37,8 +37,6 @@ export const feedTokens = {
   },
 };
 
-const phaseLabel = (key: string) => PROJECT_PHASES.find((p) => p.key === key)?.label.split(".")[1].replace("_", "-") ?? key;
-
 export async function buildFeed(scope: FeedScope, userId: string | null): Promise<string> {
   const cal = ical({ name: `${appConfig.name} – ${scope === "mine" ? "My jobs" : scope === "projects" ? "Projects" : "Rentals"}`, timezone: appConfig.timezone, method: ICalCalendarMethod.PUBLISH });
 
@@ -56,20 +54,21 @@ export async function buildFeed(scope: FeedScope, userId: string | null): Promis
         const start = p[spec.start as keyof typeof p] as Date | null;
         if (!start) continue;
         const end = spec.end ? (p[spec.end as keyof typeof p] as Date | null) : null;
-        const allDay = phase === "prep" || phase === "return";
+        const call = spec.call ? (p[spec.call as keyof typeof p] as string | null) : null;
+        const allDay = spec.allDay;
         const ev = cal.createEvent({
           id: `${p.id}-${phase}@vertigo-gear`,
           start,
-          end: allDay ? new Date(`${addDays(dateToString(end ?? start), 1)}T00:00:00Z`) : end && end > start ? end : new Date(start.getTime() + 2 * 3600_000),
+          end: allDay ? new Date(`${addDays(dateToString(end && end > start ? end : start), 1)}T00:00:00Z`) : end && end > start ? end : new Date(start.getTime() + 2 * 3600_000),
           allDay,
-          summary: `${summaryBase} – ${phaseLabel(phase)}`,
-          description: `${phaseLabel(phase)} · ${p.status}\n${url}`,
+          summary: `${summaryBase} – ${spec.title}${call ? ` (call ${call})` : ""}`,
+          description: `${spec.title} · ${p.status}\n${url}`,
           location: where || undefined,
           url,
         });
         if (scope === "mine") {
           const me = p.crew.find((c) => c.userId === userId);
-          if (me?.callTime && phase === "load_in") ev.description(`${phaseLabel(phase)} · call ${me.callTime.toISOString()}\n${url}`);
+          if (me?.callTime && phase === "load_in") ev.description(`${spec.title} · your call ${me.callTime.toISOString()}\n${url}`);
         }
       }
     }

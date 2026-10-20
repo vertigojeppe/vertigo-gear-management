@@ -214,7 +214,15 @@ a second entry that exports components only and never a service.
 - A reservation that does not fit throws `ConflictError` with the check;
   actions return it as `state.data.conflict` and the dialog offers
   "reserve anyway" (`force`). Rentals use the same engine.
-- Project phase dates live on the project; the reservation window
+- Project phase dates live on the project. Prep, build-up and pack-down
+  are continuous day ranges (`prepStart/End`, `buildStart/End`,
+  `packStart/End`, date-only) and build-up / pack-down carry one call
+  time each (`buildCall`, `packCall`, "HH:MM"); the show is two instants
+  and return one day. One end alone means a single day (`dayRange`). The
+  calendar phase keys stay `load_in` / `load_out` (Google event ids are
+  stored under them) but read "Build-up" / "Pack-down"; `PHASE_DATES`
+  maps each phase to its fields, and every day phase is one all-day event
+  over its days with the call time in the title. The reservation window
   (`reserveFrom/To`) is derived in `deriveWindow`. Allocations that still
   match the old window move with the project when dates change.
 - Items have a `homeLocationId` (warehouse shelf). Flows that return gear
@@ -286,7 +294,7 @@ a second entry that exports components only and never a service.
 - Tasks have a phase (`PLAN_PHASES`), optional assignee and due date, and a
   done flag; `sortTasks` orders them phase → open first → due date.
 - Templates (`PlanTemplate`, `PlanTemplateEntry`) hold entries relative to
-  an **anchor day** (`dayOffset`, load-in = 0). `materialiseTemplate` dates
+  an **anchor day** (`dayOffset`, first build-up day = 0). `materialiseTemplate` dates
   them; `templateFromPlan` is the inverse used by "save as template". Both
   are pure and tested in `src/modules/plans/logic.ts`.
 - "My day" (`myDay(userId)` in `src/modules/plans/my-day.ts`,

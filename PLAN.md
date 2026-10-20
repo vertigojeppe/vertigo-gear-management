@@ -80,7 +80,7 @@ with `quantity = 3` inside the kit, drawn from the model's warehouse bin.
 - **Client** — company, contact person(s), email, phone, address.
 - **Project** `*` — name, clientId, venueName, venueAddress, status
   (`quote` / `confirmed` / `in_progress` / `done` / `cancelled`), dates:
-  prepStart, loadIn, showStart, showEnd, loadOut, returnDate; notes,
+  prepStart/End, buildStart/End + buildCall, showStart, showEnd, packStart/End + packCall, returnDate; notes,
   externalLinks (Drive / Notion), googleEventIds JSON.
 - **ProjectContact** — projectId, name, role, phone, email.
 - **ProjectCrew** — projectId, userId, role, callTime.
@@ -246,7 +246,7 @@ wish list, purchase records. The spreadsheet importer is Phase 5a.
 One plan per project: day-by-day schedule (time, duration, place, who),
 tasks by phase with assignee, due date and done state, crew & contacts from
 the project, logistics (vehicles, parking, dock, hotel, travel), plan
-templates relative to the load-in day (apply / save as), day sheet and full
+templates relative to the first build-up day (apply / save as), day sheet and full
 plan PDF, read-only share link.
 **Tests:** template date maths and round trip, day grouping, task order and
 progress, plan lifecycle (DB), PDF smoke, browser flow.

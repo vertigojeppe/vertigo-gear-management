@@ -1,6 +1,6 @@
 // Public interface of the plans module (production plans, Phase 4).
 export { plans, schedule, tasks, logistics, planTemplates, PlanError } from "./service";
-export { groupByDay, taskProgress, sortTasks, materialiseTemplate, templateFromPlan, dayOffset, defaultAnchor, timeOfDay, endTime } from "./logic";
+export { groupByDay, taskProgress, sortTasks, materialiseTemplate, templateFromPlan, dayOffset, defaultAnchor, datesLine, timeOfDay, endTime } from "./logic";
 export type { TemplateEntryLike, Materialised } from "./logic";
 export { planDetail, planDetailById, planSummary, planTemplateOptions, planTemplateDetail } from "./queries";
 export { myDay } from "./my-day";

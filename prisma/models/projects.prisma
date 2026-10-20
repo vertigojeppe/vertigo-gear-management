@@ -26,12 +26,19 @@ model Project {
   venueAddress String?
   /// Key from PROJECT_STATUSES in config/app.config.ts.
   status       String    @default("quote")
-  /// Phase dates. Times are Europe/Copenhagen wall-clock stored as UTC.
+  /// Phase dates. Day fields are Copenhagen days stored as UTC midnight; show times are
+  /// Copenhagen wall-clock stored as UTC. Prep, build-up and pack-down are continuous day
+  /// ranges; build-up and pack-down carry one call time ("HH:MM") for their first day.
   prepStart    DateTime?
-  loadIn       DateTime?
+  prepEnd      DateTime?
+  buildStart   DateTime?
+  buildEnd     DateTime?
+  buildCall    String?
   showStart    DateTime?
   showEnd      DateTime?
-  loadOut      DateTime?
+  packStart    DateTime?
+  packEnd      DateTime?
+  packCall     String?
   returnDate   DateTime?
   /// Derived reservation window (dates, inclusive): earliest..latest phase date.
   reserveFrom  DateTime? @db.Date
