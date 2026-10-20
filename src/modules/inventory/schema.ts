@@ -100,11 +100,19 @@ export const partFitInput = z.object({
 export type PartFitInput = z.infer<typeof partFitInput>;
 
 /** Admin: rename a whole family; every model sharing the old manufacturer + name follows. */
-export const familyRenameInput = z.object({
+/** "yes" / "no" set a flag on every variant; anything else ("" = mixed) leaves each as it is. */
+const familyFlag = z.preprocess((v) => (v === "yes" ? true : v === "no" ? false : undefined), z.boolean().optional());
+
+export const familyEditInput = z.object({
   manufacturer: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().max(100).optional()).transform((v) => v ?? ""),
   name: z.string().trim().min(1, "Model name is required.").max(150),
+  /** Empty = leave each variant in its own category. */
+  categoryId: optionalId,
+  notForRental: familyFlag,
+  archived: familyFlag,
+  consumable: familyFlag,
 });
-export type FamilyRenameInput = z.infer<typeof familyRenameInput>;
+export type FamilyEditInput = z.infer<typeof familyEditInput>;
 
 export function parseLinksText(text: string | undefined): { label: string; url: string }[] {
   if (!text) return [];

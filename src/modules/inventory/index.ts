@@ -15,6 +15,7 @@ export {
   listItems, itemsForLabels,
   itemDetail,
   kitCandidates,
+  familyState,
   dashboardStats,
 } from "./queries";
 export type { ModelFamily, ModelListRow, ItemListRow } from "./queries";
@@ -30,7 +31,7 @@ export {
   itemBatchInput,
   statusChangeInput,
   moveInput,
-  familyRenameInput,
+  familyEditInput,
 } from "./schema";
 export type { ItemFilters, ModelFilters, TrackingType } from "./schema";
 export { validateStatusChange, isAvailableStatus, manualStatuses } from "./status";
@@ -38,7 +39,7 @@ export { buildTree, flattenTree, pathNames } from "./tree";
 export * as inventoryActions from "./actions";
 export { InventoryTabs } from "./components/inventory-tabs";
 export { FamilyList } from "./components/family-list";
-export { RenameFamilyDialog } from "./components/rename-family-dialog";
+export { EditFamilyDialog, type FamilyState } from "./components/edit-family-dialog";
 export { LabelsDialog } from "./components/labels-dialog";
 export { CategoryColorPicker, LengthColorsToggle, LengthColorsTable } from "./components/color-controls";
 export { categoryColorMap, lengthColorFor } from "./color-map";

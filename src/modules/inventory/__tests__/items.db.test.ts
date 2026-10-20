@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import type { Actor } from "@/lib/auth/session";
 import { InventoryError, items, models, modelUsage } from "../service";
+import { familyState } from "../queries";
 
 /**
  * Integration tests against the dev/CI database. They create their own
@@ -162,11 +163,11 @@ describe("renaming a family", () => {
     const b = await prisma.model.create({ data: { categoryId, manufacturer: "", name: `Rods ${marker}`, variant: "70 cm", trackingType: "bulk" } });
     const other = await prisma.model.create({ data: { categoryId, manufacturer: "", name: `Stænger ${marker}`, variant: "70 cm", trackingType: "bulk" } });
     const member: Actor = { ...admin, role: "member" };
-    await expect(models.renameFamily(member, a.id, { manufacturer: "", name: `Stænger ${marker}` })).rejects.toThrow();
+    await expect(models.editFamily(member, a.id, { manufacturer: "", name: `Stænger ${marker}` })).rejects.toThrow();
     // 70 cm already exists under the new name: refused, nothing changed.
-    await expect(models.renameFamily(admin, a.id, { manufacturer: "", name: `Stænger ${marker}` })).rejects.toThrow(/already exists/);
+    await expect(models.editFamily(admin, a.id, { manufacturer: "", name: `Stænger ${marker}` })).rejects.toThrow(/already exists/);
     expect((await prisma.model.findUniqueOrThrow({ where: { id: b.id } })).name).toBe(`Rods ${marker}`);
-    const r = await models.renameFamily(admin, a.id, { manufacturer: "Vertigo", name: `Rør ${marker}` });
+    const r = await models.editFamily(admin, a.id, { manufacturer: "Vertigo", name: `Rør ${marker}` });
     expect(r.count).toBe(2);
     const after = await prisma.model.findMany({ where: { id: { in: [a.id, b.id] } }, orderBy: { variant: "asc" } });
     expect(after.map((m) => [m.manufacturer, m.name, m.variant])).toEqual([
@@ -174,5 +175,38 @@ describe("renaming a family", () => {
       ["Vertigo", `Rør ${marker}`, "70 cm"],
     ]);
     expect((await prisma.model.findUniqueOrThrow({ where: { id: other.id } })).name).toBe(`Stænger ${marker}`);
+  });
+
+  it("moves a whole family to another category and sets its flags, leaving undecided ones alone", async () => {
+    const a = await prisma.model.create({ data: { categoryId, manufacturer: "", name: `Lamp ${marker}`, variant: "575 W", trackingType: "bulk", notForRental: true } });
+    const b = await prisma.model.create({ data: { categoryId, manufacturer: "", name: `Lamp ${marker}`, variant: "1200 W", trackingType: "bulk" } });
+    const target = await prisma.category.create({ data: { name: `Lamps ${marker}` } });
+    try {
+      expect(await familyState(a.id)).toEqual({ count: 2, categoryId, notForRental: null, archived: false, consumable: false });
+      await models.editFamily(admin, b.id, { manufacturer: "Osram", name: `Lamp ${marker}`, categoryId: target.id, consumable: true });
+      const after = await prisma.model.findMany({ where: { id: { in: [a.id, b.id] } }, orderBy: { variant: "asc" } });
+      expect(after.map((m) => [m.manufacturer, m.categoryId, m.consumable, m.notForRental])).toEqual([
+        ["Osram", target.id, true, false],
+        ["Osram", target.id, true, true],
+      ]);
+      expect(await familyState(a.id)).toMatchObject({ categoryId: target.id, consumable: true, notForRental: null });
+      await expect(models.editFamily(admin, a.id, { manufacturer: "Osram", name: `Lamp ${marker}`, categoryId: "nope" })).rejects.toThrow(/category/);
+    } finally {
+      await prisma.model.deleteMany({ where: { id: { in: [a.id, b.id] } } });
+      await prisma.category.delete({ where: { id: target.id } });
+    }
+  });
+
+  it("keeps metre consumables with stock as consumables", async () => {
+    const strip = await prisma.model.create({ data: { categoryId, manufacturer: "", name: `Strip ${marker}`, variant: "24 V", trackingType: "bulk", consumable: true, unit: "m" } });
+    await prisma.stockMovement.create({ data: { modelId: strip.id, quantity: 10, kind: "received" } });
+    try {
+      await expect(models.editFamily(admin, strip.id, { manufacturer: "", name: `Strip ${marker}`, consumable: false })).rejects.toThrow(/must stay consumables/);
+      await models.editFamily(admin, strip.id, { manufacturer: "", name: `Strip ${marker}`, notForRental: true });
+      expect(await prisma.model.findUniqueOrThrow({ where: { id: strip.id } })).toMatchObject({ consumable: true, unit: "m", notForRental: true });
+    } finally {
+      await prisma.stockMovement.deleteMany({ where: { modelId: strip.id } });
+      await prisma.model.delete({ where: { id: strip.id } });
+    }
   });
 });

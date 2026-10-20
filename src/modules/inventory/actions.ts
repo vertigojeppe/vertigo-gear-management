@@ -8,7 +8,7 @@ import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitions } from "@/modules/settings";
 // eslint-disable-next-line no-restricted-imports -- the wishlist barrel re-exports client components; the service is all this action needs
 import { wishes } from "@/modules/wishlist/service";
-import { categoryInput, consumableCountInput, consumableReceiveInput, consumableUseInput, itemBatchInput, itemInput, lengthColorInput, locationInput, modelInput, partFitInput, statusChangeInput, familyRenameInput } from "./schema";
+import { categoryInput, consumableCountInput, consumableReceiveInput, consumableUseInput, itemBatchInput, itemInput, lengthColorInput, locationInput, modelInput, partFitInput, statusChangeInput, familyEditInput } from "./schema";
 import { categories, items, lengthColors, locations, models, InventoryError, type BulkResult } from "./service";
 import { consumables, partFits } from "./consumables";
 
@@ -104,13 +104,13 @@ export async function saveModel(_prev: FormState, formData: FormData): Promise<F
   redirect(`/inventory/models/${modelId}`);
 }
 
-export async function renameFamily(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function editFamily(_prev: FormState, formData: FormData): Promise<FormState> {
   const actor = await requirePermission("users.manage");
   const modelId = String(formData.get("modelId") ?? "");
-  const parsed = parseForm(familyRenameInput, formData);
+  const parsed = parseForm(familyEditInput, formData);
   if (!parsed.ok) return parsed.state;
   try {
-    await models.renameFamily(actor, modelId, parsed.data);
+    await models.editFamily(actor, modelId, parsed.data);
   } catch (err) {
     return errorState(err, echoValues(formData));
   }
