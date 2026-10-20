@@ -25,6 +25,8 @@ export type PublicUser = {
   phone: string | null;
   googleEmail: string | null;
   active: boolean;
+  /** Two-factor sign-in is on. */
+  twoFactor: boolean;
   createdAt: Date;
 };
 
@@ -36,6 +38,7 @@ function toPublic(u: {
   phone: string | null;
   googleEmail: string | null;
   active: boolean;
+  totpEnabledAt: Date | null;
   createdAt: Date;
 }): PublicUser {
   return {
@@ -46,6 +49,7 @@ function toPublic(u: {
     phone: u.phone,
     googleEmail: u.googleEmail,
     active: u.active,
+    twoFactor: Boolean(u.totpEnabledAt),
     createdAt: u.createdAt,
   };
 }

@@ -15,14 +15,22 @@ export function LoginForm({ next }: { next?: string }) {
   return (
     <ActionForm action={action} className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next ?? ""} />
-      <div className="flex flex-col gap-2">
+      {/* Step two keeps email and password in the form (hidden) and asks for the code. */}
+      <div className="flex flex-col gap-2" hidden={state.needCode}>
         <Label htmlFor="email">{t("email")}</Label>
         <Input id="email" name="email" type="email" autoComplete="email" required autoFocus />
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2" hidden={state.needCode}>
         <Label htmlFor="password">{t("password")}</Label>
         <Input id="password" name="password" type="password" autoComplete="current-password" required />
       </div>
+      {state.needCode && (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="code">{t("code")}</Label>
+          <Input id="code" name="code" autoComplete="one-time-code" inputMode="text" autoCapitalize="none" spellCheck={false} required autoFocus />
+          <p className="text-xs text-muted-foreground">{t("codeHelp")}</p>
+        </div>
+      )}
       {state.error && (
         <p role="alert" className="text-sm text-destructive">
           {state.error === "rateLimited" ? t("rateLimited", { minutes: state.retryMinutes ?? 15 }) : t(state.error)}

@@ -355,12 +355,16 @@ of memory on 4 GB.
    docker compose exec app node scripts/create-admin.mjs you@vertigo.dk "Your Name"
    ```
 
-   Open https://gear.vertigo.dk on your phone or PC and sign in. Add your
-   colleagues under Settings › Users, and bring in the old spreadsheet
-   under Settings › Import. Running the same command again resets that
-   user's password, which is also the way back in if the last admin
-   forgets theirs. Do not run `db seed` on the server: it loads the demo
-   gear and projects.
+   Open https://gear.vertigo.dk on your phone or PC and sign in. Admins
+   must use **two-factor sign-in**: the app shows a QR code to scan with
+   an authenticator app (Google Authenticator, Microsoft Authenticator,
+   1Password …) and then ten recovery codes; keep those somewhere safe.
+   Add your colleagues under Settings › Users, and bring in the old
+   spreadsheet under Settings › Import. Running the same command again
+   resets that user's password and turns their two-factor sign-in off,
+   which is the way back in if the last admin forgets the password or
+   loses the phone and the recovery codes. Do not run `db seed` on the
+   server: it loads the demo gear and projects.
 
 7. **Finish in Cloudflare.** Under *SSL/TLS › Edge Certificates*, switch
    on *Always Use HTTPS* and HSTS. They replace the security headers Caddy
@@ -505,6 +509,17 @@ Without HTTPS at all (fine for laptops, no camera scanning on phones):
 leave Caddy out, set `APP_BIND=0.0.0.0` and `APP_URL=http://gear.local:3000`,
 and start only the database and the app: `docker compose --profile prod
 up -d --build db app`.
+
+### Two-factor sign-in
+
+Everyone can turn on two-factor sign-in under Settings › Your account;
+admins must (they are sent to the setup page until they have). Change who
+must with `TWO_FACTOR_REQUIRED_ROLES` in `.env` (`admin` when unset,
+`admin,member`, or `none`). If someone loses their phone, they sign in
+with a recovery code, or an admin opens them under Settings › Users and
+clicks *Reset two-factor sign-in*. The secrets are encrypted with
+`AUTH_SECRET`: a server restored from backup needs the same
+`AUTH_SECRET`, otherwise everyone signs in with a recovery code or is reset.
 
 ### Updating
 

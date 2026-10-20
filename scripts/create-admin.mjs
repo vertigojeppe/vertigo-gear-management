@@ -5,7 +5,9 @@
 //   docker compose exec app node scripts/create-admin.mjs you@vertigo.dk "Your Name"
 //
 // It asks for the password (typed twice, not echoed). Running it again for
-// the same email resets that user's password and makes them an active admin.
+// the same email resets that user's password, makes them an active admin and
+// turns their two-factor sign-in off: the way back in after a lost phone with
+// no recovery codes. The app then asks them to set it up again.
 // Plain JavaScript on purpose: the production image has no TypeScript runner.
 import { randomUUID } from "node:crypto";
 import { createInterface } from "node:readline";
@@ -56,11 +58,14 @@ try {
   const normalised = email.trim().toLowerCase();
   const existing = await client.query('SELECT id FROM "User" WHERE lower(email) = $1', [normalised]);
   if (existing.rows.length) {
-    await client.query('UPDATE "User" SET "passwordHash" = $1, role = \'admin\', active = true, name = $2, "updatedAt" = now() WHERE id = $3', [hash, name, existing.rows[0].id]);
-    console.log(`Updated ${normalised}: admin, active, new password.`);
+    await client.query(
+      'UPDATE "User" SET "passwordHash" = $1, role = \'admin\', active = true, name = $2, "totpSecret" = NULL, "totpEnabledAt" = NULL, "totpLastStep" = NULL, "recoveryCodes" = \'[]\', "updatedAt" = now() WHERE id = $3',
+      [hash, name, existing.rows[0].id],
+    );
+    console.log(`Updated ${normalised}: admin, active, new password, two-factor sign-in reset (set it up again after signing in).`);
   } else {
     await client.query('INSERT INTO "User" (id, email, name, "passwordHash", role, active, "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, \'admin\', true, now(), now())', [randomUUID(), normalised, name, hash]);
-    console.log(`Created admin ${normalised}. Sign in and add your colleagues under Settings › Users.`);
+    console.log(`Created admin ${normalised}. Sign in, set up two-factor sign-in, then add your colleagues under Settings › Users.`);
   }
 } finally {
   await client.end();

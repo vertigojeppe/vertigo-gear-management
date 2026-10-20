@@ -2,7 +2,7 @@ import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import { isRole, type Role } from "../../../config/app.config";
-import { users } from "@/modules/users";
+import { twoFactor, users } from "@/modules/users";
 
 declare module "next-auth" {
   interface Session {
@@ -19,6 +19,8 @@ declare module "next-auth" {
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  /** App code or recovery code; required when the user has 2FA on. */
+  code: z.string().optional(),
 });
 
 /**
@@ -39,12 +41,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/login" },
   providers: [
     Credentials({
-      credentials: { email: {}, password: {} },
+      credentials: { email: {}, password: {}, code: {} },
       authorize: async (raw) => {
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
         const user = await users.verifyCredentials(parsed.data.email, parsed.data.password);
         if (!user) return null;
+        if (user.twoFactor && !(parsed.data.code && (await twoFactor.verify(user.id, parsed.data.code)))) return null;
         return { id: user.id, email: user.email, name: user.name, role: user.role };
       },
     }),
