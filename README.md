@@ -201,8 +201,11 @@ after an outage; a small UPS is worth it, since a load-in does not wait
 for a reboot. Add swap: the Next.js build during `--build` can run out
 of memory on 4 GB.
 
-1. Install Ubuntu Server 24.04 LTS (OpenSSH on, nothing else), then
-   Docker and automatic security updates:
+1. Install Ubuntu Server 26.04 LTS (OpenSSH on, nothing else), then
+   Docker and automatic security updates. Use the LTS release, not an
+   interim ".10" one: LTS gets security updates until 2031, an interim
+   release only for nine months. If the Docker install script below
+   finishes without errors, Docker supports the release.
 
    ```bash
    curl -fsSL https://get.docker.com | sh
