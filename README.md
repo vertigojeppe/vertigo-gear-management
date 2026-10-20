@@ -220,30 +220,140 @@ of memory on 4 GB.
    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
    ```
 
-2. As `deploy`, clone to `/opt/vertigo-gear` and create `.env` with the
-   same variables as the VPS section (`AUTH_SECRET`, `POSTGRES_PASSWORD`,
-   `SEED_PASSWORD`), except: `APP_URL=https://gear.vertigo.dk`, no
-   `APP_DOMAIN` (Caddy is not used), and `CLOUDFLARE_TUNNEL_TOKEN` from
-   the next step. Leave `APP_BIND` at its default: the app port stays on
-   127.0.0.1, the tunnel reaches it over the Compose network.
-3. Create the tunnel in the Cloudflare dashboard: Zero Trust › Networks ›
-   Tunnels › Create a tunnel › Cloudflared, give it a name, and copy the
-   token from the install command it shows (the long string after
-   `--token`) into `.env` as `CLOUDFLARE_TUNNEL_TOKEN`. Under *Public
-   Hostname* add `gear` on `vertigo.dk` with service type **HTTP** and
-   URL `app:3000`. Cloudflare creates the DNS record for the hostname by
-   itself. Never commit the token; it is the whole credential.
-4. Start the stack with the tunnel profile instead of the Caddy one:
+2. **Get the code onto the server.** The repository is public, so cloning
+   needs no GitHub login. Log in with the user you created in the Ubuntu
+   installer (it can use `sudo`; `deploy` cannot), either at the
+   server's keyboard or from your PC with `ssh yourname@<server address>`.
+   Make the folder and hand it to `deploy`, then become `deploy`:
+
+   ```bash
+   sudo mkdir -p /opt/vertigo-gear
+   sudo chown deploy:deploy /opt/vertigo-gear
+   sudo -iu deploy
+   ```
+
+   The prompt now starts with `deploy@`. Clone into the folder and go
+   there:
+
+   ```bash
+   git clone https://github.com/vertigojeppe/vertigo-gear-management.git /opt/vertigo-gear
+   cd /opt/vertigo-gear
+   docker ps
+   ```
+
+   `docker ps` should print an empty table. If it says "permission
+   denied", `deploy` is not in the `docker` group yet: type `exit`, run
+   `sudo usermod -aG docker deploy`, and `sudo -iu deploy` again. If
+   `git` is missing, `exit` and run `sudo apt install -y git` first.
+
+3. **Write the settings file.** Every setting lives in `.env` in that
+   folder. Start from the example and make it private:
+
+   ```bash
+   cp .env.example .env
+   chmod 600 .env
+   ```
+
+   Make two random secrets and keep the window open so you can copy
+   them:
+
+   ```bash
+   openssl rand -base64 32
+   openssl rand -hex 24
+   ```
+
+   The first line is for `AUTH_SECRET`, the second for
+   `POSTGRES_PASSWORD`. The database password must be the hex one: it
+   ends up inside a database address, where the `+`, `/` and `=` of the
+   other kind break the connection. Now open the file:
+
+   ```bash
+   nano .env
+   ```
+
+   Move with the arrow keys and change these lines (leave everything
+   else as it is):
+
+   | Line | Set it to |
+   |---|---|
+   | `POSTGRES_PASSWORD=` | the hex secret |
+   | `AUTH_SECRET=` | the base64 secret, inside the quotes |
+   | `APP_URL=` | `"https://gear.vertigo.dk"` |
+   | `# CLOUDFLARE_TUNNEL_TOKEN=` | remove the `# ` and leave it empty for now; the token comes in step 4 |
+
+   Save with Ctrl+O and Enter, and close with Ctrl+X. The lines you
+   changed should now look like this (with your own values):
+
+   ```
+   POSTGRES_PASSWORD=4f1c0e9a7b2d...
+   AUTH_SECRET="Zk9Qx...="
+   APP_URL="https://gear.vertigo.dk"
+   CLOUDFLARE_TUNNEL_TOKEN=
+   ```
+
+   Leave these alone: `DATABASE_URL` (Compose gives the app the real
+   one, built from `POSTGRES_PASSWORD`), `APP_DOMAIN` and `CADDYFILE`
+   (Caddy is not used here), `APP_BIND` (the app stays on 127.0.0.1; the
+   tunnel reaches it inside Docker) and `SEED_PASSWORD` (demo data for
+   development only). Choose the database password now: it is fixed the
+   first time the database starts, and changing the line later does not
+   change the database. `.env` holds every secret of the installation;
+   never paste it anywhere or commit it.
+
+4. **Create the tunnel in Cloudflare.** In the Cloudflare dashboard, open
+   *Zero Trust* (the first visit asks you to pick a plan: choose *Free*),
+   then *Networks › Tunnels › Create a tunnel*. Choose *Cloudflared*, name
+   it (say `vertigo-gear`) and save. The next page shows install
+   commands; skip them, and copy only the long string after `--token`.
+   Paste it into `.env`:
+
+   ```bash
+   nano .env
+   ```
+
+   `CLOUDFLARE_TUNNEL_TOKEN=eyJhIjoi...` on one line, no quotes needed.
+   Back in the dashboard, go to the tunnel's *Public Hostname* tab and add
+   one: subdomain `gear`, domain `vertigo.dk`, service type **HTTP**,
+   URL `app:3000`. Cloudflare creates the DNS record for
+   `gear.vertigo.dk` by itself. The token is the whole credential for the
+   tunnel: if it ever leaks, rotate it in the same dashboard.
+
+5. **Start it.** Still as `deploy` in `/opt/vertigo-gear`:
 
    ```bash
    docker compose --profile tunnel up -d --build
-   docker compose exec app node node_modules/prisma/build/index.js db seed   # first time only
    ```
 
-   The tunnel shows *Healthy* in the dashboard within a minute, and
-   https://gear.vertigo.dk answers. In Cloudflare, switch on *Always Use
-   HTTPS* and HSTS (SSL/TLS › Edge Certificates) to replace the headers
-   Caddy used to add.
+   The first run builds the app image, which takes 5 to 15 minutes. Then
+   check that everything runs:
+
+   ```bash
+   docker compose --profile tunnel ps
+   ```
+
+   `db` and `app` should say *healthy* (the app needs a minute after the
+   build) and `cloudflared` *running*. The tunnel turns *Healthy* in the
+   Cloudflare dashboard. If something is wrong, the logs say why:
+   `docker compose logs app` or `docker compose logs cloudflared`.
+
+6. **Create your admin user.** The database starts empty, without demo
+   data. Create the first admin with your own email and name; it asks
+   for a password twice:
+
+   ```bash
+   docker compose exec app node scripts/create-admin.mjs you@vertigo.dk "Your Name"
+   ```
+
+   Open https://gear.vertigo.dk on your phone or PC and sign in. Add your
+   colleagues under Settings › Users, and bring in the old spreadsheet
+   under Settings › Import. Running the same command again resets that
+   user's password, which is also the way back in if the last admin
+   forgets theirs. Do not run `db seed` on the server: it loads the demo
+   gear and projects.
+
+7. **Finish in Cloudflare.** Under *SSL/TLS › Edge Certificates*, switch
+   on *Always Use HTTPS* and HSTS. They replace the security headers Caddy
+   adds in the other setups.
 
 **HTTPS and proxy headers.** Cloudflare terminates TLS, so Caddy's
 Let's Encrypt setup cannot be used as is; the `tunnel` profile therefore
@@ -332,20 +442,22 @@ Set in `.env`:
 | `APP_DOMAIN` | the DNS name, e.g. `gear.vertigo.dk` (on a LAN: the machine name, see below) |
 | `APP_URL` | `https://gear.vertigo.dk` (encoded in QR labels and feeds) |
 | `AUTH_SECRET` | `openssl rand -base64 32` |
-| `POSTGRES_PASSWORD` | a long random password |
-| `SEED_PASSWORD` | the first admin's password (used once, see below) |
+| `POSTGRES_PASSWORD` | `openssl rand -hex 24` (hex: it goes into a database URL) |
 
 Then:
 
 ```bash
 docker compose --profile prod up -d --build
-docker compose exec app node node_modules/prisma/build/index.js db seed   # first time only: creates the admin
+docker compose exec app node scripts/create-admin.mjs you@vertigo.dk "Your Name"   # first time only
 ```
 
 Caddy requests the certificate from Let's Encrypt on first start (give it a
 minute) and renews it by itself. Migrations run every time the app
-container starts. Sign in as `admin@vertigo.test` with `SEED_PASSWORD`,
-create your own user under Settings › Users, then delete the demo users.
+container starts. The database starts empty: `create-admin.mjs` makes
+your admin (it asks for the password; running it again resets it), and
+you add everyone else under Settings › Users. Use a hex password for
+`POSTGRES_PASSWORD` (`openssl rand -hex 24`): it goes into a database
+URL, where `+`, `/` and `=` break the connection.
 
 The database listens on the server only (127.0.0.1); the app container
 is not exposed except through Caddy. `GET /api/health` answers `{ "ok":

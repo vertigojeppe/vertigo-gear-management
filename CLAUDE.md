@@ -417,6 +417,13 @@ a second entry that exports components only and never a service.
   HTTPS and sets the `X-Forwarded-*` headers the app already honours; no
   Caddy, no open ports, `deploy.yml` does not apply. The container
   healthcheck and `deploy.yml` poll `GET /api/health`.
+- The production image has no `tsx` and no `src/`, so the dev seed cannot
+  run there (and would load demo data). The first admin on a server comes
+  from `scripts/create-admin.mjs` (plain Node, `pg` + `bcryptjs`, copied
+  into the image): `docker compose exec app node scripts/create-admin.mjs
+  <email> "<name>"`; it also resets a password. Keep its bcrypt rounds and
+  password minimum in step with `src/lib/auth/password.ts` and
+  `passwordSchema`.
 - `scripts/backup.sh` / `scripts/restore.sh`: one tar.gz with `db.sql` and
   `uploads.tar`, optional rclone off-site copy (`BACKUP_REMOTE`). Keep
   them POSIX sh and LF.

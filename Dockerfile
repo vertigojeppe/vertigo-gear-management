@@ -44,6 +44,8 @@ COPY --from=build --chown=app:app /app/public ./public
 COPY --from=build --chown=app:app /app/prisma ./prisma
 COPY --from=build --chown=app:app /app/prisma.config.ts ./prisma.config.ts
 COPY --from=build --chown=app:app /app/docker-entrypoint.sh ./docker-entrypoint.sh
+# First admin on a fresh server (the dev seed needs tsx and src/, which this image does not have).
+COPY --from=build --chown=app:app /app/scripts/create-admin.mjs ./scripts/create-admin.mjs
 
 RUN mkdir -p /data/uploads && chown -R app:app /data && chmod +x ./docker-entrypoint.sh
 
