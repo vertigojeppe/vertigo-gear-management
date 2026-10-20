@@ -23,6 +23,27 @@ async function pickOption(page: Page, label: string | RegExp, text: string) {
 }
 
 test.describe("packing lists", () => {
+  test("a list with projectors suggests their spare lamp, which adds as a line", async ({ page }) => {
+    await signIn(page, "member@vertigo.test");
+    await page.goto("/projects/new");
+    await page.getByLabel("Name").fill(`E2E show spares ${stamp}`);
+    await page.getByRole("button", { name: "Create" }).click();
+    await page.getByRole("link", { name: "New packing list" }).click();
+    await page.getByLabel("Name").fill(`Spares ${stamp}`);
+    await page.getByLabel("Start from").selectOption("empty");
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByRole("heading", { name: `Spares ${stamp}` })).toBeVisible();
+
+    // The seed's lamp fits the PT-EZ590: 1 per 4 projectors, at least 1.
+    await page.getByLabel("Search gear").fill("PT-EZ590");
+    await page.getByRole("button", { name: "Add Panasonic PT-EZ590", exact: true }).click();
+    const spares = page.getByRole("region", { name: "Suggested spares" });
+    await expect(spares).toContainText("Panasonic PT-EZ590 replacement lamp");
+    await spares.getByRole("button", { name: "Add 1 × Panasonic PT-EZ590 replacement lamp" }).click();
+    await expect(page.getByRole("link", { name: "Panasonic PT-EZ590 replacement lamp" })).toBeVisible();
+    await expect(spares).toHaveCount(0);
+  });
+
   test("pack, check out, share, check in", async ({ page, browser }) => {
     page.on("dialog", (d) => d.accept());
     await signIn(page, "admin@vertigo.test");

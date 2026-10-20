@@ -603,7 +603,8 @@
   "checkOutcome": {
     "ok": "OK",
     "damaged": "Beskadiget",
-    "missing": "Mangler"
+    "missing": "Mangler",
+    "used": "Brugt"
   },
   "packing": {
     "title": "Pakkelister",
@@ -719,7 +720,18 @@
     "addIntoCase": "I kasse",
     "variantCount": "{count, plural, one {# variant} other {# varianter}}",
     "rentedIn": "Indlejet",
-    "rentInFrom": "indlejes fra {owner}"
+    "rentInFrom": "indlejes fra {owner}",
+    "outcomeUsed": "Brugt",
+    "sparesTitle": "Foreslåede reservedele",
+    "sparesHelp": "Reservedele til udstyret på listen, efter reglerne på hver del.",
+    "sparesFor": "til {models}",
+    "sparesInHouse": "{count} på lager",
+    "sparesOnList": "{count} på listen",
+    "sparesAdd": "Tilføj {count}",
+    "sparesAddLabel": "Tilføj {count} × {part}",
+    "sparesShort": "{count} mangler: ønskeliste",
+    "sparesShortWished": "{count} mangler, på ønskelisten",
+    "sparesDismiss": "Ikke denne gang"
   },
   "retiredReason": {
     "sold": "Solgt",

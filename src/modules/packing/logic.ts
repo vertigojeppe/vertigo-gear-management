@@ -22,6 +22,8 @@ export type LineProgress = {
   returnedOk: number;
   damaged: number;
   missing: number;
+  /** Consumables used up on the project (in checks with outcome "used"). */
+  used: number;
   /** Packed units with no check-in yet. */
   toReturn: number;
 };
@@ -33,18 +35,20 @@ export function lineProgress(line: LineLike): LineProgress {
   const returnedOk = inn.filter((c) => c.outcome === "ok").reduce((s, c) => s + c.quantity, 0);
   const damaged = inn.filter((c) => c.outcome === "damaged").reduce((s, c) => s + c.quantity, 0);
   const missing = inn.filter((c) => c.outcome === "missing").reduce((s, c) => s + c.quantity, 0);
+  const used = inn.filter((c) => c.outcome === "used").reduce((s, c) => s + c.quantity, 0);
   return {
     packed,
     toPack: Math.max(0, line.quantity - packed),
     returnedOk,
     damaged,
     missing,
-    toReturn: Math.max(0, packed - returnedOk - damaged - missing),
+    used,
+    toReturn: Math.max(0, packed - returnedOk - damaged - missing - used),
   };
 }
 
 export function listProgress(lines: LineLike[]) {
-  const totals = { units: 0, packed: 0, toPack: 0, returnedOk: 0, damaged: 0, missing: 0, toReturn: 0, linesComplete: 0 };
+  const totals = { units: 0, packed: 0, toPack: 0, returnedOk: 0, damaged: 0, missing: 0, used: 0, toReturn: 0, linesComplete: 0 };
   for (const line of lines) {
     const p = lineProgress(line);
     totals.units += line.quantity;
@@ -53,6 +57,7 @@ export function listProgress(lines: LineLike[]) {
     totals.returnedOk += p.returnedOk;
     totals.damaged += p.damaged;
     totals.missing += p.missing;
+    totals.used += p.used;
     totals.toReturn += p.toReturn;
     if (p.toPack === 0) totals.linesComplete++;
   }

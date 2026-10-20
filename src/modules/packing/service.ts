@@ -64,6 +64,15 @@ async function projectLocationId(projectId: string, tx: Tx | Db = prisma): Promi
 /* ------------------------------------------------------------------------ */
 
 export const packingLists = {
+  /** "Not this time": hide a spare suggestion on this list. */
+  async dismissSpare(actor: Actor, listId: string, partId: string) {
+    assertCan(actor, "packing.write");
+    const list = await prisma.packingList.findUniqueOrThrow({ where: { id: listId }, select: { dismissedSpares: true } });
+    const current = Array.isArray(list.dismissedSpares) ? (list.dismissedSpares as string[]) : [];
+    if (current.includes(partId)) return;
+    await prisma.packingList.update({ where: { id: listId }, data: { dismissedSpares: [...current, partId] } });
+  },
+
   async create(actor: Actor, projectId: string, input: PackingListInput) {
     assertCan(actor, "packing.write");
     const project = await prisma.project.findUnique({ where: { id: projectId } });
@@ -365,6 +374,30 @@ export const packingChecks = {
     const reason = `${outcome === "ok" ? "Returned from" : outcome === "damaged" ? "Damaged on" : "Missing after"} ${project.name}${input.note ? `: ${input.note}` : ""}`;
     let resultItemId: string | null = out.itemId;
 
+    if (outcome === "used") {
+      // A consumable used up on the show: the quantity leaves the travel bin and the stock for good,
+      // and the ledger row (linked to this check-in) says where it went.
+      if (!out.line.model.consumable || !bulk) throw new PackingError("Only consumables can be checked in as used.");
+      return prisma.$transaction(async (tx) => {
+        let travelGone = false;
+        if (out.item) {
+          const travel = await tx.item.findUniqueOrThrow({ where: { id: out.item.id } });
+          const left = travel.quantity - qty;
+          if (left <= 0) {
+            await tx.item.delete({ where: { id: travel.id } });
+            travelGone = true;
+          } else await tx.item.update({ where: { id: travel.id }, data: { quantity: left } });
+        }
+        const row = await tx.packingCheck.create({
+          data: { lineId: out.lineId, phase: "in", itemId: travelGone ? null : out.itemId, sourceItemId: out.sourceItemId, outCheckId: out.id, resultItemId: null, quantity: qty, outcome, note: input.note ?? null, checkedById: actor.id },
+        });
+        await tx.stockMovement.create({ data: { modelId: out.line.modelId, quantity: -qty, kind: "used", projectId: project.id, note: input.note ?? null, userId: actor.id || null, packingCheckId: row.id } });
+        await logActivity(actor, { entityType: "project", entityId: project.id, action: "checked_in_unit", summary: `${out.line.list.name}: ${qty}× ${modelLabel(out.line.model)} used` }, tx);
+        await logActivity(actor, { entityType: "model", entityId: out.line.modelId, action: "consumable_used", summary: `Used ${qty} of ${modelLabel(out.line.model)} on ${project.name}` }, tx);
+        return row;
+      });
+    }
+
     if (out.item) {
       if (bulk) {
         await prisma.$transaction(async (tx) => {
@@ -469,7 +502,11 @@ export async function undoCheckIn(actor: Actor, inCheckId: string) {
           if (out) await tx.packingCheck.update({ where: { id: out.id }, data: { itemId: travel.id } });
         }
       };
-      if (row.outcome === "ok") {
+      if (row.outcome === "used") {
+        // Used up on the show: the ledger row goes, the quantity goes back into the travel bin.
+        await tx.stockMovement.deleteMany({ where: { packingCheckId: row.id } });
+        await addBack(qty);
+      } else if (row.outcome === "ok") {
         if (source && row.resultItemId === source.id) {
           // Merged into the source bin: take it out again.
           await tx.item.update({ where: { id: source.id }, data: { quantity: Math.max(0, source.quantity - qty) } });

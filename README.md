@@ -83,6 +83,9 @@ start, and help text under the fields that need it. The short version:
   to the models it fits with a rule ("1 per 4 units, at least 1"); the
   model page lists its spare parts. Set a minimum and the dashboard lists
   what is running low, with a button to put it on the wish list.
+  Packing lists then suggest spares for the gear on them ("2× lamp for
+  your 6 projectors"), and at check-in a spare can be marked *Used*: it
+  leaves the stock and the project records it.
 - **Inventory › Wish list**: gear to buy, with quantity, expected price,
   link and notes. When it arrives, *Convert to model* opens the new-model
   form prefilled; the wish is marked bought and points at the model.

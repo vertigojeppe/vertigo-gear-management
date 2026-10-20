@@ -13,6 +13,8 @@ model PackingList {
   status       String        @default("draft")
   checkedOutAt DateTime?
   checkedInAt  DateTime?
+  /// Part ids whose spare suggestion was waved off on this list ("not this time").
+  dismissedSpares Json        @default("[]")
   notes        String?
   lines        PackingLine[]
   createdAt    DateTime      @default(now())
@@ -70,6 +72,8 @@ model PackingCheck {
   checkedById  String?
   checkedBy    User?        @relation(fields: [checkedById], references: [id], onDelete: SetNull)
   checkedAt    DateTime     @default(now())
+  /// "used" in-checks of a consumable: the ledger row the use wrote, so undo can remove it.
+  stockMovement StockMovement?
 
   @@index([lineId, phase])
   @@index([itemId])

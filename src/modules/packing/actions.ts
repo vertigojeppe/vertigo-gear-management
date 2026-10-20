@@ -292,3 +292,12 @@ export async function revokeShareLink(formData: FormData): Promise<void> {
   await shareLinks.revoke(actor, "packing_list", listId);
   revalidateList(projectId, listId);
 }
+
+/** "Not this time" on a spare suggestion. */
+export async function dismissSpare(formData: FormData): Promise<void> {
+  const actor = await requirePermission("packing.write");
+  const projectId = String(formData.get("projectId"));
+  const listId = String(formData.get("listId"));
+  await packingLists.dismissSpare(actor, listId, String(formData.get("partId") ?? ""));
+  revalidateList(projectId, listId);
+}
