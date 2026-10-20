@@ -245,7 +245,7 @@ export async function otherListsForCopy(projectId: string) {
  */
 export async function gearCatalog(scope: { listId: string } | { templateId: string }): Promise<CatalogEntry[]> {
   const [models, cats, items, lines, colors] = await Promise.all([
-    prisma.model.findMany({ where: { archived: false }, orderBy: [{ manufacturer: "asc" }, { name: "asc" }], select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true, categoryId: true } }).then((rows) => rows.sort((a, b) => a.manufacturer.localeCompare(b.manufacturer) || a.name.localeCompare(b.name) || compareVariants(a.variant, b.variant))),
+    prisma.model.findMany({ where: { archived: false, NOT: { consumable: true, unit: "m" } }, orderBy: [{ manufacturer: "asc" }, { name: "asc" }], select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true, categoryId: true } }).then((rows) => rows.sort((a, b) => a.manufacturer.localeCompare(b.manufacturer) || a.name.localeCompare(b.name) || compareVariants(a.variant, b.variant))),
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
     prisma.item.findMany({ where: { status: { not: "retired" } }, select: { id: true, modelId: true, assetTag: true, name: true, status: true, quantity: true, isKit: true, _count: { select: { contents: true } } } }),
     "listId" in scope

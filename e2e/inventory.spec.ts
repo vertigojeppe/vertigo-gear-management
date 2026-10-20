@@ -223,6 +223,47 @@ test.describe("inventory", () => {
     await expect(video.getByRole("button", { name: "Blue" })).toHaveAttribute("aria-pressed", "true");
   });
 
+  test("a metre consumable is received, used and runs low", async ({ page }) => {
+    await signIn(page, "member@vertigo.test");
+    await page.goto("/inventory/models/new");
+    await page.getByLabel("Manufacturer").fill("Testlight");
+    await page.getByLabel("Model name").fill(`Strip ${stamp}`);
+    const category = page.getByLabel("Category");
+    await category.selectOption((await category.locator("option", { hasText: "LED strip" }).first().getAttribute("value"))!);
+    await page.getByLabel(/^Consumable/).check();
+    await page.locator("#unit").selectOption("m");
+    await page.locator("#minStock").fill("8");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("heading", { name: `Testlight Strip ${stamp}` })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Add items" })).toHaveCount(0);
+    const stock = page.getByTestId("consumable-stock");
+    await expect(stock).toContainText("0 m");
+
+    await page.getByRole("button", { name: "Receive" }).click();
+    let dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Metres").fill("10");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(stock).toContainText("10 m");
+
+    await page.getByRole("button", { name: "Use", exact: true }).click();
+    dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Metres").fill("2.5");
+    await dialog.getByRole("button", { name: "Use", exact: true }).click();
+    await expect(dialog).toBeHidden();
+    await expect(stock).toContainText("7,5 m");
+    await expect(page.getByText("Running low (minimum 8 m)")).toBeVisible();
+
+    // The dashboard lists it and puts it on the wish list in one click.
+    await page.goto("/dashboard");
+    // The running-low row: the activity feed below also mentions the model, so pick the row with the wish-list button.
+    const row = page.getByRole("listitem").filter({ hasText: `Testlight Strip ${stamp}` }).filter({ has: page.getByRole("button", { name: "Add to wish list" }) });
+    await expect(row).toContainText("7,5 m / 8 m");
+    await row.getByRole("button", { name: "Add to wish list" }).click();
+    // The button turns into a link to the wish list once the wish exists.
+    await expect(page.getByRole("listitem").filter({ hasText: `Testlight Strip ${stamp}` }).getByRole("link", { name: "on the wish list" })).toBeVisible();
+  });
+
   test("viewer sees inventory but no edit controls", async ({ page }) => {
     await signIn(page, "viewer@vertigo.test");
     await page.goto("/inventory");

@@ -1,6 +1,7 @@
 "use client";
 
 import { ColorBar, ColorDot } from "@/components/color-marks";
+import { formatQty } from "../consumables-logic";
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -197,8 +198,14 @@ function ModelRow({ m, label, sub, archivedLabel, inHouseLabel, compact = false 
       </span>
       <span className="shrink-0 text-right text-sm">
         <span className="block">
-          <span className="font-medium">{m.inHouse}</span>
-          <span className="text-muted-foreground"> / {m.owned}</span>
+          {m.consumable && m.unit === "m" ? (
+            <span className="font-medium">{formatQty(m.inHouse, "m")}</span>
+          ) : (
+            <>
+              <span className="font-medium">{m.inHouse}</span>
+              <span className="text-muted-foreground"> / {m.owned}</span>
+            </>
+          )}
         </span>
         {!compact && <span className="block text-xs text-muted-foreground">{inHouseLabel}</span>}
       </span>

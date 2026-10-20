@@ -13,9 +13,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatNumber, formatMoney, modelLabel } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
-import { LabelsDialog, RenameFamilyDialog, inventoryActions, modelDetail, modelUsage } from "@/modules/inventory";
+import { ConsumableSection, LabelsDialog, RenameFamilyDialog, SparePartsSection, inventoryActions, modelDetail, modelOptions, modelUsage } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
-import { modelAvailabilityView } from "@/modules/projects";
+import { modelAvailabilityView, upcomingProjects } from "@/modules/projects";
 import { PurchasesSection } from "@/modules/purchases";
 import { StatusPill } from "@/components/status-pill";
 import { ColorBar, ColorDot } from "@/components/color-marks";
@@ -37,6 +37,9 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
   const ts = await getTranslations("itemStatus");
   const canEdit = can(actor.role, "inventory.write");
   const label = `${modelLabel(model)}`;
+  // Metre consumables (LED strip, alu profile) have no units: stock and use live in the consumable section.
+  const metres = model.consumable && model.unit === "m";
+  const [projectChoices, modelChoices] = model.consumable && canEdit ? await Promise.all([upcomingProjects(40), modelOptions()]) : [[], []];
 
   const specs: [string, string][] = [];
   if (model.weightKg !== null) specs.push([t("weightKg"), formatNumber(model.weightKg, 3)]);
@@ -66,10 +69,12 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
         actions={
           canEdit && (
             <>
-              <Link href={`/inventory/items/new?modelId=${model.id}`} className={buttonVariants()}>
-                {t("newItem")}
-              </Link>
-              <LabelsDialog query={`modelId=${model.id}`} count={items.length} />
+              {!metres && (
+                <Link href={`/inventory/items/new?modelId=${model.id}`} className={buttonVariants()}>
+                  {t("newItem")}
+                </Link>
+              )}
+              {!metres && <LabelsDialog query={`modelId=${model.id}`} count={items.length} />}
               <Link href={`/inventory/models/${model.id}/edit`} className={buttonVariants({ variant: "outline" })}>
                 {tc("edit")}
               </Link>
@@ -189,6 +194,10 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
         </section>
       )}
 
+      {model.consumable && <ConsumableSection modelId={model.id} canEdit={canEdit} projects={projectChoices.map((p) => ({ id: p.id, name: p.name }))} models={modelChoices} />}
+      <SparePartsSection modelId={model.id} />
+
+      {!metres && (
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium">
@@ -220,6 +229,9 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
         )}
       </section>
 
+      )}
+
+      {!metres && (
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">{tp("reservations")}</h2>
         <form method="get" className="flex flex-wrap items-end gap-2 text-sm">
@@ -264,6 +276,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
           </p>
         )}
       </section>
+      )}
 
       {can(actor.role, "inventory.finance") && <PurchasesSection modelId={model.id} canEdit={canEdit} />}
 

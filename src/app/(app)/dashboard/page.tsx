@@ -8,7 +8,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { recentActivity } from "@/lib/activity";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDate } from "@/lib/format";
-import { dashboardStats } from "@/modules/inventory";
+import { dashboardStats, formatQty, lowStock } from "@/modules/inventory";
+import { wishFromModel } from "@/modules/wishlist/actions";
 import { upcomingProjects } from "@/modules/projects";
 import { MyDaySection, myDay } from "@/modules/plans";
 import { overdueRentals } from "@/modules/rentals";
@@ -21,7 +22,9 @@ export default async function DashboardPage() {
   const actor = await requireActor();
   const t = await getTranslations("dashboard");
   const tl = await getTranslations("locationType");
-  const [stats, activity, upcoming, overdue, mine] = await Promise.all([dashboardStats(), recentActivity(15), upcomingProjects(6), overdueRentals(), myDay(actor.id)]);
+  const [stats, activity, upcoming, overdue, mine, low] = await Promise.all([dashboardStats(), recentActivity(15), upcomingProjects(6), overdueRentals(), myDay(actor.id), lowStock()]);
+  const tcons = await getTranslations("consumables");
+  const canWish = can(actor.role, "inventory.write");
   const tp = await getTranslations("projectStatus");
   const inHouse = stats.statusTotals.in_house?.units ?? 0;
   const out = (stats.statusTotals.on_project?.units ?? 0) + (stats.statusTotals.rented_out?.units ?? 0);
@@ -168,6 +171,41 @@ export default async function DashboardPage() {
             </ul>
           )}
         </section>
+        {low.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <div>
+              <h2 className="text-lg font-medium">{tcons("runningLow")}</h2>
+              <p className="text-xs text-muted-foreground">{tcons("runningLowHelp")}</p>
+            </div>
+            <ul className="divide-y rounded-md border text-sm">
+              {low.map((r) => (
+                <li key={r.modelId} className="flex items-center gap-3 px-3 py-1.5">
+                  <Link href={`/inventory/models/${r.modelId}`} className="min-w-0 flex-1 truncate hover:underline">
+                    {r.label}
+                  </Link>
+                  <StatusPill color="red">
+                    {formatQty(r.stock, r.unit, tcons("pcs"))} / {formatQty(r.minStock, r.unit, tcons("pcs"))}
+                  </StatusPill>
+                  {r.onWishList ? (
+                    <Link href="/inventory/wishlist" className="text-xs text-muted-foreground underline">
+                      {tcons("onWishList")}
+                    </Link>
+                  ) : (
+                    canWish && (
+                      <form action={wishFromModel}>
+                        <input type="hidden" name="modelId" value={r.modelId} />
+                        <input type="hidden" name="quantity" value={Math.max(1, Math.ceil(r.minStock - r.stock))} />
+                        <button type="submit" className="text-xs underline">
+                          {tcons("addToWishList")}
+                        </button>
+                      </form>
+                    )
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {overdue.length > 0 && (
           <section className="flex flex-col gap-3">
             <h2 className="text-lg font-medium">{t("overdueRentals")}</h2>
