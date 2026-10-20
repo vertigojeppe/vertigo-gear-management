@@ -44,7 +44,8 @@ fields) is done; the rest waits until production plans have shipped.
 - Google login (add provider to `src/lib/auth/index.ts`).
 - Per-user locale (Danish UI) once `messages/da.json` is complete.
 - Maintenance log per item (service intervals, lamp hours).
-- Low-stock warnings for bulk items (consumables like gaffer, cable ties).
+- Packing list spare suggestions and a "used" check-in outcome for spares
+  (the rule is on PartFit already; `suggestSpares` is written and tested).
 - Barcode (Code128) as an alternative to QR on labels.
 - Share links with an expiry date (the column exists, no UI yet).
 - Call times per crew member straight from the plan (today: on the project).

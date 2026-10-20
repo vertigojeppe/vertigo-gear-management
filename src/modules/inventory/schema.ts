@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isColorKey } from "@/lib/colors";
+import { CONSUMABLE_UNITS } from "./consumables-logic";
 import { ITEM_STATUS_KEYS, LOCATION_TYPES, RETIREMENT_REASONS } from "../../../config/app.config";
 import { checkbox, optionalDate, optionalId, optionalNumber, optionalText } from "@/lib/forms";
 
@@ -56,8 +57,47 @@ export const modelInput = z.object({
   linksText: optionalText,
   /** Own projects only; never on a rental. */
   notForRental: checkbox,
+  /** Used up rather than returned (lamps, LED strip, alu profile). */
+  consumable: checkbox,
+  /** "pcs" or "m"; metres keep their stock in the ledger. Only meaningful for consumables. */
+  unit: z.preprocess((v) => (v === "" || v === undefined || v === null ? "pcs" : v), z.enum(CONSUMABLE_UNITS)),
+  /** Running low below this, in the model's unit. */
+  minStock: optionalNumber.pipe(z.number().min(0, "Cannot be negative.").optional()),
 });
 export type ModelInput = z.infer<typeof modelInput>;
+
+/** "Used 2 m" / "used 1 lamp in VG-0123 on Roskilde". */
+export const consumableUseInput = z.object({
+  modelId: z.string().min(1),
+  quantity: z.coerce.number({ message: "Enter a quantity." }).positive("Enter a quantity above zero.").max(100_000),
+  /** Asset tag of the unit it went into. */
+  itemTag: optionalText,
+  projectId: optionalId,
+  note: optionalText,
+});
+export type ConsumableUseInput = z.infer<typeof consumableUseInput>;
+
+export const consumableReceiveInput = z.object({
+  modelId: z.string().min(1),
+  quantity: z.coerce.number({ message: "Enter a quantity." }).positive("Enter a quantity above zero.").max(100_000),
+  note: optionalText,
+});
+export type ConsumableReceiveInput = z.infer<typeof consumableReceiveInput>;
+
+export const consumableCountInput = z.object({
+  modelId: z.string().min(1),
+  quantity: z.coerce.number({ message: "Enter what is on the shelf." }).min(0, "Cannot be negative.").max(100_000),
+  note: optionalText,
+});
+export type ConsumableCountInput = z.infer<typeof consumableCountInput>;
+
+/** A part fits a model: bring 1 per `perUnits` units, at least `minQty`. */
+export const partFitInput = z.object({
+  modelId: z.string().min(1, "Choose the model it fits."),
+  perUnits: z.coerce.number().int().min(1, "At least 1.").max(100).default(4),
+  minQty: z.coerce.number().int().min(0).max(100).default(1),
+});
+export type PartFitInput = z.infer<typeof partFitInput>;
 
 /** Admin: rename a whole family; every model sharing the old manufacturer + name follows. */
 export const familyRenameInput = z.object({

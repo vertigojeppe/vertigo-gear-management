@@ -75,6 +75,14 @@ start, and help text under the fields that need it. The short version:
   packing lists. Cables carry tape by length, so the same page has a
   length → colour table (2,5 m blue, 5 m red, …) and the matching dot
   appears next to each cable size. Screen only, never printed.
+- **Consumables and spare parts**: tick *Consumable* on a model for lamps,
+  LED strip, alu profile and the like. Count it in pieces (bins, like any
+  bulk gear) or in metres (receive a reel, use what you cut, count the
+  shelf). *Use* takes it off the stock and can name the unit it went into,
+  so that unit's history says "lamp replaced", and the project. Link a part
+  to the models it fits with a rule ("1 per 4 units, at least 1"); the
+  model page lists its spare parts. Set a minimum and the dashboard lists
+  what is running low, with a button to put it on the wish list.
 - **Inventory › Wish list**: gear to buy, with quantity, expected price,
   link and notes. When it arrives, *Convert to model* opens the new-model
   form prefilled; the wish is marked bought and points at the model.

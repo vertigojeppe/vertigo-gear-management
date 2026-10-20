@@ -1,0 +1,45 @@
+// inventory module — consumables and spare parts
+
+/// "This part fits that model": a lamp fits the PT-RZ120. `perUnits` and
+/// `minQty` are the packing list's suggestion rule: bring
+/// max(minQty, ceil(units on the list / perUnits)) spares.
+model PartFit {
+  id        String   @id @default(cuid())
+  partId    String
+  part      Model    @relation("PartFitPart", fields: [partId], references: [id], onDelete: Cascade)
+  modelId   String
+  model     Model    @relation("PartFitModel", fields: [modelId], references: [id], onDelete: Cascade)
+  perUnits  Int      @default(4)
+  minQty    Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@unique([partId, modelId])
+  @@index([modelId])
+}
+
+/// The consumables ledger. Metre consumables (LED strip, alu profile) keep
+/// their stock here: the sum of `quantity`. Piece consumables (lamps) keep
+/// their stock in bins like any bulk model, and each use is also written
+/// here so the history says what went where.
+model StockMovement {
+  id        String   @id @default(cuid())
+  modelId   String
+  model     Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  /// Positive = received, negative = used; in the model's unit (pieces or metres).
+  quantity  Decimal  @db.Decimal(10, 2)
+  /// "received" | "used" | "count" (stocktake correction)
+  kind      String
+  /// The unit the part went into ("lamp replaced in VG-0123").
+  itemId    String?
+  item      Item?    @relation("StockMovementItem", fields: [itemId], references: [id], onDelete: SetNull)
+  /// The project it was used on.
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  note      String?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([modelId, createdAt])
+  @@index([itemId])
+}

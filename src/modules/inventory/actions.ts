@@ -8,8 +8,9 @@ import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitions } from "@/modules/settings";
 // eslint-disable-next-line no-restricted-imports -- the wishlist barrel re-exports client components; the service is all this action needs
 import { wishes } from "@/modules/wishlist/service";
-import { categoryInput, itemBatchInput, itemInput, lengthColorInput, locationInput, modelInput, statusChangeInput, familyRenameInput } from "./schema";
+import { categoryInput, consumableCountInput, consumableReceiveInput, consumableUseInput, itemBatchInput, itemInput, lengthColorInput, locationInput, modelInput, partFitInput, statusChangeInput, familyRenameInput } from "./schema";
 import { categories, items, lengthColors, locations, models, InventoryError, type BulkResult } from "./service";
+import { consumables, partFits } from "./consumables";
 
 function revalidateInventory() {
   revalidatePath("/inventory", "layout");
@@ -300,4 +301,73 @@ export async function removeLengthColor(formData: FormData): Promise<void> {
   await lengthColors.remove(actor, String(formData.get("id") ?? ""));
   revalidateInventory();
   revalidatePath("/projects", "layout");
+}
+
+/* Consumables and spare parts -------------------------------------------- */
+
+function revalidateConsumable(modelId: string) {
+  revalidatePath(`/inventory/models/${modelId}`);
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
+}
+
+export async function useConsumable(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("inventory.write");
+  const parsed = parseForm(consumableUseInput, formData);
+  if (!parsed.ok) return parsed.state;
+  try {
+    const m = await consumables.use(actor, parsed.data);
+    if (m.itemId) revalidatePath(`/inventory/items/${m.itemId}`);
+  } catch (err) {
+    return errorState(err, echoValues(formData));
+  }
+  revalidateConsumable(parsed.data.modelId);
+  return { ok: true };
+}
+
+export async function receiveConsumable(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("inventory.write");
+  const parsed = parseForm(consumableReceiveInput, formData);
+  if (!parsed.ok) return parsed.state;
+  try {
+    await consumables.receive(actor, parsed.data);
+  } catch (err) {
+    return errorState(err, echoValues(formData));
+  }
+  revalidateConsumable(parsed.data.modelId);
+  return { ok: true };
+}
+
+export async function countConsumable(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("inventory.write");
+  const parsed = parseForm(consumableCountInput, formData);
+  if (!parsed.ok) return parsed.state;
+  try {
+    await consumables.count(actor, parsed.data);
+  } catch (err) {
+    return errorState(err, echoValues(formData));
+  }
+  revalidateConsumable(parsed.data.modelId);
+  return { ok: true };
+}
+
+export async function addPartFit(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("inventory.write");
+  const partId = String(formData.get("partId") ?? "");
+  const parsed = parseForm(partFitInput, formData);
+  if (!parsed.ok) return parsed.state;
+  try {
+    await partFits.add(actor, partId, parsed.data);
+  } catch (err) {
+    return errorState(err, echoValues(formData));
+  }
+  revalidatePath(`/inventory/models/${partId}`);
+  revalidatePath(`/inventory/models/${parsed.data.modelId}`);
+  return { ok: true };
+}
+
+export async function removePartFit(formData: FormData): Promise<void> {
+  const actor = await requirePermission("inventory.write");
+  await partFits.remove(actor, String(formData.get("id") ?? ""));
+  revalidatePath("/inventory", "layout");
 }

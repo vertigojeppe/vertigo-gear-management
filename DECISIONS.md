@@ -469,3 +469,16 @@ lists scannable, and a colour per cable length (one table, drawn as a dot
 next to the size) that matches the tape. Colours are never printed:
 labels and PDFs stay black and white to save ink, and the calendar keeps
 its status colours so no screen carries two meanings of colour at once.
+
+## 2026-10-20 — Metres live in a ledger, pieces in bins
+
+Consumables come in two shapes. Lamps and fuses are pieces: they sit in
+bins like any bulk gear, go on packing lists as spares and come back or
+not. LED strip and alu profile are cut by the metre in the workshop and
+never go to a show as such. Rather than make every quantity in the app a
+decimal (packing checks, travel bins, availability), metre consumables
+have no items at all: their stock is the sum of a small ledger
+(`StockMovement`: received, used, counted). Pieces write to the same
+ledger when used, so both share one history of what went where, while
+their stock stays in the bins. A model's unit is fixed once it has stock
+or history, so the two never mix.
