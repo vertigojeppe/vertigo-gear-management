@@ -31,7 +31,7 @@ Build us a self-hosted web application that solves this. Multiple users, shared 
 - A **calendar/timeline view** of projects and rentals so we can see gear conflicts.
 
 ### 3. Projects
-- A project has: name, client, venue/address, dates (prep, load-in, show dates, load-out, return), status (quote / confirmed / in progress / done / cancelled), notes, contacts, crew (users assigned), Google Drive/Notion link field.
+- A project has: name, client, venue/address, dates (prep, build-up, show dates, pack-down, return; prep, build-up and pack-down are ranges of days, build-up and pack-down with a call time), status (quote / confirmed / in progress / done / cancelled), notes, contacts, crew (users assigned), Google Drive/Notion link field.
 - A project **reserves** gear for its date range. Reserving an item that is already reserved/out in that window must warn clearly (and show what the conflict is).
 - From a project we can generate its packing list and its production plan (below).
 
@@ -68,7 +68,7 @@ Build us a self-hosted web application that solves this. Multiple users, shared 
 - **Wish list**: models we want to buy, with price, link and note; convertible to a real model when purchased.
 
 ### 7. Google Calendar integration
-- **iCal feeds** (read-only, no Google API needed): the app exposes secret-token URLs for `all projects`, `all rentals`, and `my jobs` (per user, only projects where that user is on the crew). Events carry project name, client, venue, phase (prep / load-in / show / load-out / return) and a link to the project page. Users subscribe to these in Google Calendar.
+- **iCal feeds** (read-only, no Google API needed): the app exposes secret-token URLs for `all projects`, `all rentals`, and `my jobs` (per user, only projects where that user is on the crew). Events carry project name, client, venue, phase (prep / build-up / show / pack-down / return) and a link to the project page. Users subscribe to these in Google Calendar.
 - **Push to a shared Google Calendar** via the Google Calendar API using a service account that has been shared onto the calendar (document the Google Cloud setup step by step in the README). When a project becomes `confirmed` or its dates/venue change, create or update one event per phase on the shared calendar; add assigned crew as attendees if the user has a Google email on file; delete the events if the project is cancelled. Store the Google event IDs on the project so updates are idempotent. Same for rentals on a separate "Rentals" calendar.
 - Sync is **one-way (app → Google)**. The app is the source of truth; never read edits back from Google.
 - Integration must be optional and configured by env vars; the app runs fine without it.

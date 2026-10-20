@@ -81,23 +81,39 @@ export function ProjectForm({ project, clients, defs }: { project?: ProjectDto; 
       <fieldset className="flex flex-col gap-4">
         <legend className="mb-1 text-sm font-medium">{t("dates")}</legend>
         <p className="text-xs text-muted-foreground">{t("datesHelp")}</p>
-        <div className="grid gap-4 sm:grid-cols-2">
+        {/* One row per phase: first day, last day, call time. */}
+        <div className="grid gap-4 sm:grid-cols-3">
           <Field id="prepStart" label={t("prepStart")} optional error={err.prepStart}>
             <Input id="prepStart" name="prepStart" type="date" defaultValue={v("prepStart", project?.prepStart)} />
           </Field>
-          <Field id="loadIn" label={t("loadIn")} optional error={err.loadIn}>
-            <Input id="loadIn" name="loadIn" type="datetime-local" defaultValue={v("loadIn", dateToZonedInput(project?.loadIn))} />
+          <Field id="prepEnd" label={t("prepEnd")} optional error={err.prepEnd}>
+            <Input id="prepEnd" name="prepEnd" type="date" defaultValue={v("prepEnd", project?.prepEnd)} />
           </Field>
-          <Field id="showStart" label={t("showStart")} optional error={err.showStart}>
+          <Field id="buildStart" label={t("buildStart")} optional error={err.buildStart} className="sm:col-start-1">
+            <Input id="buildStart" name="buildStart" type="date" defaultValue={v("buildStart", project?.buildStart)} />
+          </Field>
+          <Field id="buildEnd" label={t("buildEnd")} optional error={err.buildEnd}>
+            <Input id="buildEnd" name="buildEnd" type="date" defaultValue={v("buildEnd", project?.buildEnd)} />
+          </Field>
+          <Field id="buildCall" label={t("buildCall")} optional error={err.buildCall}>
+            <Input id="buildCall" name="buildCall" type="time" defaultValue={v("buildCall", project?.buildCall)} />
+          </Field>
+          <Field id="showStart" label={t("showStart")} optional error={err.showStart} className="sm:col-start-1">
             <Input id="showStart" name="showStart" type="datetime-local" defaultValue={v("showStart", dateToZonedInput(project?.showStart))} />
           </Field>
           <Field id="showEnd" label={t("showEnd")} optional error={err.showEnd}>
             <Input id="showEnd" name="showEnd" type="datetime-local" defaultValue={v("showEnd", dateToZonedInput(project?.showEnd))} />
           </Field>
-          <Field id="loadOut" label={t("loadOut")} optional error={err.loadOut}>
-            <Input id="loadOut" name="loadOut" type="datetime-local" defaultValue={v("loadOut", dateToZonedInput(project?.loadOut))} />
+          <Field id="packStart" label={t("packStart")} optional error={err.packStart} className="sm:col-start-1">
+            <Input id="packStart" name="packStart" type="date" defaultValue={v("packStart", project?.packStart)} />
           </Field>
-          <Field id="returnDate" label={t("returnDate")} optional error={err.returnDate}>
+          <Field id="packEnd" label={t("packEnd")} optional error={err.packEnd}>
+            <Input id="packEnd" name="packEnd" type="date" defaultValue={v("packEnd", project?.packEnd)} />
+          </Field>
+          <Field id="packCall" label={t("packCall")} optional error={err.packCall}>
+            <Input id="packCall" name="packCall" type="time" defaultValue={v("packCall", project?.packCall)} />
+          </Field>
+          <Field id="returnDate" label={t("returnDate")} optional error={err.returnDate} className="sm:col-start-1">
             <Input id="returnDate" name="returnDate" type="date" defaultValue={v("returnDate", project?.returnDate)} />
           </Field>
         </div>

@@ -17,7 +17,7 @@ let planId: string;
 
 beforeAll(async () => {
   admin.id = (await prisma.user.findFirst({ where: { role: "admin" } }))?.id ?? "";
-  projectId = (await prisma.project.create({ data: { name: `Plan show ${marker}`, status: "confirmed", loadIn: zonedInputToDate("2031-05-10T08:00"), showStart: zonedInputToDate("2031-05-11T21:00") } })).id;
+  projectId = (await prisma.project.create({ data: { name: `Plan show ${marker}`, status: "confirmed", buildStart: new Date("2031-05-10T00:00:00Z"), buildCall: "08:00", showStart: zonedInputToDate("2031-05-11T21:00") } })).id;
   templateId = (
     await prisma.planTemplate.create({
       data: {
@@ -45,7 +45,7 @@ afterAll(async () => {
 });
 
 describe("production plan", () => {
-  it("is created once per project and filled from a template on the load-in day", async () => {
+  it("is created once per project and filled from a template on the first build-up day", async () => {
     const plan = await plans.ensure(admin, projectId, { templateId });
     planId = plan.id;
     expect((await plans.ensure(admin, projectId)).id).toBe(planId);

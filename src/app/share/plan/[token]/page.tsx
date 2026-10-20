@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { dateFromString } from "@/lib/dates";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { shareLinks } from "@/modules/packing";
-import { documentsForPlan, planDetailById } from "@/modules/plans";
+import { datesLine, documentsForPlan, planDetailById } from "@/modules/plans";
 import { PLAN_PHASES, appConfig } from "../../../../../config/app.config";
 
 export const metadata: Metadata = { title: "Production plan" };
@@ -36,7 +36,7 @@ export default async function SharedPlanPage(props: { params: Promise<{ token: s
       <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
       <p className="text-sm text-muted-foreground">{[project.clientName, project.venueName, project.venueAddress].filter(Boolean).join(" · ")}</p>
       <p className="mt-1 text-sm">
-        {[project.loadIn ? `Load-in ${formatDateTime(project.loadIn)}` : null, project.showStart ? `Show ${formatDateTime(project.showStart)}` : null].filter(Boolean).join(" · ")}
+        {datesLine(project)}
         {" · "}
         <a href={pdf()} className="underline">
           {t("fullPdf")}

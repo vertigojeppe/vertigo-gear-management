@@ -25,12 +25,12 @@ test.describe("production plans", () => {
     await page.goto("/projects/new");
     await page.getByLabel("Name", { exact: true }).fill(`E2E show ${stamp}`);
     await page.getByLabel("Status").selectOption("confirmed");
-    await page.getByLabel("Load-in").fill(`${day(1)}T08:00`);
+    await page.getByLabel("Build-up start").fill(day(1));
     await page.getByLabel("Show start").fill(`${day(2)}T21:00`);
     await page.getByRole("button", { name: "Create" }).click();
     await expect(page.getByRole("heading", { name: `E2E show ${stamp}` })).toBeVisible();
 
-    // From the project page: create the plan from the seeded template, anchored on load-in.
+    // From the project page: create the plan from the seeded template, anchored on the first build-up day.
     await page.getByRole("button", { name: "Create plan" }).click();
     const templateSelect = page.getByLabel("Template");
     await templateSelect.selectOption((await templateSelect.locator("option", { hasText: "Festival laser show" }).first().getAttribute("value"))!);

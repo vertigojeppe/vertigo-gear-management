@@ -95,10 +95,15 @@ export type ProjectDto = {
   venueAddress: string | null;
   status: ProjectStatus;
   prepStart: string | null;
-  loadIn: Date | null;
+  prepEnd: string | null;
+  buildStart: string | null;
+  buildEnd: string | null;
+  buildCall: string | null;
   showStart: Date | null;
   showEnd: Date | null;
-  loadOut: Date | null;
+  packStart: string | null;
+  packEnd: string | null;
+  packCall: string | null;
   returnDate: string | null;
   reserveFrom: string | null;
   reserveTo: string | null;
@@ -111,6 +116,8 @@ export type ProjectDto = {
 
 type ProjectRow = NonNullable<Awaited<ReturnType<typeof prisma.project.findUnique>>>;
 
+const day = (d: Date | null) => (d ? dateToString(d) : null);
+
 export function toProjectDto(p: ProjectRow): ProjectDto {
   return {
     id: p.id,
@@ -119,12 +126,17 @@ export function toProjectDto(p: ProjectRow): ProjectDto {
     venueName: p.venueName,
     venueAddress: p.venueAddress,
     status: (PROJECT_STATUSES.find((s) => s.key === p.status)?.key ?? "quote") as ProjectStatus,
-    prepStart: p.prepStart ? dateToString(p.prepStart) : null,
-    loadIn: p.loadIn,
+    prepStart: day(p.prepStart),
+    prepEnd: day(p.prepEnd),
+    buildStart: day(p.buildStart),
+    buildEnd: day(p.buildEnd),
+    buildCall: p.buildCall,
     showStart: p.showStart,
     showEnd: p.showEnd,
-    loadOut: p.loadOut,
-    returnDate: p.returnDate ? dateToString(p.returnDate) : null,
+    packStart: day(p.packStart),
+    packEnd: day(p.packEnd),
+    packCall: p.packCall,
+    returnDate: day(p.returnDate),
     reserveFrom: p.reserveFrom ? dateToString(p.reserveFrom) : null,
     reserveTo: p.reserveTo ? dateToString(p.reserveTo) : null,
     notes: p.notes,
@@ -138,41 +150,62 @@ export function toProjectDto(p: ProjectRow): ProjectDto {
 /** Reservation window = earliest..latest of the phase dates (Copenhagen days). */
 export function deriveWindow(input: {
   prepStart?: string | null;
-  loadIn?: Date | null;
+  prepEnd?: string | null;
+  buildStart?: string | null;
+  buildEnd?: string | null;
   showStart?: Date | null;
   showEnd?: Date | null;
-  loadOut?: Date | null;
+  packStart?: string | null;
+  packEnd?: string | null;
   returnDate?: string | null;
 }): { from: DateString | null; to: DateString | null } {
   const days = [
     input.prepStart ?? null,
-    input.loadIn ? dayInZone(input.loadIn) : null,
+    input.prepEnd ?? null,
+    input.buildStart ?? null,
+    input.buildEnd ?? null,
     input.showStart ? dayInZone(input.showStart) : null,
     input.showEnd ? dayInZone(input.showEnd) : null,
-    input.loadOut ? dayInZone(input.loadOut) : null,
+    input.packStart ?? null,
+    input.packEnd ?? null,
     input.returnDate ?? null,
   ];
   return { from: minDate(...days), to: maxDate(...days) };
 }
 
+/** A day range where one end alone means a single day; refused when it runs backwards. */
+export function dayRange(start: string | undefined, end: string | undefined, field: string): [string | null, string | null] {
+  const from = start ?? end ?? null;
+  const to = end ?? start ?? null;
+  if (from && to && to < from) throw new ProjectError("The last day is before the first day.", field);
+  return [from, to];
+}
+
 function projectData(input: ProjectInput, customFields: CustomFieldValues) {
   const dt = (s: string | undefined) => (s ? zonedInputToDate(s) : null);
-  const loadIn = dt(input.loadIn);
+  const asDate = (s: string | null) => (s ? dateFromString(s) : null);
+  const [prepStart, prepEnd] = dayRange(input.prepStart, input.prepEnd, "prepEnd");
+  const [buildStart, buildEnd] = dayRange(input.buildStart, input.buildEnd, "buildEnd");
+  const [packStart, packEnd] = dayRange(input.packStart, input.packEnd, "packEnd");
   const showStart = dt(input.showStart);
   const showEnd = dt(input.showEnd);
-  const loadOut = dt(input.loadOut);
-  const window = deriveWindow({ prepStart: input.prepStart, loadIn, showStart, showEnd, loadOut, returnDate: input.returnDate });
+  const window = deriveWindow({ prepStart, prepEnd, buildStart, buildEnd, showStart, showEnd, packStart, packEnd, returnDate: input.returnDate });
   return {
     name: input.name,
     clientId: input.clientId ?? null,
     venueName: input.venueName ?? null,
     venueAddress: input.venueAddress ?? null,
     status: input.status,
-    prepStart: input.prepStart ? dateFromString(input.prepStart) : null,
-    loadIn,
+    prepStart: asDate(prepStart),
+    prepEnd: asDate(prepEnd),
+    buildStart: asDate(buildStart),
+    buildEnd: asDate(buildEnd),
+    buildCall: buildStart ? (input.buildCall ?? null) : null,
     showStart,
     showEnd,
-    loadOut,
+    packStart: asDate(packStart),
+    packEnd: asDate(packEnd),
+    packCall: packStart ? (input.packCall ?? null) : null,
     returnDate: input.returnDate ? dateFromString(input.returnDate) : null,
     reserveFrom: window.from ? dateFromString(window.from) : null,
     reserveTo: window.to ? dateFromString(window.to) : null,
@@ -182,7 +215,7 @@ function projectData(input: ProjectInput, customFields: CustomFieldValues) {
   };
 }
 
-const CALENDAR_FIELDS = ["loadIn", "showStart", "showEnd", "loadOut", "prepStart", "returnDate", "venueName", "venueAddress", "name", "status"] as const;
+const CALENDAR_FIELDS = ["prepStart", "prepEnd", "buildStart", "buildEnd", "buildCall", "showStart", "showEnd", "packStart", "packEnd", "packCall", "returnDate", "venueName", "venueAddress", "name", "status"] as const;
 
 export const projects = {
   async get(id: string): Promise<ProjectDto | null> {

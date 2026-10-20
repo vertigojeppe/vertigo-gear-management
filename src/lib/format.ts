@@ -8,6 +8,14 @@ export function formatDate(d: Date | string | null | undefined): string {
   return new Intl.DateTimeFormat("da-DK", { timeZone: d instanceof Date || d.length > 10 ? tz : "UTC", day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
 }
 
+/** A day range: "12.09.2026", or "12.09.2026 – 14.09.2026" when it runs over several days. */
+export function formatDayRange(from: Date | string | null | undefined, to?: Date | string | null): string {
+  if (!from) return "";
+  const a = formatDate(from);
+  const b = to ? formatDate(to) : a;
+  return b === a ? a : `${a} – ${b}`;
+}
+
 export function formatDateTime(d: Date | string | null | undefined): string {
   if (!d) return "";
   const date = typeof d === "string" ? new Date(d) : d;

@@ -246,9 +246,9 @@ project page always has exactly one place to click.
 
 ## 2026-10-12 — Plan templates are relative to an anchor day
 
-Template entries carry a day offset from an anchor (load-in = day 0) plus a
+Template entries carry a day offset from an anchor (first build-up day = day 0) plus a
 time of day. Applying a template asks for the anchor date (defaults to the
-project's load-in) and dates every entry from it; saving a plan as a
+project's first build-up day) and dates every entry from it; saving a plan as a
 template does the inverse. This keeps templates reusable across projects
 with different dates without a second "relative schedule" model.
 
@@ -482,3 +482,19 @@ have no items at all: their stock is the sum of a small ledger
 ledger when used, so both share one history of what went where, while
 their stock stays in the bins. A model's unit is fixed once it has stock
 or history, so the two never mix.
+
+## Build-up and pack-down are day ranges (October 2026)
+
+Load-in and load-out were single moments, so a job with two build-up days
+or a pack-down over a weekend could only show its first day, and prep
+ended wherever load-in happened to be. They are now continuous day ranges
+(`buildStart/End`, `packStart/End`, and `prepEnd` for prep) with one
+call time each: in practice the crew meets at the same time every build
+day, and a different time on one day belongs in the production plan's
+schedule, not on the project. Each range is one all-day calendar event
+over its days with the call time in the title, rather than an event per
+day: fewer events to keep in sync and it reads well in a month view. The
+calendar phase keys stay `load_in` / `load_out` because the Google
+event ids are stored under them; only the labels changed. The migration
+turns each old moment into a one-day range on its Copenhagen day with the
+time as the call time, and ends prep the day before build-up.

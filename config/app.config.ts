@@ -143,13 +143,19 @@ export const PROJECT_PHASES = [
 
 export type ProjectPhase = (typeof PROJECT_PHASES)[number]["key"];
 
-/** Which project date fields make up each phase (for calendar events). */
-export const PHASE_DATES: Record<ProjectPhase, { start: string; end?: string }> = {
-  prep: { start: "prepStart", end: "loadIn" },
-  load_in: { start: "loadIn" },
-  show: { start: "showStart", end: "showEnd" },
-  load_out: { start: "loadOut" },
-  return: { start: "returnDate" },
+/**
+ * Which project fields make up each phase (for calendar events). Day phases
+ * are continuous day ranges (all-day events) with an optional call time;
+ * the show is timed. The keys load_in / load_out stay as they are because
+ * Google event ids are stored under them; on screen they are build-up and
+ * pack-down. `title` is the English word used in calendar event titles.
+ */
+export const PHASE_DATES: Record<ProjectPhase, { start: string; end?: string; call?: string; allDay: boolean; title: string }> = {
+  prep: { start: "prepStart", end: "prepEnd", allDay: true, title: "prep" },
+  load_in: { start: "buildStart", end: "buildEnd", call: "buildCall", allDay: true, title: "build-up" },
+  show: { start: "showStart", end: "showEnd", allDay: false, title: "show" },
+  load_out: { start: "packStart", end: "packEnd", call: "packCall", allDay: true, title: "pack-down" },
+  return: { start: "returnDate", allDay: true, title: "return" },
 };
 
 /** How a rate table continues beyond its last tier. */

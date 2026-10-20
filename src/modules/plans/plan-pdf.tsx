@@ -2,6 +2,7 @@ import { Document, Image, Line, Page, Path, Polygon, Rect, StyleSheet, Svg, Text
 import sharp from "sharp";
 import { prisma } from "@/lib/db";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { datesLine } from "./logic";
 import type { DateString } from "@/lib/dates";
 import { rasterizePdfPage } from "@/lib/pdf-raster";
 import { getStorage } from "@/lib/storage";
@@ -149,7 +150,7 @@ export async function renderPlan(detail: PlanDetail, opts: { day?: DateString; /
         </Text>
         {header ? <Text style={styles.muted}>{header}</Text> : null}
         <Text style={styles.muted}>
-          {[project.loadIn ? `Load-in ${formatDateTime(project.loadIn)}` : null, project.showStart ? `Show ${formatDateTime(project.showStart)}` : null, project.loadOut ? `Load-out ${formatDateTime(project.loadOut)}` : null].filter(Boolean).join(" · ")}
+          {datesLine(project)}
         </Text>
 
         {shownDays.length === 0 && dayOnly ? <Text style={{ marginTop: 12 }}>Nothing scheduled on this day.</Text> : null}

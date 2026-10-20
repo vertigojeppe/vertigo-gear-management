@@ -1,5 +1,6 @@
 import { addDays, dateFromString, dateToZonedInput, dayInZone, zonedInputToDate, type DateString } from "@/lib/dates";
 import { PLAN_PHASES, fileConfig, type LogisticsKind, type PlanPhase } from "../../../config/app.config";
+import { formatDateTime, formatDayRange } from "@/lib/format";
 
 export type DocumentKind = "image" | "pdf" | "model3d" | "native" | "other";
 
@@ -91,7 +92,7 @@ export type Materialised = {
   logistics: { kind: LogisticsKind; title: string; details: string | null; at: Date | null; sortOrder: number }[];
 };
 
-/** Turn template entries into dated plan entries around an anchor day (load-in = day 0). */
+/** Turn template entries into dated plan entries around an anchor day (first build-up day = day 0). */
 export function materialiseTemplate(entries: TemplateEntryLike[], anchor: DateString): Materialised {
   const out: Materialised = { schedule: [], tasks: [], logistics: [] };
   for (const e of [...entries].sort((a, b) => a.sortOrder - b.sortOrder)) {
@@ -135,9 +136,9 @@ export function templateFromPlan(
   return out;
 }
 
-/** The day a project's plan hangs on: load-in, else show start, else prep start. */
-export function defaultAnchor(project: { loadIn: Date | string | null; showStart: Date | string | null; prepStart: Date | string | null }, fallback: DateString): DateString {
-  const d = project.loadIn ?? project.showStart ?? project.prepStart;
+/** The day a project's plan hangs on: the first build-up day, else show start, else prep start. */
+export function defaultAnchor(project: { buildStart: Date | string | null; showStart: Date | string | null; prepStart: Date | string | null }, fallback: DateString): DateString {
+  const d = project.buildStart ?? project.showStart ?? project.prepStart;
   if (!d) return fallback;
   if (typeof d === "string") return d.length === 10 ? d : dayInZone(new Date(d));
   return dayInZone(d);
@@ -158,4 +159,30 @@ export function formatDistance(raw: number, unit: ModelUnit): string {
   const metres = unit === "m" ? raw : unit === "cm" ? raw / 100 : raw / 1000;
   if (metres >= 1) return `${(Math.round(metres * 100) / 100).toFixed(2)} m`;
   return `${(Math.round(metres * 1000) / 10).toFixed(1)} cm`;
+}
+
+type DatesLineProject = {
+  buildStart: Date | string | null;
+  buildEnd: Date | string | null;
+  buildCall: string | null;
+  showStart: Date | string | null;
+  packStart: Date | string | null;
+  packEnd: Date | string | null;
+  packCall: string | null;
+};
+
+/** The plan header: "Build-up 12.09.2026 – 13.09.2026, call 08:00 · Show 13.09.2026 20:00 · Pack-down 14.09.2026, call 08:00". */
+export function datesLine(
+  p: DatesLineProject,
+  words: { build: string; show: string; pack: string; call: (time: string) => string } = { build: "Build-up", show: "Show", pack: "Pack-down", call: (time) => `call ${time}` },
+): string {
+  const range = (label: string, from: Date | string | null, to: Date | string | null, call: string | null) =>
+    from ? `${label} ${formatDayRange(from, to)}${call ? `, ${words.call(call)}` : ""}` : null;
+  return [
+    range(words.build, p.buildStart, p.buildEnd, p.buildCall),
+    p.showStart ? `${words.show} ${formatDateTime(p.showStart)}` : null,
+    range(words.pack, p.packStart, p.packEnd, p.packCall),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }

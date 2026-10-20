@@ -26,6 +26,7 @@ import {
   ScheduleEntryDialog,
   TaskDialog,
   TaskDoneButton,
+  datesLine,
   defaultAnchor,
   documentsForPlan,
   planDetail,
@@ -48,6 +49,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
   const t = await getTranslations("plans");
   const tp = await getTranslations("projects");
   const tph = await getTranslations("planPhase");
+  const tphase = await getTranslations("phase");
   const tk = await getTranslations("logisticsKind");
   const tps = await getTranslations("packingStatus");
   const tpack = await getTranslations("packing");
@@ -87,7 +89,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
     <div className="flex flex-col gap-8">
       <PageHeader
         title={`${t("title")} · ${project.name}`}
-        subtitle={[project.loadIn ? `${tp("loadIn")} ${formatDateTime(project.loadIn)}` : null, project.showStart ? `${tp("showStart")} ${formatDateTime(project.showStart)}` : null, project.loadOut ? `${tp("loadOut")} ${formatDateTime(project.loadOut)}` : null].filter(Boolean).join(" · ") || tp("noDates")}
+        subtitle={datesLine(project, { build: tphase("load_in"), show: tp("showStart"), pack: tphase("load_out"), call: (time) => tp("callAt", { time }) }) || tp("noDates")}
         crumbs={crumbs}
         actions={
           <>

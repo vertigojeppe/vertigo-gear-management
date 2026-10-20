@@ -268,10 +268,15 @@ erDiagram
   Project {
     string status "quote | confirmed | in_progress | done | cancelled"
     datetime prepStart
-    datetime loadIn
+    date prepEnd
+    date buildStart
+    date buildEnd
+    string buildCall
     datetime showStart
     datetime showEnd
-    datetime loadOut
+    date packStart
+    date packEnd
+    string packCall
     datetime returnDate
     date reserveFrom "derived"
     date reserveTo "derived"

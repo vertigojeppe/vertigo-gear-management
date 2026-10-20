@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
-import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
+import { formatDate, formatDateTime, formatDayRange, formatMoney } from "@/lib/format";
 import { modelOptions } from "@/modules/inventory";
 import {
   ContactDialog,
@@ -48,12 +48,14 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
   const canEdit = can(actor.role, "projects.write");
   const isAdmin = can(actor.role, "users.manage");
 
+  const tph = await getTranslations("phase");
+  const withCall = (range: string, call: string | null) => (call ? `${range} · ${t("callAt", { time: call })}` : range);
   const dates: [string, string][] = [];
-  if (project.prepStart) dates.push([t("prepStart"), formatDate(project.prepStart)]);
-  if (project.loadIn) dates.push([t("loadIn"), formatDateTime(project.loadIn)]);
+  if (project.prepStart) dates.push([tph("prep"), formatDayRange(project.prepStart, project.prepEnd)]);
+  if (project.buildStart) dates.push([tph("load_in"), withCall(formatDayRange(project.buildStart, project.buildEnd), project.buildCall)]);
   if (project.showStart) dates.push([t("showStart"), formatDateTime(project.showStart)]);
   if (project.showEnd) dates.push([t("showEnd"), formatDateTime(project.showEnd)]);
-  if (project.loadOut) dates.push([t("loadOut"), formatDateTime(project.loadOut)]);
+  if (project.packStart) dates.push([tph("load_out"), withCall(formatDayRange(project.packStart, project.packEnd), project.packCall)]);
   if (project.returnDate) dates.push([t("returnDate"), formatDate(project.returnDate)]);
 
   return (

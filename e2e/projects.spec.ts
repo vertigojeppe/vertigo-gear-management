@@ -90,10 +90,14 @@ test.describe("projects and rentals", () => {
     await expect(page.getByLabel("Name", { exact: true })).toHaveValue(`E2E show ${stamp}`);
     await page.getByLabel("Status").selectOption("confirmed");
     await page.getByLabel("Prep start").fill(day(0));
-    await page.getByLabel("Load-in").fill(`${day(1)}T08:00`);
+    await page.getByLabel("Build-up start").fill(day(1));
+    await page.getByLabel("Build-up end").fill(day(2));
+    await page.getByLabel("Build-up call time").fill("08:00");
     await page.getByLabel(/^Return/).fill(day(3));
     await page.getByRole("button", { name: "Create" }).click();
     await expect(page.getByRole("heading", { name: `E2E show ${stamp}` })).toBeVisible();
+    // Build-up is one range of days with one call time.
+    await expect(page.getByText(`${dmy(day(1))} – ${dmy(day(2))} · call 08:00`)).toBeVisible();
     await expect(page.getByText(`Gear reserved ${dmy(day(0))} – ${dmy(day(3))}`)).toBeVisible();
 
     // Reserve 2 of a model that has 2 owned: fits.
