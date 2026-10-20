@@ -1,3 +1,4 @@
+import { LiveFilterForm } from "@/components/form/live-filter-form";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
@@ -60,12 +61,12 @@ export async function KitSection({
 
       {canEdit && (
         <div className="flex flex-col gap-2 rounded-md border border-dashed p-3">
-          <form method="get" className="flex gap-2" action={`/inventory/items/${kit.id}`}>
+          <LiveFilterForm className="flex gap-2" action={`/inventory/items/${kit.id}`}>
             <Input name="q" defaultValue={q ?? ""} placeholder={t("addToKitHelp")} aria-label={t("addToKit")} />
-            <Button type="submit" variant="outline">
+            <Button type="submit" variant="outline" className="group-data-[live]:hidden">
               {tc("search")}
             </Button>
-          </form>
+          </LiveFilterForm>
           {q && candidates.length === 0 && <p className="text-sm text-muted-foreground">{tc("results", { count: 0 })}</p>}
           {candidates.length > 0 && (
             <ul className="divide-y text-sm">

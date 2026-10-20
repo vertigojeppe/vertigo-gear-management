@@ -114,6 +114,12 @@ a second entry that exports components only and never a service.
   pending flag from it. Plain `<form action={serverFn}>` is fine for buttons
   (delete, status) and for the upload form, where a reset is wanted.
 - Native `<select>` (`NativeSelect`) in forms so FormData posts without JS.
+- List filters use `LiveFilterForm` (`src/components/form/live-filter-form.tsx`):
+  a GET form that applies selects and checkboxes at once and typing after
+  300 ms via `router.replace` (URL stays the source of truth, page number
+  dropped, empty fields left out). Fields follow navigations it did not
+  make (Clear, back). Keep a submit button with `group-data-[live]:hidden`
+  as the no-JS fallback.
 - REST: handlers under `src/app/api/v1/**` use `handler(permission, fn)`
   from `src/lib/api/respond.ts` and the module zod schemas. Add new
   endpoints to `src/lib/api/openapi.ts` so `/api/docs` stays complete.

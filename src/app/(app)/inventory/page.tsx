@@ -1,3 +1,4 @@
+import { LiveFilterForm } from "@/components/form/live-filter-form";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -50,7 +51,7 @@ export default async function ModelsPage(props: { searchParams: Promise<Record<s
         </p>
       )}
 
-      <form method="get" className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto] sm:items-end">
+      <LiveFilterForm className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto] sm:items-end">
         <Input name="q" defaultValue={filters.q ?? ""} placeholder={tc("search")} aria-label={tc("search")} />
         <NativeSelect name="categoryId" defaultValue={filters.categoryId ?? ""} aria-label={t("category")} className="sm:w-48">
           <option value="">{t("allCategories")}</option>
@@ -74,7 +75,7 @@ export default async function ModelsPage(props: { searchParams: Promise<Record<s
           {t("showArchived")}
         </label>
         <div className="flex gap-2">
-          <Button type="submit" variant="outline">
+          <Button type="submit" variant="outline" className="group-data-[live]:hidden">
             {tc("filter")}
           </Button>
           {hasFilters && (
@@ -83,7 +84,7 @@ export default async function ModelsPage(props: { searchParams: Promise<Record<s
             </Link>
           )}
         </div>
-      </form>
+      </LiveFilterForm>
 
       {result.total === 0 ? (
         <EmptyState

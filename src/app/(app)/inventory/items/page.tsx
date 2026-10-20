@@ -1,3 +1,4 @@
+import { LiveFilterForm } from "@/components/form/live-filter-form";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -50,10 +51,10 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
       />
       <InventoryTabs />
 
-      <form method="get" className="flex flex-col gap-2">
+      <LiveFilterForm className="flex flex-col gap-2">
         <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
           <Input name="q" defaultValue={filters.q ?? ""} placeholder={`${tc("search")}: ${t("assetTag")}, ${t("serialNumber")}, ${t("model")}`} aria-label={tc("search")} />
-          <Button type="submit" variant="outline">
+          <Button type="submit" variant="outline" className="group-data-[live]:hidden">
             {tc("filter")}
           </Button>
           {hasFilters && (
@@ -109,7 +110,7 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
             ))}
           </div>
         )}
-      </form>
+      </LiveFilterForm>
 
       {result.total === 0 ? (
         <EmptyState title={t("noItems")} body={t("noItemsBody")} />
