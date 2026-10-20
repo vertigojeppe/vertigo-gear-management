@@ -4,6 +4,10 @@ import { loadColorMaps } from "@/modules/inventory/queries";
 // eslint-disable-next-line no-restricted-imports -- pure helper
 import { lengthColorFor } from "@/modules/inventory/color-map";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { stockByModel } from "@/modules/inventory/consumables";
+// eslint-disable-next-line no-restricted-imports -- pure helper
+import { suggestSpares, type Suggestion } from "@/modules/inventory/consumables-logic";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { pathNames } from "@/modules/inventory/tree";
 import type { PackingStatus } from "../../../config/app.config";
 import { lineProgress, listProgress, listTotals, type LineProgress } from "./logic";
@@ -33,6 +37,7 @@ export type CheckRow = {
 export type LineRow = {
   id: string;
   modelId: string;
+  consumable: boolean;
   modelLabel: string;
   /** Top category colour and cable length tape colour (palette keys), when any. */
   categoryColor: string | null;
@@ -71,7 +76,7 @@ export async function listDetail(listId: string) {
       lines: {
         orderBy: { sortOrder: "asc" },
         include: {
-          model: { select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true, categoryId: true, weightKg: true, powerDrawW: true } },
+          model: { select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true, categoryId: true, weightKg: true, powerDrawW: true, consumable: true } },
           item: { select: { id: true, assetTag: true, name: true, isKit: true, contents: { include: { model: { select: { manufacturer: true, name: true, variant: true, weightKg: true, powerDrawW: true } } } } } },
           caseItem: { select: { id: true, assetTag: true, name: true } },
           checks: { orderBy: { checkedAt: "asc" }, include: { item: { select: { assetTag: true, name: true } }, checkedBy: { select: { name: true } } } },
@@ -136,6 +141,8 @@ export async function listDetail(listId: string) {
       categoryColor: colors.byCategory.get(l.model.categoryId)?.color ?? null,
       lengthColor: lengthColorFor(l.model.variant, colors.byCategory.get(l.model.categoryId), colors.lengths),
       trackingType: tracking,
+      /** Consumable spares can be checked in as "used". */
+      consumable: l.model.consumable,
       categoryPath: path,
       categoryTop: path[0] ?? "",
       quantity: l.quantity,
@@ -274,4 +281,31 @@ export async function gearCatalog(scope: { listId: string } | { templateId: stri
     }
   }
   return out;
+}
+
+export type SpareSuggestionRow = Suggestion & { label: string; forModels: string[]; inHouse: number; onWishList: boolean };
+
+/**
+ * Spare parts the gear on a list asks for (PartFit rules), minus what is on
+ * it already and what was waved off. Metre consumables never appear: they
+ * cannot be packed.
+ */
+export async function spareSuggestions(listId: string): Promise<SpareSuggestionRow[]> {
+  const list = await prisma.packingList.findUnique({ where: { id: listId }, select: { dismissedSpares: true, lines: { select: { modelId: true, quantity: true } } } });
+  if (!list) return [];
+  const units = new Map<string, number>();
+  for (const l of list.lines) units.set(l.modelId, (units.get(l.modelId) ?? 0) + l.quantity);
+  const dismissed = new Set(Array.isArray(list.dismissedSpares) ? (list.dismissedSpares as string[]) : []);
+  const fits = (await prisma.partFit.findMany({ where: { modelId: { in: [...units.keys()] }, part: { archived: false, unit: "pcs" } }, include: { part: true, model: { select: { manufacturer: true, name: true, variant: true } } } })).filter((f) => !dismissed.has(f.partId));
+  if (fits.length === 0) return [];
+  const parts = [...new Map(fits.map((f) => [f.partId, f.part])).values()];
+  const [inHouse, wishes] = await Promise.all([stockByModel(parts), prisma.wishItem.findMany({ where: { status: "open" }, select: { manufacturer: true, name: true, variant: true } })]);
+  const wishKey = (x: { manufacturer: string; name: string; variant: string | null }) => `${x.manufacturer}|${x.name}|${x.variant ?? ""}`.toLowerCase();
+  const wished = new Set(wishes.map(wishKey));
+  const modelLabels = new Map(fits.map((f) => [f.modelId, modelLabel(f.model)]));
+  const suggestions = suggestSpares({ units, fits, onList: new Map([...units].filter(([id]) => parts.some((p) => p.id === id))), inHouse });
+  return suggestions.map((s) => {
+    const part = parts.find((p) => p.id === s.partId)!;
+    return { ...s, label: modelLabel(part), forModels: s.forModels.map((id) => modelLabels.get(id) ?? ""), inHouse: inHouse.get(s.partId) ?? 0, onWishList: wished.has(wishKey(part)) };
+  });
 }

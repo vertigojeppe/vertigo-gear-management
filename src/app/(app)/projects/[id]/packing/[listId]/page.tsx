@@ -29,6 +29,8 @@ import {
   templateOptions,
   type LineProgress,
   listTitle,
+  spareSuggestions,
+  SpareSuggestions,
 } from "@/modules/packing";
 import { PACKING_STATUSES } from "../../../../../../../config/app.config";
 
@@ -57,7 +59,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
   const canEdit = can(actor.role, "packing.write");
   const editable = canEdit && canEditLines(list.status);
   const ids = { projectId: id, listId };
-  const [catalog, templates, share] = await Promise.all([editable ? gearCatalog({ listId }) : [], editable ? templateOptions() : [], shareLinks.current("packing_list", listId)]);
+  const [catalog, templates, share, spares] = await Promise.all([editable ? gearCatalog({ listId }) : [], editable ? templateOptions() : [], shareLinks.current("packing_list", listId), editable ? spareSuggestions(listId) : []]);
   const caseOptions = lines.filter((l) => l.isKit && l.itemId).map((l) => ({ id: l.itemId!, label: l.itemName ?? l.itemTag ?? "" }));
   const groups = groupLines(lines, list.groupBy);
 
@@ -113,12 +115,14 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
           {t("returned", { returned: progress.returnedOk, packed: progress.packed })}
           {progress.damaged > 0 ? ` · ${progress.damaged} ${t("outcomeDamaged").toLowerCase()}` : ""}
           {progress.missing > 0 ? ` · ${progress.missing} ${t("outcomeMissing").toLowerCase()}` : ""}
+          {progress.used > 0 ? ` · ${progress.used} ${t("outcomeUsed").toLowerCase()}` : ""}
         </p>
       )}
 
       {editable && (
         <>
           <GearPicker target={{ kind: "list", ...ids }} catalog={catalog} cases={caseOptions} />
+          <SpareSuggestions ids={ids} rows={spares} />
           <div className="flex flex-wrap gap-2">
             {templates.length > 0 && <ApplyTemplateDialog ids={ids} templates={templates.map((x) => ({ id: x.id, label: `${x.name} (${x._count.lines})` }))} />}
             <AddReservedButton ids={ids} />
@@ -161,6 +165,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
                     {list.status === "draft" ? `${l.progress.packed}/${l.quantity}` : t("returned", { returned: l.progress.returnedOk, packed: l.progress.packed })}
                     {list.status !== "draft" && l.progress.damaged > 0 ? ` · ${l.progress.damaged} ${t("outcomeDamaged").toLowerCase()}` : ""}
                     {list.status !== "draft" && l.progress.missing > 0 ? ` · ${l.progress.missing} ${t("outcomeMissing").toLowerCase()}` : ""}
+                    {list.status !== "draft" && l.progress.used > 0 ? ` · ${l.progress.used} ${t("outcomeUsed").toLowerCase()}` : ""}
                     {list.status !== "draft" && l.progress.packed < l.quantity ? ` · ${t("notPacked").toLowerCase()} ${l.quantity - l.progress.packed}` : ""}
                   </StatusPill>
                   {editable && (

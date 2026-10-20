@@ -36,6 +36,9 @@ model StockMovement {
   projectId String?
   project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   note      String?
+  /// Set when the use was a packing list check-in with outcome "used".
+  packingCheckId String?       @unique
+  packingCheck   PackingCheck? @relation(fields: [packingCheckId], references: [id], onDelete: SetNull)
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())

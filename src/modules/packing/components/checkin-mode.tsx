@@ -60,7 +60,7 @@ export function CheckInMode({ ids, lines }: { ids: Ids; lines: LineRow[] }) {
                         <span className="font-mono text-xs">{c.assetTag ?? "—"}</span>
                         {line.trackingType === "bulk" && <span className="text-xs text-muted-foreground">×{c.quantity}</span>}
                         {inRows.map((x) => (
-                          <span key={x.id} className={`rounded-full px-2 py-0.5 text-xs ${x.outcome === "ok" ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200" : x.outcome === "damaged" ? "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200" : "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200"}`}>
+                          <span key={x.id} className={`rounded-full px-2 py-0.5 text-xs ${x.outcome === "ok" ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200" : x.outcome === "damaged" ? "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200" : x.outcome === "used" ? "bg-muted text-foreground" : "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200"}`}>
                             {line.trackingType === "bulk" ? `${x.quantity}× ` : ""}
                             {to(x.outcome as "ok")}
                             {x.note ? ` · ${x.note}` : ""}
@@ -76,7 +76,7 @@ export function CheckInMode({ ids, lines }: { ids: Ids; lines: LineRow[] }) {
                         ))}
                         {remaining <= 0 && inRows.length === 0 && <span className="text-xs text-muted-foreground">{to("ok")}</span>}
                       </div>
-                      {remaining > 0 && <OutcomeForm ids={ids} outCheckId={c.id} bulk={line.trackingType === "bulk"} remaining={remaining} />}
+                      {remaining > 0 && <OutcomeForm ids={ids} outCheckId={c.id} bulk={line.trackingType === "bulk"} consumable={line.consumable} remaining={remaining} />}
                     </li>
                   );
                 })}
@@ -88,7 +88,7 @@ export function CheckInMode({ ids, lines }: { ids: Ids; lines: LineRow[] }) {
   );
 }
 
-function OutcomeForm({ ids, outCheckId, bulk, remaining }: { ids: Ids; outCheckId: string; bulk: boolean; remaining: number }) {
+function OutcomeForm({ ids, outCheckId, bulk, consumable, remaining }: { ids: Ids; outCheckId: string; bulk: boolean; consumable: boolean; remaining: number }) {
   const t = useTranslations("packing");
   const [state, action] = useActionState<FormState, FormData>(checkInUnit, {});
   return (
@@ -107,7 +107,7 @@ function OutcomeForm({ ids, outCheckId, bulk, remaining }: { ids: Ids; outCheckI
         <Input name="note" className="h-9" />
       </label>
       <div className="flex gap-1">
-        {CHECK_OUTCOMES.map((o) => (
+        {CHECK_OUTCOMES.filter((o) => o.key !== "used" || (consumable && bulk)).map((o) => (
           <SubmitButton
             key={o.key}
             name="outcome"
@@ -116,7 +116,7 @@ function OutcomeForm({ ids, outCheckId, bulk, remaining }: { ids: Ids; outCheckI
             className="h-9"
             variant={o.key === "ok" ? "default" : "outline"}
           >
-            {t(o.key === "ok" ? "outcomeOk" : o.key === "damaged" ? "outcomeDamaged" : "outcomeMissing")}
+            {t(o.key === "ok" ? "outcomeOk" : o.key === "damaged" ? "outcomeDamaged" : o.key === "used" ? "outcomeUsed" : "outcomeMissing")}
           </SubmitButton>
         ))}
       </div>
