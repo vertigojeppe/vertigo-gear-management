@@ -364,6 +364,8 @@ export const packingChecks = {
     const targetStatus = outcomeItemStatus(outcome);
     const reason = `${outcome === "ok" ? "Returned from" : outcome === "damaged" ? "Damaged on" : "Missing after"} ${project.name}${input.note ? `: ${input.note}` : ""}`;
     let resultItemId: string | null = out.itemId;
+    // Set when a full return merges the travel bin into its source and deletes it: the in-check cannot point at it then.
+    let travelGone = false;
 
     if (out.item) {
       if (bulk) {
@@ -373,7 +375,10 @@ export const packingChecks = {
           const left = travel.quantity - qty;
           if (outcome === "ok" && source) {
             await tx.item.update({ where: { id: source.id }, data: { quantity: source.quantity + qty } });
-            if (left <= 0) await tx.item.delete({ where: { id: travel.id } });
+            if (left <= 0) {
+              await tx.item.delete({ where: { id: travel.id } });
+              travelGone = true;
+            }
             else await tx.item.update({ where: { id: travel.id }, data: { quantity: left } });
             resultItemId = source.id;
           } else if (outcome === "ok") {
@@ -412,7 +417,7 @@ export const packingChecks = {
       }
     }
     const row = await prisma.packingCheck.create({
-      data: { lineId: out.lineId, phase: "in", itemId: out.itemId, sourceItemId: out.sourceItemId, outCheckId: out.id, resultItemId, quantity: qty, outcome, note: input.note ?? null, checkedById: actor.id },
+      data: { lineId: out.lineId, phase: "in", itemId: travelGone ? null : out.itemId, sourceItemId: out.sourceItemId, outCheckId: out.id, resultItemId, quantity: qty, outcome, note: input.note ?? null, checkedById: actor.id },
     });
     await logActivity(actor, {
       entityType: "project",
