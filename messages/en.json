@@ -603,7 +603,8 @@
   "checkOutcome": {
     "ok": "OK",
     "damaged": "Damaged",
-    "missing": "Missing"
+    "missing": "Missing",
+    "used": "Used"
   },
   "packing": {
     "title": "Packing lists",
@@ -719,7 +720,18 @@
     "addIntoCase": "Into case",
     "variantCount": "{count, plural, one {# variant} other {# variants}}",
     "rentedIn": "Rented in",
-    "rentInFrom": "rent in from {owner}"
+    "rentInFrom": "rent in from {owner}",
+    "outcomeUsed": "Used",
+    "sparesTitle": "Suggested spares",
+    "sparesHelp": "Spare parts for the gear on this list, by the rules on each part.",
+    "sparesFor": "for {models}",
+    "sparesInHouse": "{count} in house",
+    "sparesOnList": "{count} on the list",
+    "sparesAdd": "Add {count}",
+    "sparesAddLabel": "Add {count} × {part}",
+    "sparesShort": "{count} short: wish list",
+    "sparesShortWished": "{count} short, on the wish list",
+    "sparesDismiss": "Not this time"
   },
   "retiredReason": {
     "sold": "Sold",
