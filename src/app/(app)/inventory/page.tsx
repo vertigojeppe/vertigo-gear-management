@@ -85,6 +85,7 @@ export default async function ModelsPage(props: { searchParams: Promise<Record<s
           )}
         </div>
       </LiveFilterForm>
+      {result.closeMatches && filters.q && <p className="text-sm text-muted-foreground">{tc("closeMatches", { query: filters.q })}</p>}
 
       {result.total === 0 ? (
         <EmptyState

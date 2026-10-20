@@ -35,7 +35,8 @@
     "forbidden": "Du har ikke rettigheder til det.",
     "activity": "Aktivitet",
     "noActivity": "Ingen aktivitet endnu.",
-    "exportCsv": "Eksportér CSV"
+    "exportCsv": "Eksportér CSV",
+    "closeMatches": "Intet præcist match for “{query}”, så her er tætte match."
   },
   "nav": {
     "dashboard": "Oversigt",
@@ -720,6 +721,7 @@
     "searchGearPlaceholder": "Model, kategori eller tag… Enter tilføjer første match",
     "searchHint": "{count} modeller og kasser. Skriv for at søge; piletaster og Enter tilføjer uden mus, og et scannet tag finder sin model.",
     "noMatches": "Intet matcher “{query}”.",
+    "closeMatches": "Intet præcist match for “{query}”, så her er tætte match.",
     "added": "Tilføjet",
     "onList": "{count} på listen",
     "inHouseOf": "{inHouse} af {owned} hjemme",
