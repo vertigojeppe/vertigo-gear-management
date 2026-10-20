@@ -265,42 +265,31 @@ of memory on 4 GB.
    chmod 600 .env
    ```
 
-   Make two random secrets and keep the window open so you can copy
-   them:
+   Let the server fill in the secrets itself, so there is nothing to
+   copy (on the server's own screen there is no clipboard anyway). Each
+   line finds one setting and replaces it:
 
    ```bash
-   openssl rand -base64 32
-   openssl rand -hex 24
+   sed -i "s|^AUTH_SECRET=.*|AUTH_SECRET=\"$(openssl rand -base64 32)\"|" .env
+   sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -hex 24)|" .env
+   sed -i 's|^APP_URL=.*|APP_URL="https://gear.vertigo.dk"|' .env
+   sed -i 's|^# CLOUDFLARE_TUNNEL_TOKEN=|CLOUDFLARE_TUNNEL_TOKEN=|' .env
    ```
 
-   The first line is for `AUTH_SECRET`, the second for
-   `POSTGRES_PASSWORD`. The database password must be the hex one: it
-   ends up inside a database address, where the `+`, `/` and `=` of the
-   other kind break the connection. Now open the file:
+   Check the result:
 
    ```bash
-   nano .env
+   grep -E '^(AUTH_SECRET|POSTGRES_PASSWORD|APP_URL|CLOUDFLARE_TUNNEL_TOKEN)=' .env
    ```
 
-   Move with the arrow keys and change these lines (leave everything
-   else as it is):
-
-   | Line | Set it to |
-   |---|---|
-   | `POSTGRES_PASSWORD=` | the hex secret |
-   | `AUTH_SECRET=` | the base64 secret, inside the quotes |
-   | `APP_URL=` | `"https://gear.vertigo.dk"` |
-   | `# CLOUDFLARE_TUNNEL_TOKEN=` | remove the `# ` and leave it empty for now; the token comes in step 4 |
-
-   Save with Ctrl+O and Enter, and close with Ctrl+X. The lines you
-   changed should now look like this (with your own values):
-
-   ```
-   POSTGRES_PASSWORD=4f1c0e9a7b2d...
-   AUTH_SECRET="Zk9Qx...="
-   APP_URL="https://gear.vertigo.dk"
-   CLOUDFLARE_TUNNEL_TOKEN=
-   ```
+   You should see a long random `AUTH_SECRET` in quotes, a long hex
+   `POSTGRES_PASSWORD`, your address, and an empty
+   `CLOUDFLARE_TUNNEL_TOKEN=` (the token comes in step 4). The database
+   password is hex on purpose: it ends up inside a database address, where
+   the `+`, `/` and `=` of other random passwords break the connection.
+   Nobody needs to know these two secrets; only the server uses them. To
+   edit `.env` by hand later: `nano .env`, save with Ctrl+O and Enter,
+   close with Ctrl+X.
 
    Leave these alone: `DATABASE_URL` (Compose gives the app the real
    one, built from `POSTGRES_PASSWORD`), `APP_DOMAIN` and `CADDYFILE`
@@ -311,23 +300,33 @@ of memory on 4 GB.
    change the database. `.env` holds every secret of the installation;
    never paste it anywhere or commit it.
 
-4. **Create the tunnel in Cloudflare.** In the Cloudflare dashboard, open
-   *Zero Trust* (the first visit asks you to pick a plan: choose *Free*),
-   then *Networks › Tunnels › Create a tunnel*. Choose *Cloudflared*, name
-   it (say `vertigo-gear`) and save. The next page shows install
-   commands; skip them, and copy only the long string after `--token`.
-   Paste it into `.env`:
+4. **Create the tunnel in Cloudflare.** Do this from your PC over SSH
+   (`ssh deploy@<server address>` in PowerShell or Windows Terminal), so
+   you can paste between the browser and the server. In the Cloudflare
+   dashboard, open *Networking › Tunnels* and create a tunnel of type
+   *Cloudflared*; name it `vertigo-gear`. On the tunnel's *Overview* page,
+   under *Install cloudflared connector*, pick *Docker* and click the copy
+   icon next to the `docker run cloudflare/cloudflared:latest tunnel …`
+   command. Do not run it: Compose starts cloudflared itself. Paste it
+   into Notepad and copy only the long string after `--token ` (it starts
+   with `eyJ`). On the server:
 
    ```bash
    nano .env
    ```
 
-   `CLOUDFLARE_TUNNEL_TOKEN=eyJhIjoi...` on one line, no quotes needed.
-   Back in the dashboard, go to the tunnel's *Public Hostname* tab and add
-   one: subdomain `gear`, domain `vertigo.dk`, service type **HTTP**,
-   URL `app:3000`. Cloudflare creates the DNS record for
-   `gear.vertigo.dk` by itself. The token is the whole credential for the
-   tunnel: if it ever leaks, rotate it in the same dashboard.
+   Put it on the token line, one line, no quotes:
+   `CLOUDFLARE_TUNNEL_TOKEN=eyJhIjoi...`. In a terminal window, paste with
+   a right-click or Ctrl+V.
+
+   Back on the tunnel page, *Routes › Add route*, and choose a route that
+   publishes an application on a public hostname (not a private network
+   route): subdomain `gear`, domain `vertigo.dk`, service
+   `http://app:3000` (or type *HTTP* and URL `app:3000` when they are
+   separate fields). Cloudflare creates the DNS record for
+   `gear.vertigo.dk` by itself. The tunnel shows *Inactive* until step 5
+   starts it. The token is the whole credential for the tunnel: if it
+   ever leaks, use *Rotate token* on the same page and paste the new one.
 
 5. **Start it.** Still as `deploy` in `/opt/vertigo-gear`:
 
@@ -581,8 +580,32 @@ the app is the source of truth and never reads edits back from Google.
    GOOGLE_CALENDAR_ID_RENTALS=<calendar id>   # optional
    ```
 
-   With Docker, mount the file into the container and point the variable at
-   the mounted path, or paste the JSON itself as the value.
+   With Docker (the office and VPS setups), the app cannot see a file in
+   the repository folder, so put the JSON itself into `.env`, as **one
+   line in single quotes**. Double quotes would turn the `\n` in the
+   private key into real line breaks and the key would not parse. Copy the
+   key file to the server (from PowerShell on your PC):
+
+   ```bash
+   scp $HOME\Downloads\<key file>.json deploy@<server address>:/opt/vertigo-gear/google-key.json
+   ```
+
+   then, on the server in `/opt/vertigo-gear`, write it into `.env` and
+   delete the file (if it is not valid JSON, nothing is written or deleted):
+
+   ```bash
+   KEY=$(python3 -c 'import json,sys;print(json.dumps(json.load(open(sys.argv[1])),separators=(",",":")))' google-key.json) && printf "GOOGLE_SERVICE_ACCOUNT_JSON='%s'\n" "$KEY" >> .env && rm google-key.json
+   ```
+
+   Add the calendar ids the same way (`echo 'GOOGLE_CALENDAR_ID_PROJECTS=…' >> .env`)
+   and recreate the app so it reads them:
+   `docker compose --profile tunnel up -d --force-recreate app` (or
+   `--profile prod`).
+
+   If an organisation policy blocks creating the key ("Disable service
+   account key creation"), a Workspace super admin has to override it for
+   this one project; project Owner is not enough. Switch it back on once
+   the key is downloaded: existing keys keep working.
 6. Restart the app. Settings › Calendar shows "Configured". Confirming a
    project, changing its dates or venue, or cancelling it queues a sync;
    the delivery queue is visible under Settings › Webhooks.
