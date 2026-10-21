@@ -106,13 +106,14 @@ async function sweepExpired() {
 
 /** Delete a File row and its bytes when nothing references it any more. */
 export async function deleteFileIfUnused(fileId: string) {
-  const [attachments, photos, versions, previews] = await Promise.all([
+  const [attachments, photos, versions, previews, appVersions] = await Promise.all([
     prisma.attachment.count({ where: { fileId } }),
     prisma.model.count({ where: { defaultPhotoId: fileId } }),
     prisma.planDocumentVersion.count({ where: { fileId } }),
     prisma.planDocument.count({ where: { previewFileId: fileId } }),
+    prisma.appVersion.count({ where: { fileId } }),
   ]);
-  if (attachments + photos + versions + previews > 0) return false;
+  if (attachments + photos + versions + previews + appVersions > 0) return false;
   const row = await prisma.file.findUnique({ where: { id: fileId } });
   if (!row) return false;
   await prisma.file.delete({ where: { id: fileId } });

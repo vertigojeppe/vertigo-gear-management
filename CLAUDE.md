@@ -438,6 +438,24 @@ a second entry that exports components only and never a service.
 - The importer writes the projector "Ønsker" rows and the Dirverse castor
   references as `WishOp`s (idempotent on `importSource` + name).
 
+## Apps
+
+- `App` (`src/modules/apps`, page `/apps`, nav "Apps" under tools) is one
+  shared list of what the crew uses a lot, kind `file | link | tool`
+  (`APP_KINDS`, fixed once created), with a free-text `category` the list
+  groups by and the forgiving search. Permissions `apps.read` (everyone)
+  and `apps.write` (admin, member); deleting an app or a version is admin
+  only (`users.manage`), and the files go with it (`deleteFileIfUnused`
+  knows `AppVersion`).
+- Files and tools keep every `AppVersion` (label, notes, `File`), newest
+  first. Uploads use the chunked uploader; its browser half is
+  `uploadFile` in `src/lib/upload-client.ts` (shared with plan documents).
+- A tool is one HTML file (≤ 10 MB). `/apps/[id]/run` frames
+  `/api/apps/versions/[id]/run` with `sandbox` (no allow-same-origin),
+  and the route sends the same sandbox as a CSP header, so the tool gets an
+  opaque origin and cannot read cookies or call the API as the user, framed
+  or opened in a tab. Never serve tool HTML from `/api/files` inline.
+
 ## Sub-hire catalog
 
 - `SubHireItem` (`src/modules/subhire`) is gear a partner company owns

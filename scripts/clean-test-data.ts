@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { prisma } from "../src/lib/db";
+import { getStorage } from "../src/lib/storage";
 
 /**
  * Removes what the browser tests leave behind in a dev database:
@@ -12,6 +13,12 @@ async function main() {
   const testUsers = await prisma.user.findMany({ where: { email: { startsWith: "e2e-" } }, select: { id: true } });
   await prisma.activityLog.deleteMany({ where: { entityType: "user", entityId: { in: testUsers.map((u) => u.id) } } });
   const removedUsers = await prisma.user.deleteMany({ where: { id: { in: testUsers.map((u) => u.id) } } });
+  const testApps = await prisma.app.findMany({ where: { name: { startsWith: "E2E " } }, select: { id: true, versions: { select: { file: { select: { id: true, storageKey: true } } } } } });
+  await prisma.activityLog.deleteMany({ where: { entityType: "app", entityId: { in: testApps.map((a) => a.id) } } });
+  await prisma.app.deleteMany({ where: { id: { in: testApps.map((a) => a.id) } } });
+  const appFiles = testApps.flatMap((a) => a.versions.map((v) => v.file));
+  await prisma.file.deleteMany({ where: { id: { in: appFiles.map((x) => x.id) } } });
+  for (const x of appFiles) await getStorage().delete(x.storageKey).catch(() => undefined);
   const wishes = await prisma.wishItem.deleteMany({ where: { manufacturer: "Testlight" } });
   await prisma.subHireLine.deleteMany({ where: { item: { manufacturer: "Testlight" } } });
   await prisma.subHireItem.deleteMany({ where: { manufacturer: "Testlight" } });
@@ -61,7 +68,7 @@ async function main() {
     await prisma.activityLog.delete({ where: { id: log.id } });
   }
   await prisma.outbox.deleteMany({ where: { status: { in: ["done", "failed"] } } });
-  console.log(`Removed ${tokens.count} tokens, ${removedUsers.count} test users, ${ids.length} models, ${wishes.count} wishes, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals, ${imports.length} test imports.`);
+  console.log(`Removed ${tokens.count} tokens, ${removedUsers.count} test users, ${testApps.length} test apps, ${ids.length} models, ${wishes.count} wishes, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals, ${imports.length} test imports.`);
   await prisma.$disconnect();
 }
 

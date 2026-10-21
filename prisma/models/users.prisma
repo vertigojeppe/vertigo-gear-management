@@ -41,6 +41,8 @@ model User {
   wishItems   WishItem[]
   purchases   Purchase[]
   stockMovements StockMovement[]
+  apps        App[]        @relation("AppCreatedBy")
+  appVersions AppVersion[] @relation("AppVersionUploadedBy")
 
   @@index([role])
 }

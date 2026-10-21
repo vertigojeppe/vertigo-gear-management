@@ -47,7 +47,8 @@
     "calendar": "Kalender",
     "scan": "Scan",
     "more": "Mere",
-    "tools": "Værktøjer"
+    "tools": "Værktøjer",
+    "apps": "Apps"
   },
   "auth": {
     "title": "Log ind",
@@ -1269,5 +1270,53 @@
     "en": "English",
     "da": "Dansk",
     "help": "Dit valg følger dig på alle enheder, du logger ind på. Navne, noter og andet, folk skriver, forbliver som de blev skrevet."
+  },
+  "appKind": {
+    "file": "Fil til download",
+    "link": "Link til et webværktøj",
+    "tool": "Værktøj i appen",
+    "fileHelp": "Installationsfiler, firmware, TouchDesigner .tox, scripts, showfiler. Alle versioner gemmes.",
+    "linkHelp": "Et webværktøj et andet sted: beregnere, konfiguratorer, dashboards.",
+    "toolHelp": "Én selvstændig HTML-fil, der kører lige her, også på telefonen. Alle versioner gemmes."
+  },
+  "apps": {
+    "title": "Apps",
+    "subtitle": "Filer, links og små værktøjer, crewet bruger meget.",
+    "newApp": "Ny app",
+    "editApp": "Redigér app",
+    "dialogHelp": "Filer og værktøjer får deres versioner på appens side efter gem.",
+    "name": "Navn",
+    "kind": "Type",
+    "url": "Adresse",
+    "category": "Gruppe",
+    "categoryHelp": "Listen grupperes efter dette: Lasere, Video, Beregnere …",
+    "description": "Beskrivelse",
+    "allKinds": "Alle typer",
+    "showArchived": "Vis arkiverede",
+    "noMatches": "Ingen apps matcher.",
+    "noApps": "Ingen apps endnu",
+    "noAppsBody": "Tilføj de installationsfiler, links og små værktøjer, I altid leder efter.",
+    "uncategorised": "Andet",
+    "archived": "Arkiveret",
+    "archive": "Arkivér",
+    "unarchive": "Gendan",
+    "versionCount": "{count, plural, one {# version} other {# versioner}}",
+    "open": "Åbn",
+    "run": "Åbn værktøj",
+    "openInTab": "Åbn i en ny fane",
+    "download": "Download",
+    "noVersionYet": "Ingen fil endnu",
+    "versions": "Versioner",
+    "noVersions": "Intet uploadet endnu.",
+    "newest": "Nyeste",
+    "versionLabel": "Version",
+    "versionLabelHelp": "fx v2.3.1 eller 2026-10. Lad stå tom for at vise filnavnet.",
+    "versionNotes": "Noter",
+    "uploadVersion": "Upload en version",
+    "dropHere": "eller slip en fil her. Store filer uploades i dele og overlever en tabt forbindelse.",
+    "toolFileHelp": "Én .html-fil (maks. 10 MB) med scripts og styles indeni.",
+    "toolSandboxHelp": "Værktøjer kører i en lukket ramme: de virker for sig selv, men kan ikke se Vertigo Gear, din konto eller dens data.",
+    "deleteAppConfirm": "Slet {name} og {count, plural, =0 {intet andet} one {dens ene version} other {alle # versioner}}? Det kan ikke fortrydes.",
+    "deleteVersionConfirm": "Slet versionen {name}? Filen fjernes for altid."
   }
 }

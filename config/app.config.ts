@@ -48,6 +48,9 @@ export const PERMISSIONS = [
   "contacts.read",
   "contacts.write",
   "files.write",
+  /** The shared apps list (src/modules/apps); deleting apps and versions needs users.manage. */
+  "apps.read",
+  "apps.write",
   "share.create",
   "users.manage",
   "settings.manage",
@@ -131,6 +134,14 @@ export const PROJECT_STATUSES = [
 ] as const;
 
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number]["key"];
+
+/** What an entry in the apps list is (src/modules/apps). */
+export const APP_KINDS = [
+  { key: "file", label: "appKind.file" },
+  { key: "link", label: "appKind.link" },
+  { key: "tool", label: "appKind.tool" },
+] as const;
+export type AppKind = (typeof APP_KINDS)[number]["key"];
 
 /** Phases become calendar events and group the production plan schedule. */
 export const PROJECT_PHASES = [

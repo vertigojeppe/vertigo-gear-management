@@ -56,6 +56,8 @@ export const TABLES: TableDef[] = [
   { name: "PlanDocument", delegate: "planDocument" },
   { name: "PlanDocumentVersion", delegate: "planDocumentVersion" },
   { name: "Markup", delegate: "markup" },
+  { name: "App", delegate: "app" },
+  { name: "AppVersion", delegate: "appVersion" },
   { name: "UploadSession", delegate: "uploadSession" },
   { name: "ActivityLog", delegate: "activityLog" },
 ];
