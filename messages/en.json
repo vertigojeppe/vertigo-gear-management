@@ -58,7 +58,10 @@
     "invalid": "Wrong email or password.",
     "error": "Something went wrong. Try again.",
     "stale": "Your session is no longer valid (the account was removed or the database was reset). Sign in again.",
-    "rateLimited": "Too many attempts. Try again in {minutes, plural, one {# minute} other {# minutes}}."
+    "rateLimited": "Too many attempts. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+    "invalidCode": "That code did not work. Type the newest code from the app, or a recovery code.",
+    "code": "Code from your authenticator app",
+    "codeHelp": "Lost your phone? Type one of your recovery codes instead."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -403,7 +406,22 @@
     "pricing": "Pricing",
     "pricingHelp": "Rate tables (days → factor) used to price quotes and rental agreements.",
     "backup": "Backup",
-    "backupHelp": "Download the whole database as a file, or restore one (admins)."
+    "backupHelp": "Download the whole database as a file, or restore one (admins).",
+    "twoFactor": "Two-factor sign-in",
+    "twoFactorHelp": "Besides your password, sign-in asks for a code from an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, 1Password …).",
+    "twoFactorSetUp": "Set up two-factor sign-in",
+    "twoFactorOn": "On since {since}. {count, plural, =0 {No recovery codes left: make new ones.} one {# recovery code left.} other {# recovery codes left.}}",
+    "twoFactorRequired": "Your role requires two-factor sign-in, so it cannot be turned off. If you lose your phone, use a recovery code or ask an admin to reset it.",
+    "twoFactorCode": "Current code (app or recovery code)",
+    "recoveryCodesRenew": "Make new recovery codes",
+    "recoveryCodesTitle": "Your recovery codes",
+    "recoveryCodesHelp": "Each one signs you in once without the app. Store them somewhere safe (a password manager, or printed); they are shown only now. Older codes no longer work.",
+    "twoFactorTurnOff": "Turn off",
+    "twoFactorTurnedOff": "Two-factor sign-in is off.",
+    "twoFactorOnFor": "Two-factor sign-in is on for this user.",
+    "twoFactorOffFor": "Two-factor sign-in is off for this user.",
+    "twoFactorReset": "Reset two-factor sign-in",
+    "twoFactorResetConfirm": "Reset two-factor sign-in for {name}? They sign in with the password alone and set it up again (required for admins)."
   },
   "roles": {
     "admin": "Admin",
@@ -1229,5 +1247,20 @@
     "runningLowHelp": "Consumables below their minimum.",
     "onWishList": "on the wish list",
     "addToWishList": "Add to wish list"
+  },
+  "twoFactor": {
+    "title": "Two-factor sign-in",
+    "intro": "Add a code from your phone to every sign-in.",
+    "requiredIntro": "Admins must use two-factor sign-in. Set it up now; it takes a minute.",
+    "step1": "Install an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, 1Password …).",
+    "step2": "In the app, add an account and scan this QR code, or type the key below.",
+    "step3": "Type the 6-digit code the app shows.",
+    "qrAlt": "QR code for the authenticator app",
+    "manualKey": "Can't scan? Key:",
+    "code": "6-digit code",
+    "confirm": "Turn on",
+    "done": "Two-factor sign-in is on.",
+    "continue": "I have saved the codes, continue",
+    "signOut": "Sign out"
   }
 }

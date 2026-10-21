@@ -4,10 +4,11 @@ import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { requireActor } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/format";
-import { apiTokens } from "@/modules/users";
+import { apiTokens, twoFactor } from "@/modules/users";
 import { feedTokens } from "@/modules/calendar";
 import { FeedRow } from "../calendar/forms";
 import { ApiTokenForm, ChangePasswordForm, RevokeTokenButton } from "./forms";
+import { TwoFactorSection } from "./two-factor-forms";
 
 export const metadata: Metadata = { title: "Your account" };
 
@@ -18,6 +19,7 @@ export default async function AccountPage() {
   const tcal = await getTranslations("calendar");
   const tokens = await apiTokens.listFor(actor.id);
   const mine = await feedTokens.ensure("mine", actor.id);
+  const tf = await twoFactor.status(actor.id);
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
@@ -32,6 +34,13 @@ export default async function AccountPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">{t("changePassword")}</h2>
         <ChangePasswordForm />
+      </section>
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-lg font-medium">{t("twoFactor")}</h2>
+          <p className="text-sm text-muted-foreground">{t("twoFactorHelp")}</p>
+        </div>
+        <TwoFactorSection enabled={tf.enabled} since={tf.enabledAt ? formatDateTime(tf.enabledAt) : null} recoveryLeft={tf.recoveryLeft} required={tf.required} />
       </section>
       <section className="flex flex-col gap-3">
         <div>

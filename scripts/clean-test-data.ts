@@ -9,6 +9,9 @@ import { prisma } from "../src/lib/db";
  */
 async function main() {
   const tokens = await prisma.apiToken.deleteMany({ where: { name: { startsWith: "e2e " } } });
+  const testUsers = await prisma.user.findMany({ where: { email: { startsWith: "e2e-2fa-" } }, select: { id: true } });
+  await prisma.activityLog.deleteMany({ where: { entityType: "user", entityId: { in: testUsers.map((u) => u.id) } } });
+  const removedUsers = await prisma.user.deleteMany({ where: { id: { in: testUsers.map((u) => u.id) } } });
   const wishes = await prisma.wishItem.deleteMany({ where: { manufacturer: "Testlight" } });
   await prisma.subHireLine.deleteMany({ where: { item: { manufacturer: "Testlight" } } });
   await prisma.subHireItem.deleteMany({ where: { manufacturer: "Testlight" } });
@@ -58,7 +61,7 @@ async function main() {
     await prisma.activityLog.delete({ where: { id: log.id } });
   }
   await prisma.outbox.deleteMany({ where: { status: { in: ["done", "failed"] } } });
-  console.log(`Removed ${tokens.count} tokens, ${ids.length} models, ${wishes.count} wishes, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals, ${imports.length} test imports.`);
+  console.log(`Removed ${tokens.count} tokens, ${removedUsers.count} test users, ${ids.length} models, ${wishes.count} wishes, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals, ${imports.length} test imports.`);
   await prisma.$disconnect();
 }
 

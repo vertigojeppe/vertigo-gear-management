@@ -82,6 +82,25 @@ a second entry that exports components only and never a service.
   `can(role, permission)` is pure and unit-tested.
 - `src/proxy.ts` only does an optimistic cookie check; it is not the
   authorisation layer.
+- Two-factor sign-in (TOTP, `src/lib/auth/totp.ts` pure + RFC 6238
+  tests; `two-factor.ts` seals the secret with AES-GCM under a key from
+  `AUTH_SECRET`, user id as AAD; `twoFactor` in
+  `src/modules/users/two-factor.ts`). Login is two steps: a right
+  password without a code returns `needCode` and the form asks for it,
+  keeping email and password; `authorize` checks password + code
+  (`twoFactor.verify`: each 30-second step once via `totpLastStep`,
+  recovery codes are sha256 hashes used up once). Roles in
+  `TWO_FACTOR_REQUIRED_ROLES` (unset = admin) without 2FA are signed in
+  for `/two-factor` only: `requireActor` redirects there, `getActor`
+  returns null (APIs answer 401), and only that page uses
+  `requireActorForTwoFactorSetup`. The setup secret travels sealed in the
+  form until a code matches; the confirm action must not `revalidatePath`
+  (the re-render would leave the page before the recovery codes show).
+  Admins reset someone's 2FA on the user page; `create-admin.mjs` clears
+  it too. CI and Playwright run with `TWO_FACTOR_REQUIRED_ROLES=none`
+  (the specs sign in as the seeded admin); set it when you start a server
+  for the browser tests by hand. `e2e/two-factor.spec.ts` covers the flow
+  with a throwaway `e2e-2fa-*` user that `db:clean-tests` removes.
 - Session is a JWT with `id` and `role`, but `getActor` looks the user up
   once per request (cached): name and role come from the database, and a
   deleted / deactivated user or a cookie from before a database reset is

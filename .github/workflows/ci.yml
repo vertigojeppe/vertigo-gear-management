@@ -9,6 +9,8 @@ env:
   AUTH_SECRET: ci-only-secret-not-for-production
   APP_URL: http://localhost:3000
   SEED_PASSWORD: vertigo123
+  # The browser tests sign in as the seeded admin; 2FA is tested on its own (e2e/two-factor.spec.ts).
+  TWO_FACTOR_REQUIRED_ROLES: none
 
 jobs:
   test:
