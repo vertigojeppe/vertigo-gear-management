@@ -98,24 +98,47 @@ export function buildGlossary(groups: string[][]): Glossary {
 }
 
 const MAX_PHRASE = 3;
+/** The word still being typed matches the start of glossary terms from this many letters: "flyver" → "flyverdragt". */
+const MIN_PREFIX = 3;
+
+/** Every partner of the glossary terms that start with `prefix` ("kab" → kabel, ledning, cable). */
+function partnersByPrefix(glossary: Glossary, prefix: string): string[] {
+  const found = new Set<string>();
+  for (const [term, partners] of glossary) if (term.startsWith(prefix)) for (const p of partners) found.add(p);
+  return [...found];
+}
 
 /**
  * The query as alternatives per word: "arbejdslys led" with a glossary →
  * [["arbejdslys", "worklight", …], ["led"]]. Up to three neighbouring words
- * may form one glossary term ("work light" → "worklight"); without a
- * glossary every word is its own single alternative.
+ * may form one glossary term ("work light" → "worklight"). The last word
+ * (or the last few, run together) is still being typed in a live search, so
+ * from three letters it also takes the partners of every glossary term it
+ * begins: "flyver" finds what "flyverdragt" finds. Finished words only take
+ * their exact term's partners, so "lys" does not pull in "lysbord". Without
+ * a glossary every word is its own single alternative.
  */
 export function queryTerms(query: string | null | undefined, glossary?: Glossary): string[][] {
   const words = searchWords(query);
   if (!glossary?.size) return words.map((w) => [w]);
   const out: string[][] = [];
+  const typed = (term: string, partners: string[]) => [term, ...partners.filter((p) => p !== term)];
   for (let i = 0; i < words.length; ) {
     let n = Math.min(MAX_PHRASE, words.length - i);
     for (; n > 1 && !glossary.has(words.slice(i, i + n).join("")); n--);
     const term = words.slice(i, i + n).join("");
     const partners = glossary.get(term);
+    if (!partners && words.length - i <= MAX_PHRASE) {
+      // What is left may be one term still being typed ("flyver", "work li").
+      const rest = words.slice(i).join("");
+      const begun = rest.length >= MIN_PREFIX ? partnersByPrefix(glossary, rest) : [];
+      if (begun.length) {
+        out.push(typed(rest, begun));
+        break;
+      }
+    }
     // The word as typed first: it matches anywhere; its partners are held to stricter rules (exactHit).
-    out.push(partners ? [term, ...partners.filter((p) => p !== term)] : [term]);
+    out.push(partners ? typed(term, partners) : [term]);
     i += n;
   }
   return out;
