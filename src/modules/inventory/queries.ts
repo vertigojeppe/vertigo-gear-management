@@ -316,6 +316,17 @@ export async function kitCandidates(kitId: string, q: string | undefined) {
   return rows.map((r) => ({ id: r.id, assetTag: r.assetTag, label: `${modelLabel(r.model)}${r.name ? ` · ${r.name}` : ""}${r.serialNumber ? ` · SN ${r.serialNumber}` : ""}` }));
 }
 
+/** What a model's family shares, for the edit-family dialog: null where the variants differ. */
+export async function familyState(modelId: string) {
+  const m = await prisma.model.findUniqueOrThrow({ where: { id: modelId }, select: { manufacturer: true, name: true } });
+  const family = await prisma.model.findMany({
+    where: { manufacturer: { equals: m.manufacturer, mode: "insensitive" }, name: { equals: m.name, mode: "insensitive" } },
+    select: { categoryId: true, notForRental: true, archived: true, consumable: true },
+  });
+  const shared = <K extends keyof (typeof family)[number]>(k: K) => (family.every((f) => f[k] === family[0][k]) ? family[0][k] : null);
+  return { count: family.length, categoryId: shared("categoryId"), notForRental: shared("notForRental"), archived: shared("archived"), consumable: shared("consumable") };
+}
+
 /* Dashboard */
 
 export async function dashboardStats() {

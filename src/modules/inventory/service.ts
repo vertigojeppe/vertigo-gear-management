@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@/generated/prisma/client";
 import { logActivity, diffFields } from "@/lib/activity";
 import { assertCan } from "@/lib/auth/permissions";
 import type { Actor } from "@/lib/auth/session";
@@ -7,7 +8,7 @@ import { nextAssetTag, normaliseAssetTag } from "@/lib/asset-tag";
 import { emitEvent } from "@/lib/events";
 import type { CustomFieldValues } from "@/lib/custom-fields";
 import { itemStatus, type ItemStatus } from "../../../config/app.config";
-import type { CategoryInput, ItemInput, LocationInput, ModelInput, StatusChangeInput, FamilyRenameInput } from "./schema";
+import type { CategoryInput, ItemInput, LocationInput, ModelInput, StatusChangeInput, FamilyEditInput } from "./schema";
 import { parseLinksText, LengthColorInput } from "./schema";
 import { validateStatusChange } from "./status";
 import { descendantIds, wouldCycle } from "./tree";
@@ -305,7 +306,14 @@ export const models = {
    * as the given one gets the new manufacturer + name; variants stay.
    * Refused when any variant would collide with a model outside the family.
    */
-  async renameFamily(actor: Actor, modelId: string, input: FamilyRenameInput): Promise<{ count: number }> {
+  /**
+   * Admin: edit a whole family (every model with the same manufacturer +
+   * name) in one go: rename it, move it to another category, set the flags.
+   * Fields left undefined stay as each variant has them. Refused when a
+   * renamed variant would collide with a model outside the family, or when
+   * a metre consumable with stock or history would stop being one.
+   */
+  async editFamily(actor: Actor, modelId: string, input: FamilyEditInput): Promise<{ count: number }> {
     assertCan(actor, "users.manage");
     const anchor = await prisma.model.findUniqueOrThrow({ where: { id: modelId } });
     const family = await prisma.model.findMany({ where: { manufacturer: { equals: anchor.manufacturer, mode: "insensitive" }, name: { equals: anchor.name, mode: "insensitive" } } });
@@ -314,9 +322,33 @@ export const models = {
       where: { id: { notIn: ids }, manufacturer: { equals: input.manufacturer, mode: "insensitive" }, name: { equals: input.name, mode: "insensitive" }, OR: family.map((m) => ({ variant: m.variant === null ? null : { equals: m.variant, mode: "insensitive" as const } })) },
     });
     if (clash) throw new InventoryError(`"${modelLabel(clash)}" already exists; merge or rename that model first.`, "name");
+    const category = input.categoryId ? await prisma.category.findUnique({ where: { id: input.categoryId } }) : null;
+    if (input.categoryId && !category) throw new InventoryError("Choose a category.", "categoryId");
+    if (input.consumable === false) {
+      // Metres live in the ledger: switching back to pieces would lose the stock (same rule as models.update).
+      const metreIds = family.filter((m) => m.unit === "m").map((m) => m.id);
+      if (metreIds.length) {
+        const [itemCount, movements] = await Promise.all([prisma.item.count({ where: { modelId: { in: metreIds } } }), prisma.stockMovement.count({ where: { modelId: { in: metreIds } } })]);
+        if (itemCount > 0 || movements > 0) throw new InventoryError("Variants counted in metres have stock or a usage history, so they must stay consumables.", "consumable");
+      }
+    }
+    const data: Prisma.ModelUpdateManyMutationInput & { categoryId?: string } = { manufacturer: input.manufacturer, name: input.name };
+    if (category) data.categoryId = category.id;
+    if (input.notForRental !== undefined) data.notForRental = input.notForRental;
+    if (input.archived !== undefined) data.archived = input.archived;
+    if (input.consumable !== undefined) data.consumable = input.consumable;
+    if (input.consumable === false) Object.assign(data, { unit: "pcs", minStock: null });
+
+    const changes = [
+      familyLabel(anchor) !== familyLabel(input) ? `renamed to "${familyLabel(input)}"` : null,
+      category && family.some((m) => m.categoryId !== category.id) ? `moved to ${category.name}` : null,
+      ...(["notForRental", "archived", "consumable"] as const).map((f) => (input[f] !== undefined && family.some((m) => m[f] !== input[f]) ? `${f} ${input[f] ? "on" : "off"}` : null)),
+    ].filter(Boolean);
     await prisma.$transaction(async (tx) => {
-      await tx.model.updateMany({ where: { id: { in: ids } }, data: { manufacturer: input.manufacturer, name: input.name } });
-      await logActivity(actor, { entityType: "model", entityId: anchor.id, action: "family_renamed", summary: `Renamed family "${familyLabel(anchor)}" to "${familyLabel(input)}" (${ids.length} ${ids.length === 1 ? "model" : "variants"})` }, tx);
+      await tx.model.updateMany({ where: { id: { in: ids } }, data });
+      if (changes.length) {
+        await logActivity(actor, { entityType: "model", entityId: anchor.id, action: "family_edited", summary: `Family "${familyLabel(anchor)}" (${ids.length} ${ids.length === 1 ? "model" : "variants"}): ${changes.join(", ")}` }, tx);
+      }
     });
     return { count: ids.length };
   },

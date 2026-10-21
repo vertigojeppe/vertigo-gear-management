@@ -14,7 +14,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatNumber, formatMoney, modelLabel } from "@/lib/format";
 import { AttachmentsSection } from "@/modules/files";
-import { ConsumableSection, LabelsDialog, RenameFamilyDialog, SparePartsSection, inventoryActions, modelDetail, modelOptions, modelUsage } from "@/modules/inventory";
+import { ConsumableSection, EditFamilyDialog, LabelsDialog, SparePartsSection, categoryOptions, familyState, inventoryActions, modelDetail, modelOptions, modelUsage } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 import { modelAvailabilityView, upcomingProjects } from "@/modules/projects";
 import { PurchasesSection } from "@/modules/purchases";
@@ -41,6 +41,8 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
   // Metre consumables (LED strip, alu profile) have no units: stock and use live in the consumable section.
   const metres = model.consumable && model.unit === "m";
   const [projectChoices, modelChoices] = model.consumable && canEdit ? await Promise.all([upcomingProjects(40), modelOptions()]) : [[], []];
+  const isAdmin = can(actor.role, "users.manage");
+  const [family, categories] = isAdmin ? await Promise.all([familyState(model.id), categoryOptions()]) : [null, []];
 
   const specs: [string, string][] = [];
   if (model.weightKg !== null) specs.push([t("weightKg"), formatNumber(model.weightKg, 3)]);
@@ -176,7 +178,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
             <h2 className="text-lg font-medium">
               {t("variants")} <span className="text-sm font-normal text-muted-foreground">({detail.variants.length + 1})</span>
             </h2>
-            {can(actor.role, "users.manage") && <RenameFamilyDialog modelId={model.id} manufacturer={model.manufacturer} name={model.name} count={detail.variants.length + 1} />}
+            {family && <EditFamilyDialog modelId={model.id} manufacturer={model.manufacturer} name={model.name} family={family} categories={categories} />}
           </div>
           <ul className="flex flex-wrap gap-2 text-sm">
             <li className="flex items-center gap-1.5 rounded-md border bg-muted px-2.5 py-1 font-medium">
