@@ -5,7 +5,8 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
-import { formatMoney, modelLabel } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
+import { ModelName } from "@/components/model-name";
 import { InventoryTabs, categoryOptions } from "@/modules/inventory";
 import { DeleteWishButton, WishDialog, WishStatusButton, wishCounts, wishList, type WishStatus } from "@/modules/wishlist";
 import { cn } from "cn";
@@ -60,7 +61,7 @@ export default async function WishListPage(props: { searchParams: Promise<{ stat
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">
                   {w.quantity > 1 ? `${w.quantity} × ` : ""}
-                  {modelLabel(w)}
+                  <ModelName model={w} />
                   {w.categoryName ? <span className="font-normal text-muted-foreground"> · {w.categoryName}</span> : null}
                 </span>
                 <span className="block text-xs text-muted-foreground">

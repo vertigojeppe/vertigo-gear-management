@@ -55,7 +55,7 @@ describe("sub-hire", () => {
 
     const groups = await subHireCatalog();
     const group = groups.find((g) => g.ownerContactId === ownerId);
-    expect(group?.items.map((i) => i.label)).toEqual([`Panasonic ET-D3LEW200 ${marker}`]);
+    expect(group?.items.map((i) => i.label)).toEqual([`ET-D3LEW200 ${marker}`]);
     expect((await subHireOptions()).find((o) => o.id === item.id)).toMatchObject({ ownerName: `Partner ${marker}`, costPerDay: 500, rentalDayPrice: 800 });
 
     // Prices left empty on the line come from the catalog item.
@@ -64,7 +64,7 @@ describe("sub-hire", () => {
     expect(Number(line.pricePerDay)).toBe(800);
     const rows = await subHireLinesFor(projectId);
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ label: `Panasonic ET-D3LEW200 ${marker}`, ownerName: `Partner ${marker}`, quantity: 2, startDate: "2033-03-01", endDate: "2033-03-03" });
+    expect(rows[0]).toMatchObject({ label: `ET-D3LEW200 ${marker}`, ownerName: `Partner ${marker}`, quantity: 2, startDate: "2033-03-01", endDate: "2033-03-03" });
 
     // The quote prices it like our own gear and names the owner; the cost travels along for the internal view.
     const quote = await quoteFor("project", projectId);

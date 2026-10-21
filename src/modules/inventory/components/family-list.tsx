@@ -10,6 +10,7 @@ import { ActionForm } from "@/components/form/action-form";
 import { SubmitButton } from "@/components/form/submit-button";
 import { Button } from "@/components/ui/button";
 import { familyLabel, modelLabel } from "@/lib/format";
+import { ModelName } from "@/components/model-name";
 import { bulkModels, type BulkState } from "../actions";
 import type { ModelFamily, ModelListRow } from "../queries";
 
@@ -104,7 +105,7 @@ export function FamilyList({ families, canEdit, isAdmin, returnTo }: { families:
                 <ColorBar color={f.color} className="ml-1" />
                 {canEdit && <Check checked={selected.has(v.id)} onChange={(on) => toggle([v.id], on)} label={modelLabel(v)} />}
                 <ColorDot color={v.lengthColor} className="ml-3" />
-                <ModelRow m={v} label={modelLabel(v)} sub={`${f.categoryPath.join(" › ")} · ${t(v.trackingType)}`} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} />
+                <ModelRow m={v} label={modelLabel(v)} maker={v.manufacturer} sub={`${f.categoryPath.join(" › ")} · ${t(v.trackingType)}`} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} />
               </li>
             );
           }
@@ -118,7 +119,7 @@ export function FamilyList({ families, canEdit, isAdmin, returnTo }: { families:
                     <Thumb url={f.thumbUrl} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">
-                        {familyLabel(f)}
+                        <ModelName model={f} maker={f.manufacturer} />
                         <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">{t("variantCount", { count: f.variants.length })}</span>
                         {f.archived && <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">{t("archived")}</span>}
                       </span>
@@ -143,7 +144,7 @@ export function FamilyList({ families, canEdit, isAdmin, returnTo }: { families:
                     <li key={v.id} className="flex items-center pl-6">
                       {canEdit && <Check checked={selected.has(v.id)} onChange={(on) => toggle([v.id], on)} label={modelLabel(v)} />}
                       <ColorDot color={v.lengthColor} className="ml-3" />
-                      <ModelRow m={v} label={v.variant ?? modelLabel(v)} sub={v.trackingType !== f.trackingType ? t(v.trackingType) : ""} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} compact />
+                      <ModelRow m={v} label={v.variant ?? modelLabel(v)} maker={f.manufacturer.includes(",") ? v.manufacturer : ""} sub={v.trackingType !== f.trackingType ? t(v.trackingType) : ""} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} compact />
                     </li>
                   ))}
                 </ul>
@@ -185,13 +186,14 @@ function Thumb({ url }: { url: string | null }) {
   );
 }
 
-function ModelRow({ m, label, sub, archivedLabel, inHouseLabel, compact = false }: { m: ModelListRow; label: string; sub: string; archivedLabel: string; inHouseLabel: string; compact?: boolean }) {
+function ModelRow({ m, label, maker = "", sub, archivedLabel, inHouseLabel, compact = false }: { m: ModelListRow; label: string; maker?: string; sub: string; archivedLabel: string; inHouseLabel: string; compact?: boolean }) {
   return (
     <Link href={`/inventory/models/${m.id}`} className={`flex min-w-0 flex-1 items-center gap-3 px-3 hover:bg-muted/50 ${compact ? "py-1.5" : "py-2"}`}>
       {!compact && <Thumb url={m.thumbUrl} />}
       <span className="min-w-0 flex-1">
         <span className={`block truncate ${compact ? "" : "font-medium"}`}>
           {label}
+          {maker && <> <span className="ml-1 text-[0.85em] font-normal text-muted-foreground">{maker}</span></>}
           {m.archived && <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">{archivedLabel}</span>}
         </span>
         {sub && <span className="block truncate text-xs text-muted-foreground">{sub}</span>}

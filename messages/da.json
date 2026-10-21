@@ -233,7 +233,7 @@
     "forceDeleteOneConfirm": "Slet denne model og det, der bruger den ({what})? Kan ikke fortrydes.",
     "askAdmin": "En admin kan slette disse sammen med det, der bruger dem.",
     "editFamily": "Redigér familie",
-    "editFamilyHelp": "Ændrer {count, plural, one {denne model} other {alle # varianter}} på én gang: navn, kategori og flag. Størrelser, lager, vægt og priser forbliver pr. variant.",
+    "editFamilyHelp": "Ændrer {count, plural, one {denne model} other {alle # varianter}} på én gang: navn, producent, kategori og flag. Størrelser, lager, vægt og priser forbliver pr. variant.",
     "familyMixed": "Blandet – lad være",
     "printLabels": "Udskriv labels",
     "labelsHelp": "{count, plural, one {Én label} other {# labels}} med QR-kode, asset tag og model, som PDF til print.",
@@ -255,7 +255,8 @@
     "unitPiecesHelp": "Stk. ligger i beholdere som andet bulkudstyr og kan komme med på pakkelister som reservedele.",
     "unitMetresHelp": "Meter modtages og bruges i værkstedet; de har ingen enheder og kommer ikke på pakkelister.",
     "minStock": "Få tilbage under",
-    "minStockHelp": "Vises på oversigten når beholdningen kommer under dette."
+    "minStockHelp": "Vises på oversigten når beholdningen kommer under dette.",
+    "familyMakersMixed": "Varianterne har forskellige producenter. Lad feltet stå tomt for at beholde hver enkelts, eller skriv én for alle."
   },
   "itemStatus": {
     "in_house": "På lager",

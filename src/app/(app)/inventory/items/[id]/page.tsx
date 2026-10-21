@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatMoney, modelLabel } from "@/lib/format";
+import { ModelName } from "@/components/model-name";
 import { AttachmentsSection } from "@/modules/files";
 import { KitSection, MoveDialog, StatusDialog, inventoryActions, itemDetail, locationOptions, LabelsDialog } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
@@ -38,7 +39,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
 
   const facts: [string, React.ReactNode][] = [
     [t("assetTag"), <span key="tag" className="font-mono">{item.assetTag}</span>],
-    [t("model"), <Link key="model" href={`/inventory/models/${model.id}`} className="underline">{label}</Link>],
+    [t("model"), <Link key="model" href={`/inventory/models/${model.id}`} className="underline"><ModelName model={model} /></Link>],
     [t("category"), detail.categoryPath.join(" › ")],
   ];
   if (model.trackingType === "bulk") facts.push([t("quantity"), String(item.quantity)]);

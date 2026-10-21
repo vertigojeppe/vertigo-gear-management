@@ -56,7 +56,7 @@ test.describe("pricing", () => {
 
     // Reserve 2 Pointes: the day price is filled from the model (400 in the seed).
     await page.getByRole("button", { name: "Reserve gear" }).click();
-    await pickOption(page, "Model", "Robe Pointe");
+    await pickOption(page, "Model", "Pointe (Robe)");
     await expect(page.getByLabel("Day price")).toHaveValue("400");
     await page.getByLabel("Quantity").fill("2");
     await page.getByLabel("Line discount %").fill("50");

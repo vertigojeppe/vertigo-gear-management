@@ -35,14 +35,29 @@ export function formatMoney(n: number | null | undefined, currency: string = app
   return new Intl.NumberFormat("da-DK", { style: "currency", currency, maximumFractionDigits: 2 }).format(n);
 }
 
-/** "Robe Pointe", "DMX 5-pin 5 m": manufacturer (if any), family name and variant (if any). */
+/**
+ * A model in text: name and variant, "Pointe", "DMX 5-pin 5 m". The
+ * manufacturer is not part of it: on screen it shows in grey beside the
+ * name (ModelName), and families are grouped by name alone.
+ */
 export function modelLabel(m: { manufacturer?: string | null; name: string; variant?: string | null }): string {
-  return [m.manufacturer?.trim(), m.name, m.variant?.trim()].filter(Boolean).join(" ");
+  return [m.name, m.variant?.trim()].filter(Boolean).join(" ");
 }
 
-/** The family without its variant: "DMX 5-pin", "Robe Pointe". */
-export function familyLabel(m: { manufacturer?: string | null; name: string }): string {
-  return [m.manufacturer?.trim(), m.name].filter(Boolean).join(" ");
+/** For plain text that cannot show the manufacturer in grey (dropdown options): "Pointe (Robe)". */
+export function modelLabelWithMaker(m: { manufacturer?: string | null; name: string; variant?: string | null }): string {
+  const maker = m.manufacturer?.trim();
+  return maker ? `${modelLabel(m)} (${maker})` : modelLabel(m);
+}
+
+/** The family without its variant: "DMX 5-pin", "Pointe". A family is every model with this name. */
+export function familyLabel(m: { name: string }): string {
+  return m.name;
+}
+
+/** The distinct manufacturers of some models, for showing beside a family name: "Robe", "Neutrik, Amphenol", or "". */
+export function makersOf(models: { manufacturer?: string | null }[]): string {
+  return [...new Set(models.map((m) => m.manufacturer?.trim()).filter((x): x is string => Boolean(x)))].join(", ");
 }
 
 export function formatNumber(n: number | null | undefined, digits = 2): string {

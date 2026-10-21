@@ -8,7 +8,7 @@ import { appConfig, ITEM_STATUSES } from "../../../config/app.config";
 import type { ItemFilters, ModelFilters } from "./schema";
 import { categoryIdsIncludingChildren, toItemDto, toModelDto, type ItemDto, type ModelDto } from "./service";
 import { buildTree, flattenTree, pathNames } from "./tree";
-import { modelLabel } from "@/lib/format";
+import { makersOf, modelLabel } from "@/lib/format";
 import { bestMatches } from "@/lib/search";
 
 const PAGE = appConfig.pageSize;
@@ -54,7 +54,7 @@ export async function locationList() {
 export async function modelOptions() {
   const rows = await prisma.model.findMany({
     where: { archived: false },
-    orderBy: [{ manufacturer: "asc" }, { name: "asc" }],
+    orderBy: [{ name: "asc" }, { manufacturer: "asc" }],
     select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true, categoryId: true, notForRental: true, rentalDayPrice: true },
   });
   return rows
@@ -74,9 +74,10 @@ export type ModelListRow = ModelDto & {
   thumbUrl: string | null;
 };
 
-/** Models that share a manufacturer and name: one row in the list, the variants inside it. */
+/** Models that share a name: one row in the list, the variants inside it. */
 export type ModelFamily = {
   key: string;
+  /** The variants' manufacturers, "Robe" or "Neutrik, Amphenol" ("" when none). */
   manufacturer: string;
   name: string;
   categoryPath: string[];
@@ -96,7 +97,7 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
 
   // Every model the other filters allow, searched here (forgiving: spaces, case, typos), grouped into families, then paginated by family (a few hundred rows at most).
   const [candidates, cats, colors] = await Promise.all([
-    prisma.model.findMany({ where, orderBy: [{ manufacturer: "asc" }, { name: "asc" }], include: { defaultPhoto: { select: { id: true, thumbKey: true } } } }),
+    prisma.model.findMany({ where, orderBy: [{ name: "asc" }, { manufacturer: "asc" }], include: { defaultPhoto: { select: { id: true, thumbKey: true } } } }),
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
     loadColorMaps(),
   ]);
@@ -126,11 +127,11 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
   return { families: families.slice((filters.page - 1) * PAGE, filters.page * PAGE), total, models: rows.length, page: filters.page, pages: Math.max(1, Math.ceil(total / PAGE)), closeMatches };
 }
 
-/** Pure: rows → families (manufacturer + name, case-insensitive), variants sorted by size, totals summed. */
+/** Pure: rows → families (by name, case-insensitive; manufacturers may differ), variants sorted by size, totals summed. */
 export function groupFamilies(rows: ModelListRow[]): ModelFamily[] {
   const map = new Map<string, ModelFamily>();
   for (const r of rows) {
-    const key = `${r.manufacturer}|${r.name}`.toLowerCase();
+    const key = r.name.trim().toLowerCase();
     const fam = map.get(key);
     if (fam) {
       fam.variants.push(r);
@@ -141,7 +142,10 @@ export function groupFamilies(rows: ModelListRow[]): ModelFamily[] {
       fam.thumbUrl ??= r.thumbUrl;
     } else map.set(key, { key, manufacturer: r.manufacturer, name: r.name, categoryPath: r.categoryPath, color: r.color, trackingType: r.trackingType, archived: r.archived, owned: r.owned, inHouse: r.inHouse, thumbUrl: r.thumbUrl, variants: [r] });
   }
-  for (const fam of map.values()) fam.variants.sort((a, b) => compareVariants(a.variant, b.variant));
+  for (const fam of map.values()) {
+    fam.variants.sort((a, b) => compareVariants(a.variant, b.variant));
+    fam.manufacturer = makersOf(fam.variants);
+  }
   return [...map.values()];
 }
 
@@ -159,7 +163,7 @@ export async function modelDetail(id: string) {
   if (!m) return null;
   const [cats, siblings, colors] = await Promise.all([
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
-    prisma.model.findMany({ where: { id: { not: id }, manufacturer: { equals: m.manufacturer, mode: "insensitive" }, name: { equals: m.name, mode: "insensitive" } }, select: { id: true, variant: true, archived: true, categoryId: true } }),
+    prisma.model.findMany({ where: { id: { not: id }, name: { equals: m.name, mode: "insensitive" } }, select: { id: true, manufacturer: true, variant: true, archived: true, categoryId: true } }),
     loadColorMaps(),
   ]);
   const coloring = colors.byCategory.get(m.categoryId);
@@ -320,11 +324,11 @@ export async function kitCandidates(kitId: string, q: string | undefined) {
 export async function familyState(modelId: string) {
   const m = await prisma.model.findUniqueOrThrow({ where: { id: modelId }, select: { manufacturer: true, name: true } });
   const family = await prisma.model.findMany({
-    where: { manufacturer: { equals: m.manufacturer, mode: "insensitive" }, name: { equals: m.name, mode: "insensitive" } },
-    select: { categoryId: true, notForRental: true, archived: true, consumable: true },
+    where: { name: { equals: m.name, mode: "insensitive" } },
+    select: { manufacturer: true, categoryId: true, notForRental: true, archived: true, consumable: true },
   });
   const shared = <K extends keyof (typeof family)[number]>(k: K) => (family.every((f) => f[k] === family[0][k]) ? family[0][k] : null);
-  return { count: family.length, categoryId: shared("categoryId"), notForRental: shared("notForRental"), archived: shared("archived"), consumable: shared("consumable") };
+  return { count: family.length, manufacturer: shared("manufacturer"), categoryId: shared("categoryId"), notForRental: shared("notForRental"), archived: shared("archived"), consumable: shared("consumable") };
 }
 
 /* Dashboard */

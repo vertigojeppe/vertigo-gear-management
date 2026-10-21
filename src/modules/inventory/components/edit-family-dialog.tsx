@@ -14,14 +14,14 @@ import type { FormState } from "@/lib/forms";
 import { editFamily } from "../actions";
 
 /** What the variants share; null where they differ. */
-export type FamilyState = { count: number; categoryId: string | null; notForRental: boolean | null; archived: boolean | null; consumable: boolean | null };
+export type FamilyState = { count: number; manufacturer: string | null; categoryId: string | null; notForRental: boolean | null; archived: boolean | null; consumable: boolean | null };
 
 /**
  * Admin: edit a whole family in one go. Manufacturer and name, category and
  * the flags apply to every variant; a field the variants disagree on starts
  * at "mixed – leave as is". Sizes, stock, weight and prices stay per variant.
  */
-export function EditFamilyDialog({ modelId, manufacturer, name, family, categories }: { modelId: string; manufacturer: string; name: string; family: FamilyState; categories: { id: string; name: string; depth: number }[] }) {
+export function EditFamilyDialog({ modelId, name, family, categories }: { modelId: string; name: string; family: FamilyState; categories: { id: string; name: string; depth: number }[] }) {
   const t = useTranslations("inventory");
   const tc = useTranslations("common");
   const [state, action] = useActionState<FormState, FormData>(editFamily, {});
@@ -54,12 +54,13 @@ export function EditFamilyDialog({ modelId, manufacturer, name, family, categori
           <ActionForm action={action} className="flex flex-col gap-4">
             <input type="hidden" name="modelId" value={modelId} />
             <FormError message={state.error} />
-            <Field id="ef-manufacturer" label={t("manufacturer")} optional error={err.manufacturer}>
-              <Input id="ef-manufacturer" name="manufacturer" defaultValue={v("manufacturer", manufacturer)} />
-            </Field>
             <Field id="ef-name" label={t("modelName")} help={t("modelNameHelp")} error={err.name}>
               <Input id="ef-name" name="name" defaultValue={v("name", name)} required autoFocus />
             </Field>
+            <Field id="ef-manufacturer" label={t("manufacturer")} optional help={family.manufacturer === null ? t("familyMakersMixed") : undefined} error={err.manufacturer}>
+              <Input id="ef-manufacturer" name="manufacturer" defaultValue={v("manufacturer", family.manufacturer ?? "")} placeholder={family.manufacturer === null ? t("familyMixed") : undefined} />
+            </Field>
+            {family.manufacturer === null && <input type="hidden" name="manufacturerMixed" value="1" />}
             <Field id="ef-category" label={t("category")} error={err.categoryId}>
               <NativeSelect id="ef-category" name="categoryId" defaultValue={v("categoryId", family.categoryId ?? "")}>
                 {family.categoryId === null && <option value="">{t("familyMixed")}</option>}

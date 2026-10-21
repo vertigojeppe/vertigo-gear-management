@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { addKitLine, addLine, addTemplateLine } from "../actions";
 import { groupCatalog, searchCatalog, type CatalogEntry } from "../picker";
+import { makersOf } from "@/lib/format";
 
 type Target = { kind: "list"; projectId: string; listId: string } | { kind: "template"; templateId: string };
 type Option = { id: string; label: string };
@@ -128,6 +129,7 @@ export function GearPicker({ target, catalog, cases = [] }: { target: Target; ca
               <header className="flex flex-wrap items-center gap-2 border-b bg-muted/30 px-3 py-1.5 text-sm">
                 <ColorBar color={g.entries[0]?.color} className="h-4" />
                 <span className="font-medium">{g.family}</span>
+                {makersOf(g.entries) && <span className="text-xs text-muted-foreground">{makersOf(g.entries)}</span>}
                 {g.kind === "kit" && (
                   <StatusPill color="purple">
                     {t("kit")}

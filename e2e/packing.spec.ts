@@ -36,11 +36,11 @@ test.describe("packing lists", () => {
 
     // The seed's lamp fits the PT-EZ590: 1 per 4 projectors, at least 1.
     await page.getByLabel("Search gear").fill("PT-EZ590");
-    await page.getByRole("button", { name: "Add Panasonic PT-EZ590", exact: true }).click();
+    await page.getByRole("button", { name: "Add PT-EZ590", exact: true }).click();
     const spares = page.getByRole("region", { name: "Suggested spares" });
-    await expect(spares).toContainText("Panasonic PT-EZ590 replacement lamp");
-    await spares.getByRole("button", { name: "Add 1 × Panasonic PT-EZ590 replacement lamp" }).click();
-    await expect(page.getByRole("link", { name: "Panasonic PT-EZ590 replacement lamp" })).toBeVisible();
+    await expect(spares).toContainText("PT-EZ590 replacement lamp");
+    await spares.getByRole("button", { name: "Add 1 × PT-EZ590 replacement lamp" }).click();
+    await expect(page.getByRole("link", { name: "PT-EZ590 replacement lamp" })).toBeVisible();
     await expect(spares).toHaveCount(0);
   });
 
@@ -73,8 +73,8 @@ test.describe("packing lists", () => {
     await page.getByLabel("Search gear").fill("aura xb");
     await expect(page.getByText("Lighting › Moving heads", { exact: false }).first()).toBeVisible();
     await page.getByLabel("Search gear").press("Enter");
-    await expect(page.getByRole("button", { name: "Add Martin MAC Aura XB" })).toHaveText(/Added/);
-    await expect(page.getByRole("link", { name: "Martin MAC Aura XB" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add MAC Aura XB" })).toHaveText(/Added/);
+    await expect(page.getByRole("link", { name: "MAC Aura XB" })).toBeVisible();
 
     // Packing mode: unknown tag is reported, choosing a unit ticks it.
     await page.getByRole("link", { name: "Pack", exact: true }).click();
@@ -105,7 +105,7 @@ test.describe("packing lists", () => {
     await anonPage.goto(shareUrl);
     await expect(anonPage).not.toHaveURL(/\/login/);
     await expect(anonPage.getByRole("heading", { name: `Truck ${stamp}` })).toBeVisible();
-    await expect(anonPage.getByText("Martin MAC Aura XB")).toBeVisible();
+    await expect(anonPage.getByText("MAC Aura XB")).toBeVisible();
     const anonPdf = await anonPage.request.get(`/api/packing/${listId}/list.pdf`);
     expect(anonPdf.status()).toBe(401);
     const sharedPdf = await anonPage.request.get(`/api/packing/${listId}/list.pdf?share=${shareUrl.split("/").pop()}`);
@@ -144,9 +144,9 @@ test.describe("packing lists", () => {
     // Creating a template opens it.
     await expect(page.getByRole("heading", { name: `E2E template ${stamp}` })).toBeVisible();
     await page.getByLabel("Search gear").fill("jdc1");
-    await page.getByLabel("Quantity GLP JDC1").fill("4");
-    await page.getByRole("button", { name: "Add GLP JDC1" }).click();
-    await expect(page.getByRole("button", { name: "Add GLP JDC1" })).toHaveText(/Added/);
+    await page.getByLabel("Quantity JDC1").fill("4");
+    await page.getByRole("button", { name: "Add JDC1" }).click();
+    await expect(page.getByRole("button", { name: "Add JDC1" })).toHaveText(/Added/);
     await expect(page.getByRole("listitem").getByText("4×")).toBeVisible();
     await page.getByRole("button", { name: "Delete" }).first().click();
     await expect(page).toHaveURL(/\/projects\/packing-templates$/);

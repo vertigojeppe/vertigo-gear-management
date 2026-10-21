@@ -1,3 +1,4 @@
+import { modelLabel } from "@/lib/format";
 import { prisma } from "@/lib/db";
 import type { WishStatus } from "./schema";
 
@@ -41,7 +42,7 @@ export async function wishList(status: WishStatus | "all" = "open"): Promise<Wis
     notes: w.notes,
     status: w.status,
     modelId: w.modelId,
-    modelLabel: w.model ? [w.model.manufacturer, w.model.name, w.model.variant].filter(Boolean).join(" ") : null,
+    modelLabel: w.model ? modelLabel(w.model) : null,
     createdByName: w.createdBy?.name ?? null,
     createdAt: w.createdAt,
   }));
