@@ -274,6 +274,14 @@ a second entry that exports components only and never a service.
 
 ## Availability, projects, rentals
 
+- **Gear on projects is hidden for now.** `projectGearEnabled()`
+  (`src/lib/features.ts`, env `PROJECT_GEAR=on`, off by default) gates the
+  project page's Reserved gear, Rent in and quote sections, the reservation
+  count on the projects list, the "Gear reserved" subtitle and "from the
+  reservations" when starting a packing list. Only the UI is hidden: data,
+  services, routes and rentals are untouched. CI and Playwright run with it
+  on so the hidden parts stay tested; pass it when starting a server for
+  the browser tests by hand.
 - **One allocation table.** `Allocation` rows (project or rental line,
   model, quantity, optional unit, inclusive dates) are the only source for
   availability. `computeAvailability` / `checkRequest` in

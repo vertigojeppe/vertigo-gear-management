@@ -510,6 +510,15 @@ leave Caddy out, set `APP_BIND=0.0.0.0` and `APP_URL=http://gear.local:3000`,
 and start only the database and the app: `docker compose --profile prod
 up -d --build db app`.
 
+### Gear on projects (hidden)
+
+Reserving gear on a project, renting gear in for a project and the
+project quote are switched off for now: the project page leaves those
+sections out. Nothing is deleted. To bring them back, add
+`PROJECT_GEAR=on` to `.env` and recreate the app
+(`docker compose --profile tunnel up -d --force-recreate app`).
+Rentals are not affected.
+
 ### Two-factor sign-in
 
 Everyone can turn on two-factor sign-in under Settings › Your account;

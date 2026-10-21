@@ -22,7 +22,7 @@ export default defineConfig({
   webServer: {
     command: process.env.CI ? "npm run start" : "npm run dev",
     // The specs sign in as the seeded admin, so admins are not sent to the 2FA setup page here.
-    env: { TWO_FACTOR_REQUIRED_ROLES: process.env.TWO_FACTOR_REQUIRED_ROLES ?? "none" },
+    env: { TWO_FACTOR_REQUIRED_ROLES: process.env.TWO_FACTOR_REQUIRED_ROLES ?? "none", PROJECT_GEAR: process.env.PROJECT_GEAR ?? "on" },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
