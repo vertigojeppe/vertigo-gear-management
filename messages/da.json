@@ -235,7 +235,7 @@
     "editFamily": "Redigér familie",
     "editFamilyHelp": "Ændrer {count, plural, one {denne model} other {alle # varianter}} på én gang: navn, kategori og flag. Størrelser, lager, vægt og priser forbliver pr. variant.",
     "familyMixed": "Blandet – lad være",
-    "printLabels": "Print labels",
+    "printLabels": "Udskriv labels",
     "labelsHelp": "{count, plural, one {Én label} other {# labels}} med QR-kode, asset tag og model, som PDF til print.",
     "labelSize": "Labelstørrelse",
     "labelOffset": "Spring labels over på første ark",
@@ -1262,5 +1262,11 @@
     "done": "Totrinslogin er slået til.",
     "continue": "Jeg har gemt koderne, fortsæt",
     "signOut": "Log ud"
+  },
+  "language": {
+    "label": "Sprog",
+    "en": "English",
+    "da": "Dansk",
+    "help": "Dit valg følger dig på alle enheder, du logger ind på. Navne, noter og andet, folk skriver, forbliver som de blev skrevet."
   }
 }

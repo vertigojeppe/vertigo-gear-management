@@ -9,6 +9,7 @@ import { feedTokens } from "@/modules/calendar";
 import { FeedRow } from "../calendar/forms";
 import { ApiTokenForm, ChangePasswordForm, RevokeTokenButton } from "./forms";
 import { TwoFactorSection } from "./two-factor-forms";
+import { LanguageToggle } from "@/components/language-toggle";
 
 export const metadata: Metadata = { title: "Your account" };
 
@@ -17,6 +18,7 @@ export default async function AccountPage() {
   const t = await getTranslations("settings");
   const tr = await getTranslations("roles");
   const tcal = await getTranslations("calendar");
+  const tl = await getTranslations("language");
   const tokens = await apiTokens.listFor(actor.id);
   const mine = await feedTokens.ensure("mine", actor.id);
   const tf = await twoFactor.status(actor.id);
@@ -31,6 +33,13 @@ export default async function AccountPage() {
         }
         crumbs={[{ label: t("title"), href: "/settings" }, { label: t("account") }]}
       />
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-lg font-medium">{tl("label")}</h2>
+          <p className="text-sm text-muted-foreground">{tl("help")}</p>
+        </div>
+        <LanguageToggle className="w-full max-w-xs" />
+      </section>
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">{t("changePassword")}</h2>
         <ChangePasswordForm />

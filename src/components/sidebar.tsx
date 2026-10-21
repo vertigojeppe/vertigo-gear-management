@@ -8,6 +8,7 @@ import { cn } from "cn";
 import { NAV_ITEMS, isActive } from "./navigation";
 import { signOutAction } from "@/app/(app)/actions";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/language-toggle";
 import type { Actor } from "@/lib/auth/session";
 
 /** Desktop navigation. Hidden below the md breakpoint. */
@@ -54,8 +55,9 @@ export function Sidebar({ actor, appName }: { actor: Actor; appName: string }) {
           </div>
         ))}
       </nav>
-      <div className="border-t px-4 pt-3">
-        <ThemeToggle compact className="w-full justify-between" />
+      <div className="flex gap-2 border-t px-4 pt-3">
+        <ThemeToggle compact className="flex-1 justify-between" />
+        <LanguageToggle compact />
       </div>
       <div className="flex items-center gap-2 px-4 py-3">
         <div className="flex size-7 items-center justify-center rounded-full bg-muted text-xs font-medium">

@@ -9,7 +9,7 @@ import { prisma } from "../src/lib/db";
  */
 async function main() {
   const tokens = await prisma.apiToken.deleteMany({ where: { name: { startsWith: "e2e " } } });
-  const testUsers = await prisma.user.findMany({ where: { email: { startsWith: "e2e-2fa-" } }, select: { id: true } });
+  const testUsers = await prisma.user.findMany({ where: { email: { startsWith: "e2e-" } }, select: { id: true } });
   await prisma.activityLog.deleteMany({ where: { entityType: "user", entityId: { in: testUsers.map((u) => u.id) } } });
   const removedUsers = await prisma.user.deleteMany({ where: { id: { in: testUsers.map((u) => u.id) } } });
   const wishes = await prisma.wishItem.deleteMany({ where: { manufacturer: "Testlight" } });

@@ -66,6 +66,22 @@ and, when they need another module's client component (the rental form
 renders the projects module's `ClientDialog`), from `@/modules/<name>/ui`,
 a second entry that exports components only and never a service.
 
+## Language
+
+- English and Danish (`appConfig.locales`), no locale in URLs. `src/i18n/request.ts`
+  picks per request with `pickLocale` (`src/lib/locale.ts`, pure, tested):
+  the user's saved `User.locale`, else the `locale` cookie, else
+  Accept-Language, else English. `LanguageToggle` (sidebar, phone "More"
+  sheet, sign-in page, account page) calls `setLanguage`, which sets the
+  cookie and, when signed in, saves the choice on the user.
+- Only the UI chrome is translated. Data people type (model names,
+  categories, notes) is stored once and searched as written, whatever the
+  UI language. Still English everywhere: PDFs, calendar event titles,
+  CSV headers, activity log summaries and service error messages (thrown
+  in English from services). Dates and money always use da-DK formats.
+- Add a string to both `messages/en.json` and `messages/da.json`
+  (same keys; check with the parity snippet in git history or by eye).
+
 ## Navigation
 
 - Desktop (md+): left sidebar (`sidebar.tsx`). Phone: top bar + bottom tab bar

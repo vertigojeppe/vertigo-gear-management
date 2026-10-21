@@ -23,14 +23,17 @@ export type Actor = {
  * A user whose role requires 2FA (TWO_FACTOR_REQUIRED_ROLES) but who has
  * not set it up yet is signed in for the setup page only.
  */
-const resolve = cache(async (): Promise<{ hasSession: boolean; actor: Actor | null; needsTwoFactorSetup: boolean }> => {
+const resolve = cache(async (): Promise<{ hasSession: boolean; actor: Actor | null; needsTwoFactorSetup: boolean; locale: string | null }> => {
   const session = await auth();
-  if (!session?.user?.id) return { hasSession: false, actor: null, needsTwoFactorSetup: false };
-  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { id: true, email: true, name: true, role: true, active: true, totpEnabledAt: true } });
-  if (!user || !user.active) return { hasSession: true, actor: null, needsTwoFactorSetup: false };
+  if (!session?.user?.id) return { hasSession: false, actor: null, needsTwoFactorSetup: false, locale: null };
+  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { id: true, email: true, name: true, role: true, active: true, totpEnabledAt: true, locale: true } });
+  if (!user || !user.active) return { hasSession: true, actor: null, needsTwoFactorSetup: false, locale: null };
   const actor: Actor = { id: user.id, email: user.email, name: user.name, role: isRole(user.role) ? user.role : "viewer" };
-  return { hasSession: true, actor, needsTwoFactorSetup: !user.totpEnabledAt && twoFactorRequired(actor.role) };
+  return { hasSession: true, actor, needsTwoFactorSetup: !user.totpEnabledAt && twoFactorRequired(actor.role), locale: user.locale };
 });
+
+/** The signed-in user's saved UI language, or null (signed out, or no choice saved). */
+export const currentUserLocale = cache(async (): Promise<string | null> => (await resolve()).locale);
 
 /** Current actor or null (also null while a required 2FA setup is pending). Cached per request. */
 export const getActor = cache(async (): Promise<Actor | null> => {
