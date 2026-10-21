@@ -169,7 +169,9 @@ a second entry that exports components only and never a service.
   `glossary` in `src/modules/settings/glossary.ts`): groups of words that
   mean the same (arbejdslys, worklight). `bestMatches(.., glossary)` and
   `searchCatalog(.., glossary)` let a query word also match its partners
-  (`queryTerms`, up to three words form one term); partners shorter than
+  (`queryTerms`, up to three words form one term; the last word, still
+  being typed, from three letters also takes the partners of every term it
+  begins, so "flyver" finds what "flyverdragt" finds); partners shorter than
   five letters must start a word ("lamp" not in "clamp"); groups do not
   chain. Used by models (which also match their category path), items,
   kit candidates, apps and the gear picker (groups passed to the browser);

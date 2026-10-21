@@ -66,12 +66,16 @@ describe("glossary", () => {
     ["kabel", "cable"],
     ["lampe", "lamp", "pære"],
     ["pære", "bulb"],
+    ["flyverdragt", "flight suit"],
+    ["lys", "light"],
+    ["lysbord", "lighting desk"],
   ]);
   const rows = [
     { manufacturer: "", name: "Worklight LED", variant: "50 W" },
     { manufacturer: "", name: "Strømkabel", variant: "5 m" },
     { manufacturer: "Osram", name: "HMI lamp", variant: "575 W" },
     { manufacturer: "", name: "Arbejdslampe", variant: null },
+    { manufacturer: "", name: "Flight suit", variant: "XL" },
   ];
   const fields = (r: (typeof rows)[number]) => [r.manufacturer, r.name, r.variant];
   const names = (q: string) => bestMatches(rows, fields, q, glossary).rows.map((r) => r.name);
@@ -91,6 +95,18 @@ describe("glossary", () => {
   it("still finds typos, and changes nothing without a glossary", () => {
     expect(bestMatches(rows, fields, "worklihgt", glossary)).toEqual({ rows: [rows[0]], close: true });
     expect(bestMatches(rows, fields, "arbejdslys").rows.map((r) => r.name)).not.toContain("Worklight LED");
+  });
+
+  it("lets the word still being typed find what the whole word would", () => {
+    expect(names("flyver")).toEqual(["Flight suit"]);
+    expect(names("flyverd")).toEqual(["Flight suit"]);
+    expect(names("flight su")).toEqual(["Flight suit"]);
+    expect(names("arbejd")).toEqual(["Worklight LED", "Arbejdslampe"]);
+    expect(queryTerms("kab", glossary)).toEqual([["kab", "kabel", "cable"]]);
+    expect(queryTerms("fl", glossary)).toEqual([["fl"]]); // under three letters: as typed only
+    expect(queryTerms("lys", glossary)).toEqual([["lys", "light"]]); // a whole term: its own partners, not lysbord's
+    expect(queryTerms("lys led", glossary)).toEqual([["lys", "light"], ["led"]]);
+    expect(queryTerms("led flyv", glossary)).toEqual([["led"], ["flyv", "flyverdragt", "flightsuit"]]);
   });
 
   it("joins neighbouring words into one glossary term", () => {
