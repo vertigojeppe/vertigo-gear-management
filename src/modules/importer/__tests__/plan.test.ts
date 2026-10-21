@@ -95,10 +95,10 @@ describe("buildPlan", () => {
     expect(units.find((u) => u.assetTag === "ZP2")).toMatchObject({ status: "retired", retiredReason: "sold", notForRental: true });
     expect(units.find((u) => u.assetTag === "U99901")).toMatchObject({ personName: "Alex Admin" });
     expect(units.find((u) => u.assetTag === "U99902")).toMatchObject({ status: "missing" });
-    expect(units.filter((u) => u.modelKey === modelKey("KITO", M, "500 kg"))).toHaveLength(2);
+    expect(units.filter((u) => u.modelKey === modelKey(M, "500 kg"))).toHaveLength(2);
     const rental = ofType(ops, "rental")[0];
     expect(rental).toMatchObject({ clientName: `Testperson ${M}`, startDate: "2021-10-12" });
-    expect(rental.lines[0]).toMatchObject({ modelKey: modelKey("ETC", "EclGalleryProfile FC 60W RGBW"), quantity: 4 });
+    expect(rental.lines[0]).toMatchObject({ modelKey: modelKey("EclGalleryProfile FC 60W RGBW"), quantity: 4 });
     // Decisions at their defaults: rods keep the stands count, the controller conflict adds nothing.
     expect(ofType(ops, "bin").some((b) => b.notes === "Adjusted per 16mm rods sheet")).toBe(false);
   });
@@ -111,7 +111,7 @@ describe("buildPlan", () => {
     expect(ofType(chosen, "unit").some((u) => u.assetTag === "W6-92")).toBe(false);
     expect(ofType(chosen, "rental")).toHaveLength(0);
 
-    const ctx: PlanContext = { ...empty, existingModels: new Set([modelKey("", `True1 ${M}`, "5 m")]), existingTags: new Set(["W6-91", "ZP1"]) };
+    const ctx: PlanContext = { ...empty, existingModels: new Set([modelKey(`True1 ${M}`, "5 m")]), existingTags: new Set(["W6-91", "ZP1"]) };
     const again = buildPlan(wb, ctx);
     const byKey = Object.fromEntries(again.rows.map((r) => [r.key, r]));
     expect(byKey["LED - SCROLLER - BOX:6"].bucket).toBe("decision");
@@ -123,6 +123,6 @@ describe("buildPlan", () => {
     expect(ofType(ops, "unit").some((u) => u.assetTag === "W6-91" || u.assetTag === "ZP1")).toBe(false);
     // "Add to the existing model" keeps the bins but not the model.
     const add = resolveOps(again, { "LED - SCROLLER - BOX:6": "add" });
-    expect(ofType(add, "bin").filter((b) => b.modelKey === modelKey("", `True1 ${M}`, "5 m"))).toHaveLength(2);
+    expect(ofType(add, "bin").filter((b) => b.modelKey === modelKey(`True1 ${M}`, "5 m"))).toHaveLength(2);
   });
 });

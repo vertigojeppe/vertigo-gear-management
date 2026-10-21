@@ -20,7 +20,7 @@ export type Bucket = "import" | "assumption" | "decision" | "parked";
 
 export type ModelOp = {
   type: "model";
-  key: string; // "manufacturer|name|variant" lower-cased, used by later ops
+  key: string; // "name|variant" lower-cased (modelKey), used by later ops
   categoryPath: string[];
   manufacturer: string;
   name: string;
@@ -92,7 +92,8 @@ export type PlanContext = {
 /* Helpers ---------------------------------------------------------------- */
 
 const low = (s: string) => s.trim().toLowerCase();
-export const modelKey = (manufacturer: string, name: string, variant: string | null = null) => `${low(manufacturer)}|${low(name)}|${low(variant ?? "")}`;
+/** How the importer recognises a model: name and size, lower-cased. The manufacturer is not part of it (families are names). */
+export const modelKey = (name: string, variant: string | null = null) => `${low(name)}|${low(variant ?? "")}`;
 
 function cleanLabel(s: string): string {
   return s
@@ -166,7 +167,7 @@ function inventoryRows(rows: InventoryRow[], ctx: PlanContext, opts: { preferQle
     const manufacturer = manufacturerFor(system);
     const { name: famName, variant } = splitName(isAlu ? "35×35 mm alu profile" : system, r.variant, manufacturer);
     const name = labelOf({ manufacturer, name: famName, variant });
-    const mkey = modelKey(manufacturer, famName, variant);
+    const mkey = modelKey(famName, variant);
     const categoryPath = categoryFor(r);
     const assumptions: string[] = [];
     const serialized = /EclGalleryProfile|KITO|Wind Up|Follow Spot/i.test(system);
@@ -254,7 +255,7 @@ function inventoryRows(rows: InventoryRow[], ctx: PlanContext, opts: { preferQle
     if (/Fordelt til (\d+) stk flightcase/i.test(r.note)) {
       const cases = Number(r.extras.join(" ").match(/(\d+) SplitLED flightcases/i)?.[1] ?? r.note.match(/Fordelt til (\d+)/i)?.[1] ?? 0);
       if (cases > 0) {
-        const caseKey = modelKey("", "SplitLED flightcase");
+        const caseKey = modelKey("SplitLED flightcase");
         ops.push({ type: "model", key: caseKey, categoryPath: ["Cases & storage"], manufacturer: "", name: "SplitLED flightcase", tracking: "serialized", importSource: r.totalSrc, notes: r.extras.join(" ") });
         ops.push({ type: "kit", modelKey: caseKey, name: "SplitLED flightcase", count: cases, importSource: r.totalSrc });
         assumptions.push(`${cases} SplitLED flightcases created as empty kits (which fixtures sit in which case is not in the sheet).`);
@@ -262,7 +263,7 @@ function inventoryRows(rows: InventoryRow[], ctx: PlanContext, opts: { preferQle
     }
     if (/i (\d+) stk .*taske/i.test(r.note)) {
       const n = Number(r.note.match(/i (\d+) stk/i)![1]);
-      const bagKey = modelKey("Manfrotto", "LBAG110 padded bag");
+      const bagKey = modelKey("LBAG110 padded bag");
       ops.push({ type: "model", key: bagKey, categoryPath: ["Cases & storage"], manufacturer: "Manfrotto", name: "LBAG110 padded bag", tracking: "serialized", importSource: r.totalSrc });
       ops.push({ type: "kit", modelKey: bagKey, name: "Manfrotto LBAG110 bag", count: n, importSource: r.totalSrc });
       assumptions.push(`${n} Manfrotto LBAG110 bags created as empty kits.`);
@@ -300,7 +301,7 @@ function controllerRows(rows: ControllerRow[], ctx: PlanContext, weights: Record
     const prefix = c.id.split("-")[0];
     const m = models[prefix];
     if (!m) continue;
-    const mkey = modelKey("", m.name, m.variant);
+    const mkey = modelKey(m.name, m.variant);
     const ops: Op[] = [];
     const tagExists = ctx.existingTags.has(c.id);
     const cf: Record<string, string> = {};
@@ -345,7 +346,7 @@ function controllerRows(rows: ControllerRow[], ctx: PlanContext, weights: Record
   // The models themselves (one row each), with the counts from the main sheet for comparison.
   for (const [prefix, m] of Object.entries(models)) {
     const n = rows.filter((c) => c.id.startsWith(prefix)).length;
-    const mkey = modelKey("", m.name, m.variant);
+    const mkey = modelKey(m.name, m.variant);
     out.unshift({ key: `ctl:model:${prefix}`, sheet: "LEDController Optælling", src: `LEDController Optælling!B1`, bucket: ctx.existingModels.has(mkey) ? "assumption" : "import", summary: `Lighting › LED controllers › ${m.name} ${m.variant}: ${n} serialized units from this sheet`, assumption: ctx.existingModels.has(mkey) ? "Model already exists; units are added to it." : undefined, ops: ctx.existingModels.has(mkey) ? [] : [{ type: "model", key: mkey, categoryPath: ["Lighting", "LED controllers"], manufacturer: "", name: m.name, variant: m.variant, tracking: "serialized", weightKg: m.weightKg, powerDrawW: m.powerDrawW, importSource: `LEDController Optælling!B1` }] });
   }
   return out;
@@ -392,7 +393,7 @@ function projectorRows(rows: ProjectorRow[], ctx: PlanContext): PlanRow[] {
     }
     const manufacturer = p.model.split(/\s+/)[0];
     const name = p.model.replace(/\s*-\s*LCD!?$/i, "").trim();
-    const mkey = modelKey(manufacturer, name);
+    const mkey = modelKey(name);
     const ops: Op[] = [];
     const assumptions: string[] = [];
     if (!seen.has(mkey)) {
@@ -444,7 +445,7 @@ function projectorRows(rows: ProjectorRow[], ctx: PlanContext): PlanRow[] {
     ops.push(unit);
     out.push({ key, sheet: "PROJEKTORE", src: p.idSrc, bucket: assumptions.length ? "assumption" : "import", summary: `${modelLabel({ manufacturer, name })} › ${assetTag}${p.serial ? ` · SN ${p.serial}` : ""}${sold ? " · sold" : ""}${p.notForRental ? " · not for rental" : ""}`, assumption: assumptions.join(" ") || undefined, ops });
   }
-  const stray = rows.length ? [{ key: "proj:note84", sheet: "PROJEKTORE", src: "PROJEKTORE!L84", bucket: "decision" as Bucket, summary: `"Lasse har købe 9 stk … fra 2014 'lidt gammle'" stands alone on the sheet`, decision: { question: "Which model does this note belong to?", defaultKey: "skip", options: [{ key: "skip", label: "Skip the note", ops: [] }, { key: "nec", label: "Attach to NEC P554U", ops: [{ type: "modelNote" as const, modelKey: modelKey("NEC", "NEC P554U"), note: "Lasse har købe 9 stk … fra 2014 'lidt gammle' (sheet row 84)" }] }] }, ops: [] }] : [];
+  const stray = rows.length ? [{ key: "proj:note84", sheet: "PROJEKTORE", src: "PROJEKTORE!L84", bucket: "decision" as Bucket, summary: `"Lasse har købe 9 stk … fra 2014 'lidt gammle'" stands alone on the sheet`, decision: { question: "Which model does this note belong to?", defaultKey: "skip", options: [{ key: "skip", label: "Skip the note", ops: [] }, { key: "nec", label: "Attach to NEC P554U", ops: [{ type: "modelNote" as const, modelKey: modelKey("NEC P554U"), note: "Lasse har købe 9 stk … fra 2014 'lidt gammle' (sheet row 84)" }] }] }, ops: [] }] : [];
   return [...out, ...stray];
 }
 
@@ -475,7 +476,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
       const system = q.section === "accessories" ? q.system : q.system.replace(/^LP12 Leftover$/i, "LP12 QLED (leftover)").replace(/^QLED set$/i, "QLED set");
       const split = splitName(system, q.variant);
       const name = labelOf({ manufacturer: "", ...split });
-      const mkey = modelKey("", split.name, split.variant);
+      const mkey = modelKey(split.name, split.variant);
       const catPath = q.section === "accessories" ? ["Cables", "Adapters"] : ["Cables", "QLED"];
       if (ctx.existingModels.has(mkey)) {
         rows.push({ key, sheet: "QLED", src: q.src, bucket: "decision", summary: `${name}: ${q.qty} — model already exists`, decision: { question: "This model is already in the inventory.", defaultKey: "skip", options: [{ key: "skip", label: "Skip", ops: [] }, { key: "add", label: "Add the quantity", ops: q.qty ? [{ type: "bin", modelKey: mkey, quantity: q.qty, status: "in_house", importSource: q.src }] : [] }] }, ops: [] });
@@ -495,7 +496,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
     if (mainBoxes.length) {
       const counts = readControllers(ctl).reduce((acc: Record<string, number>, c) => ((acc[c.id.split("-")[0]] = (acc[c.id.split("-")[0]] ?? 0) + 1), acc), {});
       const keyFor = (b: InventoryRow) => (/wieland/i.test(b.variant) ? "W6" : /scroller/i.test(b.variant) ? "N6" : "N4");
-      rows.push({ key: "ctl:conflict", sheet: "LEDController Optælling", src: "LED - SCROLLER - BOX!F69", bucket: "decision", summary: `Controller counts differ: main sheet ${mainBoxes.map((b) => `${b.variant} = ${b.total?.value}${b.underConstruction ? ` (${b.underConstruction} under construction)` : ""}${b.inRepair ? ` (${b.inRepair} in repair)` : ""}${b.missing ? ` (${b.missing} missing)` : ""}`).join(", ")} vs controller sheet ${Object.entries(counts).map(([k, v]) => `${k} = ${v}`).join(", ")}`, decision: { question: "The controller sheet lists every unit by ID and is used as is. What about the difference?", defaultKey: "controllers", options: [{ key: "controllers", label: "Trust the controller sheet (default)", ops: [] }, { key: "extra", label: "Add the main sheet's surplus as unverified units (main count minus controller count, where positive)", ops: mainBoxes.flatMap((b) => { const n = (b.total?.value ?? 0) - (counts[keyFor(b)] ?? 0); const mk = modelKey("", "BlackLED controller", keyFor(b) === "W6" ? "6 udgange (450w) (Wieland)" : keyFor(b) === "N6" ? "6 udgange (450w) (Scroller)" : "4 udgange (200w)"); return n > 0 ? Array.from({ length: n }, () => ({ type: "unit" as const, modelKey: mk, status: "in_house", notes: "Unverified: counted on the main sheet, not on the controller sheet", importSource: b.totalSrc })) : []; }) }] }, ops: [] });
+      rows.push({ key: "ctl:conflict", sheet: "LEDController Optælling", src: "LED - SCROLLER - BOX!F69", bucket: "decision", summary: `Controller counts differ: main sheet ${mainBoxes.map((b) => `${b.variant} = ${b.total?.value}${b.underConstruction ? ` (${b.underConstruction} under construction)` : ""}${b.inRepair ? ` (${b.inRepair} in repair)` : ""}${b.missing ? ` (${b.missing} missing)` : ""}`).join(", ")} vs controller sheet ${Object.entries(counts).map(([k, v]) => `${k} = ${v}`).join(", ")}`, decision: { question: "The controller sheet lists every unit by ID and is used as is. What about the difference?", defaultKey: "controllers", options: [{ key: "controllers", label: "Trust the controller sheet (default)", ops: [] }, { key: "extra", label: "Add the main sheet's surplus as unverified units (main count minus controller count, where positive)", ops: mainBoxes.flatMap((b) => { const n = (b.total?.value ?? 0) - (counts[keyFor(b)] ?? 0); const mk = modelKey("BlackLED controller", keyFor(b) === "W6" ? "6 udgange (450w) (Wieland)" : keyFor(b) === "N6" ? "6 udgange (450w) (Scroller)" : "4 udgange (200w)"); return n > 0 ? Array.from({ length: n }, () => ({ type: "unit" as const, modelKey: mk, status: "in_house", notes: "Unverified: counted on the main sheet, not on the controller sheet", importSource: b.totalSrc })) : []; }) }] }, ops: [] });
     }
   }
 
@@ -505,7 +506,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
   const comp = sheet("COMPUTERE");
   if (comp) {
     const c = readComputers(comp);
-    const serverKey = modelKey("", "Media server PC (i9 9900K)");
+    const serverKey = modelKey("Media server PC (i9 9900K)");
     if (!ctx.existingModels.has(serverKey)) rows.push({ key: "comp:model", sheet: "COMPUTERE", src: "COMPUTERE!B1", bucket: "import", summary: "Video › Media servers › Vertigo Media server PC (i9 9900K)", ops: [{ type: "model", key: serverKey, categoryPath: ["Video", "Media servers"], manufacturer: "", name: "Media server PC (i9 9900K)", tracking: "serialized", notes: "Windows 10 Pro workstation, MadMapper / TouchDesigner", importSource: "COMPUTERE!B1" }] });
     for (const s of c.servers) {
       const day = s.dayPrice !== null && s.discount !== null ? Math.round(s.dayPrice * (1 + s.discount) * 100) / 100 : s.dayPrice;
@@ -523,7 +524,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
       const isBox = /BlackBox|Qbox/i.test(p.name);
       const category = isBox ? ["Lighting", "LED controllers"] : /^GPU$/i.test(p.group) ? ["Computers & networking"] : ["Video", "Video signal"];
       const name = p.name.replace(/\s+/g, " ").trim();
-      const mkey = modelKey(isBox ? "" : name.split(" ")[0], name);
+      const mkey = modelKey(name);
       const qty = p.qty?.value ?? 1;
       if (isBox) {
         rows.push({ key: `comp:${p.row}`, sheet: "COMPUTERE", src: p.src, bucket: "decision", summary: `${name}: ${qty} — looks like the LED controllers already imported from "LEDController Optælling"`, decision: { question: "Import as a separate bulk model, or skip because the controller sheet already has the units?", defaultKey: "skip", options: [{ key: "skip", label: "Skip (controllers come from the controller sheet)", ops: [] }, { key: "add", label: "Import as a separate bulk model", ops: [{ type: "model", key: mkey, categoryPath: category, manufacturer: "", name, tracking: "bulk", rentalDayPrice: p.dayPrice, importSource: p.src }, { type: "bin", modelKey: mkey, quantity: qty, status: "in_house", importSource: p.src }] }] }, ops: [] });
@@ -536,7 +537,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
       rows.push({ key: `comp:${p.row}`, sheet: "COMPUTERE", src: p.src, bucket: "assumption", summary: `${category.join(" › ")} › ${name}: ${qty}${p.dayPrice ? ` · day price ${p.dayPrice}` : ""}`, assumption, ops });
     }
     for (const m of c.monitors) {
-      const mkey = modelKey(m.name.split(" ")[0], m.name);
+      const mkey = modelKey(m.name);
       rows.push({ key: `comp:mon:${m.name}`, sheet: "COMPUTERE", src: m.src, bucket: "assumption", summary: `Video › Video signal › ${m.name}${m.weightKg ? ` · ${m.weightKg} kg` : ""}: no quantity`, assumption: "Model created without units.", ops: ctx.existingModels.has(mkey) ? [] : [{ type: "model", key: mkey, categoryPath: ["Video", "Video signal"], manufacturer: m.name.split(" ")[0], name: m.name, tracking: "serialized", weightKg: m.weightKg, importSource: m.src }] });
     }
   }
@@ -546,7 +547,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
     const t = readTruss(truss);
     for (const row of t.inventory) {
       const name = row.description ? `${row.code} ${row.description}` : row.code;
-      const mkey = modelKey("Truss (Urs)", name);
+      const mkey = modelKey(name);
       const cf: Record<string, number> = {};
       if (row.lengthM !== null && row.lengthM >= 0.5) cf.length_m = row.lengthM;
       const ops: Op[] = [];
@@ -555,7 +556,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
       rows.push({ key: `truss:${row.row}`, sheet: "Truss", src: row.src, bucket: "assumption", summary: `Rigging › Truss › ${name}: ${row.qty ?? 0}${row.dayPrice ? ` · day price ${row.dayPrice}` : ""}`, assumption: `Manufacturer unknown on the sheet (supplier Urs); net price ${row.netPrice ?? "?"} kr kept as a note. The order confirmation lists other quantities (see the quote rows).`, ops });
     }
     // The quotes below the inventory: one purchase record per line that names a truss model (matched on the code).
-    const byCode = new Map(t.inventory.map((row) => [row.code.trim().toLowerCase(), modelKey("Truss (Urs)", row.description ? `${row.code} ${row.description}` : row.code)]));
+    const byCode = new Map(t.inventory.map((row) => [row.code.trim().toLowerCase(), modelKey(row.description ? `${row.code} ${row.description}` : row.code)]));
     for (const q of t.quotes) {
       const matched = q.lines.filter((l) => l.qty && byCode.has(l.code.trim().toLowerCase()));
       const extras = q.lines.filter((l) => !l.qty && (l.listPrice || l.netPrice));
@@ -586,7 +587,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
         ops,
       });
     }
-    if (t.notes.length) rows.push({ key: "truss:notes", sheet: "Truss", src: "Truss!A51", bucket: "assumption", summary: `Notes: ${t.notes.join(" / ")}`, assumption: "Kept as a note on HD24-200.", ops: [{ type: "modelNote", modelKey: modelKey("Truss (Urs)", "HD24-200"), note: t.notes.join(" / ") }] });
+    if (t.notes.length) rows.push({ key: "truss:notes", sheet: "Truss", src: "Truss!A51", bucket: "assumption", summary: `Notes: ${t.notes.join(" / ")}`, assumption: "Kept as a note on HD24-200.", ops: [{ type: "modelNote", modelKey: modelKey("HD24-200"), note: t.notes.join(" / ") }] });
   }
 
   const stands = sheet("Stativer & Support");
@@ -600,7 +601,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
       const other = match?.total?.value ?? null;
       if (match && other !== null && other !== r.qty) {
         const sp = splitName(match.system, match.variant, manufacturerFor(match.system));
-        const mkey = modelKey(manufacturerFor(match.system), sp.name, sp.variant);
+        const mkey = modelKey(sp.name, sp.variant);
         rows.push({ key: `rods:${r.row}`, sheet: "16mm rods", src: r.src, bucket: "decision", summary: `${r.group} ${r.label}: ${r.qty} here vs ${other} on "Stativer & Support"`, decision: { question: "Which count is right?", defaultKey: "stands", options: [{ key: "stands", label: `Keep ${other} (Stativer & Support is newer)`, ops: [] }, { key: "rods", label: `Use ${r.qty} from this sheet instead`, ops: [{ type: "bin", modelKey: mkey, quantity: (r.qty ?? 0) - other, status: "in_house", notes: "Adjusted per 16mm rods sheet", importSource: r.src }] }] }, ops: [] });
       } else if (!match) {
         rows.push({ key: `rods:${r.row}`, sheet: "16mm rods", src: r.src, bucket: "assumption", summary: `${r.group} ${r.label}: ${r.qty} (no matching row on Stativer & Support)`, assumption: "Only the stands sheet is imported; this row is shown for comparison.", ops: [] });
@@ -615,7 +616,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
       const date = l.date ? (/^\d{4}/.test(l.date) ? l.date : l.date.replace(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/, (_m, d, mo, y) => `${y.length === 2 ? "20" + y : y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`)) : "2021-01-01";
       const lines = l.lines.map((ln) => {
         const w = low(ln.what);
-        const modelKeyFor = /eclgallery/.test(w) ? modelKey("ETC", "EclGalleryProfile FC 60W RGBW") : /perstrop|th671/.test(w) ? modelKey("BenQ", "BenQ TH671st") : /nec/.test(w) ? modelKey("NEC", "NEC P554U") : /true1/.test(w) && /5m/.test(w) ? modelKey("", "True1", "5 m") : null;
+        const modelKeyFor = /eclgallery/.test(w) ? modelKey("EclGalleryProfile FC 60W RGBW") : /perstrop|th671/.test(w) ? modelKey("BenQ TH671st") : /nec/.test(w) ? modelKey("NEC P554U") : /true1/.test(w) && /5m/.test(w) ? modelKey("True1", "5 m") : null;
         return { modelKey: modelKeyFor, quantity: ln.qty, text: ln.what };
       });
       rows.push({
@@ -640,7 +641,7 @@ export function buildPlan(wb: Workbook, ctx: PlanContext): Plan {
   const fobs = sheet("Nøglebrikker");
   if (fobs) {
     const f = readFobs(fobs);
-    const mkey = modelKey("", "Key fob");
+    const mkey = modelKey("Key fob");
     if (!ctx.existingModels.has(mkey)) rows.push({ key: "fob:model", sheet: "Nøglebrikker", src: "Nøglebrikker!A4", bucket: "import", summary: `Keys & access › Key fobs › Key fob: ${f.fobs.length} serialized`, ops: [{ type: "model", key: mkey, categoryPath: ["Keys & access", "Key fobs"], manufacturer: "", name: "Key fob", tracking: "serialized", notes: f.notes.join(" · ") || null, importSource: "Nøglebrikker!A4" }] });
     for (const fob of f.fobs) {
       if (ctx.existingTags.has(fob.id)) {

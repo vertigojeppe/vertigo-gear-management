@@ -188,7 +188,9 @@ a second entry that exports components only and never a service.
   null). Stock, weight and price stay per model. The inventory list groups
   by family (`groupFamilies`), `ModelSelect` renders families as
   `<optgroup>`s, the gear picker groups results (`groupCatalog`), and
-  the importer and seed match models by (manufacturer, name, variant).
+  the importer matches models by name + variant (`modelKey(name, variant)`;
+  an existing model without a manufacturer gets the sheet's), the seed by
+  (manufacturer, name, variant).
   `splitVariant` / `compareVariants` in `src/lib/variant.ts` split a
   legacy combined name and sort sizes numerically.
 - Names lead, the manufacturer follows. `modelLabel(m)` is name +
@@ -487,7 +489,7 @@ a second entry that exports components only and never a service.
   the upload waits in storage as `imports/<id>.xlsx` until confirmed).
   Pages: `/settings/import` (upload) and `/settings/import/[importId]`
   (preview, decision selects named `decision.<rowKey>`, confirm).
-- Nothing is written before confirm. Models match by manufacturer + name,
+- Nothing is written before confirm. Models match by name + variant,
   units by asset tag, contacts/locations by name, so re-running a file is
   safe. Sheet IDs become asset tags; `normaliseAssetTag` accepts them.
 - Every imported row has `importSource`; the ActivityLog row
