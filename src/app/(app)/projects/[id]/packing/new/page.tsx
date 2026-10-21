@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/auth/session";
 import { NewListForm, otherListsForCopy, templateOptions } from "@/modules/packing";
 import { projects } from "@/modules/projects";
 import { prisma } from "@/lib/db";
+import { projectGearEnabled } from "@/lib/features";
 
 export const metadata: Metadata = { title: "New packing list" };
 
@@ -25,7 +26,7 @@ export default async function NewPackingListPage(props: { params: Promise<{ id: 
         defaultName={t("title") === "Packing lists" ? "Packing list" : "Pakkeliste"}
         templates={templates.map((x) => ({ id: x.id, label: `${x.name} (${x._count.lines})` }))}
         otherLists={others}
-        hasReservations={reservations > 0}
+        hasReservations={projectGearEnabled() && reservations > 0}
       />
     </div>
   );

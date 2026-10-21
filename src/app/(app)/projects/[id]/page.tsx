@@ -29,6 +29,7 @@ import { QuoteSection, quoteFor, rateTableOptions } from "@/modules/pricing";
 import { RemoveSubHireLineButton, RentInDialog, subHireLinesFor, subHireOptions } from "@/modules/subhire";
 import { today } from "@/lib/dates";
 import { PACKING_STATUSES, PROJECT_STATUSES } from "../../../../../config/app.config";
+import { projectGearEnabled } from "@/lib/features";
 
 export const metadata: Metadata = { title: "Project" };
 
@@ -47,6 +48,7 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
   const tc = await getTranslations("common");
   const canEdit = can(actor.role, "projects.write");
   const isAdmin = can(actor.role, "users.manage");
+  const gear = projectGearEnabled();
 
   const tph = await getTranslations("phase");
   const withCall = (range: string, call: string | null) => (call ? `${range} · ${t("callAt", { time: call })}` : range);
@@ -69,7 +71,7 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
             </StatusPill>
           </span>
         }
-        subtitle={[client?.name, project.venueName, project.reserveFrom ? t("reserveWindow", { from: formatDate(project.reserveFrom), to: formatDate(project.reserveTo ?? project.reserveFrom) }) : t("noDates")]
+        subtitle={[client?.name, project.venueName, project.reserveFrom ? (gear ? t("reserveWindow", { from: formatDate(project.reserveFrom), to: formatDate(project.reserveTo ?? project.reserveFrom) }) : null) : t("noDates")]
           .filter(Boolean)
           .join(" · ")}
         crumbs={[{ label: t("title"), href: "/projects" }, { label: project.name }]}
@@ -137,84 +139,52 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
         </section>
       </div>
 
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-medium">
-            {t("reservations")} <span className="text-sm font-normal text-muted-foreground">({reservations.length})</span>
-          </h2>
-          {canEdit && <ReserveDialog projectId={project.id} models={models} defaultFrom={project.reserveFrom} defaultTo={project.reserveTo} />}
-        </div>
-        {reservations.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("noReservations")}</p>
-        ) : (
-          <ul className="divide-y rounded-md border text-sm">
-            {reservations.map((r) => (
-              <li key={r.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
-                <span className="w-10 shrink-0 font-medium">{r.quantity}×</span>
-                <span className="min-w-0 flex-1">
-                  <Link href={`/inventory/models/${r.modelId}`} className="hover:underline">
-                    {r.modelLabel}
-                  </Link>
-                  <span className="block text-xs text-muted-foreground">
-                    {formatDate(r.startDate)} – {formatDate(r.endDate)}
-                    {r.note ? ` · ${r.note}` : ""}
-                    {r.itemTag ? ` · ${r.itemTag}` : ""}
-                  </span>
-                </span>
-                {r.shortfall > 0 ? (
-                  <StatusPill color="red" className="shrink-0" title={r.conflicts.map((c) => `${c.quantity}× ${c.holderName} (${c.startDate} – ${c.endDate})`).join("\n")}>
-                    {t("overbooked")} · {t("shortfall", { count: r.shortfall })}
-                  </StatusPill>
-                ) : (
-                  <StatusPill color="green" className="shrink-0">
-                    {t("ok")} · {t("available", { count: r.available })}
-                  </StatusPill>
-                )}
-                {canEdit && (
-                  <span className="flex shrink-0 items-center gap-1">
-                    <ReserveDialog
-                      projectId={project.id}
-                      models={models}
-                      defaultFrom={project.reserveFrom}
-                      defaultTo={project.reserveTo}
-                      existing={{ id: r.id, modelId: r.modelId, quantity: r.quantity, startDate: r.startDate, endDate: r.endDate, note: r.note, pricePerDay: r.pricePerDay, discountPct: r.discountPct }}
-                    />
-                    <RemoveReservationButton id={r.id} projectId={project.id} />
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {(subHire.length > 0 || subHireChoices.length > 0) && (
+      {/* Reserved gear, rent in and the quote: hidden until PROJECT_GEAR=on (src/lib/features.ts). */}
+      {gear && (
+        <>
         <section className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-medium">
-              {tsh("title")} <span className="text-sm font-normal text-muted-foreground">({subHire.length})</span>
+              {t("reservations")} <span className="text-sm font-normal text-muted-foreground">({reservations.length})</span>
             </h2>
-            {canEdit && subHireChoices.length > 0 && <RentInDialog projectId={project.id} options={subHireChoices} defaultFrom={project.reserveFrom} defaultTo={project.reserveTo} />}
+            {canEdit && <ReserveDialog projectId={project.id} models={models} defaultFrom={project.reserveFrom} defaultTo={project.reserveTo} />}
           </div>
-          {subHire.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{tsh("noLines")}</p>
+          {reservations.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("noReservations")}</p>
           ) : (
             <ul className="divide-y rounded-md border text-sm">
-              {subHire.map((l) => (
-                <li key={l.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
-                  <span className="w-10 shrink-0 font-medium">{l.quantity}×</span>
+              {reservations.map((r) => (
+                <li key={r.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
+                  <span className="w-10 shrink-0 font-medium">{r.quantity}×</span>
                   <span className="min-w-0 flex-1">
-                    {l.label}
+                    <Link href={`/inventory/models/${r.modelId}`} className="hover:underline">
+                      {r.modelLabel}
+                    </Link>
                     <span className="block text-xs text-muted-foreground">
-                      {tsh("rentInFrom", { owner: l.ownerName })} · {formatDate(l.startDate)} – {formatDate(l.endDate)}
-                      {l.costPerDay !== null ? ` · ${tsh("costShort", { amount: formatMoney(l.costPerDay) })}` : ""}
-                      {l.note ? ` · ${l.note}` : ""}
+                      {formatDate(r.startDate)} – {formatDate(r.endDate)}
+                      {r.note ? ` · ${r.note}` : ""}
+                      {r.itemTag ? ` · ${r.itemTag}` : ""}
                     </span>
                   </span>
+                  {r.shortfall > 0 ? (
+                    <StatusPill color="red" className="shrink-0" title={r.conflicts.map((c) => `${c.quantity}× ${c.holderName} (${c.startDate} – ${c.endDate})`).join("\n")}>
+                      {t("overbooked")} · {t("shortfall", { count: r.shortfall })}
+                    </StatusPill>
+                  ) : (
+                    <StatusPill color="green" className="shrink-0">
+                      {t("ok")} · {t("available", { count: r.available })}
+                    </StatusPill>
+                  )}
                   {canEdit && (
                     <span className="flex shrink-0 items-center gap-1">
-                      <RentInDialog projectId={project.id} options={subHireChoices} defaultFrom={project.reserveFrom} defaultTo={project.reserveTo} existing={l} />
-                      <RemoveSubHireLineButton id={l.id} projectId={project.id} />
+                      <ReserveDialog
+                        projectId={project.id}
+                        models={models}
+                        defaultFrom={project.reserveFrom}
+                        defaultTo={project.reserveTo}
+                        existing={{ id: r.id, modelId: r.modelId, quantity: r.quantity, startDate: r.startDate, endDate: r.endDate, note: r.note, pricePerDay: r.pricePerDay, discountPct: r.discountPct }}
+                      />
+                      <RemoveReservationButton id={r.id} projectId={project.id} />
                     </span>
                   )}
                 </li>
@@ -222,9 +192,46 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
             </ul>
           )}
         </section>
-      )}
 
-      {quote && <QuoteSection quote={quote} tables={rateTables} canEdit={canEdit} showGear pdfHref={`/api/projects/${project.id}/quote.pdf`} />}
+        {(subHire.length > 0 || subHireChoices.length > 0) && (
+          <section className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-medium">
+                {tsh("title")} <span className="text-sm font-normal text-muted-foreground">({subHire.length})</span>
+              </h2>
+              {canEdit && subHireChoices.length > 0 && <RentInDialog projectId={project.id} options={subHireChoices} defaultFrom={project.reserveFrom} defaultTo={project.reserveTo} />}
+            </div>
+            {subHire.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{tsh("noLines")}</p>
+            ) : (
+              <ul className="divide-y rounded-md border text-sm">
+                {subHire.map((l) => (
+                  <li key={l.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
+                    <span className="w-10 shrink-0 font-medium">{l.quantity}×</span>
+                    <span className="min-w-0 flex-1">
+                      {l.label}
+                      <span className="block text-xs text-muted-foreground">
+                        {tsh("rentInFrom", { owner: l.ownerName })} · {formatDate(l.startDate)} – {formatDate(l.endDate)}
+                        {l.costPerDay !== null ? ` · ${tsh("costShort", { amount: formatMoney(l.costPerDay) })}` : ""}
+                        {l.note ? ` · ${l.note}` : ""}
+                      </span>
+                    </span>
+                    {canEdit && (
+                      <span className="flex shrink-0 items-center gap-1">
+                        <RentInDialog projectId={project.id} options={subHireChoices} defaultFrom={project.reserveFrom} defaultTo={project.reserveTo} existing={l} />
+                        <RemoveSubHireLineButton id={l.id} projectId={project.id} />
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+
+        {quote && <QuoteSection quote={quote} tables={rateTables} canEdit={canEdit} showGear pdfHref={`/api/projects/${project.id}/quote.pdf`} />}
+        </>
+      )}
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

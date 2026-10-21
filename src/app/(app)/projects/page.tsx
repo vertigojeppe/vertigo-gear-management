@@ -13,6 +13,7 @@ import { can, requireActor } from "@/lib/auth/session";
 import { formatDate } from "@/lib/format";
 import { clientOptions, listProjects, projectFilters } from "@/modules/projects";
 import { PROJECT_STATUSES } from "../../../../config/app.config";
+import { projectGearEnabled } from "@/lib/features";
 
 export const metadata: Metadata = { title: "Projects" };
 
@@ -23,6 +24,7 @@ export default async function ProjectsPage(props: { searchParams: Promise<Record
   const t = await getTranslations("projects");
   const ts = await getTranslations("projectStatus");
   const tc = await getTranslations("common");
+  const gear = projectGearEnabled();
   const [result, clients] = await Promise.all([listProjects(filters), clientOptions()]);
   const canEdit = can(actor.role, "projects.write");
   const when = filters.when ?? "upcoming";
@@ -123,7 +125,8 @@ export default async function ProjectsPage(props: { searchParams: Promise<Record
                   <span className="block truncate text-xs text-muted-foreground">
                     {[p.clientName, p.venueName].filter(Boolean).join(" · ")}
                     {" · "}
-                    {t("reservationsCount", { count: p.reservationCount })} · {t("crewCount", { count: p.crewCount })}
+                    {gear && `${t("reservationsCount", { count: p.reservationCount })} · `}
+                    {t("crewCount", { count: p.crewCount })}
                   </span>
                 </span>
                 <StatusPill color={PROJECT_STATUSES.find((s) => s.key === p.status)?.color ?? "gray"}>{ts(p.status)}</StatusPill>
