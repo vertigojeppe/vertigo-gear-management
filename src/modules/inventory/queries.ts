@@ -10,6 +10,8 @@ import { categoryIdsIncludingChildren, toItemDto, toModelDto, type ItemDto, type
 import { buildTree, flattenTree, pathNames } from "./tree";
 import { makersOf, modelLabel } from "@/lib/format";
 import { bestMatches } from "@/lib/search";
+// eslint-disable-next-line no-restricted-imports -- the barrel loads server actions, which do not load under Vitest
+import { glossary } from "@/modules/settings/glossary";
 
 const PAGE = appConfig.pageSize;
 
@@ -101,7 +103,8 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
     loadColorMaps(),
   ]);
-  const { rows: models, close: closeMatches } = bestMatches(candidates, (m) => [m.manufacturer, m.name, m.variant, m.description], filters.q);
+  // Category names count too, so "projektor" (via the search words) finds a "PT-RZ21K" filed under Projectors.
+  const { rows: models, close: closeMatches } = bestMatches(candidates, (m) => [m.manufacturer, m.name, m.variant, m.description, ...pathNames(cats, m.categoryId)], filters.q, await glossary.load());
   const ids = models.map((m) => m.id);
   const counts = ids.length ? await prisma.item.groupBy({ by: ["modelId", "status"], where: { modelId: { in: ids } }, _sum: { quantity: true } }) : [];
   // Metre consumables have no bins: their stock is the ledger, shown as both "in house" and "owned".
@@ -222,7 +225,7 @@ async function itemSearch(filters: ItemFilters & { customField?: { key: string; 
   }
   if (!filters.q) return { where, close: false };
   const candidates = await prisma.item.findMany({ where, select: ITEM_SEARCH_SELECT });
-  const found = bestMatches(candidates, itemSearchFields, filters.q);
+  const found = bestMatches(candidates, itemSearchFields, filters.q, await glossary.load());
   return { where: { ...where, id: { in: found.rows.map((i) => i.id) } }, close: found.close };
 }
 
@@ -309,7 +312,7 @@ export async function kitCandidates(kitId: string, q: string | undefined) {
   const where: Prisma.ItemWhereInput = { id: { not: kitId }, parentItemId: null, status: { not: "retired" } };
   if (q) {
     const candidates = await prisma.item.findMany({ where, select: { ...ITEM_SEARCH_SELECT, notes: false } });
-    where.id = { in: bestMatches(candidates, itemSearchFields, q).rows.map((i) => i.id) };
+    where.id = { in: bestMatches(candidates, itemSearchFields, q, await glossary.load()).rows.map((i) => i.id) };
   }
   const rows = await prisma.item.findMany({
     where,

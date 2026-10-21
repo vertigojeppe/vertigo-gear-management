@@ -165,6 +165,19 @@ a second entry that exports components only and never a service.
   `bestMatches` and filter by `id in`; lists return `closeMatches`
   and the pages say so. The gear picker uses `searchCatalog`. New
   searchable lists go the same way, not through Prisma `contains`.
+- Search words (`GlossaryGroup`, Settings › Search words, `settings.manage`,
+  `glossary` in `src/modules/settings/glossary.ts`): groups of words that
+  mean the same (arbejdslys, worklight). `bestMatches(.., glossary)` and
+  `searchCatalog(.., glossary)` let a query word also match its partners
+  (`queryTerms`, up to three words form one term); partners shorter than
+  five letters must start a word ("lamp" not in "clamp"); groups do not
+  chain. Used by models (which also match their category path), items,
+  kit candidates, apps and the gear picker (groups passed to the browser);
+  not by projects or rentals. Names are never translated. The migration
+  seeds a starter list; saving replaces the whole list.
+- DB tests run in parallel and many pick "any admin / any member": a test
+  that creates users must give them the viewer role in the database (act
+  with other roles in memory) and delete them afterwards.
 - REST: handlers under `src/app/api/v1/**` use `handler(permission, fn)`
   from `src/lib/api/respond.ts` and the module zod schemas. Add new
   endpoints to `src/lib/api/openapi.ts` so `/api/docs` stays complete.

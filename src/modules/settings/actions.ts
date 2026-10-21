@@ -5,6 +5,7 @@ import { requirePermission } from "@/lib/auth/session";
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitionInput, webhookInput } from "./schema";
 import { customFieldDefinitions, outboxAdmin, webhooks } from "./service";
+import { glossary } from "./glossary";
 
 export async function createCustomField(_prev: FormState, formData: FormData): Promise<FormState> {
   const actor = await requirePermission("settings.manage");
@@ -67,3 +68,17 @@ export async function retryOutboxRow(formData: FormData): Promise<void> {
   await outboxAdmin.retry(actor, String(formData.get("id")));
   revalidatePath("/settings/webhooks");
 }
+
+/** Settings › Search words: replaces the whole list. */
+export async function saveGlossary(_prev: FormState<{ count: number }>, formData: FormData): Promise<FormState<{ count: number }>> {
+  const actor = await requirePermission("settings.manage");
+  try {
+    const { count } = await glossary.save(actor, String(formData.get("text") ?? ""));
+    revalidatePath("/settings/search");
+    return { ok: true, data: { count } };
+  } catch (err) {
+    const { error, fieldErrors, values } = errorState(err, echoValues(formData));
+    return { ok: false, error, fieldErrors, values };
+  }
+}
+

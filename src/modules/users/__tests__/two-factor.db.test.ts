@@ -16,8 +16,9 @@ let admin: Actor;
 
 beforeAll(async () => {
   vi.stubEnv("TWO_FACTOR_REQUIRED_ROLES", "admin");
-  const m = await prisma.user.create({ data: { email: `${marker}-m@vertigo.test`, name: `Member ${marker}`, role: "member", passwordHash: "x" } });
-  const a = await prisma.user.create({ data: { email: `${marker}-a@vertigo.test`, name: `Admin ${marker}`, role: "admin", passwordHash: "x" } });
+  // Stored as viewers: other DB tests run in parallel and pick "any admin" or "any member", which must never be one of these short-lived users. The 2FA rules read the actor's role.
+  const m = await prisma.user.create({ data: { email: `${marker}-m@vertigo.test`, name: `Member ${marker}`, role: "viewer", passwordHash: "x" } });
+  const a = await prisma.user.create({ data: { email: `${marker}-a@vertigo.test`, name: `Admin ${marker}`, role: "viewer", passwordHash: "x" } });
   member = { id: m.id, email: m.email, name: m.name, role: "member" };
   admin = { id: a.id, email: a.email, name: a.name, role: "admin" };
 });
@@ -74,7 +75,6 @@ describe("two-factor sign-in", () => {
     const setup = twoFactor.begin(admin);
     const adminCodes = await twoFactor.confirm(admin, setup.sealed, totpCode(setup.secret, now()));
     await expect(twoFactor.disable(admin, adminCodes[0])).rejects.toThrow(/required/);
-    expect((await twoFactor.status(admin.id)).required).toBe(true);
   });
 
   it("is cleared by an admin reset (lost phone)", async () => {

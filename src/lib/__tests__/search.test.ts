@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bestMatches, haystack, matchLevel, searchWords, squash, substringDistance } from "../search";
+import { bestMatches, buildGlossary, haystack, matchLevel, parseGlossaryText, queryTerms, searchWords, squash, substringDistance } from "../search";
 
 describe("squash", () => {
   it("drops spaces, punctuation, case and accents but keeps æ and ø", () => {
@@ -52,9 +52,57 @@ describe("matching", () => {
   it("allows no typos in short words and reads the fields together too", () => {
     expect(matchLevel(haystack(["Robe", "Pointe"]), ["rob"])).toBe(0);
     expect(matchLevel(haystack(["Robe", "Pointe"]), ["rox"])).toBeNull();
-    expect(haystack(["Robe", "Pointe", null])).toBe("robe|pointe|robepointe");
-    expect(haystack(["Pointe"])).toBe("pointe");
+    expect(haystack(["Robe", "Pointe", null])).toBe("robe|pointe|robepointe|^robe^pointe");
+    expect(haystack(["Pointe"])).toBe("pointe|^pointe");
+    expect(haystack(["Work light 50W"])).toBe("worklight50w|^work^light^50w");
     expect(matchLevel(haystack(["Robe", "Pointe"]), ["robepointe"])).toBe(0);
     expect(matchLevel(haystack(["Robe", "Pointe"]), ["robepionte"])).toBe(1);
+  });
+});
+
+describe("glossary", () => {
+  const glossary = buildGlossary([
+    ["arbejdslys", "worklight", "work light"],
+    ["kabel", "cable"],
+    ["lampe", "lamp", "pære"],
+    ["pære", "bulb"],
+  ]);
+  const rows = [
+    { manufacturer: "", name: "Worklight LED", variant: "50 W" },
+    { manufacturer: "", name: "Strømkabel", variant: "5 m" },
+    { manufacturer: "Osram", name: "HMI lamp", variant: "575 W" },
+    { manufacturer: "", name: "Arbejdslampe", variant: null },
+  ];
+  const fields = (r: (typeof rows)[number]) => [r.manufacturer, r.name, r.variant];
+  const names = (q: string) => bestMatches(rows, fields, q, glossary).rows.map((r) => r.name);
+
+  it("lets a word find its partners, in either language", () => {
+    expect(names("arbejdslys")).toEqual(["Worklight LED"]);
+    expect(names("work light 50w")).toEqual(["Worklight LED"]);
+    expect(names("cable 5 m")).toEqual(["Strømkabel"]);
+    expect(names("lamp")).toEqual(["HMI lamp", "Arbejdslampe"]);
+    expect(names("pære")).toEqual(["HMI lamp", "Arbejdslampe"]); // pære is in both groups
+    expect(bestMatches([{ manufacturer: "", name: "Half clamp", variant: null }, ...rows], fields, "lampe", glossary).rows.map((r) => r.name)).toEqual(["HMI lamp", "Arbejdslampe"]); // short partners start a word: no "c-lamp"
+    expect(bestMatches([{ manufacturer: "", name: "Half clamp", variant: null }], fields, "lamp", glossary).rows).toHaveLength(1); // typed words still match anywhere
+    expect(names("bulb")).toEqual([]); // groups do not chain: bulb → pære, not on to lamp
+    expect(names("worklight")).toEqual(["Worklight LED"]);
+  });
+
+  it("still finds typos, and changes nothing without a glossary", () => {
+    expect(bestMatches(rows, fields, "worklihgt", glossary)).toEqual({ rows: [rows[0]], close: true });
+    expect(bestMatches(rows, fields, "arbejdslys").rows.map((r) => r.name)).not.toContain("Worklight LED");
+  });
+
+  it("joins neighbouring words into one glossary term", () => {
+    expect(queryTerms("work light led", glossary)).toEqual([["worklight", "arbejdslys"], ["led"]]);
+    expect(queryTerms("work light led")).toEqual([["work"], ["light"], ["led"]]);
+    expect(matchLevel("worklightled", [["arbejdslys", "worklight"], "led"])).toBe(0);
+  });
+
+  it("reads the settings text: one group per line, commas between words", () => {
+    expect(parseGlossaryText("arbejdslys, worklight, work  light\n\n# comment\nkabel; cable\nstativ\nlys, LYS")).toEqual({
+      groups: [["arbejdslys", "worklight"], ["kabel", "cable"]], // "work light" is "worklight" to the search
+      badLines: [5, 6],
+    });
   });
 });

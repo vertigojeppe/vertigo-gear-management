@@ -33,6 +33,7 @@ import {
   SpareSuggestions,
 } from "@/modules/packing";
 import { PACKING_STATUSES } from "../../../../../../../config/app.config";
+import { glossary } from "@/modules/settings";
 
 export async function generateMetadata(props: { params: Promise<{ id: string; listId: string }> }): Promise<Metadata> {
   const { listId } = await props.params;
@@ -121,7 +122,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
 
       {editable && (
         <>
-          <GearPicker target={{ kind: "list", ...ids }} catalog={catalog} cases={caseOptions} />
+          <GearPicker target={{ kind: "list", ...ids }} catalog={catalog} cases={caseOptions} glossaryGroups={await glossary.groups()} />
           <SpareSuggestions ids={ids} rows={spares} />
           <div className="flex flex-wrap gap-2">
             {templates.length > 0 && <ApplyTemplateDialog ids={ids} templates={templates.map((x) => ({ id: x.id, label: `${x.name} (${x._count.lines})` }))} />}

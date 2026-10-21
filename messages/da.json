@@ -423,7 +423,12 @@
     "twoFactorOnFor": "Totrinslogin er slået til for denne bruger.",
     "twoFactorOffFor": "Totrinslogin er slået fra for denne bruger.",
     "twoFactorReset": "Nulstil totrinslogin",
-    "twoFactorResetConfirm": "Nulstil totrinslogin for {name}? Brugeren logger ind med adgangskoden alene og sætter det op igen (krævet for admins)."
+    "twoFactorResetConfirm": "Nulstil totrinslogin for {name}? Brugeren logger ind med adgangskoden alene og sætter det op igen (krævet for admins).",
+    "searchWords": "Søgeord",
+    "searchWordsHelp": "Ord, der betyder det samme i en søgning: arbejdslys finder worklight.",
+    "glossaryIntro": "Én gruppe pr. linje, ord adskilt af kommaer. En søgning efter et ord i en gruppe finder også de andre, i lageret, enhederne, pakkelistens gearvælger og apps. Navne ændres aldrig. Mellemrum og store bogstaver er ligegyldige, så “work light” og “worklight” er det samme ord. Grupper kæder ikke: et ord på to linjer får begge linjer, men ikke det, de linjer peger videre på.",
+    "glossaryText": "Grupper",
+    "glossarySaved": "Gemte {count, plural, one {# gruppe} other {# grupper}}."
   },
   "roles": {
     "admin": "Administrator",
