@@ -49,7 +49,7 @@ export const importer = {
       prisma.item.findMany({ select: { assetTag: true } }),
       prisma.user.findMany({ where: { active: true }, select: { id: true, name: true } }),
     ]);
-    return { existingModels: new Set(models.map((m) => modelKey(m.manufacturer, m.name, m.variant))), existingTags: new Set(items.map((i) => i.assetTag)), users };
+    return { existingModels: new Set(models.map((m) => modelKey(m.name, m.variant))), existingTags: new Set(items.map((i) => i.assetTag)), users };
   },
 
   /** The recorded result when this import has already been applied. */

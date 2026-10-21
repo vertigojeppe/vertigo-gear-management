@@ -117,7 +117,7 @@ describe("importer commit", () => {
     const wb = await readWorkbook(await fixtureBytes(M), fileName);
     const ctx = await importer.context();
     expect(ctx.existingTags.has("W6-91")).toBe(true);
-    expect(ctx.existingModels.has(modelKey("", `True1 ${M}`, "5 m"))).toBe(true);
+    expect(ctx.existingModels.has(modelKey(`True1 ${M}`, "5 m"))).toBe(true);
     const plan = buildPlan(wb, ctx);
     expect(plan.rows.find((r) => r.key === "LED - SCROLLER - BOX:6")?.bucket).toBe("decision");
     const result = await applyOps(admin, resolveOps(plan, { "loan:1": "closed" }), fileName);
@@ -128,11 +128,36 @@ describe("importer commit", () => {
   it("adds units to an existing model when told to", async () => {
     const wb = await readWorkbook(await fixtureBytes(M), fileName);
     const plan = buildPlan(wb, await importer.context());
-    const key = modelKey("", `True1 ${M}`, "5 m");
+    const key = modelKey(`True1 ${M}`, "5 m");
     const ops = resolveOps(plan, { "LED - SCROLLER - BOX:6": "add", "loan:1": "closed" }).filter((o) => "modelKey" in o && o.modelKey === key);
     const result = await applyOps(admin, ops, fileName);
     created.push(result.created);
     expect(result).toMatchObject({ models: 0, bins: 2 });
     expect(await prisma.item.count({ where: { model: { name: `True1 ${M}`, variant: "5 m" } } })).toBe(4);
+  });
+
+  it("matches an existing model by name and size, whatever the manufacturer, and fills in a missing one", async () => {
+    const category = await prisma.category.create({ data: { name: `Lamps ${M}` } });
+    const lamp = await prisma.model.create({ data: { categoryId: category.id, manufacturer: "", name: `HMI lamp ${M}`, variant: "575 W", trackingType: "bulk" } });
+    const key = modelKey(`hmi LAMP ${M}`, "575 w");
+    try {
+      const result = await applyOps(
+        admin,
+        [
+          { type: "model", key, categoryPath: ["Lighting", "Lamps"], manufacturer: "Osram", name: `HMI lamp ${M}`, variant: "575 W", tracking: "bulk", importSource: `Lamps ${M}!A2` },
+          { type: "bin", modelKey: key, quantity: 3, status: "in_house", importSource: `Lamps ${M}!B2` },
+        ],
+        fileName,
+      );
+      created.push(result.created);
+      expect(result).toMatchObject({ models: 0, bins: 1 });
+      expect(await prisma.model.count({ where: { name: { equals: `HMI lamp ${M}`, mode: "insensitive" } } })).toBe(1);
+      expect((await prisma.model.findUniqueOrThrow({ where: { id: lamp.id } })).manufacturer).toBe("Osram");
+      expect(await prisma.item.findFirst({ where: { modelId: lamp.id } })).toMatchObject({ quantity: 3 });
+    } finally {
+      await prisma.item.deleteMany({ where: { modelId: lamp.id } });
+      await prisma.model.delete({ where: { id: lamp.id } });
+      await prisma.category.delete({ where: { id: category.id } });
+    }
   });
 });
