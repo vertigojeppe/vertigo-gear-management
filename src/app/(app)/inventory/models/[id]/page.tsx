@@ -13,6 +13,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatNumber, formatMoney, modelLabel } from "@/lib/format";
+import { ModelName } from "@/components/model-name";
 import { AttachmentsSection } from "@/modules/files";
 import { ConsumableSection, EditFamilyDialog, LabelsDialog, SparePartsSection, categoryOptions, familyState, inventoryActions, modelDetail, modelOptions, modelUsage } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
@@ -63,7 +64,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
         title={
           <span className="flex items-center gap-2">
             <ColorBar color={detail.categoryColor} className="h-6" />
-            {label}
+            <ModelName model={model} />
             <ColorDot color={detail.lengthColor} className="size-3" />
           </span>
         }
@@ -178,7 +179,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
             <h2 className="text-lg font-medium">
               {t("variants")} <span className="text-sm font-normal text-muted-foreground">({detail.variants.length + 1})</span>
             </h2>
-            {family && <EditFamilyDialog modelId={model.id} manufacturer={model.manufacturer} name={model.name} family={family} categories={categories} />}
+            {family && <EditFamilyDialog modelId={model.id} name={model.name} family={family} categories={categories} />}
           </div>
           <ul className="flex flex-wrap gap-2 text-sm">
             <li className="flex items-center gap-1.5 rounded-md border bg-muted px-2.5 py-1 font-medium">

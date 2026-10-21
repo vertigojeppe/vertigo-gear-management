@@ -109,8 +109,10 @@ export async function editFamily(_prev: FormState, formData: FormData): Promise<
   const modelId = String(formData.get("modelId") ?? "");
   const parsed = parseForm(familyEditInput, formData);
   if (!parsed.ok) return parsed.state;
+  // Variants with different manufacturers and the field left empty: keep each one's.
+  const keepMakers = formData.get("manufacturerMixed") === "1" && !parsed.data.manufacturer;
   try {
-    await models.editFamily(actor, modelId, parsed.data);
+    await models.editFamily(actor, modelId, { ...parsed.data, manufacturer: keepMakers ? undefined : (parsed.data.manufacturer ?? "") });
   } catch (err) {
     return errorState(err, echoValues(formData));
   }

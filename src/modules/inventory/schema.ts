@@ -104,7 +104,8 @@ export type PartFitInput = z.infer<typeof partFitInput>;
 const familyFlag = z.preprocess((v) => (v === "yes" ? true : v === "no" ? false : undefined), z.boolean().optional());
 
 export const familyEditInput = z.object({
-  manufacturer: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().max(100).optional()).transform((v) => v ?? ""),
+  /** Undefined = leave each variant's manufacturer as it is (the action sends that for an empty field over mixed manufacturers). */
+  manufacturer: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().max(100).optional()),
   name: z.string().trim().min(1, "Model name is required.").max(150),
   /** Empty = leave each variant in its own category. */
   categoryId: optionalId,

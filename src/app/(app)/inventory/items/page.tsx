@@ -13,7 +13,8 @@ import { can, requireActor } from "@/lib/auth/session";
 import { InventoryTabs, categoryOptions, itemFilters, listItems, locationOptions, modelOptions, LabelsDialog } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 import { ITEM_STATUSES } from "../../../../../config/app.config";
-import { modelLabel } from "@/lib/format";
+import { modelLabelWithMaker } from "@/lib/format";
+import { ModelName } from "@/components/model-name";
 
 export const metadata: Metadata = { title: "Items" };
 
@@ -94,7 +95,7 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
             <option value="">{t("allModels")}</option>
             {models.map((m) => (
               <option key={m.id} value={m.id}>
-                {modelLabel(m)}
+                {modelLabelWithMaker(m)}
               </option>
             ))}
           </NativeSelect>
@@ -125,7 +126,7 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
                   <span className="block truncate font-medium">
                     {i.isKit && <span className="mr-1 rounded bg-muted px-1 text-[10px] uppercase">{t("kit")}</span>}
                     {i.name ? `${i.name} · ` : ""}
-                    {modelLabel(i.model)}
+                    <ModelName model={i.model} />
                   </span>
                   <span className="block truncate text-xs text-muted-foreground">
                     {i.model.trackingType === "bulk" ? `×${i.quantity}` : i.serialNumber ? `SN ${i.serialNumber}` : t("noSerial")}

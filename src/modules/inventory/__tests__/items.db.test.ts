@@ -127,7 +127,7 @@ describe("deleting a model", () => {
       expect((await prisma.model.findUniqueOrThrow({ where: { id: loose.id } })).archived).toBe(true);
       const del = await models.bulk(member, [spare.id, loose.id], "delete");
       expect(del.done).toBe(1); // loose went, spare is in use
-      expect(del.refused).toEqual([{ id: spare.id, label: `Test Spare ${marker}`, summary: "1 item, 1 reservation" }]);
+      expect(del.refused).toEqual([{ id: spare.id, label: `Spare ${marker}`, summary: "1 item, 1 reservation" }]);
       await expect(models.bulk(member, [spare.id], "delete", { force: true })).rejects.toThrow(); // members cannot force
       const forced = await models.bulk(admin, [spare.id], "delete", { force: true });
       expect(forced.done).toBe(1);
@@ -182,7 +182,7 @@ describe("renaming a family", () => {
     const b = await prisma.model.create({ data: { categoryId, manufacturer: "", name: `Lamp ${marker}`, variant: "1200 W", trackingType: "bulk" } });
     const target = await prisma.category.create({ data: { name: `Lamps ${marker}` } });
     try {
-      expect(await familyState(a.id)).toEqual({ count: 2, categoryId, notForRental: null, archived: false, consumable: false });
+      expect(await familyState(a.id)).toEqual({ count: 2, manufacturer: "", categoryId, notForRental: null, archived: false, consumable: false });
       await models.editFamily(admin, b.id, { manufacturer: "Osram", name: `Lamp ${marker}`, categoryId: target.id, consumable: true });
       const after = await prisma.model.findMany({ where: { id: { in: [a.id, b.id] } }, orderBy: { variant: "asc" } });
       expect(after.map((m) => [m.manufacturer, m.categoryId, m.consumable, m.notForRental])).toEqual([

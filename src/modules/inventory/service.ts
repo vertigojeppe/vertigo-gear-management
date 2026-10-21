@@ -307,8 +307,9 @@ export const models = {
    * Refused when any variant would collide with a model outside the family.
    */
   /**
-   * Admin: edit a whole family (every model with the same manufacturer +
-   * name) in one go: rename it, move it to another category, set the flags.
+   * Admin: edit a whole family (every model with the same name) in one go:
+   * rename it, set the manufacturer on every variant, move it to another
+   * category, set the flags.
    * Fields left undefined stay as each variant has them. Refused when a
    * renamed variant would collide with a model outside the family, or when
    * a metre consumable with stock or history would stop being one.
@@ -316,10 +317,11 @@ export const models = {
   async editFamily(actor: Actor, modelId: string, input: FamilyEditInput): Promise<{ count: number }> {
     assertCan(actor, "users.manage");
     const anchor = await prisma.model.findUniqueOrThrow({ where: { id: modelId } });
-    const family = await prisma.model.findMany({ where: { manufacturer: { equals: anchor.manufacturer, mode: "insensitive" }, name: { equals: anchor.name, mode: "insensitive" } } });
+    const family = await prisma.model.findMany({ where: { name: { equals: anchor.name, mode: "insensitive" } } });
     const ids = family.map((m) => m.id);
+    // Renaming into another family's name: refused when a size exists on both sides.
     const clash = await prisma.model.findFirst({
-      where: { id: { notIn: ids }, manufacturer: { equals: input.manufacturer, mode: "insensitive" }, name: { equals: input.name, mode: "insensitive" }, OR: family.map((m) => ({ variant: m.variant === null ? null : { equals: m.variant, mode: "insensitive" as const } })) },
+      where: { id: { notIn: ids }, name: { equals: input.name, mode: "insensitive" }, OR: family.map((m) => ({ variant: m.variant === null ? null : { equals: m.variant, mode: "insensitive" as const } })) },
     });
     if (clash) throw new InventoryError(`"${modelLabel(clash)}" already exists; merge or rename that model first.`, "name");
     const category = input.categoryId ? await prisma.category.findUnique({ where: { id: input.categoryId } }) : null;
@@ -332,7 +334,8 @@ export const models = {
         if (itemCount > 0 || movements > 0) throw new InventoryError("Variants counted in metres have stock or a usage history, so they must stay consumables.", "consumable");
       }
     }
-    const data: Prisma.ModelUpdateManyMutationInput & { categoryId?: string } = { manufacturer: input.manufacturer, name: input.name };
+    const data: Prisma.ModelUpdateManyMutationInput & { categoryId?: string } = { name: input.name };
+    if (input.manufacturer !== undefined) data.manufacturer = input.manufacturer;
     if (category) data.categoryId = category.id;
     if (input.notForRental !== undefined) data.notForRental = input.notForRental;
     if (input.archived !== undefined) data.archived = input.archived;
@@ -341,6 +344,7 @@ export const models = {
 
     const changes = [
       familyLabel(anchor) !== familyLabel(input) ? `renamed to "${familyLabel(input)}"` : null,
+      input.manufacturer !== undefined && family.some((m) => m.manufacturer !== input.manufacturer) ? `manufacturer "${input.manufacturer}"` : null,
       category && family.some((m) => m.categoryId !== category.id) ? `moved to ${category.name}` : null,
       ...(["notForRental", "archived", "consumable"] as const).map((f) => (input[f] !== undefined && family.some((m) => m[f] !== input[f]) ? `${f} ${input[f] ? "on" : "off"}` : null)),
     ].filter(Boolean);

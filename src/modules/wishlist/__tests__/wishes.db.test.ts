@@ -64,7 +64,7 @@ describe("wishes", () => {
     // The model form converted it: bought, and it points at the model.
     await wishes.markBought(admin, w.id, modelId);
     const bought = (await wishList("bought")).find((x) => x.id === w.id);
-    expect(bought).toMatchObject({ status: "bought", modelId, modelLabel: `Test Wished ${marker}` });
+    expect(bought).toMatchObject({ status: "bought", modelId, modelLabel: `Wished ${marker}` });
     expect((await wishList("open")).some((x) => x.id === w.id)).toBe(false);
 
     // Reopening by hand keeps the model link; marking bought by hand needs no model.

@@ -24,7 +24,7 @@ test.describe("inventory", () => {
     await category.selectOption(movingHeads!);
     await page.getByLabel("Weight (kg)").fill("12.5");
     await page.getByRole("button", { name: "Save" }).click();
-    await expect(page.getByRole("heading", { name: `Testlight Beam ${stamp}` })).toBeVisible();
+    await expect(page.getByRole("heading", { name: `Beam ${stamp} Testlight` })).toBeVisible();
 
     // Add 2 units with serial numbers
     await page.getByRole("link", { name: "Add items" }).first().click();
@@ -32,19 +32,19 @@ test.describe("inventory", () => {
     await page.getByLabel("How many units").fill("2");
     await page.getByLabel("Serial numbers").fill("SN-A\nSN-B");
     await page.getByRole("button", { name: "Create" }).click();
-    await expect(page.getByRole("heading", { name: `Testlight Beam ${stamp}` })).toBeVisible();
+    await expect(page.getByRole("heading", { name: `Beam ${stamp} Testlight` })).toBeVisible();
     await expect(page.getByText("SN SN-A")).toBeVisible();
     await expect(page.getByText("SN SN-B")).toBeVisible();
 
     // Open the first unit, change status to in repair (reason required)
     await page.getByText("SN SN-A").click();
-    await expect(page.getByRole("heading", { name: /Testlight Beam/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Beam / })).toBeVisible();
     await page.getByRole("button", { name: "Change status" }).click();
     await page.getByLabel("New status").selectOption("in_repair");
     await page.getByLabel("Reason").fill("Fan rattles");
     await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("dialog")).toBeHidden();
-    await expect(page.getByRole("heading", { name: /Testlight Beam/ }).getByText("In repair")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Beam / }).getByText("In repair")).toBeVisible();
     await expect(page.getByRole("cell", { name: "Fan rattles" })).toBeVisible();
   });
 
@@ -117,7 +117,8 @@ test.describe("inventory", () => {
     expect(csv.headers()["content-type"]).toContain("text/csv");
     const text = await csv.text();
     expect(text.startsWith("\uFEFFAsset tag;Model;")).toBe(true);
-    expect(text).toContain("Robe Pointe");
+    expect(text).toContain("Pointe;");
+    expect(text).toContain(";Robe;");
     expect(text).not.toContain("MAC Aura");
     for (const list of ["models", "projects", "rentals", "contacts", "wishes", "purchases"]) expect((await page.request.get(`/api/export/${list}.csv`)).status(), list).toBe(200);
     expect((await page.request.get("/api/export/nope.csv")).status()).toBe(404);
@@ -152,7 +153,7 @@ test.describe("inventory", () => {
     await dialog.locator("#w-link").fill("https://example.test/wish");
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog).toBeHidden();
-    const row = page.getByRole("listitem").filter({ hasText: `Testlight Wish ${stamp}` });
+    const row = page.getByRole("listitem").filter({ hasText: `Wish ${stamp}` });
     await expect(row).toBeVisible();
     await expect(row.getByRole("link", { name: "open link" })).toHaveAttribute("href", "https://example.test/wish");
 
@@ -164,12 +165,12 @@ test.describe("inventory", () => {
     const movingHeads = await category.locator("option", { hasText: "Moving heads" }).first().getAttribute("value");
     await category.selectOption(movingHeads!);
     await page.getByRole("button", { name: "Save" }).click();
-    await expect(page.getByRole("heading", { name: `Testlight Wish ${stamp}` })).toBeVisible();
+    await expect(page.getByRole("heading", { name: `Wish ${stamp} Testlight` })).toBeVisible();
 
     await page.goto("/inventory/wishlist");
     await expect(page.getByRole("listitem").filter({ hasText: `Wish ${stamp}` })).toHaveCount(0);
     await page.goto("/inventory/wishlist?status=bought");
-    const bought = page.getByRole("listitem").filter({ hasText: `Testlight Wish ${stamp}` });
+    const bought = page.getByRole("listitem").filter({ hasText: `Wish ${stamp}` });
     await expect(bought).toContainText("Became model");
     page.once("dialog", (d) => d.accept());
     await bought.getByRole("button", { name: "Delete" }).click();
@@ -186,7 +187,7 @@ test.describe("inventory", () => {
     const movingHeads = await category.locator("option", { hasText: "Moving heads" }).first().getAttribute("value");
     await category.selectOption(movingHeads!);
     await page.getByRole("button", { name: "Save" }).click();
-    await expect(page.getByRole("heading", { name: `Testlight Bought ${stamp}` })).toBeVisible();
+    await expect(page.getByRole("heading", { name: `Bought ${stamp} Testlight` })).toBeVisible();
 
     await page.getByRole("button", { name: "Add purchase" }).click();
     const dialog = page.getByRole("dialog");
@@ -201,11 +202,11 @@ test.describe("inventory", () => {
     await expect(page.getByText(/Total across the records/)).toContainText("3.000,00 kr.");
 
     await row.click();
-    await expect(page.getByRole("heading", { name: /Purchases: Testlight Bought/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Purchases: Bought/ })).toBeVisible();
     await expect(page.getByText("Net price per unit")).toBeVisible();
     page.once("dialog", (d) => d.accept());
     await page.getByRole("button", { name: "Delete" }).click();
-    await expect(page.getByRole("heading", { name: `Testlight Bought ${stamp}` })).toBeVisible();
+    await expect(page.getByRole("heading", { name: `Bought ${stamp} Testlight` })).toBeVisible();
     await expect(page.getByText("No purchase records yet")).toBeVisible();
   });
 
@@ -234,7 +235,7 @@ test.describe("inventory", () => {
     await page.locator("#unit").selectOption("m");
     await page.locator("#minStock").fill("8");
     await page.getByRole("button", { name: "Save" }).click();
-    await expect(page.getByRole("heading", { name: `Testlight Strip ${stamp}` })).toBeVisible();
+    await expect(page.getByRole("heading", { name: `Strip ${stamp} Testlight` })).toBeVisible();
     await expect(page.getByRole("link", { name: "Add items" })).toHaveCount(0);
     const stock = page.getByTestId("consumable-stock");
     await expect(stock).toContainText("0 m");
@@ -257,11 +258,11 @@ test.describe("inventory", () => {
     // The dashboard lists it and puts it on the wish list in one click.
     await page.goto("/dashboard");
     // The running-low row: the activity feed below also mentions the model, so pick the row with the wish-list button.
-    const row = page.getByRole("listitem").filter({ hasText: `Testlight Strip ${stamp}` }).filter({ has: page.getByRole("button", { name: "Add to wish list" }) });
+    const row = page.getByRole("listitem").filter({ hasText: `Strip ${stamp}` }).filter({ has: page.getByRole("button", { name: "Add to wish list" }) });
     await expect(row).toContainText("7,5 m / 8 m");
     await row.getByRole("button", { name: "Add to wish list" }).click();
     // The button turns into a link to the wish list once the wish exists.
-    await expect(page.getByRole("listitem").filter({ hasText: `Testlight Strip ${stamp}` }).getByRole("link", { name: "on the wish list" })).toBeVisible();
+    await expect(page.getByRole("listitem").filter({ hasText: `Strip ${stamp}` }).getByRole("link", { name: "on the wish list" })).toBeVisible();
   });
 
   test("filters apply while typing, keep focus, and Clear empties them", async ({ page }) => {
@@ -272,7 +273,7 @@ test.describe("inventory", () => {
     const search = page.getByRole("textbox", { name: "Search" });
     await search.pressSequentially("Pointe", { delay: 40 });
     await expect(page).toHaveURL(/\/inventory\?q=Pointe$/);
-    await expect(page.getByText("Robe Pointe").first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Pointe Robe" }).first()).toBeVisible();
     await expect(search).toBeFocused();
     await expect(search).toHaveValue("Pointe");
     // A checkbox applies at once.

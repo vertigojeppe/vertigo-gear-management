@@ -14,6 +14,8 @@ export type CatalogEntry = {
   family: string;
   /** "150cm" for a model variant; null for a model without variants and for kits. */
   variant: string | null;
+  /** The model's manufacturer, shown grey beside the name ("" for kits and own-built gear). */
+  manufacturer: string;
   /** "Lighting › Moving heads"; for a kit, its model. */
   category: string;
   /** Top category colour and cable length tape colour (palette keys), when any. */
@@ -47,7 +49,7 @@ export function searchCatalog(entries: CatalogEntry[], query: string, limit = 60
   const words = searchWords(query);
   if (words.length === 0) return { results: [], close: false };
   const q = squash(query);
-  const hays = entries.map((e) => haystack([e.label, e.category, ...e.tags]));
+  const hays = entries.map((e) => haystack([e.label, e.manufacturer, e.category, ...e.tags]));
   const scored: { e: CatalogEntry; score: number; i: number }[] = [];
   entries.forEach((e, i) => {
     if (!words.every((w) => hays[i].includes(w))) return;

@@ -55,12 +55,12 @@ test.describe("projects and rentals", () => {
     await expect(page.getByRole("heading", { name: `E2E show sub-hire ${stamp}` })).toBeVisible();
     await page.getByRole("button", { name: "Rent in" }).click();
     dialog = page.getByRole("dialog");
-    await dialog.getByLabel("Item").selectOption({ label: `Testlight Lens ${stamp}` });
+    await dialog.getByLabel("Item").selectOption({ label: `Lens ${stamp}` });
     await expect(dialog.locator("#sh-line-price")).toHaveValue("800");
     await dialog.locator("#sh-line-qty").fill("2");
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog).toBeHidden();
-    const line = page.getByRole("listitem").filter({ hasText: `Testlight Lens ${stamp}` }).first();
+    const line = page.getByRole("listitem").filter({ hasText: `Lens ${stamp}` }).first();
     await expect(line).toContainText(`rent in from Partner ${stamp}`);
     // On the quote: priced like gear, owner named, cost shown.
     const quoteRow = page.getByRole("row").filter({ hasText: `Lens ${stamp} (rent in from Partner ${stamp})` });
@@ -73,7 +73,7 @@ test.describe("projects and rentals", () => {
     await page.getByRole("button", { name: "Create" }).click();
     await expect(page.getByRole("heading", { name: `List ${stamp}` })).toBeVisible();
     await expect(page.getByText("Rented in")).toBeVisible();
-    await expect(page.getByRole("listitem").filter({ hasText: `Testlight Lens ${stamp}` })).toContainText(`rent in from Partner ${stamp}`);
+    await expect(page.getByRole("listitem").filter({ hasText: `Lens ${stamp}` })).toContainText(`rent in from Partner ${stamp}`);
   });
 
   test("member creates a project, reserves gear, and sees a conflict warning", async ({ page }) => {
@@ -102,7 +102,7 @@ test.describe("projects and rentals", () => {
 
     // Reserve 2 of a model that has 2 owned: fits.
     await page.getByRole("button", { name: "Reserve gear" }).click();
-    await pickOption(page, "Model", "Panasonic PT-RZ21K");
+    await pickOption(page, "Model", "PT-RZ21K (Panasonic)");
     await page.getByLabel("Quantity").fill("2");
     await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
     // A leftover run in the same date window may already hold them: accept the overlap.
@@ -111,11 +111,11 @@ test.describe("projects and rentals", () => {
       await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
       await expect(page.getByRole("dialog")).toBeHidden();
     });
-    await expect(page.getByRole("link", { name: "Panasonic PT-RZ21K" }).first()).toBeVisible(); // reservation list and quote table
+    await expect(page.getByRole("link", { name: "PT-RZ21K" }).first()).toBeVisible(); // reservation list and quote table
 
     // Reserve 3 more of the same model in the same window: conflict.
     await page.getByRole("button", { name: "Reserve gear" }).click();
-    await pickOption(page, "Model", "Panasonic PT-RZ21K");
+    await pickOption(page, "Model", "PT-RZ21K (Panasonic)");
     await page.getByLabel("Quantity").fill("3");
     await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("alert").getByText("Not enough available")).toBeVisible();
@@ -130,7 +130,7 @@ test.describe("projects and rentals", () => {
     // Calendar shows the project.
     await page.goto(`/calendar?from=${day(-2)}&weeks=2`);
     await expect(page.getByRole("link", { name: `E2E show ${stamp}` }).first()).toBeVisible();
-    await expect(page.getByText("Panasonic PT-RZ21K:")).toBeVisible();
+    await expect(page.getByText("PT-RZ21K:")).toBeVisible();
   });
 
   test("rental: add a line, hand out, return", async ({ page }) => {
@@ -146,7 +146,7 @@ test.describe("projects and rentals", () => {
     await expect(page.getByRole("heading", { name: `E2E client ${stamp} rental` })).toBeVisible();
 
     await page.getByRole("button", { name: "Add gear" }).click();
-    await pickOption(page, "Model", "Robe Pointe");
+    await pickOption(page, "Model", "Pointe (Robe)");
     await page.getByLabel("Quantity").fill("2");
     await page.getByLabel(/Per day/).fill("400");
     await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();

@@ -58,7 +58,7 @@ describe("spare suggestions and used check-in", () => {
     const rows = await spareSuggestions(listId);
     const lamp = rows.find((r) => r.partId === lampId)!;
     const filter = rows.find((r) => r.partId === filterId)!;
-    expect(lamp).toMatchObject({ wanted: 2, onList: 0, add: 1, short: 1, inHouse: 1, label: `Test Lamp ${marker}`, forModels: [`Test Projector ${marker}`] });
+    expect(lamp).toMatchObject({ wanted: 2, onList: 0, add: 1, short: 1, inHouse: 1, label: `Lamp ${marker}`, forModels: [`Projector ${marker}`] });
     expect(filter).toMatchObject({ wanted: 3, add: 0, short: 3, inHouse: 0 });
 
     await packingLists.dismissSpare(admin, listId, filterId);

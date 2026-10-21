@@ -252,7 +252,7 @@ export async function otherListsForCopy(projectId: string) {
  */
 export async function gearCatalog(scope: { listId: string } | { templateId: string }): Promise<CatalogEntry[]> {
   const [models, cats, items, lines, colors] = await Promise.all([
-    prisma.model.findMany({ where: { archived: false, NOT: { consumable: true, unit: "m" } }, orderBy: [{ manufacturer: "asc" }, { name: "asc" }], select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true, categoryId: true } }).then((rows) => rows.sort((a, b) => a.manufacturer.localeCompare(b.manufacturer) || a.name.localeCompare(b.name) || compareVariants(a.variant, b.variant))),
+    prisma.model.findMany({ where: { archived: false, NOT: { consumable: true, unit: "m" } }, orderBy: [{ name: "asc" }, { manufacturer: "asc" }], select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true, categoryId: true } }).then((rows) => rows.sort((a, b) => a.name.localeCompare(b.name) || compareVariants(a.variant, b.variant) || a.manufacturer.localeCompare(b.manufacturer))),
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
     prisma.item.findMany({ where: { status: { not: "retired" } }, select: { id: true, modelId: true, assetTag: true, name: true, status: true, quantity: true, isKit: true, _count: { select: { contents: true } } } }),
     "listId" in scope
@@ -272,12 +272,12 @@ export async function gearCatalog(scope: { listId: string } | { templateId: stri
   for (const l of lines) onList.set(l.itemId ?? l.modelId, (onList.get(l.itemId ?? l.modelId) ?? 0) + l.quantity);
   const out: CatalogEntry[] = models.map((m) => {
     const s = stock.get(m.id) ?? { owned: 0, inHouse: 0, tags: [] };
-    return { kind: "model", id: m.id, label: modelLabel(m), family: familyLabel(m), variant: m.variant, category: pathNames(cats, m.categoryId).join(" › "), color: colors.byCategory.get(m.categoryId)?.color ?? null, lengthColor: lengthColorFor(m.variant, colors.byCategory.get(m.categoryId), colors.lengths), trackingType: m.trackingType === "bulk" ? "bulk" : "serialized", owned: s.owned, inHouse: s.inHouse, onList: onList.get(m.id) ?? 0, tags: s.tags };
+    return { kind: "model", id: m.id, label: modelLabel(m), family: familyLabel(m), variant: m.variant, manufacturer: m.manufacturer, category: pathNames(cats, m.categoryId).join(" › "), color: colors.byCategory.get(m.categoryId)?.color ?? null, lengthColor: lengthColorFor(m.variant, colors.byCategory.get(m.categoryId), colors.lengths), trackingType: m.trackingType === "bulk" ? "bulk" : "serialized", owned: s.owned, inHouse: s.inHouse, onList: onList.get(m.id) ?? 0, tags: s.tags };
   });
   if ("listId" in scope) {
     const labelOf = new Map(models.map((m) => [m.id, modelLabel(m)]));
     for (const k of items.filter((i) => i.isKit && i.status === "in_house")) {
-      out.push({ kind: "kit", id: k.id, label: k.name ?? k.assetTag, family: k.name ?? k.assetTag, variant: null, category: `${labelOf.get(k.modelId) ?? ""} · ${k._count.contents} items`, color: null, lengthColor: null, trackingType: "kit", owned: 1, inHouse: 1, onList: onList.get(k.id) ?? 0, tags: [k.assetTag] });
+      out.push({ kind: "kit", id: k.id, label: k.name ?? k.assetTag, family: k.name ?? k.assetTag, variant: null, manufacturer: "", category: `${labelOf.get(k.modelId) ?? ""} · ${k._count.contents} items`, color: null, lengthColor: null, trackingType: "kit", owned: 1, inHouse: 1, onList: onList.get(k.id) ?? 0, tags: [k.assetTag] });
     }
   }
   return out;

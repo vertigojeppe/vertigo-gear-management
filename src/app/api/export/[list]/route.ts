@@ -77,6 +77,7 @@ const LISTS: Record<string, ListDef<any>> = {
     columns: [
       { key: "assetTag", header: "Asset tag", value: (i: ItemListRow) => i.assetTag },
       { key: "model", header: "Model", value: (i: ItemListRow) => modelLabel(i.model) },
+      { key: "manufacturer", header: "Manufacturer", value: (i: ItemListRow) => i.model.manufacturer },
       { key: "name", header: "Name", value: (i: ItemListRow) => i.name },
       { key: "serialNumber", header: "Serial", value: (i: ItemListRow) => i.serialNumber },
       { key: "quantity", header: "Quantity", value: (i: ItemListRow) => i.quantity },

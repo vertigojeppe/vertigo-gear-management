@@ -233,7 +233,7 @@
     "forceDeleteOneConfirm": "Delete this model and what uses it ({what})? This cannot be undone.",
     "askAdmin": "An admin can delete these together with what uses them.",
     "editFamily": "Edit family",
-    "editFamilyHelp": "Changes {count, plural, one {this model} other {all # variants}} at once: name, category and flags. Sizes, stock, weights and prices stay per variant.",
+    "editFamilyHelp": "Changes {count, plural, one {this model} other {all # variants}} at once: name, manufacturer, category and flags. Sizes, stock, weights and prices stay per variant.",
     "familyMixed": "Mixed – leave as is",
     "printLabels": "Print labels",
     "labelsHelp": "{count, plural, one {One label} other {# labels}} with the QR code, asset tag and model, as a PDF to print.",
@@ -255,7 +255,8 @@
     "unitPiecesHelp": "Pieces sit in bins like any bulk gear and can go on packing lists as spares.",
     "unitMetresHelp": "Metres are received and used in the workshop; they have no units and do not go on packing lists.",
     "minStock": "Running low below",
-    "minStockHelp": "Shown on the dashboard when stock drops below this."
+    "minStockHelp": "Shown on the dashboard when stock drops below this.",
+    "familyMakersMixed": "The variants have different manufacturers. Leave this empty to keep each one's, or type one for all."
   },
   "itemStatus": {
     "in_house": "In house",

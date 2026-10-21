@@ -174,13 +174,15 @@ a second entry that exports components only and never a service.
   `models.bulk(.., "delete", { force })` run `cascadeModel`, which removes
   those rows first. The inventory list's `FamilyList` has the bulk bar
   (archive / unarchive / delete, "delete anyway" for admins).
-- Admins edit a family in one go (`models.editFamily`, `EditFamilyDialog`
-  on the model page, defaults from `familyState`): manufacturer + name,
-  category and the flags (not for rental, consumable, archived) apply to
-  every model with the same manufacturer + name; a select left at "mixed"
-  leaves each variant as it is. Refused when a variant would collide with
-  a model outside the family, or when metre consumables with stock would
-  stop being consumables. Sizes, stock, weight and prices stay per variant.
+- A **family** is every model with the same name (case-insensitive);
+  the manufacturer belongs to each variant and never splits a family.
+  Admins edit a family in one go (`models.editFamily`, `EditFamilyDialog`
+  on the model page, defaults from `familyState`): name, manufacturer
+  (left alone when the variants differ and the field stays empty),
+  category and the flags (not for rental, consumable, archived). Refused
+  when a renamed variant's size already exists under the new name, or when
+  metre consumables with stock would stop being consumables. Sizes, stock,
+  weight and prices stay per variant.
 - A model is one **variant** of a family: `name` is the family ("DMX
   5-pin", "16 mm rustfri rods"), `variant` the size ("5 m", "150 cm", or
   null). Stock, weight and price stay per model. The inventory list groups
@@ -189,11 +191,14 @@ a second entry that exports components only and never a service.
   the importer and seed match models by (manufacturer, name, variant).
   `splitVariant` / `compareVariants` in `src/lib/variant.ts` split a
   legacy combined name and sort sizes numerically.
-- `Model.manufacturer` may be empty: own-built gear (BlackLED, SplitLED,
-  controllers, cases) and generic parts (cables, rods) have none. Build
-  labels with `modelLabel(m)` from `src/lib/format.ts`, never
-  `${manufacturer} ${name}`. Models match by (manufacturer, name) in the
-  importer and seed, so "" is a real value there.
+- Names lead, the manufacturer follows. `modelLabel(m)` is name +
+  variant ("Pointe", "DMX 5-pin 5 m") and is what text uses everywhere
+  (packing lists, PDFs, labels, quotes, calendar, activity). On screen
+  `ModelName` (`src/components/model-name.tsx`) adds the manufacturer
+  small and grey after the name; dropdown options use
+  `modelLabelWithMaker` ("Pointe (Robe)"); `makersOf` lists a family's
+  manufacturers. `Model.manufacturer` may be empty (own-built gear,
+  cables, rods). Never build labels by hand from manufacturer + name.
 - Labels: `LABEL_SIZES` in `config/app.config.ts` (sheet grids with gaps,
   or `page: "single"` for thermal rolls); `label-layout.ts` is the pure
   geometry (centred grid, offset, page count) and `labels.tsx` renders the
