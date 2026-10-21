@@ -11,6 +11,8 @@ model User {
   /// Google account email used when adding the user as a calendar attendee.
   googleEmail  String?
   active       Boolean  @default(true)
+  /// UI language ("en" | "da", appConfig.locales); null = the browser's language.
+  locale       String?
   /// Two-factor sign-in (authenticator app). The TOTP secret is encrypted with a key derived
   /// from AUTH_SECRET (src/lib/auth/two-factor.ts); null = 2FA off.
   totpSecret    String?

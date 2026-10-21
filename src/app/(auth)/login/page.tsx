@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "./login-form";
+import { LanguageToggle } from "@/components/language-toggle";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -22,6 +23,9 @@ export default async function LoginPage(props: { searchParams: Promise<{ next?: 
             </p>
           )}
           <LoginForm next={next} />
+          <div className="mt-4 flex justify-center">
+            <LanguageToggle />
+          </div>
         </CardContent>
       </Card>
     </main>

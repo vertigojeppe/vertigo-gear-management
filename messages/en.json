@@ -1262,5 +1262,11 @@
     "done": "Two-factor sign-in is on.",
     "continue": "I have saved the codes, continue",
     "signOut": "Sign out"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "da": "Dansk",
+    "help": "Your choice follows you to every device you sign in on. Names, notes and other things people type stay as they were written."
   }
 }

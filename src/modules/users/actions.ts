@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireActor, requireActorForTwoFactorSetup, requirePermission } from "@/lib/auth/session";
+import { cookies } from "next/headers";
+import { currentUserLocale, getActor, requireActor, requireActorForTwoFactorSetup, requirePermission } from "@/lib/auth/session";
+import { isLocale, LOCALE_COOKIE } from "@/lib/locale";
+import { prisma } from "@/lib/db";
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { apiTokenInput, changeOwnPasswordInput, createUserInput, setPasswordInput, userInput } from "./schema";
 import { apiTokens, users } from "./service";
@@ -121,4 +124,17 @@ export async function resetTwoFactor(formData: FormData): Promise<void> {
   await twoFactor.reset(actor, id);
   revalidatePath(`/settings/users/${id}`);
   revalidatePath("/settings/users");
+}
+
+/**
+ * The language switch: a cookie for this browser (also on the sign-in page)
+ * and, when signed in, the user's saved choice, which follows them to every
+ * device. Re-renders the whole app in the new language.
+ */
+export async function setLanguage(locale: string): Promise<void> {
+  if (!isLocale(locale)) return;
+  (await cookies()).set(LOCALE_COOKIE, locale, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+  const actor = await getActor();
+  if (actor && (await currentUserLocale()) !== locale) await prisma.user.update({ where: { id: actor.id }, data: { locale } });
+  revalidatePath("/", "layout");
 }

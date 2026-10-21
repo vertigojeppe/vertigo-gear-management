@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { MORE_ITEMS, NAV_ITEMS, TAB_ITEMS, isActive } from "./navigation";
 import { signOutAction } from "@/app/(app)/actions";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/language-toggle";
 import type { Actor } from "@/lib/auth/session";
 
 /** Slim top bar for phones: current section title. Hidden from md up. */
@@ -80,8 +81,9 @@ export function MobileTabBar({ actor }: { actor: Actor }) {
                 {t(`nav.${item.key}`)}
               </Link>
             ))}
-            <div className="mt-2 border-t px-2 pt-3">
+            <div className="mt-2 flex flex-col gap-2 border-t px-2 pt-3">
               <ThemeToggle className="w-full justify-between" />
+              <LanguageToggle className="w-full justify-between" />
             </div>
             <form action={signOutAction} className="mt-2 border-t pt-2">
               <button type="submit" className="flex w-full items-center gap-3 rounded-md px-2 py-3 text-base hover:bg-muted">
