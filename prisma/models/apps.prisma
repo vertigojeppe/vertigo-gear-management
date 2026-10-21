@@ -1,0 +1,40 @@
+/// Apps the crew uses a lot, in one shared list (src/modules/apps): a file to
+/// download (installer, firmware, TouchDesigner .tox, show file), a link to a
+/// web tool, or a small self-contained HTML tool that runs inside the app in a
+/// sandboxed frame. Files and tools keep every uploaded version.
+model App {
+  id          String       @id @default(cuid())
+  name        String
+  /// One of APP_KINDS in config/app.config.ts: file | link | tool. Fixed once created.
+  kind        String
+  description String?
+  /// Free-text group on the list ("Lasers", "Video", "Calculators").
+  category    String?
+  /// Link apps: where the tool lives (http/https).
+  url         String?
+  archived    Boolean      @default(false)
+  createdById String?
+  createdBy   User?        @relation("AppCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  versions    AppVersion[]
+
+  @@index([archived])
+}
+
+/// One uploaded version of a file or tool app; the newest is the one offered first.
+model AppVersion {
+  id           String   @id @default(cuid())
+  appId        String
+  app          App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+  /// "v2.3.1", "2024-05"; optional.
+  label        String?
+  notes        String?
+  fileId       String
+  file         File     @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  uploadedById String?
+  uploadedBy   User?    @relation("AppVersionUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@index([appId, createdAt])
+}

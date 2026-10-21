@@ -47,7 +47,8 @@
     "calendar": "Calendar",
     "scan": "Scan",
     "more": "More",
-    "tools": "Tools"
+    "tools": "Tools",
+    "apps": "Apps"
   },
   "auth": {
     "title": "Sign in",
@@ -1269,5 +1270,53 @@
     "en": "English",
     "da": "Dansk",
     "help": "Your choice follows you to every device you sign in on. Names, notes and other things people type stay as they were written."
+  },
+  "appKind": {
+    "file": "File to download",
+    "link": "Link to a web tool",
+    "tool": "Tool in the app",
+    "fileHelp": "Installers, firmware, TouchDesigner .tox, scripts, show files. Every version is kept.",
+    "linkHelp": "A web tool somewhere else: calculators, configurators, dashboards.",
+    "toolHelp": "One self-contained HTML file that runs right here, on the phone too. Every version is kept."
+  },
+  "apps": {
+    "title": "Apps",
+    "subtitle": "Files, links and small tools the crew uses a lot.",
+    "newApp": "New app",
+    "editApp": "Edit app",
+    "dialogHelp": "Files and tools get their versions on the app's page after saving.",
+    "name": "Name",
+    "kind": "Kind",
+    "url": "Address",
+    "category": "Group",
+    "categoryHelp": "Apps are grouped by this on the list: Lasers, Video, Calculators …",
+    "description": "Description",
+    "allKinds": "All kinds",
+    "showArchived": "Show archived",
+    "noMatches": "No apps match.",
+    "noApps": "No apps yet",
+    "noAppsBody": "Add the installers, links and small tools you keep looking for.",
+    "uncategorised": "Other",
+    "archived": "Archived",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "versionCount": "{count, plural, one {# version} other {# versions}}",
+    "open": "Open",
+    "run": "Open tool",
+    "openInTab": "Open in a new tab",
+    "download": "Download",
+    "noVersionYet": "No file yet",
+    "versions": "Versions",
+    "noVersions": "Nothing uploaded yet.",
+    "newest": "Newest",
+    "versionLabel": "Version",
+    "versionLabelHelp": "e.g. v2.3.1 or 2026-10. Leave empty to show the file name.",
+    "versionNotes": "Notes",
+    "uploadVersion": "Upload a version",
+    "dropHere": "or drop a file here. Large files are uploaded in parts and survive a dropped connection.",
+    "toolFileHelp": "One .html file (max 10 MB) with its scripts and styles inside.",
+    "toolSandboxHelp": "Tools run in a sealed frame: they work on their own but cannot see Vertigo Gear, your account or its data.",
+    "deleteAppConfirm": "Delete {name} and {count, plural, =0 {nothing else} one {its one version} other {all # versions}}? This cannot be undone.",
+    "deleteVersionConfirm": "Delete the version {name}? The file is removed for good."
   }
 }
