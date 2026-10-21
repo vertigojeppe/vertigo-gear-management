@@ -423,7 +423,12 @@
     "twoFactorOnFor": "Two-factor sign-in is on for this user.",
     "twoFactorOffFor": "Two-factor sign-in is off for this user.",
     "twoFactorReset": "Reset two-factor sign-in",
-    "twoFactorResetConfirm": "Reset two-factor sign-in for {name}? They sign in with the password alone and set it up again (required for admins)."
+    "twoFactorResetConfirm": "Reset two-factor sign-in for {name}? They sign in with the password alone and set it up again (required for admins).",
+    "searchWords": "Search words",
+    "searchWordsHelp": "Words that mean the same in a search: arbejdslys finds worklight.",
+    "glossaryIntro": "One group per line, words separated by commas. A search for any word in a group also finds the others, in the inventory, the items, the packing-list gear picker and the apps. Names are never changed. Spaces and capitals do not matter, so “work light” and “worklight” are the same word. Groups do not chain: a word in two lines gets both lines, but not what those lines link to.",
+    "glossaryText": "Groups",
+    "glossarySaved": "Saved {count, plural, one {# group} other {# groups}}."
   },
   "roles": {
     "admin": "Admin",

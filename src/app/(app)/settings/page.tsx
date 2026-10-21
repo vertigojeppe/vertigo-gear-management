@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { BookUser, CalendarDays, Coins, DatabaseBackup, FileSpreadsheet, KeyRound, ListPlus, Users, Webhook } from "lucide-react";
+import { BookUser, CalendarDays, Coins, DatabaseBackup, FileSpreadsheet, KeyRound, Languages, ListPlus, Users, Webhook } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
 
@@ -15,6 +15,7 @@ export default async function SettingsPage() {
     { href: "/settings/contacts", icon: BookUser, title: t("contacts"), body: t("contactsHelp"), show: can(actor.role, "contacts.read") },
     { href: "/settings/users", icon: Users, title: t("users"), body: t("usersHelp"), show: can(actor.role, "users.manage") },
     { href: "/settings/custom-fields", icon: ListPlus, title: t("customFields"), body: t("customFieldsHelp"), show: can(actor.role, "settings.manage") },
+    { href: "/settings/search", icon: Languages, title: t("searchWords"), body: t("searchWordsHelp"), show: can(actor.role, "settings.manage") },
     { href: "/settings/pricing", icon: Coins, title: t("pricing"), body: t("pricingHelp"), show: can(actor.role, "settings.manage") },
     { href: "/settings/calendar", icon: CalendarDays, title: t("calendar"), body: t("calendarHelp"), show: can(actor.role, "settings.manage") },
     { href: "/settings/webhooks", icon: Webhook, title: t("webhooks"), body: t("webhooksHelp"), show: can(actor.role, "settings.manage") },

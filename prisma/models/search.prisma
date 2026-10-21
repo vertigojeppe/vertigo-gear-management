@@ -1,0 +1,11 @@
+/// Words that mean the same in a search (Settings › Search words): a search for
+/// one also finds the others, e.g. "arbejdslys" finds "Worklight". Names are
+/// never translated; this only widens the search (buildGlossary in src/lib/search.ts).
+model GlossaryGroup {
+  id        String   @id @default(cuid())
+  /// As typed: ["arbejdslys", "worklight", "arbejdslampe"].
+  terms     String[]
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

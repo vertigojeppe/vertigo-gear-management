@@ -3,7 +3,7 @@
  * pages show while you type. Entries are models (add N) and kits (add the
  * case). No database here; `gearCatalog` in queries.ts builds the entries.
  */
-import { haystack, matchLevel, searchWords, squash } from "@/lib/search";
+import { exactHit, haystack, matchLevel, queryTerms, squash, type Glossary } from "@/lib/search";
 
 export type CatalogEntry = {
   kind: "model" | "kit";
@@ -45,19 +45,19 @@ const norm = (s: string) =>
  * rest (category / tag matches). Ties keep catalog order. When nothing
  * matches, close matches (a typo per word) are returned with `close`.
  */
-export function searchCatalog(entries: CatalogEntry[], query: string, limit = 60): { results: CatalogEntry[]; close: boolean } {
-  const words = searchWords(query);
+export function searchCatalog(entries: CatalogEntry[], query: string, limit = 60, glossary?: Glossary): { results: CatalogEntry[]; close: boolean } {
+  const words = queryTerms(query, glossary);
   if (words.length === 0) return { results: [], close: false };
   const q = squash(query);
   const hays = entries.map((e) => haystack([e.label, e.manufacturer, e.category, ...e.tags]));
   const scored: { e: CatalogEntry; score: number; i: number }[] = [];
   entries.forEach((e, i) => {
-    if (!words.every((w) => hays[i].includes(w))) return;
+    if (!exactHit(hays[i], words)) return;
     const label = squash(e.label);
     let score = 2;
     if (label.startsWith(q)) score = 0;
     else if (label.includes(q)) score = 1;
-    else if (words.every((w) => label.includes(w))) score = 1;
+    else if (words.every((alts) => alts.some((w) => label.includes(w)))) score = 1;
     if (e.tags.some((t) => squash(t) === q)) score = -1; // an exact tag is what a scanner sends
     scored.push({ e, score, i });
   });

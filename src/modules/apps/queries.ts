@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { bestMatches } from "@/lib/search";
+// eslint-disable-next-line no-restricted-imports -- the barrel loads server actions, which do not load under Vitest
+import { glossary } from "@/modules/settings/glossary";
 import type { AppKind } from "../../../config/app.config";
 import type { AppFilters } from "./schema";
 
@@ -31,7 +33,7 @@ export async function appList(filters: AppFilters): Promise<{ rows: AppRow[]; cl
     orderBy: [{ category: "asc" }, { name: "asc" }],
     include: { versions: { orderBy: { createdAt: "desc" }, take: 1, include: versionInclude }, _count: { select: { versions: true } } },
   });
-  const found = bestMatches(rows, (a) => [a.name, a.category, a.description], filters.q);
+  const found = bestMatches(rows, (a) => [a.name, a.category, a.description], filters.q, await glossary.load());
   const categories = [...new Set((await prisma.app.findMany({ where: { category: { not: null } }, select: { category: true }, distinct: ["category"] })).map((a) => a.category!))].sort((a, b) => a.localeCompare(b));
   return {
     rows: found.rows.map((a) => ({

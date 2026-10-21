@@ -6,6 +6,8 @@
  * word must appear, in any order). When nothing matches that way, close
  * matches are allowed: one typo per word from four letters, two from eight
  * (a wrong, missing, extra or swapped letter), so "pinte" finds "Pointe".
+ * With a glossary (Settings › Search words), a word also matches the words
+ * it is grouped with: "arbejdslys" finds "Worklight".
  */
 
 /** Lower case, accents off, spaces and punctuation out: "Q-Base 2" → "qbase2". æ and ø stay. */
@@ -59,34 +61,118 @@ export function substringDistance(word: string, text: string, max: number): numb
   return Math.min(...prev);
 }
 
+/** Marks the start of a word in the haystack's last section. */
+const WORD = "^";
+
 /**
  * The searchable text of a row: each field squashed on its own, then all of
  * them run together, so "robepointe" finds manufacturer "Robe" + name
- * "Pointe" while "|" keeps typo matches from straddling two fields.
+ * "Pointe" while "|" keeps typo matches from straddling two fields. A last
+ * section lists every word with "^" in front, for matches that must start
+ * a word (short glossary partners: "lamp" in "Lamp projectors", not in
+ * "Clamps").
  */
 export function haystack(fields: (string | null | undefined)[]): string {
   const parts = fields.map(squash).filter(Boolean);
-  return parts.length > 1 ? [...parts, parts.join("")].join("|") : (parts[0] ?? "");
+  const text = parts.length > 1 ? [...parts, parts.join("")].join("|") : (parts[0] ?? "");
+  const words = fields.flatMap((f) => (f ? f.split(/[\s\p{P}\p{S}]+/u).map(squash).filter(Boolean) : []));
+  return words.length ? `${text}|${words.map((w) => WORD + w).join("")}` : text;
 }
 
-/** 0 = every word appears; 1 = every word appears within its typo allowance; null = no match. */
-export function matchLevel(hay: string, words: string[]): 0 | 1 | null {
-  if (words.every((w) => hay.includes(w))) return 0;
-  if (words.every((w) => substringDistance(w, hay, typosAllowed(w)) <= typosAllowed(w))) return 1;
+/** Word groups that mean the same: each squashed term → every squashed term it is grouped with (itself included). */
+export type Glossary = Map<string, string[]>;
+
+/** Builds the lookup from groups like ["arbejdslys", "worklight", "work light"]; a term in several groups gets them all. */
+export function buildGlossary(groups: string[][]): Glossary {
+  const map = new Map<string, Set<string>>();
+  for (const group of groups) {
+    const terms = [...new Set(group.map(squash).filter(Boolean))];
+    if (terms.length < 2) continue;
+    for (const t of terms) {
+      const set = map.get(t) ?? new Set<string>();
+      for (const x of terms) set.add(x);
+      map.set(t, set);
+    }
+  }
+  return new Map([...map].map(([k, v]) => [k, [...v]]));
+}
+
+const MAX_PHRASE = 3;
+
+/**
+ * The query as alternatives per word: "arbejdslys led" with a glossary →
+ * [["arbejdslys", "worklight", …], ["led"]]. Up to three neighbouring words
+ * may form one glossary term ("work light" → "worklight"); without a
+ * glossary every word is its own single alternative.
+ */
+export function queryTerms(query: string | null | undefined, glossary?: Glossary): string[][] {
+  const words = searchWords(query);
+  if (!glossary?.size) return words.map((w) => [w]);
+  const out: string[][] = [];
+  for (let i = 0; i < words.length; ) {
+    let n = Math.min(MAX_PHRASE, words.length - i);
+    for (; n > 1 && !glossary.has(words.slice(i, i + n).join("")); n--);
+    const term = words.slice(i, i + n).join("");
+    const partners = glossary.get(term);
+    // The word as typed first: it matches anywhere; its partners are held to stricter rules (exactHit).
+    out.push(partners ? [term, ...partners.filter((p) => p !== term)] : [term]);
+    i += n;
+  }
+  return out;
+}
+
+type Terms = (string | string[])[];
+const alternatives = (terms: Terms) => terms.map((t) => (Array.isArray(t) ? t : [t]));
+/** Glossary partners shorter than this must start a word, so "lamp" does not find "clamp" while "kabel" still finds "Strømkabel". */
+const SHORT_PARTNER = 5;
+export const exactHit = (hay: string, terms: string[][]) => terms.every((alts) => alts.some((a, k) => (k > 0 && a.length < SHORT_PARTNER ? hay.includes(WORD + a) : hay.includes(a))));
+
+/** 0 = every word (or one of its glossary partners) appears; 1 = the same within the typo allowance; null = no match. */
+export function matchLevel(hay: string, words: Terms): 0 | 1 | null {
+  const terms = alternatives(words);
+  if (exactHit(hay, terms)) return 0;
+  if (terms.every((alts) => alts.some((a) => substringDistance(a, hay, typosAllowed(a)) <= typosAllowed(a)))) return 1;
   return null;
 }
 
 /**
  * Filters rows by the query, keeping their order. Exact matches when there
  * are any; otherwise close matches, with `close: true` so the page can say
- * so. An empty query keeps every row.
+ * so. An empty query keeps every row. Pass the glossary to let a word find
+ * its partners.
  */
-export function bestMatches<T>(rows: T[], fields: (row: T) => (string | null | undefined)[], query: string | null | undefined): { rows: T[]; close: boolean } {
-  const words = searchWords(query);
-  if (words.length === 0) return { rows, close: false };
+export function bestMatches<T>(rows: T[], fields: (row: T) => (string | null | undefined)[], query: string | null | undefined, glossary?: Glossary): { rows: T[]; close: boolean } {
+  const terms = queryTerms(query, glossary);
+  if (terms.length === 0) return { rows, close: false };
   const hays = rows.map((r) => haystack(fields(r)));
-  const exact = rows.filter((_, i) => words.every((w) => hays[i].includes(w)));
+  const exact = rows.filter((_, i) => exactHit(hays[i], terms));
   if (exact.length > 0) return { rows: exact, close: false };
-  const close = rows.filter((_, i) => matchLevel(hays[i], words) === 1);
+  const close = rows.filter((_, i) => matchLevel(hays[i], terms) === 1);
   return { rows: close, close: close.length > 0 };
+}
+
+/**
+ * Settings › Search words as text: one group per line, words separated by
+ * commas. Returns the groups, or the 1-based numbers of lines with fewer
+ * than two different words.
+ */
+export function parseGlossaryText(text: string): { groups: string[][]; badLines: number[] } {
+  const groups: string[][] = [];
+  const badLines: number[] = [];
+  text.split(/\r?\n/).forEach((line, i) => {
+    if (!line.trim() || line.trim().startsWith("#")) return;
+    const seen = new Set<string>();
+    const terms: string[] = [];
+    for (const raw of line.split(/[,;]/)) {
+      const term = raw.trim().replace(/\s+/g, " ");
+      const key = squash(term);
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        terms.push(term);
+      }
+    }
+    if (terms.length < 2) badLines.push(i + 1);
+    else groups.push(terms);
+  });
+  return { groups, badLines };
 }

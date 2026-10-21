@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { addKitLine, addLine, addTemplateLine } from "../actions";
 import { groupCatalog, searchCatalog, type CatalogEntry } from "../picker";
 import { makersOf } from "@/lib/format";
+import { buildGlossary } from "@/lib/search";
 
 type Target = { kind: "list"; projectId: string; listId: string } | { kind: "template"; templateId: string };
 type Option = { id: string; label: string };
@@ -22,7 +23,7 @@ type RowState = { type: "pending" } | { type: "added"; count: number } | { type:
  * button. Enter adds the highlighted row and keeps the focus, so a list is
  * built from the keyboard (or a barcode scanner typing a tag + Enter).
  */
-export function GearPicker({ target, catalog, cases = [] }: { target: Target; catalog: CatalogEntry[]; cases?: Option[] }) {
+export function GearPicker({ target, catalog, cases = [], glossaryGroups = [] }: { target: Target; catalog: CatalogEntry[]; cases?: Option[]; glossaryGroups?: string[][] }) {
   const t = useTranslations("packing");
   const tc = useTranslations("common");
   const [query, setQuery] = useState("");
@@ -34,7 +35,8 @@ export function GearPicker({ target, catalog, cases = [] }: { target: Target; ca
   const [, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { results, close } = useMemo(() => searchCatalog(catalog, query), [catalog, query]);
+  const glossary = useMemo(() => buildGlossary(glossaryGroups), [glossaryGroups]);
+  const { results, close } = useMemo(() => searchCatalog(catalog, query, 60, glossary), [catalog, query, glossary]);
   const groups = useMemo(() => groupCatalog(results), [results]);
   // The flat order (for arrow keys / Enter) follows the grouped display.
   const flat = useMemo(() => groups.flatMap((g) => g.entries), [groups]);

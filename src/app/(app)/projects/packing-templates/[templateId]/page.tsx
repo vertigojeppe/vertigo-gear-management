@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
 import { DeleteTemplateButton, GearPicker, RemoveTemplateLineButton, TemplateDialog, gearCatalog, templateDetail } from "@/modules/packing";
+import { glossary } from "@/modules/settings";
 
 export const metadata: Metadata = { title: "Packing template" };
 
@@ -46,7 +47,7 @@ export default async function TemplatePage(props: { params: Promise<{ templateId
           ))}
         </ul>
       )}
-      {canEdit && <GearPicker target={{ kind: "template", templateId: tpl.id }} catalog={catalog} />}
+      {canEdit && <GearPicker target={{ kind: "template", templateId: tpl.id }} catalog={catalog} glossaryGroups={await glossary.groups()} />}
     </div>
   );
 }
