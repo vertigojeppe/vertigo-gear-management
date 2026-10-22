@@ -181,8 +181,8 @@ test.describe("projects and rentals", () => {
     // The default window around today, where the seeded projects always are. (Week numbers across New Year: dates.test.ts.)
     await page.goto("/calendar");
     const grid = page.locator("main .grid").first();
-    await expect(grid.getByText(/^Week · \d{4}(–\d{4})?$/)).toBeVisible();
-    await expect(grid.getByText(/^Week \d{1,2}$/).first()).toBeVisible();
+    await expect(grid.getByText(/^\d{4}(–\d{4})?$/)).toBeVisible(); // the year, in the corner
+    await expect(grid.getByTitle(/^Week \d{1,2}$/).first()).toHaveText(/^\d{1,2}$/); // week cells show just the number
     for (const day of ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]) await expect(grid.getByText(day, { exact: true }).first()).toBeVisible();
   });
 });
