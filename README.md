@@ -660,6 +660,22 @@ Drive) and prunes the remote the same way. Run it nightly:
 10 3 * * * cd /opt/vertigo-gear && ./scripts/backup.sh >> backups/backup.log 2>&1
 ```
 
+**Dropbox (also Business team spaces).** Install rclone on the server
+(`sudo apt install rclone`). Log in from a PC with a browser:
+`rclone authorize "dropbox"` prints a token. On the server, as `deploy`,
+run `rclone config`: new remote `dropbox`, type `dropbox`, no client
+id or secret, no advanced config, *no* to auto config / web browser, then
+paste the token. On a Business account `dropbox:folder` is the signed-in
+member's own folder and `dropbox:/` the team root (`rclone lsd dropbox:/`
+lists the team folders). Keep backups out of folders the whole team can
+open: they hold the full database. For example:
+
+```
+rclone mkdir "dropbox:/Server Account/vertigo-gear-backups"
+echo 'BACKUP_REMOTE="dropbox:/Server Account/vertigo-gear-backups"' >> .env
+./scripts/backup.sh
+```
+
 `scripts/restore.sh <archive>` stops the app, replaces the database and
 the uploads with the archive's contents, and starts the app again
 (migrations run if the code is newer than the backup). It asks for a
