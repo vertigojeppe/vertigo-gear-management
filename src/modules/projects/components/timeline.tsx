@@ -14,13 +14,13 @@ const COLORS: Record<string, string> = {
   gray: "bg-muted text-muted-foreground",
 };
 
-/** Monday columns get a stronger left edge, so the weeks stand apart down the whole timeline. */
-const WEEK_START = "border-l-2 border-l-muted-foreground/40";
+/** Sundays' right edge (the line every cell already has) is drawn darker, so weeks stand apart without a thicker line. */
+const WEEK_END = "border-r-muted-foreground/50";
 
 /**
  * Horizontal timeline: one row per project/rental, one column per day.
- * Above the days, a row with the (ISO) week number spanning each week;
- * every day shows its weekday. Server component; pure CSS grid, scrolls
+ * Above the days, a row with the (ISO) week number spanning each week
+ * and the year in its corner; every day shows its weekday. Server component; pure CSS grid, scrolls
  * horizontally on phones.
  */
 export async function Timeline({ from, to, bars, conflictDays }: { from: DateString; to: DateString; bars: TimelineBar[]; conflictDays: Set<DateString> }) {
@@ -39,7 +39,7 @@ export async function Timeline({ from, to, bars, conflictDays }: { from: DateStr
     const w = weekdayFormat.format(new Date(`${d}T00:00:00Z`)).replace(".", "");
     return w.charAt(0).toUpperCase() + w.slice(1, 2);
   };
-  const weekStart = (d: DateString, i: number) => i > 0 && isoWeekday(d) === 1;
+  const weekEnd = (d: DateString, i: number) => i < days - 1 && isoWeekday(d) === 7;
   // The year: in the corner ("2026", or "2026–2027" across New Year), and on the month label where a new year starts.
   const years = from.slice(0, 4) === to.slice(0, 4) ? from.slice(0, 4) : `${from.slice(0, 4)}–${to.slice(0, 4)}`;
   const monthHeading = (d: DateString) => (d.endsWith("-01-01") ? `${monthLabel(d)} ${d.slice(0, 4)}` : monthLabel(d));
@@ -57,22 +57,22 @@ export async function Timeline({ from, to, bars, conflictDays }: { from: DateStr
       <div className="grid min-w-max text-xs" style={{ gridTemplateColumns: `200px repeat(${days}, 28px)` }}>
         {/* week numbers */}
         <div className="sticky left-0 z-10 border-b border-r bg-card px-2 py-1 font-medium">
-          {t("weekColumn")} <span className="font-normal text-muted-foreground">· {years}</span>
+          {years}
         </div>
         {weeks.map((w, i) => (
-          <div key={w.start} className={cn("border-b border-r bg-muted/20 px-1 py-1 text-center font-medium", i > 0 && WEEK_START)} style={{ gridColumn: `span ${w.span}` }} title={t("weekLabel", { week: w.week })}>
-            {w.span >= 3 ? t("weekLabel", { week: w.week }) : w.week}
+          <div key={w.start} className={cn("border-b border-r bg-muted/20 px-1 py-1 text-center font-medium", i < weeks.length - 1 && WEEK_END)} style={{ gridColumn: `span ${w.span}` }} title={t("weekLabel", { week: w.week })}>
+            {w.week}
           </div>
         ))}
         {/* days */}
-        <div className="sticky left-0 z-10 border-b border-r bg-card p-2 font-medium">{t("title")}</div>
+        <div className="sticky left-0 z-10 border-b border-r bg-card" />
         {dayList.map((d, i) => {
           const isToday = d === todayStr;
           const weekend = isoWeekday(d) >= 6;
           return (
             <div
               key={d}
-              className={cn("border-b border-r py-1 text-center leading-tight", weekend && "bg-muted/40", conflictDays.has(d) && "bg-red-100 dark:bg-red-900/40", weekStart(d, i) && WEEK_START, isToday && "font-bold")}
+              className={cn("border-b border-r py-1 text-center leading-tight", weekend && "bg-muted/40", conflictDays.has(d) && "bg-red-100 dark:bg-red-900/40", weekEnd(d, i) && WEEK_END, isToday && "font-bold")}
               title={d}
             >
               <div className="whitespace-nowrap text-[10px] text-muted-foreground">{d.endsWith("-01") || d === from ? monthHeading(d) : "\u00a0"}</div>
@@ -98,7 +98,7 @@ export async function Timeline({ from, to, bars, conflictDays }: { from: DateStr
               {dayList.map((d, i) => {
                 const inBar = i >= startIdx && i <= endIdx;
                 return (
-                  <div key={d} className={cn("border-b border-r", conflictDays.has(d) && "bg-red-50 dark:bg-red-950/30", weekStart(d, i) && WEEK_START)}>
+                  <div key={d} className={cn("border-b border-r", conflictDays.has(d) && "bg-red-50 dark:bg-red-950/30", weekEnd(d, i) && WEEK_END)}>
                     {inBar && (
                       <Link
                         href={bar.href}

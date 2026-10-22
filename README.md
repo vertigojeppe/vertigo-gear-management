@@ -681,3 +681,81 @@ the uploads with the archive's contents, and starts the app again
 (migrations run if the code is newer than the backup). It asks for a
 typed `yes` first. Test it on a fresh server now and then; a backup that
 was never restored is a guess.
+
+### Recreating the server from a backup
+
+When the server is gone (dead disk, stolen, replaced), a new one is the
+office walkthrough above plus a restore. Have three things ready:
+
+- **A backup archive**, normally the newest one in Dropbox.
+- **The old `.env`**, kept in your password manager. The backup leaves it
+  out on purpose because it holds the secrets. Most important in it is
+  `AUTH_SECRET`: two-factor sign-in only works with the same one (see
+  "If the old `.env` is lost" below).
+- **Access to Cloudflare and Dropbox.**
+
+1. **Set up the machine** as in the office walkthrough, steps 1 and 2:
+   Ubuntu, Docker, the `deploy` user, and the code cloned to
+   `/opt/vertigo-gear`. Use the newest code. The backup notes which
+   version made it, but a newer one is fine: the restore runs any newer
+   database migrations on start.
+
+2. **Put the old `.env` back.** As `deploy` in `/opt/vertigo-gear`:
+   `nano .env`, paste it in, save. It holds the tunnel token too, so the
+   same Cloudflare tunnel and address (`gear.vertigo.dk`) carry over.
+   **Switch the old server off first** if it still runs, or both answer on
+   the same address. Cloudflare's tunnel page lists its connectors.
+
+3. **Start the stack once.** This builds the app and creates an empty
+   database:
+
+   ```bash
+   docker compose --profile tunnel up -d --build
+   ```
+
+   Do not create an admin user (`create-admin.mjs`): the restore brings
+   all the users back.
+
+4. **Fetch the backup from Dropbox.** Install rclone and connect Dropbox
+   as described under *Dropbox* above (`rclone authorize "dropbox"` on a
+   PC, `rclone config` on the server as `deploy`). Then list the
+   backups and copy the newest one down:
+
+   ```bash
+   rclone ls "dropbox:/Server Account/vertigo-gear-backups"
+   mkdir -p backups
+   rclone copy "dropbox:/Server Account/vertigo-gear-backups/vertigo-gear-YYYYMMDD-HHMM.tar.gz" backups/
+   ```
+
+5. **Restore it.** It asks you to type `yes`, swaps in the database and
+   the uploads, and starts the app again:
+
+   ```bash
+   sh ./scripts/restore.sh backups/vertigo-gear-YYYYMMDD-HHMM.tar.gz
+   ```
+
+6. **Check.** Open the address and sign in as usual, with your
+   two-factor code. Then open a model with photos and a production plan
+   with documents to see that the uploads came back.
+
+7. **Turn the nightly backup back on.** `crontab -e` as `deploy`, with
+   the line from the start of this section. Check that
+   `BACKUP_REMOTE` is in `.env`, and that the timezone is Danish
+   (`sudo timedatectl set-timezone Europe/Copenhagen`).
+
+**If the old `.env` is lost**, write a new one as in step 3 of the
+walkthrough, and get a new tunnel token from Cloudflare (*Rotate token*
+on the tunnel page). Then restore as above. Everything comes back, but:
+
+- Everyone has to sign in again.
+- Two-factor sign-in no longer accepts app codes, because the secrets
+  were sealed with the old `AUTH_SECRET`. Each person can sign in once
+  with one of their recovery codes. An admin without one runs
+  `docker compose exec app node scripts/create-admin.mjs <email> "<name>"`,
+  which also resets that person's two-factor sign-in. Admins then reset
+  everyone else's under *Settings › Users*, and people set it up again.
+- The Google Calendar key and calendar ids have to be added to `.env`
+  again (*Google Calendar push*), if you use them.
+
+Practise this once on a spare PC or a virtual machine, so it is not the
+first time when it matters.
