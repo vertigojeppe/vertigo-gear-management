@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { cn } from "cn";
-import { addDays, daysBetween, today, type DateString } from "@/lib/dates";
+import { addDays, daysBetween, isoWeek, isoWeekday, today, type DateString } from "@/lib/dates";
 import { PROJECT_STATUSES, RENTAL_STATUSES } from "../../../../config/app.config";
 import type { TimelineBar } from "../queries";
 
@@ -14,9 +14,14 @@ const COLORS: Record<string, string> = {
   gray: "bg-muted text-muted-foreground",
 };
 
+/** Monday columns get a stronger left edge, so the weeks stand apart down the whole timeline. */
+const WEEK_START = "border-l-2 border-l-muted-foreground/40";
+
 /**
  * Horizontal timeline: one row per project/rental, one column per day.
- * Server component; pure CSS grid, scrolls horizontally on phones.
+ * Above the days, a row with the (ISO) week number spanning each week;
+ * every day shows its weekday. Server component; pure CSS grid, scrolls
+ * horizontally on phones.
  */
 export async function Timeline({ from, to, bars, conflictDays }: { from: DateString; to: DateString; bars: TimelineBar[]; conflictDays: Set<DateString> }) {
   const t = await getTranslations("calendar");
@@ -26,27 +31,53 @@ export async function Timeline({ from, to, bars, conflictDays }: { from: DateStr
   const colorOf = (bar: TimelineBar) =>
     bar.kind === "project" ? (PROJECT_STATUSES.find((s) => s.key === bar.status)?.color ?? "gray") : (RENTAL_STATUSES.find((s) => s.key === bar.status)?.color ?? "gray");
 
-  const monthLabel = (d: DateString) => new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: "UTC" }).format(new Date(`${d}T00:00:00Z`));
+  const locale = (await getLocale()) === "da" ? "da-DK" : "en-GB";
+  const monthLabel = (d: DateString) => new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" }).format(new Date(`${d}T00:00:00Z`)).replace(".", "");
+  // Two letters fit a 28 px column: "Ma", "Ti" … / "Mo", "Tu" …
+  const weekdayFormat = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" });
+  const weekdayLabel = (d: DateString) => {
+    const w = weekdayFormat.format(new Date(`${d}T00:00:00Z`)).replace(".", "");
+    return w.charAt(0).toUpperCase() + w.slice(1, 2);
+  };
+  const weekStart = (d: DateString, i: number) => i > 0 && isoWeekday(d) === 1;
+  // The year: in the corner ("2026", or "2026–2027" across New Year), and on the month label where a new year starts.
+  const years = from.slice(0, 4) === to.slice(0, 4) ? from.slice(0, 4) : `${from.slice(0, 4)}–${to.slice(0, 4)}`;
+  const monthHeading = (d: DateString) => (d.endsWith("-01-01") ? `${monthLabel(d)} ${d.slice(0, 4)}` : monthLabel(d));
+  // The week row: one cell per week, as wide as that week's days in the window (the first and last may be partial).
+  const weeks: { week: number; start: DateString; span: number }[] = [];
+  dayList.forEach((d, i) => {
+    if (i === 0 || isoWeekday(d) === 1) weeks.push({ week: isoWeek(d), start: d, span: 1 });
+    else weeks[weeks.length - 1].span++;
+  });
 
   if (bars.length === 0) return <p className="text-sm text-muted-foreground">{t("empty")}</p>;
 
   return (
     <div className="overflow-x-auto rounded-md border">
       <div className="grid min-w-max text-xs" style={{ gridTemplateColumns: `200px repeat(${days}, 28px)` }}>
-        {/* header */}
+        {/* week numbers */}
+        <div className="sticky left-0 z-10 border-b border-r bg-card px-2 py-1 font-medium">
+          {t("weekColumn")} <span className="font-normal text-muted-foreground">· {years}</span>
+        </div>
+        {weeks.map((w, i) => (
+          <div key={w.start} className={cn("border-b border-r bg-muted/20 px-1 py-1 text-center font-medium", i > 0 && WEEK_START)} style={{ gridColumn: `span ${w.span}` }} title={t("weekLabel", { week: w.week })}>
+            {w.span >= 3 ? t("weekLabel", { week: w.week }) : w.week}
+          </div>
+        ))}
+        {/* days */}
         <div className="sticky left-0 z-10 border-b border-r bg-card p-2 font-medium">{t("title")}</div>
-        {dayList.map((d) => {
+        {dayList.map((d, i) => {
           const isToday = d === todayStr;
-          const dow = new Date(`${d}T00:00:00Z`).getUTCDay();
-          const weekend = dow === 0 || dow === 6;
+          const weekend = isoWeekday(d) >= 6;
           return (
             <div
               key={d}
-              className={cn("border-b border-r py-1 text-center leading-tight", weekend && "bg-muted/40", conflictDays.has(d) && "bg-red-100 dark:bg-red-900/40", isToday && "font-bold underline")}
+              className={cn("border-b border-r py-1 text-center leading-tight", weekend && "bg-muted/40", conflictDays.has(d) && "bg-red-100 dark:bg-red-900/40", weekStart(d, i) && WEEK_START, isToday && "font-bold")}
               title={d}
             >
-              <div className="text-[10px] text-muted-foreground">{d.endsWith("-01") || d === from ? monthLabel(d) : ""}</div>
-              <div>{d.slice(8)}</div>
+              <div className="whitespace-nowrap text-[10px] text-muted-foreground">{d.endsWith("-01") || d === from ? monthHeading(d) : "\u00a0"}</div>
+              <div className={cn("text-[10px]", weekend ? "text-muted-foreground" : "")}>{weekdayLabel(d)}</div>
+              <div className={cn(isToday && "underline")}>{d.slice(8)}</div>
             </div>
           );
         })}
@@ -67,7 +98,7 @@ export async function Timeline({ from, to, bars, conflictDays }: { from: DateStr
               {dayList.map((d, i) => {
                 const inBar = i >= startIdx && i <= endIdx;
                 return (
-                  <div key={d} className={cn("border-b border-r", conflictDays.has(d) && "bg-red-50 dark:bg-red-950/30")}>
+                  <div key={d} className={cn("border-b border-r", conflictDays.has(d) && "bg-red-50 dark:bg-red-950/30", weekStart(d, i) && WEEK_START)}>
                     {inBar && (
                       <Link
                         href={bar.href}

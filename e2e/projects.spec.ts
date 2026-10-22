@@ -175,4 +175,14 @@ test.describe("projects and rentals", () => {
     expect(res.status()).toBe(200);
     expect(await res.text()).toContain("BEGIN:VCALENDAR");
   });
+
+  test("the calendar shows week numbers, weekdays and the year", async ({ page }) => {
+    await signIn(page, "viewer@vertigo.test");
+    // The default window around today, where the seeded projects always are. (Week numbers across New Year: dates.test.ts.)
+    await page.goto("/calendar");
+    const grid = page.locator("main .grid").first();
+    await expect(grid.getByText(/^Week · \d{4}(–\d{4})?$/)).toBeVisible();
+    await expect(grid.getByText(/^Week \d{1,2}$/).first()).toBeVisible();
+    for (const day of ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]) await expect(grid.getByText(day, { exact: true }).first()).toBeVisible();
+  });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, dateToZonedInput, daysBetween, maxDate, minDate, rangesOverlap, zonedInputToDate } from "./dates";
+import { addDays, dateToZonedInput, daysBetween, isoWeek, isoWeekday, maxDate, minDate, rangesOverlap, zonedInputToDate } from "./dates";
 
 describe("dates", () => {
   it("converts Copenhagen wall clock to UTC and back (winter and summer)", () => {
@@ -23,5 +23,22 @@ describe("dates", () => {
   it("checks inclusive overlap", () => {
     expect(rangesOverlap("2026-11-10", "2026-11-12", "2026-11-12", "2026-11-14")).toBe(true);
     expect(rangesOverlap("2026-11-10", "2026-11-12", "2026-11-13", "2026-11-14")).toBe(false);
+  });
+});
+
+describe("ISO weeks", () => {
+  it("numbers weekdays Monday 1 to Sunday 7", () => {
+    expect(isoWeekday("2026-10-19")).toBe(1);
+    expect(isoWeekday("2026-10-25")).toBe(7);
+  });
+
+  it("numbers weeks the way Danish calendars do, across year ends", () => {
+    expect(isoWeek("2026-10-22")).toBe(43);
+    expect(isoWeek("2026-01-01")).toBe(1); // a Thursday
+    expect(isoWeek("2026-12-31")).toBe(53); // 2026 has 53 weeks
+    expect(isoWeek("2027-01-03")).toBe(53); // Sunday: still last year's week
+    expect(isoWeek("2027-01-04")).toBe(1);
+    expect(isoWeek("2024-12-30")).toBe(1); // Monday: already next year's week 1
+    expect(isoWeek("2021-01-03")).toBe(53);
   });
 });

@@ -652,7 +652,9 @@
     "google": "Google Kalender-push",
     "googleOn": "Konfigureret. Bekræftede projekter og udlejninger skubbes til de delte kalendere.",
     "googleOff": "Ikke konfigureret. Sæt GOOGLE_SERVICE_ACCOUNT_JSON og GOOGLE_CALENDAR_ID_PROJECTS (se README).",
-    "syncNow": "Synkronisér nu"
+    "syncNow": "Synkronisér nu",
+    "weekColumn": "Uge",
+    "weekLabel": "Uge {week}"
   },
   "packingStatus": {
     "draft": "Kladde",
