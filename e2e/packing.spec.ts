@@ -44,6 +44,41 @@ test.describe("packing lists", () => {
     await expect(spares).toHaveCount(0);
   });
 
+  test("pack all units of a line in one tap, and undo a packed unit", async ({ page }, info) => {
+    await signIn(page, "member@vertigo.test");
+    await page.goto("/projects/new");
+    await page.getByLabel("Name").fill(`E2E show pack-all ${stamp}-${info.project.name}`);
+    await page.getByLabel("Status").selectOption("confirmed");
+    await page.getByRole("button", { name: "Create" }).click();
+    await page.getByRole("link", { name: "New packing list" }).click();
+    await page.getByLabel("Name").fill(`Van ${stamp}`);
+    await page.getByLabel("Start from").selectOption("empty");
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByRole("heading", { name: `Van ${stamp}` })).toBeVisible();
+
+    // Three of one model: one line.
+    await page.getByLabel("Search gear").fill("aura xb");
+    await page.getByLabel("Quantity MAC Aura XB").fill("3");
+    await page.getByLabel("Quantity MAC Aura XB").press("Enter");
+    await expect(page.getByRole("button", { name: "Add MAC Aura XB" })).toHaveText(/Added/);
+
+    await page.getByRole("link", { name: "Pack", exact: true }).click();
+    await expect(page.getByText("0 / 3 packed")).toBeVisible();
+    await page.getByRole("button", { name: "Pack all 3 MAC Aura XB" }).click();
+    await expect(page.getByText("3 / 3 packed")).toBeVisible();
+
+    // The finished line stays on screen with an Undo per unit; one wrong unit comes off.
+    const undo = page.getByRole("button", { name: /^Undo MAC Aura XB/ });
+    await expect(undo).toHaveCount(3);
+    await undo.first().click();
+    await expect(page.getByText("2 / 3 packed")).toBeVisible();
+    await expect(undo).toHaveCount(2);
+    // One left to pack: the single-unit tick takes over from Pack all.
+    await expect(page.getByRole("button", { name: /^Pack all/ })).toHaveCount(0);
+    await page.getByRole("button", { name: "Tick unit" }).click();
+    await expect(page.getByText("3 / 3 packed")).toBeVisible();
+  });
+
   test("pack, check out, share, check in", async ({ page, browser }) => {
     page.on("dialog", (d) => d.accept());
     await signIn(page, "admin@vertigo.test");

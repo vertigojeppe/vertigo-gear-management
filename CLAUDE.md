@@ -338,6 +338,13 @@ a second entry that exports components only and never a service.
 - Scanning in pack mode (`packingChecks.scan`) finds the open line for the
   tag's model and ticks it; the result object (`ticked | unknown |
   not_on_list | error`) drives the message in `PackMode`.
+- Pack mode lists lines still to pack plus lines packed in the last 15
+  minutes; older finished lines fold into "Packed". Every out-check has an
+  Undo (`UndoTick` → `untickCheck`, which answers `{ ok, error }`; a
+  repeat undo is a no-op), and so has the last scan (`checkId` in the
+  ticked result). "Pack all" (`packingChecks.tickAll`) ticks the first
+  in-house units of a serialized line in asset-tag order, up to what it
+  needs, and reports `{ packed, missing }`.
 - `ShareLink` rows (`targetType`, `targetId`, random token) are generic;
   `/share/packing/[token]` and `?share=<token>` on the PDF route are the
   Phase 3 consumers. Public pages live under `src/app/share/` outside the

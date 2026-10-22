@@ -124,7 +124,21 @@ describe("packing list lifecycle", () => {
     const mover = detail!.lines.find((l) => l.modelId === moverModelId && !l.isKit)!;
     const check = mover.checks.find((c) => c.itemId === moverIds[1])!;
     await packingChecks.untick(admin, check.id);
+    await packingChecks.untick(admin, check.id); // a double tap is harmless
     await packingChecks.tick(admin, { lineId: mover.id, itemId: moverIds[1], quantity: undefined });
+  });
+
+  it("pack all ticks the in-house units a serialized line still needs, and says how many are missing", async () => {
+    const mover = (await listDetail(listId))!.lines.find((l) => l.modelId === moverModelId && !l.isKit)!;
+    expect(mover.quantity).toBe(3);
+    for (const c of mover.checks.filter((c) => c.phase === "out")) await packingChecks.untick(admin, c.id);
+    // Three wanted; the third mover is in repair (above) and the fourth sits in the kit.
+    expect(await packingChecks.tickAll(admin, mover.id)).toEqual({ packed: 2, missing: 1 });
+    const after = (await listDetail(listId))!.lines.find((l) => l.id === mover.id)!;
+    expect(after.checks.filter((c) => c.phase === "out").map((c) => c.itemId).sort()).toEqual([moverIds[0], moverIds[1]].sort());
+    await expect(packingChecks.tickAll(admin, mover.id)).rejects.toThrow(/in house/);
+    const cable = (await listDetail(listId))!.lines.find((l) => l.modelId === cableModelId)!;
+    await expect(packingChecks.tickAll(admin, cable.id)).rejects.toThrow(/serialized/);
   });
 
   it("check-out moves units to on_project, splits a travel bin, cascades the kit", async () => {

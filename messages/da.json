@@ -765,7 +765,11 @@
     "sparesAddLabel": "Tilføj {count} × {part}",
     "sparesShort": "{count} mangler: ønskeliste",
     "sparesShortWished": "{count} mangler, på ønskelisten",
-    "sparesDismiss": "Ikke denne gang"
+    "sparesDismiss": "Ikke denne gang",
+    "undone": "Fortrudt",
+    "packedLines": "{count, plural, one {# pakket linje} other {# pakkede linjer}}",
+    "packAll": "Pak alle {count}",
+    "packAllShort": "Pakkede {packed}; {missing} mere er ikke hjemme."
   },
   "retiredReason": {
     "sold": "Solgt",
