@@ -10,6 +10,7 @@ import { categoryIdsIncludingChildren, toItemDto, toModelDto, type ItemDto, type
 import { buildTree, flattenTree, pathNames } from "./tree";
 import { makersOf, modelLabel } from "@/lib/format";
 import { bestMatches } from "@/lib/search";
+import { itemOrderBy, sortFamilies } from "./sorting";
 // eslint-disable-next-line no-restricted-imports -- the barrel loads server actions, which do not load under Vitest
 import { glossary } from "@/modules/settings/glossary";
 
@@ -79,6 +80,11 @@ export type ModelListRow = ModelDto & {
 /** Models that share a name: one row in the list, the variants inside it. */
 export type ModelFamily = {
   key: string;
+  /** For sorting (sorting.ts): newest variant, highest day price, heaviest variant, quantity packed in 12 months (0 unless sorted by it). */
+  addedAt: Date;
+  dayPrice: number | null;
+  weightKg: number | null;
+  packed: number;
   /** The variants' manufacturers, "Robe" or "Neutrik, Amphenol" ("" when none). */
   manufacturer: string;
   name: string;
@@ -125,10 +131,20 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
     inHouse: metreStock.get(m.id) ?? inHouse.get(m.id) ?? 0,
     thumbUrl: m.defaultPhoto?.thumbKey ? `/api/files/${m.defaultPhoto.id}?thumb=1` : null,
   }));
-  const families = groupFamilies(rows);
+  const grouped = groupFamilies(rows);
+  if (filters.sort === "packed") {
+    // Quantity on packing lists made in the last 12 months, per model, summed per family.
+    const since = new Date(Date.now() - 365 * 24 * 3_600_000);
+    const used = ids.length ? await prisma.packingLine.groupBy({ by: ["modelId"], where: { modelId: { in: ids }, list: { createdAt: { gte: since } } }, _sum: { quantity: true } }) : [];
+    const byModel = new Map(used.map((u) => [u.modelId, u._sum.quantity ?? 0]));
+    for (const f of grouped) f.packed = f.variants.reduce((n, v) => n + (byModel.get(v.id) ?? 0), 0);
+  }
+  const families = sortFamilies(grouped, filters.sort);
   const total = families.length;
   return { families: families.slice((filters.page - 1) * PAGE, filters.page * PAGE), total, models: rows.length, page: filters.page, pages: Math.max(1, Math.ceil(total / PAGE)), closeMatches };
 }
+
+const maxOrNull = (a: number | null, b: number | null) => (a === null ? b : b === null ? a : Math.max(a, b));
 
 /** Pure: rows → families (by name, case-insensitive; manufacturers may differ), variants sorted by size, totals summed. */
 export function groupFamilies(rows: ModelListRow[]): ModelFamily[] {
@@ -143,7 +159,27 @@ export function groupFamilies(rows: ModelListRow[]): ModelFamily[] {
       if (fam.trackingType !== r.trackingType) fam.trackingType = "mixed";
       fam.archived = fam.archived && r.archived;
       fam.thumbUrl ??= r.thumbUrl;
-    } else map.set(key, { key, manufacturer: r.manufacturer, name: r.name, categoryPath: r.categoryPath, color: r.color, trackingType: r.trackingType, archived: r.archived, owned: r.owned, inHouse: r.inHouse, thumbUrl: r.thumbUrl, variants: [r] });
+      if (r.createdAt > fam.addedAt) fam.addedAt = r.createdAt;
+      fam.dayPrice = maxOrNull(fam.dayPrice, r.rentalDayPrice);
+      fam.weightKg = maxOrNull(fam.weightKg, r.weightKg);
+    } else
+      map.set(key, {
+        key,
+        manufacturer: r.manufacturer,
+        name: r.name,
+        categoryPath: r.categoryPath,
+        color: r.color,
+        trackingType: r.trackingType,
+        archived: r.archived,
+        owned: r.owned,
+        inHouse: r.inHouse,
+        thumbUrl: r.thumbUrl,
+        addedAt: r.createdAt,
+        dayPrice: r.rentalDayPrice,
+        weightKg: r.weightKg,
+        packed: 0,
+        variants: [r],
+      });
   }
   for (const fam of map.values()) {
     fam.variants.sort((a, b) => compareVariants(a.variant, b.variant));
@@ -244,7 +280,7 @@ export async function listItems(
     prisma.item.count({ where }),
     prisma.item.findMany({
       where,
-      orderBy: [{ assetTag: "asc" }],
+      orderBy: itemOrderBy(filters.sort),
       skip: (filters.page - 1) * PAGE,
       take: PAGE,
       include: {

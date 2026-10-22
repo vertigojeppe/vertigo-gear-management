@@ -257,7 +257,33 @@
     "unitMetresHelp": "Meter modtages og bruges i værkstedet; de har ingen enheder og kommer ikke på pakkelister.",
     "minStock": "Få tilbage under",
     "minStockHelp": "Vises på oversigten når beholdningen kommer under dette.",
-    "familyMakersMixed": "Varianterne har forskellige producenter. Lad feltet stå tomt for at beholde hver enkelts, eller skriv én for alle."
+    "familyMakersMixed": "Varianterne har forskellige producenter. Lad feltet stå tomt for at beholde hver enkelts, eller skriv én for alle.",
+    "sort": "Sortér",
+    "sortBy": {
+      "name": "Navn (A–Å)",
+      "category": "Kategori",
+      "manufacturer": "Producent",
+      "units": "Flest enheder",
+      "out": "Flest ude lige nu",
+      "packed": "Mest pakket (12 mdr.)",
+      "newest": "Nyeste først",
+      "price": "Højeste dagspris",
+      "weight": "Tungeste først"
+    },
+    "sortItemsBy": {
+      "tag": "Asset-tag",
+      "model": "Model",
+      "location": "Placering",
+      "changed": "Senest ændret",
+      "purchased": "Nyeste køb"
+    },
+    "metric": {
+      "out": "{count} ikke hjemme",
+      "packed": "{count, plural, =0 {ikke pakket i 12 mdr.} other {pakket {count}× i 12 mdr.}}",
+      "added": "tilføjet {date}",
+      "price": "{price}/dag",
+      "weight": "{kg} kg"
+    }
   },
   "itemStatus": {
     "in_house": "På lager",

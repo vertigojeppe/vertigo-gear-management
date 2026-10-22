@@ -2,7 +2,7 @@
 
 import { ColorBar, ColorDot } from "@/components/color-marks";
 import { formatQty } from "../consumables-logic";
-import { useActionState, useState } from "react";
+import { Fragment, useActionState, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Package } from "lucide-react";
@@ -13,6 +13,8 @@ import { familyLabel, modelLabel } from "@/lib/format";
 import { ModelName } from "@/components/model-name";
 import { bulkModels, type BulkState } from "../actions";
 import type { ModelFamily, ModelListRow } from "../queries";
+import type { ModelSort } from "../sorting";
+import { formatDate, formatMoney, formatNumber } from "@/lib/format";
 
 /**
  * The inventory list: one row per family that opens to its variants, with
@@ -21,8 +23,26 @@ import type { ModelFamily, ModelListRow } from "../queries";
  * then delete anyway, which removes the reservations, lines and items
  * that point at those models.
  */
-export function FamilyList({ families, canEdit, isAdmin, returnTo }: { families: ModelFamily[]; canEdit: boolean; isAdmin: boolean; returnTo: string }) {
+export function FamilyList({ families, sort = "name", canEdit, isAdmin, returnTo }: { families: ModelFamily[]; sort?: ModelSort; canEdit: boolean; isAdmin: boolean; returnTo: string }) {
   const t = useTranslations("inventory");
+  /** The value the list is sorted by, shown on each row, so the order explains itself. */
+  const metric = (f: ModelFamily): string | null => {
+    switch (sort) {
+      case "out":
+        return t("metric.out", { count: f.owned - f.inHouse });
+      case "packed":
+        return t("metric.packed", { count: f.packed });
+      case "newest":
+        return t("metric.added", { date: formatDate(f.addedAt) });
+      case "price":
+        return f.dayPrice !== null ? t("metric.price", { price: formatMoney(f.dayPrice) }) : null;
+      case "weight":
+        return f.weightKg !== null ? t("metric.weight", { kg: formatNumber(f.weightKg, 1) }) : null;
+      default:
+        return null;
+    }
+  };
+  const withMetric = (base: string, f: ModelFamily) => [base, metric(f)].filter(Boolean).join(" · ");
   const tc = useTranslations("common");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [state, action] = useActionState<BulkState, FormData>(bulkModels, {});
@@ -95,22 +115,32 @@ export function FamilyList({ families, canEdit, isAdmin, returnTo }: { families:
       )}
 
       <ul className="divide-y rounded-md border">
-        {families.map((f) => {
+        {families.map((f, i) => {
           const ids = f.variants.map((v) => v.id);
           const picked = ids.filter((id) => selected.has(id)).length;
+          // Sorted by category: a heading wherever the category changes.
+          const path = f.categoryPath.join(" › ");
+          const heading = sort === "category" && (i === 0 || families[i - 1].categoryPath.join(" › ") !== path) && (
+            <li className="bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground">{path || "—"}</li>
+          );
           if (f.variants.length === 1) {
             const v = f.variants[0];
             return (
-              <li key={f.key} className="flex items-center">
+              <Fragment key={f.key}>
+                {heading}
+                <li className="flex items-center">
                 <ColorBar color={f.color} className="ml-1" />
                 {canEdit && <Check checked={selected.has(v.id)} onChange={(on) => toggle([v.id], on)} label={modelLabel(v)} />}
                 <ColorDot color={v.lengthColor} className="ml-3" />
-                <ModelRow m={v} label={modelLabel(v)} maker={v.manufacturer} sub={`${f.categoryPath.join(" › ")} · ${t(v.trackingType)}`} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} />
-              </li>
+                <ModelRow m={v} label={modelLabel(v)} maker={v.manufacturer} sub={withMetric(`${f.categoryPath.join(" › ")} · ${t(v.trackingType)}`, f)} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} />
+                </li>
+              </Fragment>
             );
           }
           return (
-            <li key={f.key}>
+            <Fragment key={f.key}>
+              {heading}
+              <li>
               <details className="group">
                 <summary className="flex cursor-pointer list-none items-center hover:bg-muted/50 [&::-webkit-details-marker]:hidden">
                   <ColorBar color={f.color} className="ml-1" />
@@ -124,7 +154,7 @@ export function FamilyList({ families, canEdit, isAdmin, returnTo }: { families:
                         {f.archived && <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">{t("archived")}</span>}
                       </span>
                       <span className="block truncate text-xs text-muted-foreground">
-                        {f.categoryPath.join(" › ")} · {tracking(f)} · {f.variants.map((v) => v.variant ?? "—").join(", ")}
+                        {withMetric(`${f.categoryPath.join(" › ")} · ${tracking(f)} · ${f.variants.map((v) => v.variant ?? "—").join(", ")}`, f)}
                       </span>
                     </span>
                     <span className="shrink-0 text-right text-sm">
@@ -149,7 +179,8 @@ export function FamilyList({ families, canEdit, isAdmin, returnTo }: { families:
                   ))}
                 </ul>
               </details>
-            </li>
+              </li>
+            </Fragment>
           );
         })}
       </ul>

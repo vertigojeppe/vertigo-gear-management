@@ -3,6 +3,7 @@ import { isColorKey } from "@/lib/colors";
 import { CONSUMABLE_UNITS } from "./consumables-logic";
 import { ITEM_STATUS_KEYS, LOCATION_TYPES, RETIREMENT_REASONS } from "../../../config/app.config";
 import { checkbox, optionalDate, optionalId, optionalNumber, optionalText } from "@/lib/forms";
+import { ITEM_SORTS, MODEL_SORTS } from "./sorting";
 
 /* Categories */
 export const categoryInput = z.object({
@@ -187,6 +188,7 @@ export const itemFilters = z.object({
   categoryId: optionalId,
   modelId: optionalId,
   kits: z.preprocess((v) => v === "1" || v === "true", z.boolean()).optional(),
+  sort: z.enum(ITEM_SORTS).optional().catch(undefined),
   page: optionalNumber.transform((v) => Math.max(1, Math.floor(v ?? 1))),
 });
 export type ItemFilters = z.infer<typeof itemFilters>;
@@ -196,6 +198,7 @@ export const modelFilters = z.object({
   categoryId: optionalId,
   trackingType: z.enum(TRACKING_TYPES).optional().catch(undefined),
   archived: z.preprocess((v) => v === "1" || v === "true", z.boolean()).optional(),
+  sort: z.enum(MODEL_SORTS).optional().catch(undefined),
   page: optionalNumber.transform((v) => Math.max(1, Math.floor(v ?? 1))),
 });
 export type ModelFilters = z.infer<typeof modelFilters>;
