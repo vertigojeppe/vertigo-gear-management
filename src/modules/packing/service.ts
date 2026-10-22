@@ -327,12 +327,37 @@ export const packingChecks = {
     return prisma.packingCheck.create({ data: { lineId: line.id, phase: "out", itemId, quantity: 1, checkedById: actor.id } });
   },
 
-  /** Undo a tick while the list is still a draft. */
+  /**
+   * "Pack all" on a serialized line: ticks in-house units of the model that
+   * are not packed on this list yet, in asset-tag order (the pick list's
+   * order), up to what the line still needs. Returns how many were packed
+   * and how many are still missing because too few are in house.
+   */
+  async tickAll(actor: Actor, lineId: string): Promise<{ packed: number; missing: number }> {
+    assertCan(actor, "packing.write");
+    return prisma.$transaction(async (tx) => {
+      const line = await tx.packingLine.findUniqueOrThrow({ where: { id: lineId }, include: { model: true, checks: true, list: true } });
+      if (!canPack(line.list.status as PackingStatus)) throw new PackingError("This list is no longer being packed.");
+      if (line.model.trackingType === "bulk" || line.itemId) throw new PackingError("Pack all is for lines of several serialized units.");
+      const progress = lineProgress({ quantity: line.quantity, trackingType: "serialized", checks: line.checks.map((c) => ({ phase: c.phase as "out" | "in", quantity: c.quantity, outcome: c.outcome })) });
+      if (progress.toPack <= 0) throw new PackingError("This line is fully packed.");
+      const packedHere = new Set((await tx.packingCheck.findMany({ where: { phase: "out", itemId: { not: null }, line: { listId: line.listId } }, select: { itemId: true } })).map((c) => c.itemId));
+      const units = (await tx.item.findMany({ where: { modelId: line.modelId, status: "in_house", parentItemId: null, isKit: false }, orderBy: { assetTag: "asc" }, select: { id: true } }))
+        .filter((u) => !packedHere.has(u.id))
+        .slice(0, progress.toPack);
+      if (units.length === 0) throw new PackingError("No units of this model are in house.");
+      await tx.packingCheck.createMany({ data: units.map((u) => ({ lineId: line.id, phase: "out", itemId: u.id, quantity: 1, checkedById: actor.id })) });
+      return { packed: units.length, missing: progress.toPack - units.length };
+    });
+  },
+
+  /** Undo a tick while the list is still a draft. Undoing one that is already gone does nothing (a double tap). */
   async untick(actor: Actor, checkId: string) {
     assertCan(actor, "packing.write");
-    const check = await prisma.packingCheck.findUniqueOrThrow({ where: { id: checkId }, include: { line: { include: { list: true } } } });
-    if (check.phase !== "out" || !canPack(check.line.list.status as PackingStatus)) throw new PackingError("This cannot be undone any more.");
-    await prisma.packingCheck.delete({ where: { id: checkId } });
+    const check = await prisma.packingCheck.findUnique({ where: { id: checkId }, include: { line: { include: { list: true } } } });
+    if (!check) return;
+    if (check.phase !== "out" || !canPack(check.line.list.status as PackingStatus)) throw new PackingError("This cannot be undone any more: the list has been checked out.");
+    await prisma.packingCheck.deleteMany({ where: { id: checkId } });
   },
 
   /**
@@ -351,7 +376,7 @@ export const packingChecks = {
     if (!open) return { status: "not_on_list" as const, tag: item.assetTag, modelId: item.modelId, modelLabel: `${modelLabel(item.model)}`, alreadyComplete: candidates.length > 0 };
     try {
       const check = await packingChecks.tick(actor, { lineId: open.id, itemId: item.id, quantity: undefined });
-      return { status: "ticked" as const, tag: item.assetTag, lineId: open.id, quantity: check.quantity, modelLabel: `${modelLabel(item.model)}` };
+      return { status: "ticked" as const, tag: item.assetTag, lineId: open.id, checkId: check.id, quantity: check.quantity, modelLabel: `${modelLabel(item.model)}` };
     } catch (err) {
       return { status: "error" as const, tag: item.assetTag, message: err instanceof Error ? err.message : String(err) };
     }

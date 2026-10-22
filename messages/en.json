@@ -765,7 +765,11 @@
     "sparesAddLabel": "Add {count} × {part}",
     "sparesShort": "{count} short: wish list",
     "sparesShortWished": "{count} short, on the wish list",
-    "sparesDismiss": "Not this time"
+    "sparesDismiss": "Not this time",
+    "undone": "Undone",
+    "packedLines": "{count, plural, one {# packed line} other {# packed lines}}",
+    "packAll": "Pack all {count}",
+    "packAllShort": "Packed {packed}; {missing} more are not in house."
   },
   "retiredReason": {
     "sold": "Sold",

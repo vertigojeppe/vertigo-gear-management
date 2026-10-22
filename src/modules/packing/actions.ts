@@ -153,27 +153,50 @@ export async function removeLine(formData: FormData): Promise<void> {
 
 /* Packing mode */
 
-export async function tickLine(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function tickLine(_prev: FormState<{ checkId: string }>, formData: FormData): Promise<FormState<{ checkId: string }>> {
   const actor = await requirePermission("packing.write");
   const projectId = String(formData.get("projectId"));
   const listId = String(formData.get("listId"));
   const parsed = parseForm(tickInput, formData);
-  if (!parsed.ok) return parsed.state;
+  if (!parsed.ok) return parsed.state as FormState<{ checkId: string }>;
+  let checkId: string;
   try {
-    await packingChecks.tick(actor, parsed.data);
+    checkId = (await packingChecks.tick(actor, parsed.data)).id;
   } catch (err) {
-    return errorState(err);
+    const { error, fieldErrors } = errorState(err);
+    return { ok: false, error, fieldErrors };
   }
   revalidateList(projectId, listId);
-  return { ok: true };
+  return { ok: true, data: { checkId } };
 }
 
-export async function untickCheck(formData: FormData): Promise<void> {
+/** "Pack all" on a serialized line: the first in-house units, up to what the line needs. */
+export async function tickAllUnits(_prev: FormState<{ packed: number; missing: number }>, formData: FormData): Promise<FormState<{ packed: number; missing: number }>> {
   const actor = await requirePermission("packing.write");
   const projectId = String(formData.get("projectId"));
   const listId = String(formData.get("listId"));
-  await packingChecks.untick(actor, String(formData.get("checkId")));
+  try {
+    const data = await packingChecks.tickAll(actor, String(formData.get("lineId")));
+    revalidateList(projectId, listId);
+    return { ok: true, data };
+  } catch (err) {
+    const { error } = errorState(err);
+    return { ok: false, error };
+  }
+}
+
+/** Undo a tick (pack mode). Answers instead of throwing, so the button can say why when the list has moved on. */
+export async function untickCheck(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+  const actor = await requirePermission("packing.write");
+  const projectId = String(formData.get("projectId"));
+  const listId = String(formData.get("listId"));
+  try {
+    await packingChecks.untick(actor, String(formData.get("checkId")));
+  } catch (err) {
+    return { ok: false, error: errorState(err).error ?? "Could not undo." };
+  }
   revalidateList(projectId, listId);
+  return { ok: true };
 }
 
 export async function undoReturn(formData: FormData): Promise<void> {
