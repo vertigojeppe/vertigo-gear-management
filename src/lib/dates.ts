@@ -56,6 +56,18 @@ export function maxDate(...ds: (DateString | null | undefined)[]): DateString | 
   return list.length ? list.reduce((a, b) => (a > b ? a : b)) : null;
 }
 
+/** Day of the week, Monday = 1 … Sunday = 7. */
+export function isoWeekday(s: DateString): number {
+  return new Date(`${s}T00:00:00Z`).getUTCDay() || 7;
+}
+
+/** ISO 8601 week number (the one Danish calendars use): weeks start on Monday, week 1 holds the year's first Thursday. */
+export function isoWeek(s: DateString): number {
+  const thursday = addDays(s, 4 - isoWeekday(s));
+  const jan1 = `${thursday.slice(0, 4)}-01-01`;
+  return Math.floor((daysBetween(jan1, thursday) - 1) / 7) + 1;
+}
+
 /** Two inclusive date ranges overlap. */
 export function rangesOverlap(aFrom: DateString, aTo: DateString, bFrom: DateString, bTo: DateString): boolean {
   return aFrom <= bTo && aTo >= bFrom;
