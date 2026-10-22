@@ -216,6 +216,14 @@ a second entry that exports components only and never a service.
   `modelLabelWithMaker` ("Pointe (Robe)"); `makersOf` lists a family's
   manufacturers. `Model.manufacturer` may be empty (own-built gear,
   cables, rods). Never build labels by hand from manufacturer + name.
+- Sorting (`src/modules/inventory/sorting.ts`, pure, tested): the model
+  list takes `?sort=` (`MODEL_SORTS`: name, category, manufacturer,
+  units, out, packed, newest, price, weight) and sorts families after
+  search and before paging (`sortFamilies`, Danish collation, largest
+  first for numbers, missing values last, ties by name); `packed` sums
+  packing-line quantities of the last 12 months (one groupBy, only when
+  chosen). The row shows the sorted-by value; category sort adds headings.
+  The item list maps `ITEM_SORTS` to a Prisma orderBy (`itemOrderBy`).
 - Labels: `LABEL_SIZES` in `config/app.config.ts` (sheet grids with gaps,
   or `page: "single"` for thermal rolls); `label-layout.ts` is the pure
   geometry (centred grid, offset, page count) and `labels.tsx` renders the

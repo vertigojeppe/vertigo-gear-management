@@ -265,6 +265,24 @@ test.describe("inventory", () => {
     await expect(page.getByRole("listitem").filter({ hasText: `Strip ${stamp}` }).getByRole("link", { name: "on the wish list" })).toBeVisible();
   });
 
+  test("the model and item lists sort in other ways", async ({ page }) => {
+    await signIn(page, "viewer@vertigo.test");
+    await page.goto("/inventory");
+    // By category: a heading per category, and the choice lives in the URL.
+    await page.getByLabel("Sort").selectOption({ label: "Category" });
+    await expect(page).toHaveURL(/sort=category/);
+    await expect(page.getByRole("listitem").filter({ hasText: /^Cables › / }).first()).toBeVisible();
+    // By day price: the price is shown on each row, highest first.
+    await page.getByLabel("Sort").selectOption({ label: "Highest day price" });
+    await expect(page).toHaveURL(/sort=price/);
+    await expect(page.getByText(/\/day/).first()).toBeVisible();
+    // Items: most recently changed first.
+    await page.goto("/inventory/items");
+    await page.getByLabel("Sort").selectOption({ label: "Recently changed" });
+    await expect(page).toHaveURL(/sort=changed/);
+    await expect(page.locator(`main a[href^="/inventory/items/"]`).first()).toBeVisible();
+  });
+
   test("filters apply while typing, keep focus, and Clear empties them", async ({ page }) => {
     await signIn(page, "viewer@vertigo.test");
     await page.goto("/inventory");

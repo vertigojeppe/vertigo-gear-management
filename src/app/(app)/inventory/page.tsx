@@ -9,7 +9,7 @@ import { Pagination } from "@/components/pagination";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can, requireActor } from "@/lib/auth/session";
-import { FamilyList, InventoryTabs, categoryOptions, listModels, modelFilters, TRACKING_TYPES } from "@/modules/inventory";
+import { FamilyList, InventoryTabs, MODEL_SORTS, categoryOptions, listModels, modelFilters, TRACKING_TYPES } from "@/modules/inventory";
 
 export const metadata: Metadata = { title: "Inventory" };
 
@@ -51,7 +51,7 @@ export default async function ModelsPage(props: { searchParams: Promise<Record<s
         </p>
       )}
 
-      <LiveFilterForm className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto] sm:items-end">
+      <LiveFilterForm className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:items-end">
         <Input name="q" defaultValue={filters.q ?? ""} placeholder={tc("search")} aria-label={tc("search")} />
         <NativeSelect name="categoryId" defaultValue={filters.categoryId ?? ""} aria-label={t("category")} className="sm:w-48">
           <option value="">{t("allCategories")}</option>
@@ -67,6 +67,13 @@ export default async function ModelsPage(props: { searchParams: Promise<Record<s
           {TRACKING_TYPES.map((tt) => (
             <option key={tt} value={tt}>
               {t(tt)}
+            </option>
+          ))}
+        </NativeSelect>
+        <NativeSelect name="sort" defaultValue={filters.sort ?? ""} aria-label={t("sort")} className="sm:w-48">
+          {MODEL_SORTS.map((s) => (
+            <option key={s} value={s === "name" ? "" : s}>
+              {t(`sortBy.${s}`)}
             </option>
           ))}
         </NativeSelect>
@@ -101,7 +108,7 @@ export default async function ModelsPage(props: { searchParams: Promise<Record<s
           }
         />
       ) : (
-        <FamilyList families={result.families} canEdit={canEdit} isAdmin={can(actor.role, "users.manage")} returnTo={`/inventory${query ? `?${query}` : ""}`} />
+        <FamilyList families={result.families} sort={filters.sort ?? "name"} canEdit={canEdit} isAdmin={can(actor.role, "users.manage")} returnTo={`/inventory${query ? `?${query}` : ""}`} />
       )}
       <Pagination page={result.page} pages={result.pages} total={result.total} params={sp} />
     </div>

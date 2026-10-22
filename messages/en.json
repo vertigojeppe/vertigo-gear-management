@@ -257,7 +257,33 @@
     "unitMetresHelp": "Metres are received and used in the workshop; they have no units and do not go on packing lists.",
     "minStock": "Running low below",
     "minStockHelp": "Shown on the dashboard when stock drops below this.",
-    "familyMakersMixed": "The variants have different manufacturers. Leave this empty to keep each one's, or type one for all."
+    "familyMakersMixed": "The variants have different manufacturers. Leave this empty to keep each one's, or type one for all.",
+    "sort": "Sort",
+    "sortBy": {
+      "name": "Name (A–Z)",
+      "category": "Category",
+      "manufacturer": "Manufacturer",
+      "units": "Most units",
+      "out": "Most out right now",
+      "packed": "Most packed (12 months)",
+      "newest": "Newest first",
+      "price": "Highest day price",
+      "weight": "Heaviest first"
+    },
+    "sortItemsBy": {
+      "tag": "Asset tag",
+      "model": "Model",
+      "location": "Location",
+      "changed": "Recently changed",
+      "purchased": "Newest purchase"
+    },
+    "metric": {
+      "out": "{count} not in house",
+      "packed": "{count, plural, =0 {not packed in 12 months} other {packed {count}× in 12 months}}",
+      "added": "added {date}",
+      "price": "{price}/day",
+      "weight": "{kg} kg"
+    }
   },
   "itemStatus": {
     "in_house": "In house",

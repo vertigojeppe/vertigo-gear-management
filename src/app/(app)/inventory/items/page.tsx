@@ -10,7 +10,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can, requireActor } from "@/lib/auth/session";
-import { InventoryTabs, categoryOptions, itemFilters, listItems, locationOptions, modelOptions, LabelsDialog } from "@/modules/inventory";
+import { InventoryTabs, categoryOptions, itemFilters, listItems, locationOptions, modelOptions, LabelsDialog, ITEM_SORTS } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 import { ITEM_STATUSES } from "../../../../../config/app.config";
 import { modelLabelWithMaker } from "@/lib/format";
@@ -64,7 +64,7 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
             </Link>
           )}
         </div>
-        <div className="grid gap-2 sm:grid-cols-5">
+        <div className="grid gap-2 sm:grid-cols-6">
           <NativeSelect name="status" defaultValue={filters.status ?? ""} aria-label={t("status")}>
             <option value="">{t("allStatuses")}</option>
             {ITEM_STATUSES.map((s) => (
@@ -103,6 +103,13 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
             <input type="checkbox" name="kits" value="1" defaultChecked={filters.kits} className="size-4" />
             {t("kitsOnly")}
           </label>
+          <NativeSelect name="sort" defaultValue={filters.sort ?? ""} aria-label={t("sort")}>
+            {ITEM_SORTS.map((s) => (
+              <option key={s} value={s === "tag" ? "" : s}>
+                {t(`sortItemsBy.${s}`)}
+              </option>
+            ))}
+          </NativeSelect>
         </div>
         {defs.length > 0 && (
           <div className="grid gap-2 sm:grid-cols-5">
