@@ -12,7 +12,8 @@ import { InstallHint } from "./pwa/install-hint";
  *
  * The frame is viewport-high and only the content area scrolls, so the
  * tab bar and sidebar never move and mobile browser chrome cannot cover
- * the tabs. Navigation items live in ./navigation.ts.
+ * the tabs. Navigation items live in ./navigation.ts. A page that marks
+ * its root with `data-wide` (the packing list) gets the full width.
  */
 export function AppShell({ actor, children }: { actor: Actor; children: React.ReactNode }) {
   return (
@@ -22,7 +23,7 @@ export function AppShell({ actor, children }: { actor: Actor; children: React.Re
         <MobileTopBar appName={appConfig.name} />
         <InstallHint />
         <ScrollContainer>
-          <main className="mx-auto w-full max-w-6xl px-4 py-5 md:px-8 md:py-8">{children}</main>
+          <main className="mx-auto w-full max-w-6xl px-4 py-5 md:px-8 md:py-8 has-[[data-wide]]:max-w-none">{children}</main>
         </ScrollContainer>
         <MobileTabBar actor={actor} />
       </div>

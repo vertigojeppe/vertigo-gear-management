@@ -65,7 +65,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
   const groups = groupLines(lines, list.groupBy);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div data-wide className="flex flex-col gap-6">
       <PageHeader
         title={
           <span className="flex flex-wrap items-center gap-2">
@@ -131,75 +131,79 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
         </>
       )}
 
-      {lines.length === 0 ? (
+      {lines.length === 0 && (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="font-medium">{t("noLines")}</p>
           <p className="text-sm text-muted-foreground">{t("noLinesBody")}</p>
         </div>
-      ) : (
-        groups.map((g) => (
-          <section key={g.key} className="flex flex-col gap-1">
-            <h2 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <ColorBar color={g.color} className="h-4" />
-              {g.label}
-            </h2>
-            <ul className="divide-y rounded-md border text-sm">
-              {g.lines.map((l) => (
-                <li key={l.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
-                  <span className="w-10 shrink-0 font-medium">{l.quantity}×</span>
-                  <span className="min-w-0 flex-1">
-                    <Link href={`/inventory/models/${l.modelId}`} className="hover:underline">
-                      {l.modelLabel}
-                    </Link>
-                    <ColorDot color={l.lengthColor} className="ml-1.5" />
-                    {l.itemName ? <span className="text-muted-foreground"> – {l.itemName}</span> : null}
-                    <span className="block text-xs text-muted-foreground">
-                      {[l.note && l.note !== l.itemName ? l.note : null, l.itemTag && !l.isKit ? l.itemTag : null, l.caseLabel && !l.isKit ? `${t("case")}: ${l.caseLabel}` : null].filter(Boolean).join(" · ")}
-                      {l.isKit && l.kitContents.length > 0 ? `${t("contains")}: ${l.kitContents.map((c) => `${c.quantity > 1 ? `${c.quantity}× ` : ""}${c.label}`).join(", ")}` : ""}
-                    </span>
-                    {list.status === "draft" && !l.isKit && l.quantity > l.inHouse && <span className="block text-xs text-amber-700 dark:text-amber-300">{t("inHouseHint", { count: l.inHouse, owned: l.owned })}</span>}
-                    {l.checks.filter((c) => c.phase === "out").length > 0 && (
-                      <span className="block font-mono text-xs text-muted-foreground">{l.checks.filter((c) => c.phase === "out").map((c) => `${c.assetTag ?? ""}${l.trackingType === "bulk" ? ` ×${c.quantity}` : ""}`).join(", ")}</span>
-                    )}
-                  </span>
-                  <StatusPill color={linePillColor(list.status, l.progress)} className="shrink-0">
-                    {list.status === "draft" ? `${l.progress.packed}/${l.quantity}` : t("returned", { returned: l.progress.returnedOk, packed: l.progress.packed })}
-                    {list.status !== "draft" && l.progress.damaged > 0 ? ` · ${l.progress.damaged} ${t("outcomeDamaged").toLowerCase()}` : ""}
-                    {list.status !== "draft" && l.progress.missing > 0 ? ` · ${l.progress.missing} ${t("outcomeMissing").toLowerCase()}` : ""}
-                    {list.status !== "draft" && l.progress.used > 0 ? ` · ${l.progress.used} ${t("outcomeUsed").toLowerCase()}` : ""}
-                    {list.status !== "draft" && l.progress.packed < l.quantity ? ` · ${t("notPacked").toLowerCase()} ${l.quantity - l.progress.packed}` : ""}
-                  </StatusPill>
-                  {editable && (
-                    <span className="flex shrink-0 items-center gap-1">
-                      <EditLineDialog ids={ids} line={l} cases={caseOptions} units={l.availableUnits} />
-                      <RemoveLineButton ids={ids} lineId={l.id} />
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
       )}
 
-      {subHire.length > 0 && (
-        <section className="flex flex-col gap-1">
-          <h2 className="text-sm font-medium text-muted-foreground">{t("rentedIn")}</h2>
-          <ul className="divide-y rounded-md border text-sm">
-            {subHire.map((l) => (
-              <li key={l.id} className="flex items-center gap-3 px-3 py-2">
-                <span className="w-10 shrink-0 font-medium">{l.quantity}×</span>
-                <span className="min-w-0 flex-1">
-                  {l.label}
-                  <span className="block text-xs text-muted-foreground">
-                    {t("rentInFrom", { owner: l.ownerName })}
-                    {l.note ? ` · ${l.note}` : ""}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
+      {/* Groups flow into columns on wide screens; a group never breaks across two. */}
+      {(lines.length > 0 || subHire.length > 0) && (
+        <div className="gap-6 lg:columns-2 2xl:columns-3">
+          {groups.map((g) => (
+            <section key={g.key} className="mb-5 flex break-inside-avoid flex-col gap-1">
+              <h2 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <ColorBar color={g.color} className="h-4" />
+                {g.label}
+              </h2>
+              <ul className="divide-y rounded-md border text-sm">
+                {g.lines.map((l) => (
+                  <li key={l.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
+                    <span className="w-10 shrink-0 font-medium">{l.quantity}×</span>
+                    <span className="min-w-0 flex-1">
+                      <Link href={`/inventory/models/${l.modelId}`} className="hover:underline">
+                        {l.modelLabel}
+                      </Link>
+                      <ColorDot color={l.lengthColor} className="ml-1.5" />
+                      {l.itemName ? <span className="text-muted-foreground"> – {l.itemName}</span> : null}
+                      <span className="block text-xs text-muted-foreground">
+                        {[l.note && l.note !== l.itemName ? l.note : null, l.itemTag && !l.isKit ? l.itemTag : null, l.caseLabel && !l.isKit ? `${t("case")}: ${l.caseLabel}` : null].filter(Boolean).join(" · ")}
+                        {l.isKit && l.kitContents.length > 0 ? `${t("contains")}: ${l.kitContents.map((c) => `${c.quantity > 1 ? `${c.quantity}× ` : ""}${c.label}`).join(", ")}` : ""}
+                      </span>
+                      {list.status === "draft" && !l.isKit && l.quantity > l.inHouse && <span className="block text-xs text-amber-700 dark:text-amber-300">{t("inHouseHint", { count: l.inHouse, owned: l.owned })}</span>}
+                      {l.checks.filter((c) => c.phase === "out").length > 0 && (
+                        <span className="block font-mono text-xs text-muted-foreground">{l.checks.filter((c) => c.phase === "out").map((c) => `${c.assetTag ?? ""}${l.trackingType === "bulk" ? ` ×${c.quantity}` : ""}`).join(", ")}</span>
+                      )}
+                    </span>
+                    <StatusPill color={linePillColor(list.status, l.progress)} className="shrink-0">
+                      {list.status === "draft" ? `${l.progress.packed}/${l.quantity}` : t("returned", { returned: l.progress.returnedOk, packed: l.progress.packed })}
+                      {list.status !== "draft" && l.progress.damaged > 0 ? ` · ${l.progress.damaged} ${t("outcomeDamaged").toLowerCase()}` : ""}
+                      {list.status !== "draft" && l.progress.missing > 0 ? ` · ${l.progress.missing} ${t("outcomeMissing").toLowerCase()}` : ""}
+                      {list.status !== "draft" && l.progress.used > 0 ? ` · ${l.progress.used} ${t("outcomeUsed").toLowerCase()}` : ""}
+                      {list.status !== "draft" && l.progress.packed < l.quantity ? ` · ${t("notPacked").toLowerCase()} ${l.quantity - l.progress.packed}` : ""}
+                    </StatusPill>
+                    {editable && (
+                      <span className="flex shrink-0 items-center gap-1">
+                        <EditLineDialog ids={ids} line={l} cases={caseOptions} units={l.availableUnits} />
+                        <RemoveLineButton ids={ids} lineId={l.id} />
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+          {subHire.length > 0 && (
+            <section className="mb-5 flex break-inside-avoid flex-col gap-1">
+              <h2 className="text-sm font-medium text-muted-foreground">{t("rentedIn")}</h2>
+              <ul className="divide-y rounded-md border text-sm">
+                {subHire.map((l) => (
+                  <li key={l.id} className="flex items-center gap-3 px-3 py-2">
+                    <span className="w-10 shrink-0 font-medium">{l.quantity}×</span>
+                    <span className="min-w-0 flex-1">
+                      {l.label}
+                      <span className="block text-xs text-muted-foreground">
+                        {t("rentInFrom", { owner: l.ownerName })}
+                        {l.note ? ` · ${l.note}` : ""}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
       )}
 
       {list.notes && <p className="whitespace-pre-line text-sm text-muted-foreground">{list.notes}</p>}
