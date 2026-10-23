@@ -58,6 +58,7 @@ export const TABLES: TableDef[] = [
   { name: "Markup", delegate: "markup" },
   { name: "App", delegate: "app" },
   { name: "GlossaryGroup", delegate: "glossaryGroup" },
+  { name: "AppSetting", delegate: "appSetting", idField: "key" },
   { name: "AppVersion", delegate: "appVersion" },
   { name: "UploadSession", delegate: "uploadSession" },
   { name: "ActivityLog", delegate: "activityLog" },

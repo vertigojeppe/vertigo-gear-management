@@ -138,9 +138,9 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
         </div>
       )}
 
-      {/* Groups flow into columns on wide screens; a group never breaks across two. */}
+      {/* With the roomy layout, groups flow into columns on wide screens; a group never breaks across two. */}
       {(lines.length > 0 || subHire.length > 0) && (
-        <div className="gap-6 lg:columns-2 2xl:columns-3">
+        <div className="gap-6 roomy:lg:columns-2 roomy:2xl:columns-3">
           {groups.map((g) => (
             <section key={g.key} className="mb-5 flex break-inside-avoid flex-col gap-1">
               <h2 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">

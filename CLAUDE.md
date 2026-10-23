@@ -84,6 +84,15 @@ a second entry that exports components only and never a service.
 
 ## Navigation
 
+- Layout (Settings › Layout, `settings.manage`, one setting for everyone,
+  `AppSetting` key `layout` via `appSettings` in
+  `src/modules/settings/app-settings.ts`; `LAYOUTS` in the config):
+  `AppShell` carries `data-layout`, and the `roomy:` Tailwind variant
+  (globals.css) switches the wide parts on. A page root with `data-wide`
+  drops the content width cap under roomy (packing list, production
+  plan); columns are `roomy:lg:…` / `roomy:xl:…` classes. Compact must
+  look exactly like the old single-column layout, so wrap, never reorder.
+
 - Desktop (md+): left sidebar (`sidebar.tsx`). Phone: top bar + bottom tab bar
   with a "More" sheet (`mobile-nav.tsx`). Both read `NAV_ITEMS` in
   `src/components/navigation.ts`; add a section there, not in the components.

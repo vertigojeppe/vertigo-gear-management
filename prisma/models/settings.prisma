@@ -1,0 +1,7 @@
+/// App-wide settings an admin changes in the app (Settings › Layout): one row per key, the value as JSON.
+/// Read through `appSettings` (src/modules/settings/app-settings.ts), which knows each key's default.
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

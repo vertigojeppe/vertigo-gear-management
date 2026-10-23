@@ -86,7 +86,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
   const todayStr = today();
 
   return (
-    <div className="flex flex-col gap-8">
+    <div data-wide className="flex flex-col gap-8">
       <PageHeader
         title={`${t("title")} · ${project.name}`}
         subtitle={datesLine(project, { build: tphase("load_in"), show: tp("showStart"), pack: tphase("load_out"), call: (time) => tp("callAt", { time }) }) || tp("noDates")}
@@ -103,98 +103,101 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
         }
       />
 
-      {/* Schedule */}
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-medium">{t("schedule")}</h2>
-          {canEdit && <ScheduleEntryDialog ids={ids} people={people} defaultDay={days[0]?.day ?? anchor} />}
-        </div>
-        {days.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("noSchedule")}</p>
-        ) : (
-          days.map((d) => (
-            <div key={d.day} className="flex flex-col gap-1">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className={`text-sm font-medium ${d.day === todayStr ? "text-green-700 dark:text-green-300" : "text-muted-foreground"}`}>
-                  {weekday(d.day)} {formatDate(d.day)}
-                  {d.day === todayStr ? ` · ${t("today")}` : ""}
-                </h3>
-                <a href={`/api/plans/${plan.id}/plan.pdf?day=${d.day}`} target="_blank" rel="noreferrer" className="text-xs underline">
-                  {t("daySheet")}
-                </a>
-              </div>
-              <ul className="divide-y rounded-md border text-sm">
-                {d.entries.map((e) => (
-                  <li key={e.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
-                    <span className="w-28 shrink-0 font-mono text-xs">
-                      {e.time}
-                      {e.endTime ? `–${e.endTime}` : ""}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-medium">{e.title}</span>
-                      <span className="block text-xs text-muted-foreground">{[e.location, e.responsibleName, e.notes].filter(Boolean).join(" · ")}</span>
-                      {clip(docsFor("scheduleEntryId", e.id))}
-                    </span>
-                    {canEdit && (
-                      <span className="flex shrink-0 items-center gap-1">
-                        <ScheduleEntryDialog ids={ids} people={people} defaultDay={d.day} entry={{ id: e.id, day: e.day, time: e.time, durationMin: e.durationMin, title: e.title, location: e.location, responsibleId: e.responsibleId, notes: e.notes }} />
-                        <RemoveScheduleEntryButton ids={ids} id={e.id} />
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))
-        )}
-      </section>
-
-      {/* Tasks */}
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-medium">
-            {t("tasks")} <span className="text-sm font-normal text-muted-foreground">{t("tasksProgress", { done: taskProgress.done, total: taskProgress.total })}</span>
-          </h2>
-          {canEdit && <TaskDialog ids={ids} people={people} />}
-        </div>
-        {tasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("noTasks")}</p>
-        ) : (
-          PLAN_PHASES.map((phase) => {
-            const list = tasks.filter((x) => x.phase === phase);
-            if (list.length === 0) return null;
-            return (
-              <div key={phase} className="flex flex-col gap-1">
-                <h3 className="text-sm font-medium text-muted-foreground">{tph(phase)}</h3>
+      {/* With the roomy layout (Settings › Layout), schedule and tasks sit side by side on wide screens. */}
+      <div className="flex flex-col gap-8 roomy:xl:grid roomy:xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] roomy:xl:items-start">
+        {/* Schedule */}
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-medium">{t("schedule")}</h2>
+            {canEdit && <ScheduleEntryDialog ids={ids} people={people} defaultDay={days[0]?.day ?? anchor} />}
+          </div>
+          {days.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("noSchedule")}</p>
+          ) : (
+            days.map((d) => (
+              <div key={d.day} className="flex flex-col gap-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className={`text-sm font-medium ${d.day === todayStr ? "text-green-700 dark:text-green-300" : "text-muted-foreground"}`}>
+                    {weekday(d.day)} {formatDate(d.day)}
+                    {d.day === todayStr ? ` · ${t("today")}` : ""}
+                  </h3>
+                  <a href={`/api/plans/${plan.id}/plan.pdf?day=${d.day}`} target="_blank" rel="noreferrer" className="text-xs underline">
+                    {t("daySheet")}
+                  </a>
+                </div>
                 <ul className="divide-y rounded-md border text-sm">
-                  {list.map((x) => {
-                    const overdue = !x.done && x.dueDate !== null && x.dueDate < todayStr;
-                    return (
-                      <li key={x.id} className="flex items-center gap-3 px-3 py-2">
-                        {canEdit ? <TaskDoneButton ids={ids} id={x.id} done={x.done} /> : <span className="text-xs">{x.done ? "✓" : "○"}</span>}
-                        <span className="min-w-0 flex-1">
-                          <span className={`block ${x.done ? "text-muted-foreground line-through" : "font-medium"}`}>{x.title}</span>
-                          <span className="block text-xs text-muted-foreground">
-                            {[x.assigneeName, x.dueDate ? formatDate(x.dueDate) : null, x.notes].filter(Boolean).join(" · ")}
-                            {overdue ? <span className="ml-1 text-destructive">{t("overdue")}</span> : null}
-                          </span>
-                          {clip(docsFor("taskId", x.id))}
+                  {d.entries.map((e) => (
+                    <li key={e.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
+                      <span className="w-28 shrink-0 font-mono text-xs">
+                        {e.time}
+                        {e.endTime ? `–${e.endTime}` : ""}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-medium">{e.title}</span>
+                        <span className="block text-xs text-muted-foreground">{[e.location, e.responsibleName, e.notes].filter(Boolean).join(" · ")}</span>
+                        {clip(docsFor("scheduleEntryId", e.id))}
+                      </span>
+                      {canEdit && (
+                        <span className="flex shrink-0 items-center gap-1">
+                          <ScheduleEntryDialog ids={ids} people={people} defaultDay={d.day} entry={{ id: e.id, day: e.day, time: e.time, durationMin: e.durationMin, title: e.title, location: e.location, responsibleId: e.responsibleId, notes: e.notes }} />
+                          <RemoveScheduleEntryButton ids={ids} id={e.id} />
                         </span>
-                        {canEdit && (
-                          <span className="flex shrink-0 items-center gap-1">
-                            <TaskDialog ids={ids} people={people} task={{ id: x.id, phase: x.phase, title: x.title, assigneeId: x.assigneeId, dueDate: x.dueDate, notes: x.notes }} />
-                            <RemoveTaskButton ids={ids} id={x.id} />
-                          </span>
-                        )}
-                      </li>
-                    );
-                  })}
+                      )}
+                    </li>
+                  ))}
                 </ul>
               </div>
-            );
-          })
-        )}
-      </section>
+            ))
+          )}
+        </section>
+
+        {/* Tasks */}
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-medium">
+              {t("tasks")} <span className="text-sm font-normal text-muted-foreground">{t("tasksProgress", { done: taskProgress.done, total: taskProgress.total })}</span>
+            </h2>
+            {canEdit && <TaskDialog ids={ids} people={people} />}
+          </div>
+          {tasks.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("noTasks")}</p>
+          ) : (
+            PLAN_PHASES.map((phase) => {
+              const list = tasks.filter((x) => x.phase === phase);
+              if (list.length === 0) return null;
+              return (
+                <div key={phase} className="flex flex-col gap-1">
+                  <h3 className="text-sm font-medium text-muted-foreground">{tph(phase)}</h3>
+                  <ul className="divide-y rounded-md border text-sm">
+                    {list.map((x) => {
+                      const overdue = !x.done && x.dueDate !== null && x.dueDate < todayStr;
+                      return (
+                        <li key={x.id} className="flex items-center gap-3 px-3 py-2">
+                          {canEdit ? <TaskDoneButton ids={ids} id={x.id} done={x.done} /> : <span className="text-xs">{x.done ? "✓" : "○"}</span>}
+                          <span className="min-w-0 flex-1">
+                            <span className={`block ${x.done ? "text-muted-foreground line-through" : "font-medium"}`}>{x.title}</span>
+                            <span className="block text-xs text-muted-foreground">
+                              {[x.assigneeName, x.dueDate ? formatDate(x.dueDate) : null, x.notes].filter(Boolean).join(" · ")}
+                              {overdue ? <span className="ml-1 text-destructive">{t("overdue")}</span> : null}
+                            </span>
+                            {clip(docsFor("taskId", x.id))}
+                          </span>
+                          {canEdit && (
+                            <span className="flex shrink-0 items-center gap-1">
+                              <TaskDialog ids={ids} people={people} task={{ id: x.id, phase: x.phase, title: x.title, assigneeId: x.assigneeId, dueDate: x.dueDate, notes: x.notes }} />
+                              <RemoveTaskButton ids={ids} id={x.id} />
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })
+          )}
+        </section>
+      </div>
 
       <div className="grid gap-8 md:grid-cols-2">
         {/* Crew & contacts (from the project) */}
@@ -271,7 +274,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
         {docs.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("noDocuments")}</p>
         ) : (
-          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 roomy:2xl:grid-cols-4">
             {docs.map((d) => (
               <li key={d.id}>
                 <Link href={`/projects/${id}/plan/documents/${d.id}`} className="flex gap-3 rounded-md border p-2 hover:bg-muted/50">

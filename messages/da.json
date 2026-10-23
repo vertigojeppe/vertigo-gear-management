@@ -454,7 +454,15 @@
     "searchWordsHelp": "Ord, der betyder det samme i en søgning: arbejdslys finder worklight.",
     "glossaryIntro": "Én gruppe pr. linje, ord adskilt af kommaer. En søgning efter et ord i en gruppe finder også de andre, i lageret, enhederne, pakkelistens gearvælger og apps. Navne ændres aldrig. Mellemrum og store bogstaver er ligegyldige, så “work light” og “worklight” er det samme ord. Grupper kæder ikke: et ord på to linjer får begge linjer, men ikke det, de linjer peger videre på.",
     "glossaryText": "Grupper",
-    "glossarySaved": "Gemte {count, plural, one {# gruppe} other {# grupper}}."
+    "glossarySaved": "Gemte {count, plural, one {# gruppe} other {# grupper}}.",
+    "layout": "Layout",
+    "layoutHelp": "Rummelige sider med kolonner, eller det kompakte layout, for alle.",
+    "layoutIntro": "Hvordan travle sider bruger en bred skærm. Det gælder alle; telefoner viser altid én kolonne.",
+    "layout_roomy": "Rummelig",
+    "layout_roomyHelp": "Travle sider bruger mere af en bred skærm: pakkelisten i to eller tre kolonner, tidsplan og opgaver side om side i produktionsplanen, og projektsiden i to kolonner.",
+    "layout_compact": "Kompakt",
+    "layout_compactHelp": "Alle sider beholder den smallere bredde og viser én kolonne, som før.",
+    "layoutSaved": "Gemt. Alle sider bruger nu dette layout."
   },
   "roles": {
     "admin": "Administrator",
