@@ -42,7 +42,7 @@ npm run db:clean-tests           # remove Testlight models / e2e tokens the brow
 npm run build
 ```
 
-Production: `docker compose --profile prod up -d --build` (see README).
+Production: the office server runs `docker compose --profile tunnel up -d --build` (see README, Running the server).
 
 ## Folder conventions
 
@@ -560,14 +560,14 @@ a second entry that exports components only and never a service.
 
 - `docker compose --profile prod` runs db + app + Caddy; Caddy (`Caddyfile`,
   `APP_DOMAIN`) terminates HTTPS, the app listens on 127.0.0.1 only
-  (`APP_BIND` widens it). `Caddyfile.lan` (`CADDYFILE=./Caddyfile.lan`) uses
-  Caddy's own CA for an office server without a public DNS name (README
-  has the recipe, including the root certificate for phones).
+  (`APP_BIND` widens it).
   `docker compose --profile tunnel` is the office setup behind a
   Cloudflare Tunnel: `cloudflared` (token in `CLOUDFLARE_TUNNEL_TOKEN`)
   forwards to `app:3000` over the Compose network, Cloudflare terminates
   HTTPS and sets the `X-Forwarded-*` headers the app already honours; no
-  Caddy, no open ports, `deploy.yml` does not apply. The container
+  Caddy, no open ports, `deploy.yml` does not apply. This is the setup in
+  use; SSH reaches the server on the LAN and over Tailscale (README,
+  *Remote access*). The container
   healthcheck and `deploy.yml` poll `GET /api/health`.
 - The production image has no `tsx` and no `src/`, so the dev seed cannot
   run there (and would load demo data). The first admin on a server comes

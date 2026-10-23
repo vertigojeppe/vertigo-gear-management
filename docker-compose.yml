@@ -41,7 +41,7 @@ services:
       retries: 3
       start_period: 40s
     # "prod": behind Caddy on a server with a public address. "tunnel": behind a Cloudflare
-    # Tunnel on a machine with no open ports (README: Self-hosting at the office).
+    # Tunnel on a machine with no open ports (README: Running the server).
     profiles: ["prod", "tunnel"]
 
   # HTTPS in front of the app: Caddy gets and renews the Let's Encrypt certificate for
@@ -59,8 +59,7 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      # CADDYFILE=./Caddyfile.lan in .env for an office server without a public DNS name.
-      - ${CADDYFILE:-./Caddyfile}:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
     profiles: ["prod"]
