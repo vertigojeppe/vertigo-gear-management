@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeSheet, parseDelimited, parseSpecNumber, planSpecs, readSpecSheet, specUpdate, type CurrentModel } from "../specs";
+import { decodeSheet, parseDelimited, parseSpecNumber, pickKey, planSpecs, readSpecSheet, specUpdate, type CurrentModel } from "../specs";
 
 const model = (over: Partial<CurrentModel> = {}): CurrentModel => ({
   id: "m1",
@@ -99,11 +99,11 @@ describe("planSpecs", () => {
     expect(plan.models[0].changes.find((c) => c.field === "lumen")?.action).toBe("unavailable");
   });
 
-  it("writes only the fills, appending new links and merging extra fields", () => {
+  it("without ticks, writes only the fills, appending new links and merging extra fields", () => {
     const m = model({ links: [{ label: "Old", url: "https://old" }], customFields: { throw_ratio: "1.2" }, customKeys: ["lumen", "throw_ratio"] });
     const plan = planSpecs(sheet, new Map([["m1", m]]));
-    const { data, fields } = specUpdate(sheet.rows[0], m, plan.models[0]);
-    expect(fields).toEqual(["weightKg", "heightCm", "lumen", "description", "links"]);
+    const { data, changes } = specUpdate(sheet.rows[0], m, plan.models[0]);
+    expect(changes.map((c) => c.field)).toEqual(["weightKg", "heightCm", "lumen", "description", "links"]);
     expect(data).toEqual({
       weightKg: 32.5,
       heightCm: 180,
@@ -114,5 +114,17 @@ describe("planSpecs", () => {
       ],
       customFields: { throw_ratio: "1.2", lumen: 3500 },
     });
+  });
+
+  it("writes what is ticked: an unticked fill is skipped, a ticked kept value is replaced", () => {
+    const m = model({ numbers: { weightKg: 30, widthCm: null, heightCm: null, depthCm: null, powerDrawW: null }, customKeys: ["lumen"] });
+    const plan = planSpecs(sheet, new Map([["m1", m]]));
+    const picked = new Set([pickKey("m1", "weightKg"), pickKey("m1", "lumen"), pickKey("m1", "notAField")]);
+    const { data, changes } = specUpdate(sheet.rows[0], m, plan.models[0], picked);
+    expect(changes.map((c) => [c.field, c.action])).toEqual([
+      ["weightKg", "keep"],
+      ["lumen", "fill"],
+    ]);
+    expect(data).toEqual({ weightKg: 32.5, customFields: { lumen: 3500 } });
   });
 });
