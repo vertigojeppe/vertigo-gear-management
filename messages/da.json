@@ -1001,7 +1001,9 @@
     "doneCounts": "{categories} kategorier, {models} modeller, {units} enheder, {bins} bulk-beholdere, {kits} kasser, {contacts} kontakter, {locations} lokationer, {rentals} udlejninger, {rateTables} lejefaktor-tabeller, {wishes} ønsker, {purchases} indkøb, {subHireItems} indlejeemner oprettet.",
     "skipped": "Sprunget over",
     "openInventory": "Åbn lageret",
-    "another": "Importér et andet regneark"
+    "another": "Importér et andet regneark",
+    "specsHint": "Har du vægt, mål og strømforbrug til modeller, der allerede findes?",
+    "specsLink": "Importér et specifikationsark"
   },
   "rateExtraRule": {
     "none": "Sidste trin gælder",
@@ -1354,5 +1356,42 @@
     "toolSandboxHelp": "Værktøjer kører i en lukket ramme: de virker for sig selv, men kan ikke se Vertigo Gear, din konto eller dens data.",
     "deleteAppConfirm": "Slet {name} og {count, plural, =0 {intet andet} one {dens ene version} other {alle # versioner}}? Det kan ikke fortrydes.",
     "deleteVersionConfirm": "Slet versionen {name}? Filen fjernes for altid."
+  },
+  "specImport": {
+    "title": "Importér specifikationer",
+    "subtitle": "Udfyld vægt, mål, strømforbrug, beskrivelse, links, lumen og throw ratio på eksisterende modeller fra et ark. Intet gemmes, før du bekræfter.",
+    "file": "Specifikationsark (.csv)",
+    "fileHelp": "Semikolon eller komma, én række pr. model, med kolonnen Id fra Lager › Eksportér CSV.",
+    "reading": "Læser…",
+    "preview": "Vis forhåndsvisning",
+    "errors": "Ret disse rækker i arket først:",
+    "summaryFill": "{fields, plural, one {# felt} other {# felter}} på {models, plural, one {# model} other {# modeller}} udfyldes",
+    "summaryKeep": "{count, plural, one {# værdi er forskellig og bliver} other {# værdier er forskellige og bliver}} som de er",
+    "summaryUnknown": "{count, plural, one {# ukendt id} other {# ukendte id'er}}",
+    "apply": "Udfyld {fields, plural, one {# felt} other {# felter}} på {models, plural, one {# model} other {# modeller}}",
+    "applying": "Udfylder…",
+    "explain": "Kun tomme felter udfyldes. Har en model allerede en værdi, bliver den stående, og arkets værdi vises ved siden af; ret den på modellens side, hvis arket har ret. Links tilføjes, når de er nye.",
+    "showAll": "Vis også modeller, hvor intet ændres",
+    "sheetSays": "arket: {value}",
+    "unknown": "Ingen model har id'et i række {lines}. Den kan være slettet siden eksporten.",
+    "done": "Færdig: {fields, plural, one {# felt} other {# felter}} udfyldt på {models, plural, one {# model} other {# modeller}}. Hver models historik viser, hvad der kom fra arket.",
+    "another": "Læs et andet ark",
+    "howTitle": "Arket",
+    "how1": "Start fra Lager › Eksportér CSV, som giver hver models Id.",
+    "how2": "Kolonner: Id, Weight (kg), Width (cm), Height (cm), Depth (cm), Power (W), Lumen, Throw ratio, Description, Links. Andre kolonner (kilder, noter) ignoreres. Lad en celle være tom for at lade feltet være.",
+    "how3": "Description: én specifikation pr. linje (\"Max height: 366 cm\"). Links: ét pr. linje, \"Navn | https://…\".",
+    "field_weightKg": "Vægt (kg)",
+    "field_widthCm": "Bredde (cm)",
+    "field_heightCm": "Højde (cm)",
+    "field_depthCm": "Dybde (cm)",
+    "field_powerDrawW": "Strømforbrug (W)",
+    "field_lumen": "Lumen",
+    "field_throw_ratio": "Throw ratio",
+    "field_description": "Beskrivelse",
+    "field_links": "Links",
+    "action_fill": "Udfyldes",
+    "action_keep": "Beholdes",
+    "action_same": "Findes allerede",
+    "action_unavailable": "Feltet findes ikke"
   }
 }

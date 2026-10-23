@@ -1001,7 +1001,9 @@
     "doneCounts": "{categories} categories, {models} models, {units} units, {bins} bulk bins, {kits} cases, {contacts} contacts, {locations} locations, {rentals} rentals, {rateTables} rate tables, {wishes} wishes, {purchases} purchase records, {subHireItems} sub-hire items created.",
     "skipped": "Skipped",
     "openInventory": "Open inventory",
-    "another": "Import another spreadsheet"
+    "another": "Import another spreadsheet",
+    "specsHint": "Have weights, sizes and power draw for models you already have?",
+    "specsLink": "Import a spec sheet"
   },
   "rateExtraRule": {
     "none": "Last tier holds",
@@ -1354,5 +1356,42 @@
     "toolSandboxHelp": "Tools run in a sealed frame: they work on their own but cannot see Vertigo Gear, your account or its data.",
     "deleteAppConfirm": "Delete {name} and {count, plural, =0 {nothing else} one {its one version} other {all # versions}}? This cannot be undone.",
     "deleteVersionConfirm": "Delete the version {name}? The file is removed for good."
+  },
+  "specImport": {
+    "title": "Import specs",
+    "subtitle": "Fill in weight, size, power draw, description, links, lumen and throw ratio on existing models from a sheet. Nothing is written until you confirm.",
+    "file": "Spec sheet (.csv)",
+    "fileHelp": "Semicolons or commas, one row per model, with the Id column from Inventory › Export CSV.",
+    "reading": "Reading…",
+    "preview": "Preview",
+    "errors": "Fix these rows in the sheet first:",
+    "summaryFill": "{fields, plural, one {# field} other {# fields}} on {models, plural, one {# model} other {# models}} to fill in",
+    "summaryKeep": "{count, plural, one {# value differs and stays} other {# values differ and stay}} as they are",
+    "summaryUnknown": "{count, plural, one {# unknown id} other {# unknown ids}}",
+    "apply": "Fill in {fields, plural, one {# field} other {# fields}} on {models, plural, one {# model} other {# models}}",
+    "applying": "Filling in…",
+    "explain": "Only empty fields are filled in. Where a model already has a value, it stays and the sheet's value is shown next to it; change it on the model page if the sheet is right. Links are added when they are new.",
+    "showAll": "Also show models where nothing changes",
+    "sheetSays": "sheet: {value}",
+    "unknown": "No model has the id on row {lines}. It may have been deleted since the export.",
+    "done": "Done: {fields, plural, one {# field} other {# fields}} filled in on {models, plural, one {# model} other {# models}}. Each model's history says what came from the sheet.",
+    "another": "Read another sheet",
+    "howTitle": "The sheet",
+    "how1": "Start from Inventory › Export CSV, which gives each model's Id.",
+    "how2": "Columns: Id, Weight (kg), Width (cm), Height (cm), Depth (cm), Power (W), Lumen, Throw ratio, Description, Links. Other columns (sources, notes) are ignored. Leave a cell empty to leave the field alone.",
+    "how3": "Description: one spec per line (\"Max height: 366 cm\"). Links: one per line, \"Label | https://…\".",
+    "field_weightKg": "Weight (kg)",
+    "field_widthCm": "Width (cm)",
+    "field_heightCm": "Height (cm)",
+    "field_depthCm": "Depth (cm)",
+    "field_powerDrawW": "Power draw (W)",
+    "field_lumen": "Lumen",
+    "field_throw_ratio": "Throw ratio",
+    "field_description": "Description",
+    "field_links": "Links",
+    "action_fill": "Fill in",
+    "action_keep": "Kept",
+    "action_same": "Already there",
+    "action_unavailable": "No such field"
   }
 }
