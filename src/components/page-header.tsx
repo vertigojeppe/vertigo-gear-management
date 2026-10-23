@@ -17,8 +17,8 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0">
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <div className="min-w-0 flex-1">
         {crumbs && crumbs.length > 0 && (
           <nav aria-label="Breadcrumb" className="mb-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
             {crumbs.map((c, i) => (
@@ -35,10 +35,11 @@ export function PageHeader({
             ))}
           </nav>
         )}
-        <h1 className="truncate text-2xl font-semibold tracking-tight">{title}</h1>
+        {/* Long names (a whole kit description) wrap rather than slide under the actions. */}
+        <h1 className="text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">{title}</h1>
         {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2 lg:max-w-[60%] lg:shrink-0 lg:justify-end">{actions}</div>}
     </div>
   );
 }
