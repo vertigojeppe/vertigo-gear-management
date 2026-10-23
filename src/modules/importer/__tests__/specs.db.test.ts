@@ -35,7 +35,7 @@ describe("specImport", () => {
 
   it("previews fills, kept values and unknown ids without writing", async () => {
     const plan = await specImport.preview(admin, sheet());
-    expect(plan.unknownIds).toEqual([{ line: 4, id: "not-a-model" }]);
+    expect(plan.unknownIds).toEqual([{ line: 3, id: "not-a-model" }]); // rows as Excel numbers them: the description cell spans two lines
     expect(plan.models[0].changes.map((c) => [c.field, c.action])).toEqual([
       ["weightKg", "keep"],
       ["heightCm", "fill"],
@@ -64,6 +64,6 @@ describe("specImport", () => {
   });
 
   it("refuses a sheet with a bad number", async () => {
-    await expect(specImport.apply(admin, `Id;Weight (kg)\n${modelId};heavy\n`, `${M}.csv`)).rejects.toThrow(/Line 2/);
+    await expect(specImport.apply(admin, `Id;Weight (kg)\n${modelId};heavy\n`, `${M}.csv`)).rejects.toThrow(/Row 2/);
   });
 });

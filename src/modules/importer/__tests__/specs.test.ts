@@ -68,7 +68,7 @@ describe("readSpecSheet", () => {
       description: "Resolution: WXGA",
       links: [{ label: "Product page", url: "https://example.com/p" }],
     });
-    expect(sheet.errors).toEqual(['Line 3: "heavy" in Weight (kg) is not a number.']);
+    expect(sheet.errors).toEqual(['Row 3: "heavy" in Weight (kg) is not a number.']);
   });
 });
 

@@ -112,7 +112,7 @@ export function readSpecSheet(text: string): SpecSheet {
     for (const s of SPEC_NUMBERS) {
       const v = parseSpecNumber(get(r, s.header), s.integer);
       if (v === null) continue;
-      if (Number.isNaN(v)) errors.push(`Line ${line}: "${get(r, s.header)}" in ${s.header} is not a ${s.integer ? "whole " : ""}number.`);
+      if (Number.isNaN(v)) errors.push(`Row ${line}: "${get(r, s.header)}" in ${s.header} is not a ${s.integer ? "whole " : ""}number.`);
       else row.numbers[s.field] = v;
     }
     for (const c of SPEC_CUSTOM) {
@@ -121,7 +121,7 @@ export function readSpecSheet(text: string): SpecSheet {
       if ("text" in c) row.custom[c.key] = raw;
       else {
         const v = parseSpecNumber(raw, c.integer);
-        if (v === null || Number.isNaN(v)) errors.push(`Line ${line}: "${raw}" in ${c.header} is not a whole number.`);
+        if (v === null || Number.isNaN(v)) errors.push(`Row ${line}: "${raw}" in ${c.header} is not a whole number.`);
         else row.custom[c.key] = v;
       }
     }
