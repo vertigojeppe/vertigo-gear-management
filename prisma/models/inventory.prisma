@@ -59,6 +59,8 @@ model Model {
   rentalDayPrice Decimal? @db.Decimal(12, 2)
   /// "Sheet!A1" of the spreadsheet row this came from, when imported.
   importSource String?
+  /// When a spec sheet (Settings › Import › Import specs) last covered this model, whether or not it changed anything; a later lookup skips these.
+  specsCheckedAt DateTime?
   items        Item[]
   allocations  Allocation[]
   rentalLines  RentalLine[]

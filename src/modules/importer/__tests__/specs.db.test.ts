@@ -6,7 +6,8 @@ import { specImport } from "../specs-service";
 /**
  * Spec sheet import against the dev database: empty fields are filled,
  * a weight already on the model stays, links are appended, the model's
- * history records it, and a second run writes nothing.
+ * history records it, every model in the sheet is stamped as checked, a
+ * second run writes nothing, and ticks decide what is written.
  */
 const M = `spec-${Date.now().toString(36)}`;
 const admin: Actor = { id: "", email: "", name: "Alex Admin", role: "admin" };
@@ -46,8 +47,9 @@ describe("specImport", () => {
   });
 
   it("fills only empty fields and records it on the model", async () => {
-    expect(await specImport.apply(admin, sheet(), `${M}.csv`)).toEqual({ models: 1, fields: 3 });
+    expect(await specImport.apply(admin, sheet(), `${M}.csv`)).toEqual({ models: 1, fields: 3, checked: 1 });
     const m = await prisma.model.findUniqueOrThrow({ where: { id: modelId } });
+    expect(m.specsCheckedAt).toBeInstanceOf(Date);
     expect(m.weightKg?.toNumber()).toBe(30);
     expect(m.heightCm?.toNumber()).toBe(366);
     expect(m.description).toBe("Min height: 156 cm\nPayload: 80 kg");
@@ -56,11 +58,18 @@ describe("specImport", () => {
       { label: "Product page", url: "https://example.com/p" },
     ]);
     const log = await prisma.activityLog.findFirst({ where: { entityType: "model", entityId: modelId, action: "specs_imported" } });
-    expect(log?.summary).toBe(`Specs filled in from ${M}.csv: heightCm, description, links`);
+    expect(log?.summary).toBe(`Specs from ${M}.csv: filled in heightCm, description, links`);
   });
 
   it("writes nothing the second time", async () => {
-    expect(await specImport.apply(admin, sheet(), `${M}.csv`)).toEqual({ models: 0, fields: 0 });
+    expect(await specImport.apply(admin, sheet(), `${M}.csv`)).toEqual({ models: 0, fields: 0, checked: 1 });
+  });
+
+  it("replaces a kept value when it is ticked", async () => {
+    expect(await specImport.apply(admin, sheet(), `${M}.csv`, [`${modelId}.weightKg`])).toEqual({ models: 1, fields: 1, checked: 1 });
+    expect((await prisma.model.findUniqueOrThrow({ where: { id: modelId } })).weightKg?.toNumber()).toBe(32.5);
+    const log = await prisma.activityLog.findFirst({ where: { entityId: modelId, summary: { contains: "replaced" } } });
+    expect(log?.summary).toBe(`Specs from ${M}.csv: replaced weightKg`);
   });
 
   it("refuses a sheet with a bad number", async () => {

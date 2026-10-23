@@ -68,6 +68,7 @@ const LISTS: Record<string, ListDef<any>> = {
       { key: "notForRental", header: "Not for rental", value: (m: ModelListRow) => m.notForRental },
       { key: "archived", header: "Archived", value: (m: ModelListRow) => m.archived },
       { key: "notes", header: "Notes", value: (m: ModelListRow) => m.notes },
+      { key: "specsChecked", header: "Specs checked", value: (m: ModelListRow) => m.specsCheckedAt },
       { key: "id", header: "Id", value: (m: ModelListRow) => m.id },
     ],
   },
