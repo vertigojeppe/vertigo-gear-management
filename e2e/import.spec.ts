@@ -56,6 +56,37 @@ test.describe("spreadsheet import", () => {
     await expect(page.getByText("60cm").first()).toBeVisible();
   });
 
+  test("a spec sheet fills in empty fields on a model and keeps the rest", async ({ page }) => {
+    await signIn(page, "admin@vertigo.test");
+    await page.goto("/inventory/models/new");
+    await page.getByLabel("Manufacturer").fill("Testlight");
+    await page.getByLabel("Model name").fill(`Specs ${stamp}`);
+    const category = page.getByLabel("Category");
+    await category.selectOption((await category.locator("option", { hasText: "Moving heads" }).first().getAttribute("value"))!);
+    await page.getByLabel("Weight (kg)").fill("12");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("heading", { name: `Specs ${stamp} Testlight` })).toBeVisible();
+    const id = page.url().split("/").pop()!;
+
+    await page.goto("/settings/import");
+    await page.getByRole("link", { name: "Import a spec sheet" }).click();
+    await expect(page.getByRole("heading", { name: "Import specs" })).toBeVisible();
+    const sheet = `﻿Id;Weight (kg);Power (W);Description;Links\r\n${id};13,5;"1.200";"Pan: 540°\r\nTilt: 270°";"Product page | https://example.com/specs"\r\n`;
+    await page.getByLabel("Spec sheet").setInputFiles({ name: `specs ${stamp}.csv`, mimeType: "text/csv", buffer: Buffer.from(sheet) });
+    await page.getByRole("button", { name: "Preview" }).click();
+
+    await expect(page.getByText("3 fields on 1 model to fill in")).toBeVisible();
+    await expect(page.getByText("1 value differs and stays as they are")).toBeVisible();
+    await expect(page.getByText("sheet: 13.5")).toBeVisible();
+    await page.getByRole("button", { name: "Fill in 3 fields on 1 model" }).click();
+    await expect(page.getByRole("status")).toContainText("Done: 3 fields filled in on 1 model.");
+
+    await page.goto(`/inventory/models/${id}`);
+    await expect(page.getByText("1200", { exact: true })).toBeVisible();
+    await expect(page.getByText("Tilt: 270°")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Product page" })).toBeVisible();
+  });
+
   test("members cannot open the import page", async ({ page }) => {
     await signIn(page, "member@vertigo.test");
     await page.goto("/settings/import");

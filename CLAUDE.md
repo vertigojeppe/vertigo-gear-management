@@ -555,6 +555,17 @@ a second entry that exports components only and never a service.
   build a synthetic workbook in `__tests__/fixture.ts` with the same sheet
   names and column layouts; extend it when a reader changes.
 - Server actions accept 25 MB bodies (`next.config.ts`) for the upload.
+- Spec sheets (`/settings/import/specs`, `settings.manage`): a CSV keyed
+  by model `Id` (from the models export) with weight, width, height,
+  depth, power, lumen, throw ratio, description and links.
+  `specs.ts` is pure (`readSpecSheet`, `planSpecs`, `specUpdate`;
+  semicolons or commas, Danish decimals, Excel's Windows-1252),
+  `specs-service.ts` plans against the models as they are now on both
+  preview and apply. Only empty fields are filled (a different value is
+  shown as kept), links are appended by URL, lumen / throw ratio only
+  where the category has the extra field. Each model gets a
+  `specs_imported` activity row. The sheet's text travels in a hidden
+  field between preview and confirm; nothing is stashed.
 
 ## Deployment
 

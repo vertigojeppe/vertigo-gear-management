@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
@@ -23,6 +24,12 @@ export default async function ImportPage() {
           <li>{t("how4")}</li>
         </ol>
       </div>
+      <p className="max-w-xl text-sm text-muted-foreground">
+        {t("specsHint")}{" "}
+        <Link href="/settings/import/specs" className="font-medium text-foreground underline">
+          {t("specsLink")}
+        </Link>
+      </p>
     </div>
   );
 }
