@@ -454,7 +454,15 @@
     "searchWordsHelp": "Words that mean the same in a search: arbejdslys finds worklight.",
     "glossaryIntro": "One group per line, words separated by commas. A search for any word in a group also finds the others, in the inventory, the items, the packing-list gear picker and the apps. Names are never changed. Spaces and capitals do not matter, so “work light” and “worklight” are the same word. Groups do not chain: a word in two lines gets both lines, but not what those lines link to.",
     "glossaryText": "Groups",
-    "glossarySaved": "Saved {count, plural, one {# group} other {# groups}}."
+    "glossarySaved": "Saved {count, plural, one {# group} other {# groups}}.",
+    "layout": "Layout",
+    "layoutHelp": "Roomy pages with columns, or the compact layout, for everyone.",
+    "layoutIntro": "How busy pages use a wide screen. It applies to everyone; phones always show one column.",
+    "layout_roomy": "Roomy",
+    "layout_roomyHelp": "Busy pages use more of a wide screen: the packing list in two or three columns, schedule and tasks side by side on the production plan, and the project page in two columns.",
+    "layout_compact": "Compact",
+    "layout_compactHelp": "Every page keeps the narrower width and shows one column, as before.",
+    "layoutSaved": "Saved. Every page now uses this layout."
   },
   "roles": {
     "admin": "Admin",

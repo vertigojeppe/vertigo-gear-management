@@ -6,6 +6,7 @@ import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitionInput, webhookInput } from "./schema";
 import { customFieldDefinitions, outboxAdmin, webhooks } from "./service";
 import { glossary } from "./glossary";
+import { appSettings } from "./app-settings";
 
 export async function createCustomField(_prev: FormState, formData: FormData): Promise<FormState> {
   const actor = await requirePermission("settings.manage");
@@ -82,3 +83,15 @@ export async function saveGlossary(_prev: FormState<{ count: number }>, formData
   }
 }
 
+
+/** Settings › Layout: the page layout for everyone. Every page re-renders with it. */
+export async function saveLayout(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("settings.manage");
+  try {
+    await appSettings.setLayout(actor, String(formData.get("layout") ?? ""));
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (err) {
+    return errorState(err);
+  }
+}

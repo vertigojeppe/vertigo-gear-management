@@ -308,3 +308,11 @@ export type LogisticsKind = (typeof LOGISTICS_KINDS)[number];
 /** What a plan template entry becomes when applied. */
 export const PLAN_ENTRY_KINDS = ["schedule", "task", "logistics"] as const;
 export type PlanEntryKind = (typeof PLAN_ENTRY_KINDS)[number];
+
+/**
+ * Page layout for everyone (Settings › Layout, admins): "roomy" lets busy
+ * pages (the packing list) use the full width with columns; "compact" keeps
+ * every page at the narrower width in one column.
+ */
+export const LAYOUTS = ["roomy", "compact"] as const;
+export type Layout = (typeof LAYOUTS)[number];
