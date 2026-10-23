@@ -1365,16 +1365,16 @@
     "reading": "Læser…",
     "preview": "Vis forhåndsvisning",
     "errors": "Ret disse rækker i arket først:",
-    "summaryFill": "{fields, plural, one {# felt} other {# felter}} på {models, plural, one {# model} other {# modeller}} udfyldes",
-    "summaryKeep": "{count, plural, one {# værdi er forskellig og bliver} other {# værdier er forskellige og bliver}} som de er",
+    "summaryFill": "{count, plural, one {# tomt felt} other {# tomme felter}} kan udfyldes",
+    "summaryKeep": "{count, plural, one {# værdi er forskellig} other {# værdier er forskellige}} fra modellen",
     "summaryUnknown": "{count, plural, one {# ukendt id} other {# ukendte id'er}}",
-    "apply": "Udfyld {fields, plural, one {# felt} other {# felter}} på {models, plural, one {# model} other {# modeller}}",
-    "applying": "Udfylder…",
-    "explain": "Kun tomme felter udfyldes. Har en model allerede en værdi, bliver den stående, og arkets værdi vises ved siden af; ret den på modellens side, hvis arket har ret. Links tilføjes, når de er nye.",
+    "apply": "Gem {fields, plural, one {# ændring} other {# ændringer}} på {models, plural, one {# model} other {# modeller}}",
+    "applying": "Gemmer…",
+    "explain": "Afkrydsede ændringer gemmes. Tomme felter er afkrydset fra start. Har modellen allerede en anden værdi, er den ikke afkrydset og bliver stående; sæt kryds for at bruge arkets værdi i stedet. Links tilføjes, når de er nye. Alle modeller i arket markeres som tjekket (kun i CSV-eksporten), så et senere opslag kan springe dem over; udelad en model fra arket, hvis den skal slås op igen.",
     "showAll": "Vis også modeller, hvor intet ændres",
     "sheetSays": "arket: {value}",
     "unknown": "Ingen model har id'et i række {lines}. Den kan være slettet siden eksporten.",
-    "done": "Færdig: {fields, plural, one {# felt} other {# felter}} udfyldt på {models, plural, one {# model} other {# modeller}}. Hver models historik viser, hvad der kom fra arket.",
+    "done": "Færdig: {fields, plural, one {# ændring} other {# ændringer}} gemt på {models, plural, one {# model} other {# modeller}}, og {checked, plural, one {# model} other {# modeller}} markeret som tjekket. Hver models historik viser, hvad der kom fra arket.",
     "another": "Læs et andet ark",
     "howTitle": "Arket",
     "how1": "Start fra Lager › Eksportér CSV, som giver hver models Id.",
@@ -1392,6 +1392,9 @@
     "action_fill": "Udfyldes",
     "action_keep": "Beholdes",
     "action_same": "Findes allerede",
-    "action_unavailable": "Feltet findes ikke"
+    "action_unavailable": "Feltet findes ikke",
+    "applyNone": "Gem uden ændringer",
+    "action_skip": "Springes over",
+    "action_replace": "Erstattes"
   }
 }

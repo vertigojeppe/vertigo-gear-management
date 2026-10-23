@@ -56,7 +56,7 @@ test.describe("spreadsheet import", () => {
     await expect(page.getByText("60cm").first()).toBeVisible();
   });
 
-  test("a spec sheet fills in empty fields on a model and keeps the rest", async ({ page }) => {
+  test("a spec sheet fills in empty fields, and replaces a value only when ticked", async ({ page }) => {
     await signIn(page, "admin@vertigo.test");
     await page.goto("/inventory/models/new");
     await page.getByLabel("Manufacturer").fill("Testlight");
@@ -75,14 +75,20 @@ test.describe("spreadsheet import", () => {
     await page.getByLabel("Spec sheet").setInputFiles({ name: `specs ${stamp}.csv`, mimeType: "text/csv", buffer: Buffer.from(sheet) });
     await page.getByRole("button", { name: "Preview" }).click();
 
-    await expect(page.getByText("3 fields on 1 model to fill in")).toBeVisible();
-    await expect(page.getByText("1 value differs and stays as they are")).toBeVisible();
+    await expect(page.getByText("3 empty fields to fill in")).toBeVisible();
+    await expect(page.getByText("1 value differs from the model")).toBeVisible();
     await expect(page.getByText("sheet: 13.5")).toBeVisible();
-    await page.getByRole("button", { name: "Fill in 3 fields on 1 model" }).click();
-    await expect(page.getByRole("status")).toContainText("Done: 3 fields filled in on 1 model.");
+    // The weight the model already has stays unless it is ticked.
+    const weight = page.getByRole("checkbox", { name: /^Weight \(kg\):/ });
+    await expect(weight).not.toBeChecked();
+    await expect(page.getByRole("button", { name: "Save 3 changes on 1 model" })).toBeVisible();
+    await weight.check();
+    await page.getByRole("button", { name: "Save 4 changes on 1 model" }).click();
+    await expect(page.getByRole("status")).toContainText("Done: 4 changes saved on 1 model, and 1 model marked as checked.");
 
     await page.goto(`/inventory/models/${id}`);
     await expect(page.getByText("1200", { exact: true })).toBeVisible();
+    await expect(page.getByText("13,5", { exact: true })).toBeVisible();
     await expect(page.getByText("Tilt: 270°")).toBeVisible();
     await expect(page.getByRole("link", { name: "Product page" })).toBeVisible();
   });

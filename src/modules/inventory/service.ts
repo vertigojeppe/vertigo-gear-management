@@ -199,6 +199,8 @@ export type ModelDto = {
   consumable: boolean;
   unit: "pcs" | "m";
   minStock: number | null;
+  /** Last covered by a spec sheet import (null = never). */
+  specsCheckedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -229,6 +231,7 @@ export function toModelDto(m: ModelRow): ModelDto {
     consumable: m.consumable,
     unit: m.unit === "m" ? "m" : "pcs",
     minStock: num(m.minStock),
+    specsCheckedAt: m.specsCheckedAt,
     createdAt: m.createdAt,
     updatedAt: m.updatedAt,
   };

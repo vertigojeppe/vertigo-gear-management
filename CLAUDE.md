@@ -561,11 +561,15 @@ a second entry that exports components only and never a service.
   `specs.ts` is pure (`readSpecSheet`, `planSpecs`, `specUpdate`;
   semicolons or commas, Danish decimals, Excel's Windows-1252),
   `specs-service.ts` plans against the models as they are now on both
-  preview and apply. Only empty fields are filled (a different value is
-  shown as kept), links are appended by URL, lumen / throw ratio only
-  where the category has the extra field. Each model gets a
-  `specs_imported` activity row. The sheet's text travels in a hidden
-  field between preview and confirm; nothing is stashed.
+  preview and apply. Each change is a checkbox (`pick` = `pickKey(model,
+  field)`): empty fields start ticked, values the model already has start
+  unticked (ticked = replaced); links are appended by URL, lumen / throw
+  ratio only where the category has the extra field. Each changed model
+  gets a `specs_imported` activity row (filled in / replaced). Every
+  model in an applied sheet gets `Model.specsCheckedAt` (only shown in
+  the models CSV export, "Specs checked"), so a later lookup can skip
+  them. The sheet's text travels in a hidden field between preview and
+  confirm; nothing is stashed.
 
 ## Deployment
 

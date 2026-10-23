@@ -10,7 +10,8 @@ import { customFieldDefinitions } from "@/modules/settings/service";
 import { ImportError } from "./service";
 import { planSpecs, readSpecSheet, specUpdate, type CurrentModel, type Link, type SpecPlan } from "./specs";
 
-export type SpecImportResult = { models: number; fields: number };
+/** models / fields: what changed; checked: every model the sheet covered, now stamped `specsCheckedAt`. */
+export type SpecImportResult = { models: number; fields: number; checked: number };
 
 const num = (v: { toNumber(): number } | number | null) => (v === null ? null : typeof v === "number" ? v : v.toNumber());
 
@@ -44,32 +45,36 @@ export const specImport = {
     return planSpecs(sheet, await currentModels(sheet.rows.map((r) => r.id)));
   },
 
-  async apply(actor: Actor, text: string, fileName: string): Promise<SpecImportResult> {
+  /** `picks`: the preview's ticked changes (`pickKey`); without them, the fills. */
+  async apply(actor: Actor, text: string, fileName: string, picks?: string[]): Promise<SpecImportResult> {
     assertCan(actor, "settings.manage");
     const sheet = readSpecSheet(text);
     if (sheet.errors.length) throw new ImportError(sheet.errors[0]);
     const current = await currentModels(sheet.rows.map((r) => r.id));
     const plan = planSpecs(sheet, current);
+    const picked = picks ? new Set(picks) : undefined;
     let models = 0;
     let fields = 0;
+    const checkedAt = new Date();
     await prisma.$transaction(async (tx) => {
       for (const row of sheet.rows) {
         const m = current.get(row.id);
         const p = plan.models.find((x) => x.id === row.id);
         if (!m || !p) continue;
-        const { data, fields: filled } = specUpdate(row, m, p);
-        if (!filled.length) continue;
+        const { data, changes } = specUpdate(row, m, p, picked);
+        if (!changes.length) continue;
         await tx.model.update({ where: { id: m.id }, data: data as Prisma.ModelUpdateInput });
-        await logActivity(
-          actor,
-          { entityType: "model", entityId: m.id, action: "specs_imported", summary: `Specs filled in from ${fileName}: ${filled.join(", ")}`, details: { changes: p.changes.filter((c) => c.action === "fill") } },
-          tx,
-        );
+        const filled = changes.filter((c) => c.action === "fill").map((c) => c.field);
+        const replaced = changes.filter((c) => c.action === "keep").map((c) => c.field);
+        const parts = [filled.length ? `filled in ${filled.join(", ")}` : "", replaced.length ? `replaced ${replaced.join(", ")}` : ""].filter(Boolean);
+        await logActivity(actor, { entityType: "model", entityId: m.id, action: "specs_imported", summary: `Specs from ${fileName}: ${parts.join("; ")}`, details: { changes } }, tx);
         models++;
-        fields += filled.length;
+        fields += changes.length;
       }
-      await logActivity(actor, { entityType: "settings", entityId: "import", action: "specs_imported", summary: `Spec sheet ${fileName}: ${fields} fields filled in on ${models} models` }, tx);
+      // Every model the sheet covered counts as checked, also when nothing changed (nothing found, or the values were declined).
+      await tx.model.updateMany({ where: { id: { in: [...current.keys()] } }, data: { specsCheckedAt: checkedAt } });
+      await logActivity(actor, { entityType: "settings", entityId: "import", action: "specs_imported", summary: `Spec sheet ${fileName}: ${fields} fields updated on ${models} models, ${current.size} models checked` }, tx);
     }, { timeout: 60_000 });
-    return { models, fields };
+    return { models, fields, checked: current.size };
   },
 };

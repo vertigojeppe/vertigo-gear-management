@@ -1365,16 +1365,16 @@
     "reading": "Reading…",
     "preview": "Preview",
     "errors": "Fix these rows in the sheet first:",
-    "summaryFill": "{fields, plural, one {# field} other {# fields}} on {models, plural, one {# model} other {# models}} to fill in",
-    "summaryKeep": "{count, plural, one {# value differs and stays} other {# values differ and stay}} as they are",
+    "summaryFill": "{count, plural, one {# empty field} other {# empty fields}} to fill in",
+    "summaryKeep": "{count, plural, one {# value differs} other {# values differ}} from the model",
     "summaryUnknown": "{count, plural, one {# unknown id} other {# unknown ids}}",
-    "apply": "Fill in {fields, plural, one {# field} other {# fields}} on {models, plural, one {# model} other {# models}}",
-    "applying": "Filling in…",
-    "explain": "Only empty fields are filled in. Where a model already has a value, it stays and the sheet's value is shown next to it; change it on the model page if the sheet is right. Links are added when they are new.",
+    "apply": "Save {fields, plural, one {# change} other {# changes}} on {models, plural, one {# model} other {# models}}",
+    "applying": "Saving…",
+    "explain": "Ticked changes are saved. Empty fields start ticked. Where the model already has a different value, it starts unticked and stays; tick it to use the sheet's value instead. Links are added when they are new. Every model in the sheet is marked as checked (only in the CSV export), so a later lookup can skip it; leave a model out of the sheet to have it looked up again.",
     "showAll": "Also show models where nothing changes",
     "sheetSays": "sheet: {value}",
     "unknown": "No model has the id on row {lines}. It may have been deleted since the export.",
-    "done": "Done: {fields, plural, one {# field} other {# fields}} filled in on {models, plural, one {# model} other {# models}}. Each model's history says what came from the sheet.",
+    "done": "Done: {fields, plural, one {# change} other {# changes}} saved on {models, plural, one {# model} other {# models}}, and {checked, plural, one {# model} other {# models}} marked as checked. Each model's history says what came from the sheet.",
     "another": "Read another sheet",
     "howTitle": "The sheet",
     "how1": "Start from Inventory › Export CSV, which gives each model's Id.",
@@ -1392,6 +1392,9 @@
     "action_fill": "Fill in",
     "action_keep": "Kept",
     "action_same": "Already there",
-    "action_unavailable": "No such field"
+    "action_unavailable": "No such field",
+    "applyNone": "Save without changes",
+    "action_skip": "Skip",
+    "action_replace": "Replace"
   }
 }

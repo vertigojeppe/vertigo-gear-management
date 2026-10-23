@@ -28,7 +28,8 @@ export async function previewSpecs(_prev: FormState<SpecPreviewData>, formData: 
 export async function applySpecs(_prev: FormState<SpecImportResult>, formData: FormData): Promise<FormState<SpecImportResult>> {
   const actor = await requirePermission("settings.manage");
   try {
-    const result = await specImport.apply(actor, String(formData.get("sheet") ?? ""), String(formData.get("fileName") ?? "spec sheet"));
+    const picks = formData.getAll("pick").map(String);
+    const result = await specImport.apply(actor, String(formData.get("sheet") ?? ""), String(formData.get("fileName") ?? "spec sheet"), picks);
     revalidatePath("/inventory", "layout");
     return { ok: true, data: result };
   } catch (err) {

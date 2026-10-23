@@ -194,17 +194,28 @@ export function planSpecs(sheet: SpecSheet, current: Map<string, CurrentModel>):
   return { models, unknownIds, errors: sheet.errors };
 }
 
-/** What to write for one model: only the fills. Links are appended, extra fields merged. */
-export function specUpdate(row: SpecRow, m: CurrentModel, plan: ModelSpecPlan) {
-  const fills = new Set(plan.changes.filter((c) => c.action === "fill").map((c) => c.field));
+/** The preview's checkbox for one change ("<model id>.<field>"). */
+export const pickKey = (modelId: string, field: string) => `${modelId}.${field}`;
+
+/** A change the preview can tick: fills start ticked, kept values unticked. */
+export const pickable = (action: ChangeAction) => action === "fill" || action === "keep";
+
+/**
+ * What to write for one model: the ticked changes (without `picked`, the
+ * fills). A ticked kept value is overwritten with the sheet's. Links are
+ * appended, extra fields merged.
+ */
+export function specUpdate(row: SpecRow, m: CurrentModel, plan: ModelSpecPlan, picked?: Set<string>) {
+  const chosen = plan.changes.filter((c) => pickable(c.action) && (picked ? picked.has(pickKey(m.id, c.field)) : c.action === "fill"));
+  const write = new Set(chosen.map((c) => c.field));
   const data: Partial<Record<SpecNumberField, number>> & { description?: string; links?: Link[]; customFields?: Record<string, unknown> } = {};
-  for (const s of SPEC_NUMBERS) if (fills.has(s.field)) data[s.field] = row.numbers[s.field];
-  if (fills.has("description")) data.description = row.description;
-  if (fills.has("links")) {
+  for (const s of SPEC_NUMBERS) if (write.has(s.field)) data[s.field] = row.numbers[s.field];
+  if (write.has("description")) data.description = row.description;
+  if (write.has("links")) {
     const have = new Set(m.links.map((l) => l.url));
     data.links = [...m.links, ...row.links.filter((l) => !have.has(l.url))];
   }
-  const custom = SPEC_CUSTOM.filter((c) => fills.has(c.key));
+  const custom = SPEC_CUSTOM.filter((c) => write.has(c.key));
   if (custom.length) data.customFields = { ...m.customFields, ...Object.fromEntries(custom.map((c) => [c.key, row.custom[c.key]])) };
-  return { data, fields: [...fills] };
+  return { data, changes: chosen };
 }
