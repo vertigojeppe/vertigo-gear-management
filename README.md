@@ -3,14 +3,19 @@
 Gear inventory, packing lists and production plans for Vertigo. Self-hosted,
 multi-user, works on a phone in the warehouse and a laptop in the office.
 
-Status: **in production use.** Inventory with families and variants,
-kits, asset tags and labels; projects with availability and conflict
-warnings; external rentals; packing lists with check-out and check-in;
-production plans with documents, 3D viewers and markup; pricing with rate
-tables and quote PDFs; calendar feeds and Google push; the old
-spreadsheet importer; CSV export and whole-database backup. Danish and
-English. Ideas and follow-ups live in `BACKLOG.md`. The roadmap and what is done is in `PLAN.md`; why things
-are the way they are in `DECISIONS.md`.
+Status: **in production use** at `gear.vertigo.dk`, on a mini PC at the
+office behind a Cloudflare Tunnel. Danish and English, chosen per person.
+
+More documents: `SPEC.md` (what it should do), `PLAN.md` (roadmap and
+data model), `DECISIONS.md` (why things are the way they are),
+`BACKLOG.md` (ideas and follow-ups), `CLAUDE.md` (conventions for
+working on the code).
+
+- [Quick start (development)](#quick-start-development)
+- [What you can do](#what-you-can-do)
+- [Scripts](#scripts)
+- [Running the server](#running-the-server)
+- [Other ways to host](#other-ways-to-host)
 
 ## Quick start (development)
 
@@ -35,208 +40,250 @@ Demo users (password `vertigo123`, or whatever `SEED_PASSWORD` is):
 | member@vertigo.test | member |
 | viewer@vertigo.test | viewer |
 
+Admins must set up two-factor sign-in. To skip that in development, put
+`TWO_FACTOR_REQUIRED_ROLES=none` in `.env`.
+
 ## What you can do
 
 Every screen has an empty state that says what goes there and how to
 start, and help text under the fields that need it. The short version:
 
-- **Inventory › Categories / Locations**: build your category tree and
-  warehouse zones.
-- **Inventory › Models**: one entry per product (manufacturer, model,
-  specs, links, photo). Choose *serialized* (one record per unit) or *bulk*
-  (tracked by quantity).
-- **Models › Add items**: create units in one go with serial numbers;
-  every unit gets an asset tag like `VG-0042` and a QR code.
-- **Item page**: change status (reason required for repair/missing/retired),
-  move, put into a kit, attach photos/invoices/manuals, see history.
-- **Labels**: "Print labels" on the item list (whatever the filters show),
-  on a model (all its units) and on a unit. Avery L7160 sheets (21 per
-  A4, with a "skip the used ones" field) or 62 × 29 mm thermal labels,
-  one per page. Each label carries the QR code, the asset tag and the
-  model. Sizes live in `config/app.config.ts`.
-- **Scan** (phone): point the camera at a tag, or type it. Browsers only
-  allow the camera over HTTPS (or localhost), so in production put the app
-  behind HTTPS and in development use `npm run dev:https`.
-- **On the phone**: the app installs on the home screen. iPhone: open it
-  in Safari, Share › *Add to Home Screen*. Android: Chrome offers
-  *Install* (the app also shows the hint). It then opens full-screen with
-  its own icon, the camera scanner works, and the home-screen icon has
-  shortcuts to Scan, Projects and Inventory. Packing lists you have
-  opened stay readable on the phone without a connection (as they were
-  when last opened; ticking needs a connection); everything else shows an
-  offline page that lists them. Nothing else is cached.
-- **Settings › Extra fields**: add your own fields to models and items,
-  for every category or just one (projectors get lumen and throw ratio,
-  LED controllers get IP and firmware, and so on).
-- **Settings › Contacts**: people and companies who are not users. A
-  contact or a colleague can be a *person* location ("Mikkel has 2").
+### Inventory
+
+- **Categories and locations** (Inventory › Categories / Locations): the
+  category tree and the warehouse zones. A person can be a location too
+  ("Mikkel has 2").
+- **Models, families and variants.** A model is one product. Models with
+  the same name form a *family*, and each model is one size of it
+  ("DMX 5-pin" in 1 m, 5 m, 10 m). Stock, weight and prices belong to
+  each size. The manufacturer is shown small after the name. Admins
+  change a whole family at once with *Edit family* on the model page
+  (name, manufacturer, category, flags). Choose *serialized* (one record
+  per unit) or *bulk* (counted by quantity).
+- **Items**: *Add items* on a model creates units in one go. Every unit
+  gets an asset tag like `VG-0042` and a QR code. On the item page you
+  change its status (a reason is required for repair, missing and
+  retired), move it, put it in a kit, attach photos, invoices and manuals,
+  and see its history.
+- **Search** forgives you: spaces, case, punctuation and accents do not
+  matter ("qbase" finds "Q Base"), and a typo still finds close matches.
+  Under Settings › Search words you list words that mean the same
+  (arbejdslys = worklight), so either finds the other, even while you are
+  still typing the word.
+- **Sorting**: the inventory list sorts by name, category, manufacturer,
+  most units, most out right now, most packed in the last 12 months,
+  newest, day price or weight.
+- **Labels**: *Print labels* on the item list (whatever the filters
+  show), on a model (all its units) and on a unit. Avery L7160 sheets (21
+  per A4, with a field for skipping used labels) or 62 × 29 mm thermal
+  labels, one per page. Each label carries the QR code, the asset tag and
+  the model. Sizes live in `config/app.config.ts`.
 - **Colours**: admins give each top category a colour under Inventory ›
-  Categories; it shows as a bar in the inventory list, the gear picker and
+  Categories. It shows as a bar in the inventory list, the gear picker and
   packing lists. Cables carry tape by length, so the same page has a
-  length → colour table (2,5 m blue, 5 m red, …) and the matching dot
+  length → colour table (2,5 m blue, 5 m red, …), and the matching dot
   appears next to each cable size. Screen only, never printed.
 - **Consumables and spare parts**: tick *Consumable* on a model for lamps,
   LED strip, alu profile and the like. Count it in pieces (bins, like any
   bulk gear) or in metres (receive a reel, use what you cut, count the
-  shelf). *Use* takes it off the stock and can name the unit it went into,
-  so that unit's history says "lamp replaced", and the project. Link a part
-  to the models it fits with a rule ("1 per 4 units, at least 1"); the
-  model page lists its spare parts. Set a minimum and the dashboard lists
-  what is running low, with a button to put it on the wish list.
-  Packing lists then suggest spares for the gear on them ("2× lamp for
-  your 6 projectors"), and at check-in a spare can be marked *Used*: it
-  leaves the stock and the project records it.
-- **Inventory › Wish list**: gear to buy, with quantity, expected price,
-  link and notes. When it arrives, *Convert to model* opens the new-model
-  form prefilled; the wish is marked bought and points at the model.
-- **Inventory › Sub-hire**: gear partners own that you rent in (the
-  GearGuys lenses), with owner, cost and your day price. *Rent in* on a
-  project puts it on the quote (priced like your own gear, owner named)
-  and under *Rented in* on the packing list, its PDF and the shared view.
-- **Purchases** on a model (admins and members with the finance
+  shelf). *Use* takes it off the stock and can name the unit it went into
+  (that unit's history then says "lamp replaced") and the project. Link a
+  part to the models it fits with a rule ("1 per 4 units, at least 1").
+  Set a minimum, and the dashboard lists what is running low, with a
+  button to put it on the wish list.
+- **Not for rental**: flag a model or a unit as own projects only, and
+  the rental screens refuse it. Retiring an item asks whether it was
+  sold, scrapped or lost. Own-built fixtures can sit as *under
+  construction*.
+- **Wish list** (Inventory › Wish list): gear to buy, with quantity,
+  expected price, link and notes. When it arrives, *Convert to model*
+  opens the new-model form prefilled, and the wish is marked bought.
+- **Sub-hire** (Inventory › Sub-hire): gear partners own that we rent in,
+  with owner, their price and ours.
+- **Purchases** on a model (admins, and members with the finance
   permission): supplier, date, quote or order number, quantity, list
-  price, discount and net price, with the quote PDF attached to the
-  record. The importer fills these from the truss supplier quotes.
-- **Not for rental**: flag a model or a unit as own-projects-only; the
-  rentals screens refuse it. Retiring an item asks whether it was sold,
-  scrapped or lost; own-built fixtures can sit as *under construction*.
-- **Pricing and quotes**: every model has a rental day price. Settings ›
-  Pricing holds the rate tables (days → factor; Standard, Theatre and
-  Revised from the old sheet). A project or rental picks a table, can
-  override the charged days, add freight / insurance / crew lines and a
-  discount, and prints a quote (projects) or rental agreement (rentals)
-  with totals excl. and incl. VAT.
-- **Settings › Import**: upload the old gear spreadsheet. You get a
-  preview first: what imports as is, what imports with a stated guess,
-  what needs your decision, and what is parked for later features. Nothing
-  is written until you confirm, and importing the same file again adds
-  nothing. Every imported row remembers its sheet cell.
-- **Export CSV** on every list (models, items, projects, rentals,
-  contacts) with the filters you have set; semicolon-separated so Danish
-  Excel opens it straight away.
-- **Settings › Backup** (admins): the whole database as one JSON file,
-  and a restore that replaces everything with such a file. Uploaded files
-  are not inside; `scripts/backup.sh` on the server bundles both.
-- **Settings › Users**: invite colleagues as admin, member or viewer.
-- **Settings › Your account › API tokens**: call the REST API from other
-  tools. Docs at `/api/docs`.
-- **Projects**: a project has a client, venue, phase dates (prep, build-up,
-  show, pack-down, return; build-up and pack-down can run over several days
-  with one call time), crew and contacts. **Reserve gear** per model for
-  the project's dates; the app warns when not enough is available and shows
-  who holds the rest. You can reserve anyway.
-- **Calendar**: a timeline of projects and rentals; days where a model is
-  over-booked are marked red, with the models listed below.
-- **Rentals**: reserve gear for an external client with daily/weekly prices,
-  assign the exact units, hand out and take back, print the agreement PDF.
-- **Calendar feeds**: Settings › Calendar gives subscribe links for all
-  projects, all rentals and "my jobs". Paste them into Google or Apple
-  Calendar.
-- **Webhooks**: Settings › Webhooks posts signed JSON to your URL on events
-  such as a status change or a confirmed project.
-- **Packing lists** (project page): start empty, from the project's
-  reservations, from a template, or by copying another list. Add models,
-  whole kits, or a template's lines; group by category or by case; see the
-  weight, case and power totals; print the PDF.
-- **Packing mode** (phone): tick units from a list, or scan a tag to tick
-  that unit; bulk gear is taken from a bin by quantity. **Check out** moves
+  price, discount and net price, with the quote PDF attached.
+- **Extra fields** (Settings › Extra fields): your own fields on models
+  and items, for every category or just one (projectors get lumen and
+  throw ratio, LED controllers IP and firmware).
+
+### Projects and calendar
+
+- **Projects**: client, venue, phase dates (prep, build-up, show,
+  pack-down, return; build-up and pack-down can run over several days
+  with one call time), crew and contacts.
+- **Gear on projects is switched off for now**: reserving gear with
+  availability warnings, renting in sub-hire gear, and the project
+  quote. The data and code stay; see [Settings in `.env`](#settings-in-env)
+  to turn it back on.
+- **Calendar**: a timeline of projects and rentals with weekday names,
+  week numbers and the year. Days where a model is over-booked are red,
+  with the models listed below.
+- **Calendar feeds** (Settings › Calendar): subscribe links for all
+  projects, all rentals and "my jobs", for Google or Apple Calendar. The
+  app can also push to a shared Google Calendar; see
+  [Google Calendar push](#google-calendar-push-optional).
+- **My day** on the dashboard: today's and tomorrow's schedule on your
+  projects, your open tasks (overdue first, tick them off right there),
+  and this week's projects with your call time. *My plan (PDF)* prints
+  the schedule with only your tasks.
+
+### Packing lists
+
+- **Packing lists** (on the project page): start empty, from a template,
+  or by copying another list. Add models, whole kits or a template's lines
+  with one search box (a barcode scanner works too). Group by category or
+  by case, see weight, case and power totals, print the PDF. Spares for
+  the gear on the list are suggested ("2× lamp for your 6 projectors").
+- **Packing mode** (phone): tick units, or scan a tag to tick that unit.
+  Bulk gear is taken from a bin by quantity. *Pack all* ticks every unit
+  of a line in one go, and every tick has an *Undo*. **Check out** moves
   everything ticked to the project. **Check in** records each unit as OK,
-  damaged or missing; finishing marks whatever is still out as missing.
-- **Share link**: a read-only page for the crew or the venue, no login
-  needed. Revoke it when the job is done.
-- **Packing templates** (Projects › Templates): reusable model lists, also
-  savable from any packing list.
-- **My day** on the dashboard: what is on today and tomorrow on your
-  projects, your open tasks (overdue first, tick them off right there), and
-  the projects you are booked on this week with your call time. "My plan
-  (PDF)" prints the schedule with only your tasks and call time.
+  damaged or missing, and spares as *Used*. Finishing marks whatever is
+  still out as missing.
+- **Share link**: a read-only page for the crew or the venue, no login.
+  Revoke it when the job is done.
+- **Packing templates** (Projects › Templates): reusable model lists,
+  also saved from any packing list.
+
+### Production plans
+
 - **Production plan** (project page › Production plan): a day-by-day
-  schedule with times, places and who is responsible; tasks by phase with
-  assignee, due date and a big Done button; the project's crew with call
-  times and its contacts; logistics such as vans, parking, dock info and
-  hotels. Print a **day sheet** per day or the whole plan, and share a
-  read-only link with the crew.
-- **Plan templates** (Projects › Plan templates): a whole plan relative to
-  the first build-up day, applied to a project in one go; any plan can be saved
-  as one.
-- **Documents on the plan**: riders, stage plots, drawings, risk
-  assessments and 3D models. Upload anything (chunked, so large files from
-  a phone survive); uploading the same name again adds a version. Images
-  and PDFs open inline with a **markup** layer (pen, arrow, box, text) that
-  is saved separately and shows who drew it; glTF/GLB, OBJ and STL open in
-  a 3D viewer with a measure tool; SketchUp, DWG, DXF, Vectorworks, AI and
-  PSD are stored for download with an optional preview image. Pin a
-  document to a schedule entry or task; it appears on that day sheet.
+  schedule with times, places and who is responsible; tasks by phase
+  with assignee, due date and a big Done button; crew with call times and
+  contacts; logistics such as vans, parking, dock info and hotels. Print
+  a **day sheet** per day or the whole plan, and share a read-only link.
+- **Plan templates** (Projects › Plan templates): a whole plan relative
+  to the first build-up day, applied to a project in one go. Any plan can
+  be saved as one.
+- **Documents**: riders, stage plots, drawings, risk assessments and 3D
+  models. Uploads go up in chunks, so large files from a phone survive.
+  The same name again adds a version. Images and PDFs open with a
+  **markup** layer (pen, arrow, box, text) that shows who drew what.
+  glTF/GLB, OBJ and STL open in a 3D viewer with a measure tool. SketchUp,
+  DWG, DXF, Vectorworks, AI and PSD are stored for download with an
+  optional preview image. A document pinned to a schedule entry or task
+  appears on that day sheet.
+
+### Rentals and pricing
+
+- **Rentals**: gear for an external client, with the exact units, hand
+  out and take back, and the agreement PDF.
+- **Pricing**: every model has a rental day price. Settings › Pricing
+  holds the rate tables (days → factor: Standard, Theatre and Revised
+  from the old sheet). A rental picks a table, can override the charged
+  days, add freight, insurance and crew lines and a discount, and prints
+  totals excl. and incl. VAT.
+
+### Everything else
+
+- **Apps** (in the menu): one shared list of what the crew uses a lot.
+  Files and small HTML tools keep every version; links just open. Tools
+  run in a sandbox and cannot act as the person who opens them. Admins
+  and members add, only admins delete.
+- **On the phone**: the app installs on the home screen (iPhone: Safari,
+  Share › *Add to Home Screen*; Android: Chrome offers *Install*). It
+  opens full-screen with shortcuts to Scan, Projects and Inventory.
+  Packing lists you have opened stay readable without a connection
+  (ticking needs one).
+- **Scan**: point the phone camera at a tag, or type it. Browsers only
+  allow the camera over HTTPS, so in development use `npm run dev:https`.
+- **Language**: English or Danish, switched in the menu, on the sign-in
+  page and under Settings › Your account. Each person's choice is saved.
+  Only the screens are translated: gear names and notes are stored as
+  typed, and PDFs, CSV files and calendar events stay in English.
+- **Two-factor sign-in** with an authenticator app (Google Authenticator,
+  Microsoft Authenticator, 1Password …), required for admins and optional
+  for everyone else under Settings › Your account. Setup gives ten
+  recovery codes. An admin can reset someone who lost their phone under
+  Settings › Users.
+- **Users** (Settings › Users): admin, member or viewer.
+  **Contacts** (Settings › Contacts): people and companies who are not
+  users.
+- **Import** (Settings › Import): the old gear spreadsheet. A preview
+  shows what imports as is, what imports with a stated guess, and what
+  needs your decision. Nothing is written until you confirm, and
+  importing the same file again adds nothing.
+- **Export CSV** on every list, with the filters you have set,
+  semicolon-separated so Danish Excel opens it straight away.
+- **Backup** (Settings › Backup, admins): the whole database as one JSON
+  file, and a restore from such a file. Uploaded files are not in it; the
+  server's nightly backup has both (see [Backups](#backups)).
+- **API and webhooks**: API tokens under Settings › Your account, docs at
+  `/api/docs`. Settings › Webhooks posts signed JSON to your URL on events
+  such as a status change or a confirmed project.
 
 ## Scripts
 
 | Command | What it does |
 |---|---|
 | `npm run dev` | Dev server with hot reload |
-| `npm run dev:https` | Dev server over HTTPS (self-signed). Needed to test the camera scanner from a phone: open `https://<your-pc-ip>:3000` and accept the certificate warning |
+| `npm run dev:https` | Dev server over HTTPS (self-signed), for the camera scanner on a phone: open `https://<your-pc-ip>:3000` and accept the warning |
 | `npm run build` / `npm start` | Production build / server |
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript |
-| `npm run test` | Unit and integration tests (Vitest) |
-| `npm run test:e2e` | Browser tests (Playwright, starts the app itself) |
-| `npm run db:migrate` | Create and apply a migration in dev |
+| `npm run test` | Unit and database tests (Vitest) |
+| `npm run test:backup` | The backup restore test, which wipes the database (run alone) |
+| `npm run test:e2e` | Browser tests (Playwright; starts the app itself) |
+| `npm run db:clean-tests` | Remove what the browser tests leave behind |
+| `npm run db:migrate` | Create and apply a migration in development |
 | `npm run db:deploy` | Apply migrations (production) |
 | `npm run db:seed` | Re-runnable demo data |
-| `npm run db:reset` | Drop, migrate, seed (dev only) |
+| `npm run db:reset` | Drop, migrate, seed (development only) |
 | `npm run db:studio` | Prisma Studio |
 
-## Deployment
+## Running the server
 
-The app is one container next to Postgres, with Caddy in front for HTTPS.
-Everything is configured through `.env`; nothing secret is in the
-repository. It is meant to be reachable from the internet (warehouse
-phones, venues, freelancers): every route is behind login except share
-links and iCal feeds, the login form is rate-limited, and Caddy serves
-HTTPS only.
+The app runs on a small always-on PC at the office, as a Docker Compose
+stack: Postgres, the app, and `cloudflared`. The server needs no open
+ports: `cloudflared` connects out to Cloudflare, which serves
+`gear.vertigo.dk` over HTTPS and forwards the requests through the
+tunnel. Every route is behind login except share links and calendar
+feeds, and the login form is rate-limited. The tunnel is free.
 
-Our chosen route is the first section below: a mini PC at the office
-behind a Cloudflare Tunnel. The VPS and Vercel sections after it still
-work and stay documented.
+Everything is configured in `.env` on the server; nothing secret is in
+the repository.
 
-### Self-hosting at the office (mini PC + Cloudflare Tunnel) — our chosen route
-
-A small always-on PC at the office runs the same Compose stack. It stays
-reachable from the internet over HTTPS without opening a single port on
-the office network: `cloudflared` makes outbound connections to
-Cloudflare, Cloudflare terminates TLS for `gear.vertigo.dk` (our DNS is
-there already) and forwards requests through the tunnel to the app
-container. The tunnel is free.
+### Setting up the server
 
 **Hardware.** A mini PC with 8 GB RAM (4 GB is the minimum), a 256 GB or
 larger SSD and a wired network port. In the BIOS set "power on after
 power loss" (often under power management or ACPI) so it comes back
-after an outage; a small UPS is worth it, since a load-in does not wait
-for a reboot. Add swap: the Next.js build during `--build` can run out
-of memory on 4 GB.
+after an outage. A small UPS is worth it, since a load-in does not wait
+for a reboot.
 
-1. Install Ubuntu Server 26.04 LTS (OpenSSH on, nothing else), then
-   Docker and automatic security updates. Use the LTS release, not an
-   interim ".10" one: LTS gets security updates until 2031, an interim
-   release only for nine months. If the Docker install script below
-   finishes without errors, Docker supports the release.
+**Network.** The server needs outbound HTTPS (443) and port 7844 (TCP and
+UDP) to Cloudflare. Nothing inbound. Reserve its address in the router's
+DHCP settings so SSH on the office network always finds it.
+
+1. **Install Ubuntu Server** 26.04 LTS (tick *OpenSSH server*, nothing
+   else). Use an LTS release: it gets security updates until 2031, an
+   interim ".10" release only for nine months. The user you create in
+   the installer is the admin user (it can use `sudo`). Logged in as
+   that user, install Docker, a `deploy` user for the app, automatic
+   security updates, and set the clock to Danish time (the nightly backup
+   runs by it):
 
    ```bash
    curl -fsSL https://get.docker.com | sh
    sudo adduser deploy && sudo usermod -aG docker deploy
    sudo apt install -y unattended-upgrades && sudo dpkg-reconfigure -plow unattended-upgrades
+   sudo timedatectl set-timezone Europe/Copenhagen
    ```
 
-   Swap (4 GB; use 2G on a 4 GB machine with a small disk):
+   Add swap: the app build can run out of memory on 4 GB (use 2G on a
+   small disk):
 
    ```bash
    sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
    ```
 
-2. **Get the code onto the server.** The repository is public, so cloning
-   needs no GitHub login. Log in with the user you created in the Ubuntu
-   installer (it can use `sudo`; `deploy` cannot), either at the
-   server's keyboard or from your PC with `ssh yourname@<server address>`.
-   Make the folder and hand it to `deploy`, then become `deploy`:
+   Now set up [remote access](#remote-access-ssh-and-tailscale), so the
+   rest can be done from a PC with copy and paste.
+
+2. **Get the code onto the server.** The repository is public, so
+   cloning needs no GitHub login. As the admin user, make the folder and
+   hand it to `deploy`, then become `deploy`:
 
    ```bash
    sudo mkdir -p /opt/vertigo-gear
@@ -258,17 +305,18 @@ of memory on 4 GB.
    `sudo usermod -aG docker deploy`, and `sudo -iu deploy` again. If
    `git` is missing, `exit` and run `sudo apt install -y git` first.
 
-3. **Write the settings file.** Every setting lives in `.env` in that
-   folder. Start from the example and make it private:
+   `deploy` cannot use `sudo`. To go back to the admin user, type `exit`.
+
+3. **Write the settings file.** Start from the example and make it
+   private:
 
    ```bash
    cp .env.example .env
    chmod 600 .env
    ```
 
-   Let the server fill in the secrets itself, so there is nothing to
-   copy (on the server's own screen there is no clipboard anyway). Each
-   line finds one setting and replaces it:
+   Let the server fill in the secrets itself. Each line finds one setting
+   and replaces it:
 
    ```bash
    sed -i "s|^AUTH_SECRET=.*|AUTH_SECRET=\"$(openssl rand -base64 32)\"|" .env
@@ -284,59 +332,47 @@ of memory on 4 GB.
    ```
 
    You should see a long random `AUTH_SECRET` in quotes, a long hex
-   `POSTGRES_PASSWORD`, your address, and an empty
+   `POSTGRES_PASSWORD`, the address, and an empty
    `CLOUDFLARE_TUNNEL_TOKEN=` (the token comes in step 4). The database
-   password is hex on purpose: it ends up inside a database address, where
-   the `+`, `/` and `=` of other random passwords break the connection.
-   Nobody needs to know these two secrets; only the server uses them. To
-   edit `.env` by hand later: `nano .env`, save with Ctrl+O and Enter,
-   close with Ctrl+X.
+   password is hex on purpose: it ends up inside a database address,
+   where `+`, `/` and `=` break the connection. It is fixed the first
+   time the database starts; changing the line later does not change the
+   database. To edit `.env` by hand: `nano .env`, save with Ctrl+O and
+   Enter, close with Ctrl+X.
 
-   Leave these alone: `DATABASE_URL` (Compose gives the app the real
-   one, built from `POSTGRES_PASSWORD`), `APP_DOMAIN` and `CADDYFILE`
-   (Caddy is not used here), `APP_BIND` (the app stays on 127.0.0.1; the
-   tunnel reaches it inside Docker) and `SEED_PASSWORD` (demo data for
-   development only). Choose the database password now: it is fixed the
-   first time the database starts, and changing the line later does not
-   change the database. `.env` holds every secret of the installation;
-   never paste it anywhere or commit it.
+   Leave `DATABASE_URL`, `APP_DOMAIN`, `APP_BIND` and `SEED_PASSWORD`
+   alone; they are for development or the other setups.
 
-4. **Create the tunnel in Cloudflare.** Do this from your PC over SSH
-   (`ssh deploy@<server address>` in PowerShell or Windows Terminal), so
-   you can paste between the browser and the server. In the Cloudflare
-   dashboard, open *Networking › Tunnels* and create a tunnel of type
-   *Cloudflared*; name it `vertigo-gear`. On the tunnel's *Overview* page,
-   under *Install cloudflared connector*, pick *Docker* and click the copy
-   icon next to the `docker run cloudflare/cloudflared:latest tunnel …`
-   command. Do not run it: Compose starts cloudflared itself. Paste it
-   into Notepad and copy only the long string after `--token ` (it starts
-   with `eyJ`). On the server:
+   **Keep a copy of the finished `.env` in the password manager.** The
+   backups leave it out because it holds the secrets, and a restored
+   server needs the same `AUTH_SECRET` for two-factor sign-in to work.
+   Never paste it anywhere else or commit it.
 
-   ```bash
-   nano .env
-   ```
-
-   Put it on the token line, one line, no quotes:
-   `CLOUDFLARE_TUNNEL_TOKEN=eyJhIjoi...`. In a terminal window, paste with
-   a right-click or Ctrl+V.
+4. **Create the tunnel in Cloudflare.** In the Cloudflare dashboard, open
+   *Networking › Tunnels* and create a tunnel of type *Cloudflared* named
+   `vertigo-gear`. On its *Overview* page, under *Install cloudflared
+   connector*, pick *Docker* and copy the
+   `docker run cloudflare/cloudflared:latest tunnel …` command. Do not run
+   it: Compose starts cloudflared itself. Paste it into Notepad and copy
+   only the long string after `--token ` (it starts with `eyJ`). On the
+   server, `nano .env` and put it on the token line, one line, no quotes:
+   `CLOUDFLARE_TUNNEL_TOKEN=eyJhIjoi...`.
 
    Back on the tunnel page, *Routes › Add route*, and choose a route that
    publishes an application on a public hostname (not a private network
    route): subdomain `gear`, domain `vertigo.dk`, service
    `http://app:3000` (or type *HTTP* and URL `app:3000` when they are
-   separate fields). Cloudflare creates the DNS record for
-   `gear.vertigo.dk` by itself. The tunnel shows *Inactive* until step 5
-   starts it. The token is the whole credential for the tunnel: if it
-   ever leaks, use *Rotate token* on the same page and paste the new one.
+   separate fields). Cloudflare creates the DNS record itself. The token
+   is the whole credential for the tunnel: if it ever leaks, use *Rotate
+   token* on the same page and put the new one in `.env`.
 
-5. **Start it.** Still as `deploy` in `/opt/vertigo-gear`:
+5. **Start it.** As `deploy` in `/opt/vertigo-gear`:
 
    ```bash
    docker compose --profile tunnel up -d --build
    ```
 
-   The first run builds the app image, which takes 5 to 15 minutes. Then
-   check that everything runs:
+   The first run builds the app, which takes 5 to 15 minutes. Then check:
 
    ```bash
    docker compose --profile tunnel ps
@@ -347,318 +383,113 @@ of memory on 4 GB.
    Cloudflare dashboard. If something is wrong, the logs say why:
    `docker compose logs app` or `docker compose logs cloudflared`.
 
-6. **Create your admin user.** The database starts empty, without demo
-   data. Create the first admin with your own email and name; it asks
-   for a password twice:
+6. **Create your admin user.** The database starts empty. Create the
+   first admin with your own email and name; it asks for a password
+   twice:
 
    ```bash
    docker compose exec app node scripts/create-admin.mjs you@vertigo.dk "Your Name"
    ```
 
-   Open https://gear.vertigo.dk on your phone or PC and sign in. Admins
-   must use **two-factor sign-in**: the app shows a QR code to scan with
-   an authenticator app (Google Authenticator, Microsoft Authenticator,
-   1Password …) and then ten recovery codes; keep those somewhere safe.
-   Add your colleagues under Settings › Users, and bring in the old
-   spreadsheet under Settings › Import. Running the same command again
-   resets that user's password and turns their two-factor sign-in off,
-   which is the way back in if the last admin forgets the password or
-   loses the phone and the recovery codes. Do not run `db seed` on the
-   server: it loads the demo gear and projects.
+   Open https://gear.vertigo.dk and sign in. The app then sets up
+   two-factor sign-in: scan the QR code with an authenticator app and keep
+   the ten recovery codes somewhere safe. Add colleagues under Settings ›
+   Users, and bring in the old spreadsheet under Settings › Import.
+
+   Running the same command again resets that user's password and turns
+   their two-factor sign-in off: the way back in if the last admin forgets
+   the password or loses both the phone and the recovery codes. Never run
+   `db:seed` on the server: it loads the demo data.
 
 7. **Finish in Cloudflare.** Under *SSL/TLS › Edge Certificates*, switch
-   on *Always Use HTTPS* and HSTS. They replace the security headers Caddy
-   adds in the other setups.
+   on *Always Use HTTPS* and HSTS.
 
-**HTTPS and proxy headers.** Cloudflare terminates TLS, so Caddy's
-Let's Encrypt setup cannot be used as is; the `tunnel` profile therefore
-runs `cloudflared` straight to the app on plain HTTP inside the Compose
-network, and the `prod` profile (Caddy) is unchanged. The app was
-checked for life behind a proxy:
+8. **Turn on the nightly backup**, see [Backups](#backups).
 
-- Scheme and host come from `X-Forwarded-Proto` / `X-Forwarded-Host`
-  (`src/lib/request-origin.ts`), which Cloudflare sets, so login
-  redirects go to `https://gear.vertigo.dk`.
-- Auth.js runs with `trustHost` and reads the same headers, so the
-  session cookie is marked *Secure*. No `AUTH_URL` is needed.
-- The login rate limiter keys on the first address in `X-Forwarded-For`,
-  which Cloudflare sets to the visitor, so one locked-out phone does not
-  lock the whole internet out. The app container is not reachable except
-  through the tunnel, so the header cannot be forged from outside.
-- Cloudflare's free plan caps a request body at 100 MB. Document uploads
-  go up in small chunks and the other forms accept 25 MB, so nothing hits
-  it; keep that in mind before raising `MAX_UPLOAD_MB` elsewhere.
-- QR codes and share links use the address the page was opened on, so
-  they carry `https://gear.vertigo.dk` whether printed at the office or
-  at a venue.
+**Behind the proxy.** Cloudflare terminates HTTPS and passes the visitor's
+scheme, host and address in `X-Forwarded-*` headers, which the app reads
+(`src/lib/request-origin.ts`). Login redirects therefore go to
+`https://gear.vertigo.dk`, the session cookie is marked *Secure*, and the
+login rate limit counts per visitor, not per tunnel. The app is reachable
+only through the tunnel, so the headers cannot be forged from outside.
+Cloudflare's free plan caps a request at 100 MB; uploads go in small
+chunks and forms accept 25 MB, so nothing hits it. QR codes and share
+links use the address the page was opened on.
 
-**Backups.** Copies must leave the building. Set `BACKUP_REMOTE` to an
-rclone remote (Cloudflare R2 or Backblaze B2 are cheap; `rclone config`
-once as `deploy`) and run `scripts/backup.sh` nightly from cron:
+### Remote access (SSH and Tailscale)
 
-```
-10 3 * * * cd /opt/vertigo-gear && ./scripts/backup.sh >> backups/backup.log 2>&1
-```
+SSH gives you a terminal on the server from a PC, with normal copy and
+paste. It works on the office network and, through
+[Tailscale](https://tailscale.com), from anywhere. It is never open to
+the internet: do not forward port 22 on the office router (the tunnel
+needs no open ports). Log in with the user's normal password. Anyone on
+the office network can try it, so use proper passwords for both users.
 
-On a small disk keep `BACKUP_KEEP_DAYS` low (3 to 7); the remote keeps
-the history. Restore one archive on a laptop with `scripts/restore.sh`
-every few months so the procedure is known before it is needed.
+1. **SSH on the server.** If OpenSSH was not ticked in the installer:
 
-**Updating.**
+   ```bash
+   sudo apt install openssh-server
+   sudo systemctl enable --now ssh
+   ```
+
+   If `sudo ufw status` says `active`, also run `sudo ufw allow OpenSSH`.
+
+2. **On the office network.** `hostname -I` on the server prints its
+   address (the first one, like `192.168.1.50`). From PowerShell on a PC:
+
+   ```bash
+   ssh deploy@192.168.1.50
+   ```
+
+   Use the admin user's name instead of `deploy` for anything that needs
+   `sudo`. The first time, it asks whether to trust the server: type
+   `yes`.
+
+3. **Tailscale on the server**, as the admin user:
+
+   ```bash
+   curl -fsSL https://tailscale.com/install.sh | sh
+   sudo tailscale up
+   ```
+
+   Open the link it prints and sign in. Then, in the Tailscale admin
+   console (login.tailscale.com), *Machines*, the server's `…` menu,
+   **Disable key expiry**. Otherwise the server drops off Tailscale after
+   about six months.
+
+4. **Tailscale on your PC or phone**: install it from
+   tailscale.com/download and sign in with the same account. Then, from
+   anywhere:
+
+   ```bash
+   ssh deploy@<server name>
+   ```
+
+   The server name is its Ubuntu hostname. If it is not found, use the
+   `100.x.x.x` address the Tailscale app shows.
+
+To take someone's access away, remove their device in the Tailscale
+console and change the passwords they knew.
+
+### Updating
+
+As `deploy`:
 
 ```bash
 cd /opt/vertigo-gear && git pull && docker compose --profile tunnel up -d --build
 ```
 
-The GitHub Actions deploy workflow (`deploy.yml`) needs to reach the
-server over SSH, which it cannot behind a tunnel, so it does not apply
-here: update by hand as above, or leave the `DEPLOY_*` secrets unset and
-the workflow simply fails to connect and does nothing.
+Database migrations run when the app starts. The GitHub deploy workflow
+(`deploy.yml`) is for a server GitHub can reach over SSH, so it does not
+apply here; with its `DEPLOY_*` secrets unset it does nothing.
 
-**Checklist for the IT team.**
-
-- Is outbound HTTPS (443) and port 7844 (TCP and UDP) to Cloudflare
-  allowed from the server? That is the only network permission the tunnel
-  needs; nothing inbound.
-- Can the server get a wired port and a reserved internal IP?
-- Can it sit on its own network segment (VLAN), separate from the office
-  computers?
-- Is a UPS or other power protection available, and are power outages
-  or maintenance windows planned?
-- Who is responsible for security and updates of the server (OS updates
-  are automatic; Docker and the app are updated by us)?
-- If a tunnel is refused: can ports 80 and 443 be forwarded to the server
-  instead, and is the office IP public and fixed (not behind CGNAT)? Then
-  the VPS section applies unchanged, with `--profile prod`.
-
-**Trade-offs.** Self-hosting saves the monthly VPS, and nothing of ours
-runs on someone else's machine. In return the mini PC is a single point
-of failure during load-ins: uptime, backups and security are our
-responsibility, and a dead disk or a power cut at the office takes the
-app down until someone is there. The off-site backup plus a spare
-machine that can be restored in an hour is the mitigation; a VPS stays
-the fallback and is a one-line change.
-
-### Docker Compose with automatic HTTPS (recommended)
-
-On a server with Docker, a DNS name pointing at it, and ports 80 and 443
-open:
-
-```bash
-git clone https://github.com/vertigojeppe/vertigo-gear-management.git /opt/vertigo-gear
-cd /opt/vertigo-gear
-cp .env.example .env
-```
-
-Set in `.env`:
-
-| Variable | Value |
-|---|---|
-| `APP_DOMAIN` | the DNS name, e.g. `gear.vertigo.dk` (on a LAN: the machine name, see below) |
-| `APP_URL` | `https://gear.vertigo.dk` (encoded in QR labels and feeds) |
-| `AUTH_SECRET` | `openssl rand -base64 32` |
-| `POSTGRES_PASSWORD` | `openssl rand -hex 24` (hex: it goes into a database URL) |
-
-Then:
-
-```bash
-docker compose --profile prod up -d --build
-docker compose exec app node scripts/create-admin.mjs you@vertigo.dk "Your Name"   # first time only
-```
-
-Caddy requests the certificate from Let's Encrypt on first start (give it a
-minute) and renews it by itself. Migrations run every time the app
-container starts. The database starts empty: `create-admin.mjs` makes
-your admin (it asks for the password; running it again resets it), and
-you add everyone else under Settings › Users. Use a hex password for
-`POSTGRES_PASSWORD` (`openssl rand -hex 24`): it goes into a database
-URL, where `+`, `/` and `=` break the connection.
-
-The database listens on the server only (127.0.0.1); the app container
-is not exposed except through Caddy. `GET /api/health` answers `{ "ok":
-true }` when the app reaches its database; Compose restarts the
-container when it does not.
-
-### Office server on the LAN (no public DNS name)
-
-The same stack runs on a machine in the office that is not reachable from
-the internet. Let's Encrypt cannot issue a certificate for a name the
-internet does not know, so Caddy signs one itself; phones need that
-certificate installed once, or the camera scanner stays off (browsers
-only open the camera on HTTPS).
-
-1. Give the machine a fixed name on the network (the router's DHCP
-   reservation plus its hostname, say `gear`; `gear.local` works on most
-   phones through mDNS).
-2. In `.env`: `APP_DOMAIN=gear.local`, `APP_URL=https://gear.local`,
-   `CADDYFILE=./Caddyfile.lan`. Then `docker compose --profile prod up -d
-   --build` as above.
-3. Export Caddy's root certificate and install it on every phone and
-   laptop (iOS: AirDrop or mail the file, install the profile under
-   Settings › General › VPN & Device Management, then enable it under
-   Settings › General › About › Certificate Trust Settings; Android:
-   Settings › Security › Install a certificate › CA certificate):
-
-   ```bash
-   docker compose --profile prod cp caddy:/data/caddy/pki/authorities/local/root.crt vertigo-gear-ca.crt
-   ```
-
-4. Print labels only after `APP_URL` is final: the QR codes carry it.
-
-Without HTTPS at all (fine for laptops, no camera scanning on phones):
-leave Caddy out, set `APP_BIND=0.0.0.0` and `APP_URL=http://gear.local:3000`,
-and start only the database and the app: `docker compose --profile prod
-up -d --build db app`.
-
-### Gear on projects (hidden)
-
-Reserving gear on a project, renting gear in for a project and the
-project quote are switched off for now: the project page leaves those
-sections out. Nothing is deleted. To bring them back, add
-`PROJECT_GEAR=on` to `.env` and recreate the app
-(`docker compose --profile tunnel up -d --force-recreate app`).
-Rentals are not affected.
-
-### Two-factor sign-in
-
-Everyone can turn on two-factor sign-in under Settings › Your account;
-admins must (they are sent to the setup page until they have). Change who
-must with `TWO_FACTOR_REQUIRED_ROLES` in `.env` (`admin` when unset,
-`admin,member`, or `none`). If someone loses their phone, they sign in
-with a recovery code, or an admin opens them under Settings › Users and
-clicks *Reset two-factor sign-in*. The secrets are encrypted with
-`AUTH_SECRET`: a server restored from backup needs the same
-`AUTH_SECRET`, otherwise everyone signs in with a recovery code or is reset.
-
-### Updating
-
-```bash
-cd /opt/vertigo-gear && git pull && docker compose --profile prod up -d --build
-```
-
-Or let GitHub do it: `.github/workflows/deploy.yml` runs after CI passes on
-`main` and performs the same commands over SSH. Add these repository
-secrets (Settings › Secrets and variables › Actions): `DEPLOY_HOST`,
-`DEPLOY_USER`, `DEPLOY_KEY` (a private key whose public half is in that
-user's `~/.ssh/authorized_keys`), `DEPLOY_PATH` (`/opt/vertigo-gear`). The
-workflow waits for the health check and prints the app log if it fails.
-It needs SSH access to the server, so it does not apply to the office
-setup behind a Cloudflare Tunnel (see above).
-
-### Hetzner (or any VPS), step by step
-
-1. Create a server with Ubuntu: a CX23 (2 vCPU, 4 GB, 40 GB) is plenty;
-   CX33 (4 vCPU, 8 GB, 80 GB) or the CPX22 / CPX32 are the alternatives,
-   and a plan can be sold out in some locations. In the firewall allow
-   22, 80 and 443. Point `gear.vertigo.dk` (an A record) at its address.
-2. SSH in and install Docker: `curl -fsSL https://get.docker.com | sh`.
-   Create a user for the app: `adduser deploy && usermod -aG docker deploy`.
-3. As `deploy`, clone the repository to `/opt/vertigo-gear`, create
-   `.env` as above, and run the Compose command.
-4. Enable backups (next section) with a cron line, and add the deploy
-   secrets to GitHub if you want pushes to `main` to deploy.
-5. Keep the server itself updated: `apt install unattended-upgrades`.
-
-### Vercel + managed Postgres
-
-The app runs on Vercel with a managed database and object storage, with
-two gaps: PDF thumbnails and PDF pages in plan exports need poppler, which
-Vercel does not have (documents are listed by name instead), and the
-outbox worker needs a scheduler.
-
-1. Create a Postgres database (Neon, Supabase, Vercel Postgres) and a
-   bucket on Cloudflare R2 or another S3-compatible store.
-2. Import the repository in Vercel. Set the environment variables from
-   `.env.example`: `DATABASE_URL`, `AUTH_SECRET`, `APP_URL` (the Vercel
-   domain), `STORAGE_DRIVER=s3` with the `S3_*` values, `CRON_SECRET`,
-   `OUTBOX_DISABLED=1`.
-3. Build command: `npx prisma generate && npx prisma migrate deploy && npm run build`.
-4. Add a Vercel cron (`vercel.json`) that calls `POST /api/cron/outbox`
-   every minute with `Authorization: Bearer <CRON_SECRET>` so webhooks and
-   calendar pushes go out.
-5. Seed once from your machine with `DATABASE_URL` pointing at the managed
-   database: `npm run db:seed`.
-
-## Google Calendar push (optional)
-
-The app can create one event per project phase on a shared Google
-Calendar, and one event per rental on a second calendar. Sync is one-way:
-the app is the source of truth and never reads edits back from Google.
-
-1. In [Google Cloud Console](https://console.cloud.google.com/), create a
-   project (or use an existing one) and enable the **Google Calendar API**
-   (APIs & Services › Library).
-2. Create a **service account** (IAM & Admin › Service Accounts › Create).
-   No roles are needed. Open it, go to **Keys › Add key › JSON** and
-   download the key file.
-3. In Google Calendar, create a calendar "Vertigo projects" (and optionally
-   "Vertigo rentals"). Open its settings › **Share with specific people**
-   and add the service account's email (`...@...iam.gserviceaccount.com`)
-   with **Make changes to events**.
-4. Still in the calendar settings, copy the **Calendar ID** from
-   "Integrate calendar".
-5. Put the key file next to the app (it is git-ignored) and set in `.env`:
-
-   ```
-   GOOGLE_SERVICE_ACCOUNT_JSON=./google-service-account.json
-   GOOGLE_CALENDAR_ID_PROJECTS=<calendar id>
-   GOOGLE_CALENDAR_ID_RENTALS=<calendar id>   # optional
-   ```
-
-   With Docker (the office and VPS setups), the app cannot see a file in
-   the repository folder, so put the JSON itself into `.env`, as **one
-   line in single quotes**. Double quotes would turn the `\n` in the
-   private key into real line breaks and the key would not parse. Copy the
-   key file to the server (from PowerShell on your PC):
-
-   ```bash
-   scp $HOME\Downloads\<key file>.json deploy@<server address>:/opt/vertigo-gear/google-key.json
-   ```
-
-   then, on the server in `/opt/vertigo-gear`, write it into `.env` and
-   delete the file (if it is not valid JSON, nothing is written or deleted):
-
-   ```bash
-   KEY=$(python3 -c 'import json,sys;print(json.dumps(json.load(open(sys.argv[1])),separators=(",",":")))' google-key.json) && printf "GOOGLE_SERVICE_ACCOUNT_JSON='%s'\n" "$KEY" >> .env && rm google-key.json
-   ```
-
-   Add the calendar ids the same way (`echo 'GOOGLE_CALENDAR_ID_PROJECTS=…' >> .env`)
-   and recreate the app so it reads them:
-   `docker compose --profile tunnel up -d --force-recreate app` (or
-   `--profile prod`).
-
-   If an organisation policy blocks creating the key ("Disable service
-   account key creation"), a Workspace super admin has to override it for
-   this one project; project Owner is not enough. Switch it back on once
-   the key is downloaded: existing keys keep working.
-6. Restart the app. Settings › Calendar shows "Configured". Confirming a
-   project, changing its dates or venue, or cancelling it queues a sync;
-   the delivery queue is visible under Settings › Webhooks.
-
-Crew members with a Google email on their user profile are added as
-attendees. Service accounts can only invite attendees when the Workspace
-admin grants domain-wide delegation; without it, events are created
-without attendees and the sync still succeeds.
-
-## Background work
-
-Webhook deliveries and calendar pushes go through an outbox table processed
-by a worker inside the app process every 15 seconds. On a host without a
-long-running process (Vercel), set `CRON_SECRET` and have a scheduler call
-`POST /api/cron/outbox` with `Authorization: Bearer <secret>` every
-minute.
-
-## Backup and restore
+### Backups
 
 `scripts/backup.sh` writes one archive with the database dump and every
-upload to `backups/` (`BACKUP_DIR`), keeps `BACKUP_KEEP_DAYS` of them (14
-by default), and, when `BACKUP_REMOTE` is set, copies each archive off-site
-with [rclone](https://rclone.org) (Cloudflare R2, Backblaze B2, S3, Google
-Drive) and prunes the remote the same way. Run it nightly:
-
-```
-10 3 * * * cd /opt/vertigo-gear && ./scripts/backup.sh >> backups/backup.log 2>&1
-```
+upload to `backups/`, keeps 14 days of them (`BACKUP_KEEP_DAYS`), and
+copies each archive off-site with [rclone](https://rclone.org) to
+`BACKUP_REMOTE`, pruning the remote the same way. Copies must leave the
+building, so set up the remote first.
 
 **Dropbox (also Business team spaces).** Install rclone on the server
 (`sudo apt install rclone`). Log in from a PC with a browser:
@@ -668,43 +499,53 @@ id or secret, no advanced config, *no* to auto config / web browser, then
 paste the token. On a Business account `dropbox:folder` is the signed-in
 member's own folder and `dropbox:/` the team root (`rclone lsd dropbox:/`
 lists the team folders). Keep backups out of folders the whole team can
-open: they hold the full database. For example:
+open: they hold the full database. Then, in `/opt/vertigo-gear`:
 
-```
+```bash
 rclone mkdir "dropbox:/Server Account/vertigo-gear-backups"
 echo 'BACKUP_REMOTE="dropbox:/Server Account/vertigo-gear-backups"' >> .env
 ./scripts/backup.sh
 ```
 
-`scripts/restore.sh <archive>` stops the app, replaces the database and
-the uploads with the archive's contents, and starts the app again
-(migrations run if the code is newer than the backup). It asks for a
-typed `yes` first. Test it on a fresh server now and then; a backup that
-was never restored is a guess.
+Cloudflare R2, Backblaze B2, S3 and Google Drive work the same way with
+their own rclone remote.
+
+**Every night.** As `deploy`, `crontab -e` and add this line (03:10
+server time):
+
+```
+10 3 * * * cd /opt/vertigo-gear && ./scripts/backup.sh >> backups/backup.log 2>&1
+```
+
+`tail backups/backup.log` shows how the last runs went.
+
+**Restoring.** `scripts/restore.sh <archive>` stops the app, replaces the
+database and the uploads with the archive's contents, and starts the app
+again (migrations run if the code is newer than the backup). It asks for
+a typed `yes` first. A backup that was never restored is a guess: try it
+on a spare machine now and then.
 
 ### Recreating the server from a backup
 
 When the server is gone (dead disk, stolen, replaced), a new one is the
-office walkthrough above plus a restore. Have three things ready:
+setup above plus a restore. Have three things ready:
 
 - **A backup archive**, normally the newest one in Dropbox.
-- **The old `.env`**, kept in your password manager. The backup leaves it
-  out on purpose because it holds the secrets. Most important in it is
+- **The old `.env`** from the password manager. Most important in it is
   `AUTH_SECRET`: two-factor sign-in only works with the same one (see
   "If the old `.env` is lost" below).
 - **Access to Cloudflare and Dropbox.**
 
-1. **Set up the machine** as in the office walkthrough, steps 1 and 2:
-   Ubuntu, Docker, the `deploy` user, and the code cloned to
-   `/opt/vertigo-gear`. Use the newest code. The backup notes which
-   version made it, but a newer one is fine: the restore runs any newer
-   database migrations on start.
+1. **Set up the machine** as in [Setting up the server](#setting-up-the-server),
+   steps 1 and 2: Ubuntu, Docker, the `deploy` user, remote access, and
+   the code in `/opt/vertigo-gear`. Use the newest code: the restore runs
+   any newer database migrations on start.
 
 2. **Put the old `.env` back.** As `deploy` in `/opt/vertigo-gear`:
    `nano .env`, paste it in, save. It holds the tunnel token too, so the
-   same Cloudflare tunnel and address (`gear.vertigo.dk`) carry over.
-   **Switch the old server off first** if it still runs, or both answer on
-   the same address. Cloudflare's tunnel page lists its connectors.
+   same tunnel and address carry over. **Switch the old server off first**
+   if it still runs, or both answer on the same address. Cloudflare's
+   tunnel page lists its connectors.
 
 3. **Start the stack once.** This builds the app and creates an empty
    database:
@@ -713,13 +554,10 @@ office walkthrough above plus a restore. Have three things ready:
    docker compose --profile tunnel up -d --build
    ```
 
-   Do not create an admin user (`create-admin.mjs`): the restore brings
-   all the users back.
+   Do not create an admin user: the restore brings all the users back.
 
-4. **Fetch the backup from Dropbox.** Install rclone and connect Dropbox
-   as described under *Dropbox* above (`rclone authorize "dropbox"` on a
-   PC, `rclone config` on the server as `deploy`). Then list the
-   backups and copy the newest one down:
+4. **Fetch the backup.** Connect rclone to Dropbox as described under
+   [Backups](#backups), list the backups and copy the newest one down:
 
    ```bash
    rclone ls "dropbox:/Server Account/vertigo-gear-backups"
@@ -727,25 +565,22 @@ office walkthrough above plus a restore. Have three things ready:
    rclone copy "dropbox:/Server Account/vertigo-gear-backups/vertigo-gear-YYYYMMDD-HHMM.tar.gz" backups/
    ```
 
-5. **Restore it.** It asks you to type `yes`, swaps in the database and
-   the uploads, and starts the app again:
+5. **Restore it.** Type `yes` when asked:
 
    ```bash
-   sh ./scripts/restore.sh backups/vertigo-gear-YYYYMMDD-HHMM.tar.gz
+   ./scripts/restore.sh backups/vertigo-gear-YYYYMMDD-HHMM.tar.gz
    ```
 
-6. **Check.** Open the address and sign in as usual, with your
-   two-factor code. Then open a model with photos and a production plan
-   with documents to see that the uploads came back.
+6. **Check.** Open the address and sign in as usual, with your two-factor
+   code. Open a model with photos and a production plan with documents
+   to see that the uploads came back.
 
-7. **Turn the nightly backup back on.** `crontab -e` as `deploy`, with
-   the line from the start of this section. Check that
-   `BACKUP_REMOTE` is in `.env`, and that the timezone is Danish
-   (`sudo timedatectl set-timezone Europe/Copenhagen`).
+7. **Turn the nightly backup back on** (the cron line under
+   [Backups](#backups)), and check that `BACKUP_REMOTE` is in `.env`.
 
-**If the old `.env` is lost**, write a new one as in step 3 of the
-walkthrough, and get a new tunnel token from Cloudflare (*Rotate token*
-on the tunnel page). Then restore as above. Everything comes back, but:
+**If the old `.env` is lost**, write a new one as in step 3 of the setup,
+and get a new tunnel token from Cloudflare (*Rotate token* on the tunnel
+page). Then restore as above. Everything comes back, but:
 
 - Everyone has to sign in again.
 - Two-factor sign-in no longer accepts app codes, because the secrets
@@ -753,9 +588,147 @@ on the tunnel page). Then restore as above. Everything comes back, but:
   with one of their recovery codes. An admin without one runs
   `docker compose exec app node scripts/create-admin.mjs <email> "<name>"`,
   which also resets that person's two-factor sign-in. Admins then reset
-  everyone else's under *Settings › Users*, and people set it up again.
-- The Google Calendar key and calendar ids have to be added to `.env`
-  again (*Google Calendar push*), if you use them.
+  everyone else's under Settings › Users, and people set it up again.
+- The Google Calendar key and calendar ids have to go into `.env` again,
+  if you use them.
 
 Practise this once on a spare PC or a virtual machine, so it is not the
 first time when it matters.
+
+### Settings in `.env`
+
+Besides the ones the setup writes, these change how the app behaves.
+After editing `.env`, recreate the app so it reads them:
+
+```bash
+docker compose --profile tunnel up -d --force-recreate app
+```
+
+| Setting | What it does |
+|---|---|
+| `PROJECT_GEAR=on` | Brings back gear on projects: reserving gear, renting in sub-hire gear, the project quote, and starting a packing list from the reservations. Off by default; nothing is deleted while it is off. Rentals are not affected. |
+| `TWO_FACTOR_REQUIRED_ROLES` | Who must use two-factor sign-in: `admin` when unset, `admin,member`, or `none`. |
+| `MAX_UPLOAD_MB` | Largest document upload (500 by default). |
+| `BACKUP_REMOTE`, `BACKUP_KEEP_DAYS` | Where backups are copied and how many days are kept (see [Backups](#backups)). |
+
+### Google Calendar push (optional)
+
+The app can create one event per project phase on a shared Google
+Calendar, and one event per rental on a second calendar. Sync is one-way:
+the app is the source of truth and never reads edits back from Google.
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create a
+   project (or use an existing one) and enable the **Google Calendar API**
+   (APIs & Services › Library).
+2. Create a **service account** (IAM & Admin › Service Accounts ›
+   Create). No roles are needed. Open it, go to **Keys › Add key › JSON**
+   and download the key file. If an organisation policy blocks creating
+   the key ("Disable service account key creation"), a Workspace super
+   admin has to override it for this one project; project Owner is not
+   enough. Switch it back on once the key is downloaded: existing keys
+   keep working.
+3. In Google Calendar, create a calendar "Vertigo projects" (and
+   optionally "Vertigo rentals"). In its settings › **Share with specific
+   people**, add the service account's email
+   (`...@...iam.gserviceaccount.com`) with **Make changes to events**, and
+   copy the **Calendar ID** from "Integrate calendar".
+4. Put the key into `.env` on the server, as **one line in single
+   quotes** (double quotes would turn the `\n` in the private key into
+   real line breaks). Copy the key file to the server, from PowerShell on
+   your PC:
+
+   ```bash
+   scp $HOME\Downloads\<key file>.json deploy@<server name>:/opt/vertigo-gear/google-key.json
+   ```
+
+   then, on the server in `/opt/vertigo-gear`, write it into `.env` and
+   delete the file (if it is not valid JSON, nothing is written or
+   deleted):
+
+   ```bash
+   KEY=$(python3 -c 'import json,sys;print(json.dumps(json.load(open(sys.argv[1])),separators=(",",":")))' google-key.json) && printf "GOOGLE_SERVICE_ACCOUNT_JSON='%s'\n" "$KEY" >> .env && rm google-key.json
+   ```
+
+   Add the calendar ids the same way and recreate the app:
+
+   ```bash
+   echo 'GOOGLE_CALENDAR_ID_PROJECTS=<calendar id>' >> .env
+   echo 'GOOGLE_CALENDAR_ID_RENTALS=<calendar id>' >> .env
+   docker compose --profile tunnel up -d --force-recreate app
+   ```
+
+   In development, `GOOGLE_SERVICE_ACCOUNT_JSON` can instead be the path
+   to the key file (it is git-ignored).
+5. Settings › Calendar now shows "Configured". Confirming a project,
+   changing its dates or venue, or cancelling it queues a sync; the
+   delivery queue is visible under Settings › Webhooks.
+
+Crew members with a Google email on their user profile are added as
+attendees. Service accounts can only invite attendees when the Workspace
+admin grants domain-wide delegation; without it, events are created
+without attendees and the sync still succeeds.
+
+### Background work
+
+Webhook deliveries and calendar pushes go through an outbox table that a
+worker inside the app processes every 15 seconds. On a host without a
+long-running process (Vercel), set `CRON_SECRET` and have a scheduler call
+`POST /api/cron/outbox` with `Authorization: Bearer <secret>` every
+minute.
+
+## Other ways to host
+
+The office setup above is the one in use. These still work.
+
+### A VPS with Caddy
+
+On a server with Docker (a Hetzner CX23 with 2 vCPU and 4 GB is plenty),
+an A record such as `gear.vertigo.dk` pointing at it, and ports 22, 80 and
+443 open: set it up as in steps 1 to 3 above, with these in `.env`
+instead of the tunnel token:
+
+| Variable | Value |
+|---|---|
+| `APP_DOMAIN` | the DNS name, e.g. `gear.vertigo.dk` |
+| `APP_URL` | `https://gear.vertigo.dk` |
+
+Then start the `prod` profile and create the admin:
+
+```bash
+docker compose --profile prod up -d --build
+docker compose exec app node scripts/create-admin.mjs you@vertigo.dk "Your Name"
+```
+
+Caddy gets the certificate from Let's Encrypt on first start and renews
+it by itself. The database and the app listen on the server only; Caddy
+is the way in. `GET /api/health` answers `{ "ok": true }` when the app
+reaches its database, and Compose restarts the container when it does
+not. Update with `--profile prod` instead of `--profile tunnel`.
+
+GitHub can deploy for you: `.github/workflows/deploy.yml` runs after CI
+passes on `main` and runs the update over SSH. Add these repository
+secrets (Settings › Secrets and variables › Actions): `DEPLOY_HOST`,
+`DEPLOY_USER`, `DEPLOY_KEY` (a private key whose public half is in that
+user's `~/.ssh/authorized_keys`), `DEPLOY_PATH` (`/opt/vertigo-gear`).
+The workflow waits for the health check and prints the app log if it
+fails.
+
+### Vercel and managed Postgres
+
+The app runs on Vercel with a managed database and object storage, with
+two gaps: PDF pages in plan exports need poppler, which Vercel does not
+have (documents are listed by name instead), and the outbox worker needs
+a scheduler.
+
+1. Create a Postgres database (Neon, Supabase, Vercel Postgres) and a
+   bucket on Cloudflare R2 or another S3-compatible store.
+2. Import the repository in Vercel. Set the environment variables from
+   `.env.example`: `DATABASE_URL`, `AUTH_SECRET`, `APP_URL` (the Vercel
+   domain), `STORAGE_DRIVER=s3` with the `S3_*` values, `CRON_SECRET`,
+   `OUTBOX_DISABLED=1`.
+3. Build command: `npx prisma generate && npx prisma migrate deploy && npm run build`.
+4. Add a Vercel cron (`vercel.json`) that calls `POST /api/cron/outbox`
+   every minute with `Authorization: Bearer <CRON_SECRET>`.
+5. Create the first admin from your machine with `DATABASE_URL` pointing
+   at the managed database:
+   `node scripts/create-admin.mjs you@vertigo.dk "Your Name"`.

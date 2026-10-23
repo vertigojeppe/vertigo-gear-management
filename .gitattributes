@@ -2,4 +2,3 @@
 *.sh text eol=lf
 Dockerfile text eol=lf
 Caddyfile text eol=lf
-Caddyfile.lan text eol=lf
