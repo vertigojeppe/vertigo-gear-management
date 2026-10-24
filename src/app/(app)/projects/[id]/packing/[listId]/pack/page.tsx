@@ -16,7 +16,7 @@ export default async function PackPage(props: { params: Promise<{ id: string; li
   if (!detail || detail.project.id !== id || !canPack(detail.list.status)) notFound();
   const t = await getTranslations("packing");
   return (
-    <div className="flex flex-col gap-4">
+    <div data-wide className="flex flex-col gap-4">
       <PageHeader
         title={`${t("packMode")} · ${detail.list.name}`}
         subtitle={t("packHint")}

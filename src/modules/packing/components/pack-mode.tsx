@@ -65,49 +65,52 @@ export function PackMode({ ids, lines, units, packed }: { ids: Ids; lines: LineR
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-md border p-3">
-        <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="font-medium">{t("packed", { packed, total: units })}</span>
-          <span className="text-muted-foreground">{units - packed > 0 ? t("stillToPack", { count: units - packed }) : t("allPacked")}</span>
+      {/* With the roomy layout (Settings › Layout), progress and scanner sit side by side and the lines fill a grid on wide screens. */}
+      <div className="flex flex-col gap-4 roomy:lg:grid roomy:lg:grid-cols-2 roomy:lg:items-start">
+        <div className="rounded-md border p-3">
+          <div className="mb-2 flex items-center justify-between text-sm">
+            <span className="font-medium">{t("packed", { packed, total: units })}</span>
+            <span className="text-muted-foreground">{units - packed > 0 ? t("stillToPack", { count: units - packed }) : t("allPacked")}</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded bg-muted">
+            <div className="h-full bg-green-500 transition-all" style={{ width: `${units ? Math.min(100, (packed / units) * 100) : 0}%` }} />
+          </div>
         </div>
-        <div className="h-2 overflow-hidden rounded bg-muted">
-          <div className="h-full bg-green-500 transition-all" style={{ width: `${units ? Math.min(100, (packed / units) * 100) : 0}%` }} />
-        </div>
-      </div>
 
-      <div className="flex flex-col gap-2 rounded-md border p-3">
-        <QrScanner onScan={submitTag} id="pack-qr" />
-        <form
-          className="flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            submitTag(manual);
-          }}
-        >
-          <Input value={manual} onChange={(e) => setManual(e.target.value)} placeholder={t("scanOrType")} aria-label={t("scanOrType")} autoCapitalize="characters" />
-          <Button type="submit" variant="outline">
-            {t("scan")}
-          </Button>
-        </form>
-        {scanMessage && (
-          <p role="status" className={`flex flex-wrap items-center gap-2 text-sm ${r?.status === "ticked" ? "text-green-700 dark:text-green-300" : "text-destructive"}`}>
-            {scanMessage}
-            {r?.status === "ticked" && <UndoTick key={r.checkId} ids={ids} checkId={r.checkId} label={r.tag} />}
-            {r?.status === "not_on_list" && !r.alreadyComplete && (
-              <>
-                {" "}
-                <Link href={`/projects/${ids.projectId}/packing/${ids.listId}?add=${r.modelId}`} className="underline">
-                  {t("addToList")}
-                </Link>
-              </>
-            )}
-          </p>
-        )}
+        <div className="flex flex-col gap-2 rounded-md border p-3">
+          <QrScanner onScan={submitTag} id="pack-qr" />
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitTag(manual);
+            }}
+          >
+            <Input value={manual} onChange={(e) => setManual(e.target.value)} placeholder={t("scanOrType")} aria-label={t("scanOrType")} autoCapitalize="characters" />
+            <Button type="submit" variant="outline">
+              {t("scan")}
+            </Button>
+          </form>
+          {scanMessage && (
+            <p role="status" className={`flex flex-wrap items-center gap-2 text-sm ${r?.status === "ticked" ? "text-green-700 dark:text-green-300" : "text-destructive"}`}>
+              {scanMessage}
+              {r?.status === "ticked" && <UndoTick key={r.checkId} ids={ids} checkId={r.checkId} label={r.tag} />}
+              {r?.status === "not_on_list" && !r.alreadyComplete && (
+                <>
+                  {" "}
+                  <Link href={`/projects/${ids.projectId}/packing/${ids.listId}?add=${r.modelId}`} className="underline">
+                    {t("addToList")}
+                  </Link>
+                </>
+              )}
+            </p>
+          )}
+        </div>
       </div>
 
       {current.length === 0 && <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">{t("allPacked")}</p>}
 
-      <ul className="flex flex-col gap-3">
+      <ul className="grid items-start gap-3 roomy:lg:grid-cols-2 roomy:2xl:grid-cols-3">
         {current.map((line) => (
           <LineCard key={line.id} ids={ids} line={line} />
         ))}
@@ -118,7 +121,7 @@ export function PackMode({ ids, lines, units, packed }: { ids: Ids; lines: LineR
           <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
             {t("packedLines", { count: done.length })} <span className="text-muted-foreground transition-transform group-open:rotate-90">›</span>
           </summary>
-          <ul className="flex flex-col gap-3 border-t p-3">
+          <ul className="grid items-start gap-3 roomy:lg:grid-cols-2 roomy:2xl:grid-cols-3 border-t p-3">
             {done.map((line) => (
               <LineCard key={line.id} ids={ids} line={line} />
             ))}
