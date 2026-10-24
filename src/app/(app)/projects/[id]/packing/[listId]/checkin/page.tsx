@@ -17,7 +17,7 @@ export default async function CheckInPage(props: { params: Promise<{ id: string;
   const t = await getTranslations("packing");
   const ids = { projectId: id, listId };
   return (
-    <div className="flex flex-col gap-4">
+    <div data-wide className="flex flex-col gap-4">
       <PageHeader
         title={`${t("checkInMode")} · ${detail.list.name}`}
         subtitle={t("checkInHint")}

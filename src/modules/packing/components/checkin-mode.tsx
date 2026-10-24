@@ -41,9 +41,10 @@ export function CheckInMode({ ids, lines }: { ids: Ids; lines: LineRow[] }) {
 
       {visible.length === 0 && <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">{t("allReturned")}</p>}
 
-      <ul className="flex flex-col gap-3">
+      {/* With the roomy layout (Settings › Layout), the lines flow into columns on wide screens; a line never breaks across two. */}
+      <ul className="flex flex-col gap-3 roomy:lg:block roomy:lg:columns-2 roomy:lg:gap-3 roomy:2xl:columns-3">
         {visible.map((line) => (
-          <li key={line.id} className="rounded-md border p-3">
+          <li key={line.id} className="break-inside-avoid rounded-md border p-3 roomy:lg:mb-3">
             <p className="font-medium">
               {line.quantity}× {line.modelLabel}
               {line.itemName ? ` – ${line.itemName}` : ""}

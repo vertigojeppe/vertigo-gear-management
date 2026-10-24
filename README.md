@@ -198,7 +198,7 @@ start, and help text under the fields that need it. The short version:
   recovery codes. An admin can reset someone who lost their phone under
   Settings › Users.
 - **Layout** (Settings › Layout, admins): *Roomy* lets the packing list,
-  production plan, project page and pack mode use a wide screen with columns;
+  production plan, project page, pack mode and check-in use a wide screen with columns;
   *Compact* keeps every page narrow and in one column. It applies to
   everyone.
 - **Users** (Settings › Users): admin, member or viewer.
