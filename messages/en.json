@@ -459,7 +459,7 @@
     "layoutHelp": "Roomy pages with columns, or the compact layout, for everyone.",
     "layoutIntro": "How busy pages use a wide screen. It applies to everyone; phones always show one column.",
     "layout_roomy": "Roomy",
-    "layout_roomyHelp": "Busy pages use more of a wide screen: the packing list in two or three columns, schedule and tasks side by side on the production plan, the project page in two columns, and pack mode with its lines in a grid.",
+    "layout_roomyHelp": "Busy pages use more of a wide screen: the packing list in two or three columns, schedule and tasks side by side on the production plan, the project page in two columns, and pack mode and check-in with their lines in columns.",
     "layout_compact": "Compact",
     "layout_compactHelp": "Every page keeps the narrower width and shows one column, as before.",
     "layoutSaved": "Saved. Every page now uses this layout."

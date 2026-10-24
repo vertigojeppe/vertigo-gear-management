@@ -459,7 +459,7 @@
     "layoutHelp": "Rummelige sider med kolonner, eller det kompakte layout, for alle.",
     "layoutIntro": "Hvordan travle sider bruger en bred skærm. Det gælder alle; telefoner viser altid én kolonne.",
     "layout_roomy": "Rummelig",
-    "layout_roomyHelp": "Travle sider bruger mere af en bred skærm: pakkelisten i to eller tre kolonner, tidsplan og opgaver side om side i produktionsplanen, projektsiden i to kolonner, og pakketilstanden med linjerne i et gitter.",
+    "layout_roomyHelp": "Travle sider bruger mere af en bred skærm: pakkelisten i to eller tre kolonner, tidsplan og opgaver side om side i produktionsplanen, projektsiden i to kolonner, og pakke- og tjek-ind-tilstanden med linjerne i kolonner.",
     "layout_compact": "Kompakt",
     "layout_compactHelp": "Alle sider beholder den smallere bredde og viser én kolonne, som før.",
     "layoutSaved": "Gemt. Alle sider bruger nu dette layout."
