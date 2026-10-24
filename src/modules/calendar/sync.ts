@@ -60,12 +60,13 @@ export function projectPhaseEvents(
   return out;
 }
 
-export async function syncProject(projectId: string, client?: GoogleCalendar): Promise<"skipped" | "synced" | "deleted"> {
+/** `deletedIds`: the event ids a deleted project handed to its job; used when the row is gone. */
+export async function syncProject(projectId: string, client?: GoogleCalendar, deletedIds?: Record<string, string>): Promise<"skipped" | "synced" | "deleted"> {
   const cfg = googleConfig();
   if (!cfg) return "skipped";
   const google = client ?? new GoogleCalendar(cfg.account);
   const p = await prisma.project.findUnique({ where: { id: projectId }, include: { client: true, crew: { include: { user: true } } } });
-  const ids: Record<string, string> = p && typeof p.googleEventIds === "object" && p.googleEventIds ? { ...(p.googleEventIds as Record<string, string>) } : {};
+  const ids: Record<string, string> = p ? (typeof p.googleEventIds === "object" && p.googleEventIds ? { ...(p.googleEventIds as Record<string, string>) } : {}) : { ...deletedIds };
 
   // Deleted or cancelled or back to quote: remove everything we created.
   if (!p || p.status === "cancelled" || p.status === "quote") {
@@ -94,12 +95,13 @@ export async function queueAllProjectSyncs(): Promise<number> {
   return projects.length;
 }
 
-export async function syncRental(rentalId: string, client?: GoogleCalendar): Promise<"skipped" | "synced" | "deleted"> {
+/** `deletedIds`: the event ids a deleted rental handed to its job; used when the row is gone. */
+export async function syncRental(rentalId: string, client?: GoogleCalendar, deletedIds?: Record<string, string>): Promise<"skipped" | "synced" | "deleted"> {
   const cfg = googleConfig();
   if (!cfg || !cfg.calendars.rentals) return "skipped";
   const google = client ?? new GoogleCalendar(cfg.account);
   const r = await prisma.rental.findUnique({ where: { id: rentalId }, include: { client: true, lines: { include: { model: true } } } });
-  const ids: Record<string, string> = r && typeof r.googleEventIds === "object" && r.googleEventIds ? { ...(r.googleEventIds as Record<string, string>) } : {};
+  const ids: Record<string, string> = r ? (typeof r.googleEventIds === "object" && r.googleEventIds ? { ...(r.googleEventIds as Record<string, string>) } : {}) : { ...deletedIds };
   if (!r) {
     for (const id of Object.values(ids)) await google.delete(cfg.calendars.rentals, id);
     return "deleted";

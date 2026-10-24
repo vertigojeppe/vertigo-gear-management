@@ -297,7 +297,8 @@ export const projects = {
       await tx.project.delete({ where: { id } });
       await logActivity(actor, { entityType: "project", entityId: id, action: "deleted", summary: `Deleted project ${p.name}` }, tx);
     });
-    await emitEvent("project.cancelled", { id, name: p.name, deleted: true }, { calendar: { kind: "project", id } });
+    // The ids go with the job: the row that stored them is gone.
+    await emitEvent("project.cancelled", { id, name: p.name, deleted: true }, { calendar: { kind: "project", id, eventIds: p.googleEventIds } });
   },
 
   /* Contacts */

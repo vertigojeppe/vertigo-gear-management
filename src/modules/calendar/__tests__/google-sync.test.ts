@@ -1,5 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/db";
+import type { Actor } from "@/lib/auth/session";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { projects } from "@/modules/projects/service";
 import { projectPhaseEvents, syncProject } from "../sync";
 import type { GoogleCalendar, GoogleEvent } from "../google";
 
@@ -127,5 +130,24 @@ describe("syncProject", () => {
     expect(fake.calls.filter((c) => c.method === "delete")).toHaveLength(3);
     const stored = (await prisma.project.findUniqueOrThrow({ where: { id: projectId } })).googleEventIds;
     expect(stored).toEqual({});
+  });
+
+  it("still removes the events of a deleted project, from the ids its job carries", async () => {
+    const fake = new FakeGoogle();
+    expect(await syncProject("no-such-project", fake as unknown as GoogleCalendar, { job: "evt-job", show: "evt-show" })).toBe("deleted");
+    expect(fake.calls.map((c) => [c.method, c.eventId])).toEqual([
+      ["delete", "evt-job"],
+      ["delete", "evt-show"],
+    ]);
+  });
+
+  it("hands a deleted project's event ids to its last sync job", async () => {
+    const admin: Actor = { id: (await prisma.user.findFirstOrThrow({ where: { role: "admin" } })).id, email: "", name: "Alex Admin", role: "admin" };
+    const doomed = await prisma.project.create({ data: { name: `Doomed ${marker}`, status: "confirmed", googleEventIds: { job: "evt-a", show: "evt-b" } } });
+    await projects.remove(admin, doomed.id);
+    const job = await prisma.outbox.findFirstOrThrow({ where: { type: "calendar.sync_project", payload: { path: ["id"], equals: doomed.id } }, orderBy: { createdAt: "desc" } });
+    expect((job.payload as { eventIds?: unknown }).eventIds).toEqual({ job: "evt-a", show: "evt-b" });
+    await prisma.outbox.deleteMany({ where: { payload: { path: ["id"], equals: doomed.id } } });
+    await prisma.activityLog.deleteMany({ where: { entityId: doomed.id } });
   });
 });

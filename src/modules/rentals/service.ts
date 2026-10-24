@@ -178,7 +178,8 @@ export const rentals = {
     if (r.status === "out") throw new RentalError("Gear is still out. Mark it returned first.");
     await prisma.rental.delete({ where: { id } });
     await logActivity(actor, { entityType: "rental", entityId: id, action: "deleted", summary: `Deleted rental for ${r.client.name}` });
-    await emitEvent("rental.returned", { id, deleted: true }, { calendar: { kind: "rental", id } });
+    // The ids go with the job: the row that stored them is gone.
+    await emitEvent("rental.returned", { id, deleted: true }, { calendar: { kind: "rental", id, eventIds: r.googleEventIds } });
   },
 };
 
