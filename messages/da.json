@@ -661,7 +661,12 @@
     "googleOn": "Konfigureret. Bekræftede projekter og udlejninger skubbes til de delte kalendere.",
     "googleOff": "Ikke konfigureret. Sæt GOOGLE_SERVICE_ACCOUNT_JSON og GOOGLE_CALENDAR_ID_PROJECTS (se README).",
     "syncNow": "Synkronisér nu",
-    "weekLabel": "Uge {week}"
+    "weekLabel": "Uge {week}",
+    "jobEvents": "Jobs i kalenderne",
+    "jobEventsHelp": "Hvert job er én heldagsbegivenhed over hele perioden, med alle faser i beskrivelsen. Opbygning og nedtagning er tidsbestemte begivenheder fra mødetiden (én pr. dag), og showet fra start til slut. En opbygning eller nedtagning uden mødetid vises kun i heldagsbegivenheden.",
+    "callHours": "Opbygning og nedtagning varer (timer)",
+    "callHoursHelp": "Fra mødetiden, i halve timer. Når du gemmer, opdateres alle jobs i Google Kalender; abonnerede kalendere følger med ved næste opdatering.",
+    "callHoursSaved": "Gemt: {hours} t. Alle jobs opdateres i Google Kalender."
   },
   "packingStatus": {
     "draft": "Kladde",

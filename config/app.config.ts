@@ -155,11 +155,13 @@ export const PROJECT_PHASES = [
 export type ProjectPhase = (typeof PROJECT_PHASES)[number]["key"];
 
 /**
- * Which project fields make up each phase (for calendar events). Day phases
- * are continuous day ranges (all-day events) with an optional call time;
- * the show is timed. The keys load_in / load_out stay as they are because
- * Google event ids are stored under them; on screen they are build-up and
- * pack-down. `title` is the English word used in calendar event titles.
+ * Which project fields make up each phase. Day phases (`allDay`) are
+ * continuous day ranges with an optional call time; the show is two
+ * instants. Calendars turn them into one banner per job plus timed
+ * build-up / pack-down days (src/modules/calendar/job-events.ts). The keys
+ * load_in / load_out stay as they are (Google event ids are stored under
+ * `load_in:<day>`); on screen they are build-up and pack-down. `title` is
+ * the English word used in calendar event titles.
  */
 export const PHASE_DATES: Record<ProjectPhase, { start: string; end?: string; call?: string; allDay: boolean; title: string }> = {
   prep: { start: "prepStart", end: "prepEnd", allDay: true, title: "prep" },
@@ -316,3 +318,10 @@ export type PlanEntryKind = (typeof PLAN_ENTRY_KINDS)[number];
  */
 export const LAYOUTS = ["roomy", "compact"] as const;
 export type Layout = (typeof LAYOUTS)[number];
+
+/**
+ * Calendars show build-up and pack-down as timed events from their call
+ * time; this is how long they last unless an admin changed it (Settings ›
+ * Calendar), and the range allowed there.
+ */
+export const CALL_HOURS = { default: 2, min: 0.5, max: 12 } as const;

@@ -2,8 +2,11 @@ import { randomBytes } from "node:crypto";
 import ical, { ICalCalendarMethod } from "ical-generator";
 import { prisma } from "@/lib/db";
 import { addDays, dateToString } from "@/lib/dates";
-import { appConfig, PHASE_DATES, PROJECT_PHASES } from "../../../config/app.config";
-import { modelLabel } from "@/lib/format";
+import { appConfig } from "../../../config/app.config";
+import { formatDateTime, modelLabel } from "@/lib/format";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { appSettings } from "@/modules/settings/app-settings";
+import { jobEvents } from "./job-events";
 
 /**
  * Read-only iCal feeds with secret tokens. Users subscribe to the URL in
@@ -45,31 +48,23 @@ export async function buildFeed(scope: FeedScope, userId: string | null): Promis
       where: { status: { not: "cancelled" }, ...(scope === "mine" && userId ? { crew: { some: { userId } } } : {}) },
       include: { client: true, crew: { include: { user: true } } },
     });
+    const callHours = await appSettings.callHours();
     for (const p of projects) {
       const url = appUrl(`/projects/${p.id}`);
       const where = [p.venueName, p.venueAddress].filter(Boolean).join(", ");
       const summaryBase = `${p.name}${p.client ? ` (${p.client.name})` : ""}`;
-      for (const phase of PROJECT_PHASES.map((x) => x.key)) {
-        const spec = PHASE_DATES[phase];
-        const start = p[spec.start as keyof typeof p] as Date | null;
-        if (!start) continue;
-        const end = spec.end ? (p[spec.end as keyof typeof p] as Date | null) : null;
-        const call = spec.call ? (p[spec.call as keyof typeof p] as string | null) : null;
-        const allDay = spec.allDay;
-        const ev = cal.createEvent({
-          id: `${p.id}-${phase}@vertigo-gear`,
-          start,
-          end: allDay ? new Date(`${addDays(dateToString(end && end > start ? end : start), 1)}T00:00:00Z`) : end && end > start ? end : new Date(start.getTime() + 2 * 3600_000),
-          allDay,
-          summary: `${summaryBase} – ${spec.title}${call ? ` (call ${call})` : ""}`,
-          description: `${spec.title} · ${p.status}\n${url}`,
+      const me = scope === "mine" ? p.crew.find((c) => c.userId === userId) : undefined;
+      // One banner per job plus timed build-up / pack-down days and the show (job-events.ts).
+      for (const ev of jobEvents(p, { callHours })) {
+        const yourCall = me?.callTime ? `\nYour call: ${formatDateTime(me.callTime)}` : "";
+        cal.createEvent({
+          id: `${p.id}-${ev.key}@vertigo-gear`,
+          ...(ev.allDay
+            ? { start: new Date(`${ev.firstDay}T00:00:00Z`), end: new Date(`${addDays(ev.lastDay, 1)}T00:00:00Z`), allDay: true, summary: summaryBase, description: `${p.status}\n${ev.lines.join("\n")}${yourCall}\n${url}` }
+            : { start: ev.start, end: ev.end, summary: `${summaryBase} – ${ev.title}`, description: `${ev.title} · ${p.status}${ev.phase === "load_in" ? yourCall : ""}\n${url}` }),
           location: where || undefined,
           url,
         });
-        if (scope === "mine") {
-          const me = p.crew.find((c) => c.userId === userId);
-          if (me?.callTime && phase === "load_in") ev.description(`${spec.title} · your call ${me.callTime.toISOString()}\n${url}`);
-        }
       }
     }
   }

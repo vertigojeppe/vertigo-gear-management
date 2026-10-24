@@ -1,10 +1,35 @@
 "use client";
 
+import { useActionState } from "react";
 import { ShareUrl } from "@/components/share-url";
 import { useTranslations } from "next-intl";
+import { ActionForm } from "@/components/form/action-form";
 import { ConfirmButton } from "@/components/form/confirm-button";
+import { Field, FormError, FormSuccess } from "@/components/form/field";
 import { SubmitButton } from "@/components/form/submit-button";
-import { rotateFeedToken, runOutboxNow } from "@/modules/calendar/actions";
+import { Input } from "@/components/ui/input";
+import type { FormState } from "@/lib/forms";
+import { rotateFeedToken, runOutboxNow, saveCallHours } from "@/modules/calendar/actions";
+import { CALL_HOURS } from "../../../../../config/app.config";
+
+/** How long build-up and pack-down events last in the calendars, from their call time. */
+export function CallHoursForm({ hours }: { hours: number }) {
+  const t = useTranslations("calendar");
+  const tc = useTranslations("common");
+  const [state, action] = useActionState<FormState<{ hours: number }>, FormData>(saveCallHours, {});
+  return (
+    <ActionForm action={action} className="flex max-w-md flex-col gap-3">
+      <FormError message={state.error} />
+      <FormSuccess message={state.ok && state.data ? t("callHoursSaved", { hours: state.data.hours }) : undefined} />
+      <Field id="callHours" label={t("callHours")} help={t("callHoursHelp")} error={state.fieldErrors?.callHours}>
+        <Input id="callHours" name="callHours" type="number" inputMode="decimal" min={CALL_HOURS.min} max={CALL_HOURS.max} step={0.5} defaultValue={state.values?.callHours ?? hours} className="w-28" />
+      </Field>
+      <div>
+        <SubmitButton pendingText={tc("loading")}>{tc("save")}</SubmitButton>
+      </div>
+    </ActionForm>
+  );
+}
 
 export function FeedRow({ label, scope, path }: { label: string; scope: string; path: string }) {
   const t = useTranslations("calendar");

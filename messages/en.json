@@ -661,7 +661,12 @@
     "googleOn": "Configured. Confirmed projects and rentals are pushed to the shared calendars.",
     "googleOff": "Not configured. Set GOOGLE_SERVICE_ACCOUNT_JSON and GOOGLE_CALENDAR_ID_PROJECTS (see README).",
     "syncNow": "Sync now",
-    "weekLabel": "Week {week}"
+    "weekLabel": "Week {week}",
+    "jobEvents": "Jobs in the calendars",
+    "jobEventsHelp": "Each job is one all-day event over its whole span, with every phase in the description. Build-up and pack-down are timed events from their call time (one per day), and the show from its start to its end. A build-up or pack-down without a call time only shows in the all-day event.",
+    "callHours": "Build-up and pack-down events last (hours)",
+    "callHoursHelp": "From the call time, in half hours. Saving updates every job in Google Calendar; subscribed feeds follow on their next refresh.",
+    "callHoursSaved": "Saved: {hours} h. Every job is being updated in Google Calendar."
   },
   "packingStatus": {
     "draft": "Draft",

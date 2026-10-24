@@ -3,7 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
 import { feedTokens, isGoogleConfigured } from "@/modules/calendar";
-import { FeedRow, SyncNowButton } from "./forms";
+import { appSettings } from "@/modules/settings";
+import { CallHoursForm, FeedRow, SyncNowButton } from "./forms";
 
 export const metadata: Metadata = { title: "Calendar settings" };
 
@@ -27,6 +28,13 @@ export default async function CalendarSettingsPage() {
           <FeedRow label={t("feedRentals")} scope="rentals" path={feedTokens.url(rentals.token, "")} />
           <FeedRow label={t("feedMine")} scope="mine" path={feedTokens.url(mine.token, "")} />
         </ul>
+      </section>
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-lg font-medium">{t("jobEvents")}</h2>
+          <p className="max-w-2xl text-sm text-muted-foreground">{t("jobEventsHelp")}</p>
+        </div>
+        <CallHoursForm hours={await appSettings.callHours()} />
       </section>
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">{t("google")}</h2>

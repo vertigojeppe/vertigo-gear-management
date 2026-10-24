@@ -176,6 +176,24 @@ test.describe("projects and rentals", () => {
     expect(await res.text()).toContain("BEGIN:VCALENDAR");
   });
 
+  test("an admin sets how long build-up and pack-down events last", async ({ page, isMobile }) => {
+    test.skip(isMobile, "app-wide setting; desktop only");
+    await signIn(page, "admin@vertigo.test");
+    await page.goto("/settings/calendar");
+    const field = page.getByLabel("Build-up and pack-down events last (hours)");
+    await expect(field).toHaveValue(/^\d+(\.\d)?$/);
+    const before = await field.inputValue();
+    try {
+      await field.fill("3.5");
+      await page.getByRole("button", { name: "Save" }).click();
+      await expect(page.getByText("Saved: 3.5 h. Every job is being updated in Google Calendar.")).toBeVisible();
+    } finally {
+      await field.fill(before);
+      await page.getByRole("button", { name: "Save" }).click();
+      await expect(page.getByText(`Saved: ${before} h.`, { exact: false })).toBeVisible();
+    }
+  });
+
   test("the calendar shows week numbers, weekdays and the year", async ({ page }) => {
     await signIn(page, "viewer@vertigo.test");
     // The default window around today, where the seeded projects always are. (Week numbers across New Year: dates.test.ts.)
