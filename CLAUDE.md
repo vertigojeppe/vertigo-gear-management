@@ -317,8 +317,15 @@ a second entry that exports components only and never a service.
   and return one day. One end alone means a single day (`dayRange`). The
   calendar phase keys stay `load_in` / `load_out` (Google event ids are
   stored under them) but read "Build-up" / "Pack-down"; `PHASE_DATES`
-  maps each phase to its fields, and every day phase is one all-day event
-  over its days with the call time in the title. The reservation window
+  maps each phase to its fields. Calendars (Google push and iCal feeds)
+  use `jobEvents` (`src/modules/calendar/job-events.ts`, pure): one
+  all-day banner per job over its whole span with every phase in the
+  description, build-up / pack-down as timed events from the call time
+  (one per day, key `load_in:<day>`, `appSettings.callHours()` long,
+  Settings › Calendar, default `CALL_HOURS`), the show timed; prep,
+  return and call-less build-up days only appear in the banner.
+  `syncProject` deletes stored event ids it no longer produces; saving
+  the length queues `queueAllProjectSyncs`. The reservation window
   (`reserveFrom/To`) is derived in `deriveWindow`. Allocations that still
   match the old window move with the project when dates change.
 - Items have a `homeLocationId` (warehouse shelf). Flows that return gear

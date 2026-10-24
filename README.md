@@ -620,8 +620,12 @@ docker compose --profile tunnel up -d --force-recreate app
 
 ### Google Calendar push (optional)
 
-The app can create one event per project phase on a shared Google
-Calendar, and one event per rental on a second calendar. Sync is one-way:
+The app can put every job on a shared Google Calendar, and one event per
+rental on a second calendar. A job is one all-day event over its whole
+span, with the phases in its description, plus timed events for the show
+and for each build-up and pack-down day from its call time (how long those
+last is set under Settings › Calendar). The subscribe feeds show jobs the
+same way. Sync is one-way:
 the app is the source of truth and never reads edits back from Google.
 
 1. In [Google Cloud Console](https://console.cloud.google.com/), create a

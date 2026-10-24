@@ -41,14 +41,21 @@ describe("iCal feeds", () => {
     expect((await feedTokens.resolve(c.token))?.scope).toBe("projects");
   });
 
-  it("renders project phases as VEVENTs with a link back", async () => {
+  it("renders one banner per job, timed build-up days and the show, with a link back", async () => {
     const ics = await buildFeed("projects", null);
     expect(ics).toContain("BEGIN:VCALENDAR");
+    const events = ics.split("BEGIN:VEVENT").filter((e) => e.includes(projectId));
+    // The banner covers the whole job (end exclusive) and lists the phases.
+    const banner = events.find((e) => e.includes(`${projectId}-job@`))!;
+    expect(banner).toMatch(/DTSTART;VALUE=DATE:20300629/);
+    expect(banner).toMatch(/DTEND;VALUE=DATE:20300702/);
+    expect(banner).toContain(`SUMMARY:Feed ${marker}`);
+    // iCal folds long lines (CRLF + space) and escapes commas.
+    expect(banner.replace(/\r\n /g, "")).toContain("Build-up: 29.06.2030 – 01.07.2030\\, call 08:00");
+    // Build-up: one timed event per day from the call time; no all-day phase events any more.
+    expect(events.filter((e) => e.includes(`${projectId}-load_in:`))).toHaveLength(3);
     expect(ics).toContain(`SUMMARY:Feed ${marker} – build-up (call 08:00)`);
-    // One all-day event over the three build-up days (end exclusive).
-    const build = ics.split("BEGIN:VEVENT").find((e) => e.includes(`${projectId}-load_in@`))!;
-    expect(build).toMatch(/DTSTART;VALUE=DATE:20300629/);
-    expect(build).toMatch(/DTEND;VALUE=DATE:20300702/);
+    expect(events.filter((e) => /VALUE=DATE:/.test(e))).toHaveLength(1);
     expect(ics).toContain(`SUMMARY:Feed ${marker} – show`);
     expect(ics).toContain(`/projects/${projectId}`);
   });

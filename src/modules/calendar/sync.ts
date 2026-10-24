@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db";
 import { dateToString, addDays } from "@/lib/dates";
-import { appConfig, PHASE_DATES, PROJECT_PHASES, type ProjectPhase } from "../../../config/app.config";
+import { appConfig } from "../../../config/app.config";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into the outbox worker and Vitest
+import { appSettings } from "@/modules/settings/app-settings";
+import { jobEvents, type JobDates } from "./job-events";
 import { GoogleCalendar, googleConfig, type GoogleEvent } from "./google";
 import { modelLabel } from "@/lib/format";
 
@@ -16,56 +19,41 @@ function appUrl(path: string) {
   return `${(process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "")}${path}`;
 }
 
-/** Build the per-phase events for a project. Exported for tests. */
-export function projectPhaseEvents(p: {
-  id: string;
-  name: string;
-  venueName: string | null;
-  venueAddress: string | null;
-  prepStart: Date | null;
-  prepEnd: Date | null;
-  buildStart: Date | null;
-  buildEnd: Date | null;
-  buildCall: string | null;
-  showStart: Date | null;
-  showEnd: Date | null;
-  packStart: Date | null;
-  packEnd: Date | null;
-  packCall: string | null;
-  returnDate: Date | null;
-  client: { name: string } | null;
-  crew: { user: { googleEmail: string | null } }[];
-}): Partial<Record<ProjectPhase, GoogleEvent>> {
-  const out: Partial<Record<ProjectPhase, GoogleEvent>> = {};
+/**
+ * The Google events for a project, keyed by what `googleEventIds` stores:
+ * "job" (the all-day banner), "show", and "load_in:<day>" / "load_out:<day>"
+ * for each build-up and pack-down day (see job-events.ts). Exported for tests.
+ */
+export function projectPhaseEvents(
+  p: JobDates & {
+    id: string;
+    name: string;
+    venueName: string | null;
+    venueAddress: string | null;
+    client: { name: string } | null;
+    crew: { user: { googleEmail: string | null } }[];
+  },
+  opts: { callHours?: number } = {},
+): Record<string, GoogleEvent> {
+  const out: Record<string, GoogleEvent> = {};
   const attendees = p.crew.map((c) => c.user.googleEmail).filter((e): e is string => Boolean(e)).map((email) => ({ email }));
   const base = {
     location: [p.venueName, p.venueAddress].filter(Boolean).join(", ") || undefined,
     source: { title: "Vertigo Gear", url: appUrl(`/projects/${p.id}`) },
     attendees: attendees.length ? attendees : undefined,
   };
-  const description = (phase: string) => `${phase} · ${p.client?.name ?? "No client"}${p.venueName ? ` · ${p.venueName}` : ""}\n${appUrl(`/projects/${p.id}`)}`;
-  const get = (k: string) => p[k as keyof typeof p] as Date | null;
-
-  for (const phase of PROJECT_PHASES.map((x) => x.key)) {
-    const spec = PHASE_DATES[phase];
-    const start = get(spec.start);
-    if (!start) continue;
-    const end = spec.end ? get(spec.end) : null;
-    const call = spec.call ? (p[spec.call as keyof typeof p] as string | null) : null;
-    const summary = `${p.name} – ${spec.title}${call ? ` (call ${call})` : ""}`;
-    if (spec.allDay) {
-      // Day ranges become one all-day event over every day (end exclusive in Google).
-      const startDay = dateToString(start);
-      const endDay = end && end > start ? dateToString(end) : startDay;
-      out[phase] = { ...base, summary, description: description(spec.title), start: { date: startDay }, end: { date: addDays(endDay, 1) } };
+  const about = `${p.client?.name ?? "No client"}${p.venueName ? ` · ${p.venueName}` : ""}`;
+  for (const ev of jobEvents(p, opts)) {
+    if (ev.allDay) {
+      // End is exclusive in Google: the day after the last one.
+      out[ev.key] = { ...base, summary: p.name, description: `${about}\n${ev.lines.join("\n")}\n${appUrl(`/projects/${p.id}`)}`, start: { date: ev.firstDay }, end: { date: addDays(ev.lastDay, 1) } };
     } else {
-      const endTime = end && end > start ? end : new Date(start.getTime() + 2 * 3600_000);
-      out[phase] = {
+      out[ev.key] = {
         ...base,
-        summary,
-        description: description(spec.title),
-        start: { dateTime: start.toISOString(), timeZone: TZ },
-        end: { dateTime: endTime.toISOString(), timeZone: TZ },
+        summary: `${p.name} – ${ev.title}`,
+        description: `${ev.title} · ${about}\n${appUrl(`/projects/${p.id}`)}`,
+        start: { dateTime: ev.start.toISOString(), timeZone: TZ },
+        end: { dateTime: ev.end.toISOString(), timeZone: TZ },
       };
     }
   }
@@ -86,15 +74,24 @@ export async function syncProject(projectId: string, client?: GoogleCalendar): P
     return "deleted";
   }
 
-  const events = projectPhaseEvents(p);
+  const events = projectPhaseEvents(p, { callHours: await appSettings.callHours() });
   const next: Record<string, string> = {};
-  for (const phase of PROJECT_PHASES.map((x) => x.key)) {
-    const ev = events[phase];
-    if (ev) next[phase] = await google.upsert(cfg.calendars.projects, ids[phase] ?? null, ev);
-    else if (ids[phase]) await google.delete(cfg.calendars.projects, ids[phase]);
-  }
+  for (const [key, ev] of Object.entries(events)) next[key] = await google.upsert(cfg.calendars.projects, ids[key] ?? null, ev);
+  // Whatever is stored but no longer wanted goes: a phase without dates, a day that moved, and the per-phase
+  // all-day events (prep, load_in, load_out, return) from before the banner.
+  for (const [key, id] of Object.entries(ids)) if (!(key in events)) await google.delete(cfg.calendars.projects, id);
   await prisma.project.update({ where: { id: projectId }, data: { googleEventIds: next } });
   return "synced";
+}
+
+/** Queue a sync for every project that is (or may still be) in Google, e.g. after the event length changed. */
+export async function queueAllProjectSyncs(): Promise<number> {
+  const projects = await prisma.project.findMany({ where: { status: { notIn: ["quote", "cancelled"] } }, select: { id: true } });
+  const pending = await prisma.outbox.findMany({ where: { type: "calendar.sync_project", status: "pending" }, select: { payload: true } });
+  const queued = new Set(pending.map((r) => (r.payload as { id?: string }).id));
+  const rows = projects.filter((p) => !queued.has(p.id)).map((p) => ({ type: "calendar.sync_project", payload: { id: p.id, event: "calendar.resync" } }));
+  if (rows.length) await prisma.outbox.createMany({ data: rows });
+  return projects.length;
 }
 
 export async function syncRental(rentalId: string, client?: GoogleCalendar): Promise<"skipped" | "synced" | "deleted"> {
