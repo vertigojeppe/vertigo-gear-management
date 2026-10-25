@@ -15,6 +15,7 @@ export default async function CalendarPage(props: { searchParams: Promise<{ from
   await requireActor();
   const sp = await props.searchParams;
   const t = await getTranslations("calendar");
+  const tb = await getTranslations("board");
   const weeks = Math.min(16, Math.max(2, Number(sp.weeks) || DEFAULT_WEEKS));
   const from = /^\d{4}-\d{2}-\d{2}$/.test(sp.from ?? "") ? sp.from! : addDays(today(), -3);
   const to = addDays(from, weeks * 7 - 1);
@@ -40,6 +41,9 @@ export default async function CalendarPage(props: { searchParams: Promise<{ from
             </Link>
             <Link href={link(from, weeks === 6 ? 12 : 6)} className={buttonVariants({ variant: "ghost", size: "sm" })}>
               {t("weeks", { count: weeks === 6 ? 12 : 6 })}
+            </Link>
+            <Link href="/board" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+              {tb("openBoard")}
             </Link>
           </>
         }

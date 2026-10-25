@@ -52,6 +52,8 @@ export const PERMISSIONS = [
   "apps.read",
   "apps.write",
   "share.create",
+  /** The office screen (/board): upcoming jobs, today and tomorrow, the long timeline. */
+  "board.read",
   "users.manage",
   "settings.manage",
 ] as const;
@@ -72,6 +74,11 @@ export const ROLES = {
   viewer: {
     label: "roles.viewer",
     permissions: PERMISSIONS.filter((p) => p.endsWith(".read")) as Permission[],
+  },
+  /** An account for the screen on the office wall: the board and nothing else (the (app) layout sends it to /board). */
+  display: {
+    label: "roles.display",
+    permissions: ["board.read"] as Permission[],
   },
 } as const satisfies Record<string, { label: string; permissions: Permission[] }>;
 
