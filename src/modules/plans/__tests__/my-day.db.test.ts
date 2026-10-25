@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
-import { addDays, today } from "@/lib/dates";
+import { addDays, today, zonedInputToDate } from "@/lib/dates";
 import { myDay } from "../my-day";
 
 /**
@@ -17,7 +17,8 @@ let mineId: string;
 let otherId: string;
 const planIds: string[] = [];
 
-const at = (day: string, hhmm: string) => new Date(`${day}T${hhmm}:00+02:00`);
+// Copenhagen wall-clock time, summer or winter (a fixed +02:00 broke the test from the last Sunday of October).
+const at = (day: string, hhmm: string) => zonedInputToDate(`${day}T${hhmm}`);
 
 beforeAll(async () => {
   userId = (await prisma.user.findFirst({ where: { role: "member" } }))?.id ?? (await prisma.user.findFirstOrThrow()).id;
