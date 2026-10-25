@@ -16,7 +16,7 @@ export async function clientOptions() {
 }
 
 export async function crewOptions() {
-  return prisma.user.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true, role: true } });
+  return prisma.user.findMany({ where: { active: true, role: { not: "display" } }, orderBy: { name: "asc" }, select: { id: true, name: true, role: true } });
 }
 
 /* Projects list */
@@ -153,7 +153,8 @@ export type TimelineBar = {
   href: string;
 };
 
-export async function timeline(from: DateString, to: DateString) {
+/** Projects and rentals in a window as timeline bars (no conflict check: cheap enough for a year). */
+export async function timelineBars(from: DateString, to: DateString): Promise<TimelineBar[]> {
   const [projects, rentals] = await Promise.all([
     prisma.project.findMany({
       where: { reserveFrom: { lte: new Date(`${to}T00:00:00Z`) }, reserveTo: { gte: new Date(`${from}T00:00:00Z`) }, status: { not: "cancelled" } },
@@ -188,6 +189,11 @@ export async function timeline(from: DateString, to: DateString) {
       href: `/rentals/${r.id}`,
     })),
   ];
+  return bars;
+}
+
+export async function timeline(from: DateString, to: DateString) {
+  const bars = await timelineBars(from, to);
 
   // Over-booked models in the window.
   const modelIds = [...new Set((await prisma.allocation.findMany({ where: { startDate: { lte: new Date(`${to}T00:00:00Z`) }, endDate: { gte: new Date(`${from}T00:00:00Z`) } }, select: { modelId: true } })).map((a) => a.modelId))];

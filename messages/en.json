@@ -467,7 +467,8 @@
   "roles": {
     "admin": "Admin",
     "member": "Member",
-    "viewer": "Viewer"
+    "viewer": "Viewer",
+    "display": "Office screen"
   },
   "projectStatus": {
     "quote": "Quote",
@@ -1409,5 +1410,24 @@
     "applyNone": "Save without changes",
     "action_skip": "Skip",
     "action_replace": "Replace"
+  },
+  "board": {
+    "title": "Coming up",
+    "jobs": "Jobs in the next 14 days",
+    "noJobs": "No confirmed jobs in the next 14 days.",
+    "now": "Now",
+    "tomorrow": "Tomorrow",
+    "today": "Today",
+    "inDays": "In {count} days",
+    "crew": "Crew",
+    "packed": "{packed}/{total} packed",
+    "nothing": "Nothing planned.",
+    "allDay": "All day",
+    "rentalOut": "Rental out: {client}",
+    "rentalBack": "Rental back: {client}",
+    "week": "week {week}",
+    "timeline": "Timeline, next {months} months",
+    "signOut": "Sign out",
+    "openBoard": "Office screen"
   }
 }

@@ -9,6 +9,7 @@ export const SEED_USERS = [
   { email: "admin@vertigo.test", name: "Alex Admin", role: "admin" },
   { email: "member@vertigo.test", name: "Mette Member", role: "member" },
   { email: "viewer@vertigo.test", name: "Viggo Viewer", role: "viewer" },
+  { email: "screen@vertigo.test", name: "Office Screen", role: "display" },
 ] as const;
 
 export async function seedUsers(prisma: PrismaClient) {

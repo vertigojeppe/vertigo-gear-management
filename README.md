@@ -201,7 +201,16 @@ start, and help text under the fields that need it. The short version:
   production plan, project page, pack mode and check-in use a wide screen with columns;
   *Compact* keeps every page narrow and in one column. It applies to
   everyone.
-- **Users** (Settings › Users): admin, member or viewer.
+- **Office screen** (`/board`): a full-screen page for a screen on the
+  office wall. Job cards for the next 14 days with phases, crew and
+  packing progress, today and tomorrow (call times, the plan schedule,
+  rentals going out and coming back), and a timeline of the next six
+  months at the bottom (`/board?months=12` for a year). It refreshes
+  itself every minute. Make a user with the role *Office screen* under
+  Settings › Users, sign in with it once in the screen's browser (full
+  screen or kiosk mode), and it stays signed in and sees nothing but the
+  board. Anyone else can open it from the Calendar page.
+- **Users** (Settings › Users): admin, member, viewer, or office screen.
   **Contacts** (Settings › Contacts): people and companies who are not
   users.
 - **Import** (Settings › Import): the old gear spreadsheet. A preview

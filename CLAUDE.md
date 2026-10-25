@@ -492,6 +492,23 @@ a second entry that exports components only and never a service.
 - The importer writes the projector "Ønsker" rows and the Dirverse castor
   references as `WishOp`s (idempotent on `importSource` + name).
 
+## Office screen
+
+- `/board` (`src/app/board/page.tsx`, outside the app shell, always
+  dark) is the screen on the office wall: job cards for the next 14 days
+  (confirmed / in progress, with phases, crew and packing progress),
+  today and tomorrow (phases with call times, plan schedule, rentals out
+  and back) and a long timeline at the bottom (`?months=` 1–12, default
+  6; bars packed into rows by `packLanes`, from `timelineBars`, which
+  skips the calendar's conflict check). Data: `boardData`
+  (`src/modules/board`, pure parts in `logic.ts`). `BoardRefresh`
+  re-reads every minute and touches `/api/auth/session` every half hour
+  so the cookie never expires.
+- Permission `board.read` (every role). The `display` role has only that:
+  the (app) layout redirects it to `/board`, the APIs refuse it, and the
+  user pickers (crew, assignees, person locations) leave it out. The seed
+  has `screen@vertigo.test`.
+
 ## Apps
 
 - `App` (`src/modules/apps`, page `/apps`, nav "Apps" under tools) is one

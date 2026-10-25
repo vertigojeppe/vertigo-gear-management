@@ -5,7 +5,8 @@ import { addDays, daysBetween, isoWeek, isoWeekday, today, type DateString } fro
 import { PROJECT_STATUSES, RENTAL_STATUSES } from "../../../../config/app.config";
 import type { TimelineBar } from "../queries";
 
-const COLORS: Record<string, string> = {
+/** Bar colours by status colour key; also used by the office screen's long timeline. */
+export const BAR_COLORS: Record<string, string> = {
   green: "bg-green-200 text-green-900 dark:bg-green-900/60 dark:text-green-100",
   blue: "bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-100",
   purple: "bg-purple-200 text-purple-900 dark:bg-purple-900/60 dark:text-purple-100",
@@ -13,6 +14,12 @@ const COLORS: Record<string, string> = {
   red: "bg-red-200 text-red-900 dark:bg-red-900/60 dark:text-red-100",
   gray: "bg-muted text-muted-foreground",
 };
+
+/** The Tailwind classes for a bar: its status colour. */
+export function barColor(bar: Pick<TimelineBar, "kind" | "status">): string {
+  const key = bar.kind === "project" ? (PROJECT_STATUSES.find((s) => s.key === bar.status)?.color ?? "gray") : (RENTAL_STATUSES.find((s) => s.key === bar.status)?.color ?? "gray");
+  return BAR_COLORS[key] ?? BAR_COLORS.gray;
+}
 
 /** Sundays' right edge (the line every cell already has) is drawn darker, so weeks stand apart without a thicker line. */
 const WEEK_END = "border-r-muted-foreground/50";
@@ -28,8 +35,6 @@ export async function Timeline({ from, to, bars, conflictDays }: { from: DateStr
   const days = daysBetween(from, to);
   const dayList = Array.from({ length: days }, (_, i) => addDays(from, i));
   const todayStr = today();
-  const colorOf = (bar: TimelineBar) =>
-    bar.kind === "project" ? (PROJECT_STATUSES.find((s) => s.key === bar.status)?.color ?? "gray") : (RENTAL_STATUSES.find((s) => s.key === bar.status)?.color ?? "gray");
 
   const locale = (await getLocale()) === "da" ? "da-DK" : "en-GB";
   const monthLabel = (d: DateString) => new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" }).format(new Date(`${d}T00:00:00Z`)).replace(".", "");
@@ -102,7 +107,7 @@ export async function Timeline({ from, to, bars, conflictDays }: { from: DateStr
                     {inBar && (
                       <Link
                         href={bar.href}
-                        className={cn("block h-full min-h-8 py-1", COLORS[colorOf(bar)], i === startIdx && "ml-0.5 rounded-l", i === endIdx && "mr-0.5 rounded-r")}
+                        className={cn("block h-full min-h-8 py-1", barColor(bar), i === startIdx && "ml-0.5 rounded-l", i === endIdx && "mr-0.5 rounded-r")}
                         title={`${bar.label} ${bar.from} – ${bar.to}`}
                       >
                         {i === startIdx && <span className="sticky left-[204px] truncate px-1 text-[10px]">{bar.label}</span>}

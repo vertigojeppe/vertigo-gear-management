@@ -467,7 +467,8 @@
   "roles": {
     "admin": "Administrator",
     "member": "Medlem",
-    "viewer": "Læser"
+    "viewer": "Læser",
+    "display": "Kontorskærm"
   },
   "projectStatus": {
     "quote": "Tilbud",
@@ -1409,5 +1410,24 @@
     "applyNone": "Gem uden ændringer",
     "action_skip": "Springes over",
     "action_replace": "Erstattes"
+  },
+  "board": {
+    "title": "Det kommer",
+    "jobs": "Jobs de næste 14 dage",
+    "noJobs": "Ingen bekræftede jobs de næste 14 dage.",
+    "now": "Nu",
+    "tomorrow": "I morgen",
+    "today": "I dag",
+    "inDays": "Om {count} dage",
+    "crew": "Crew",
+    "packed": "{packed}/{total} pakket",
+    "nothing": "Intet planlagt.",
+    "allDay": "Hele dagen",
+    "rentalOut": "Udlejning ud: {client}",
+    "rentalBack": "Udlejning retur: {client}",
+    "week": "uge {week}",
+    "timeline": "Tidslinje, de næste {months} måneder",
+    "signOut": "Log ud",
+    "openBoard": "Kontorskærm"
   }
 }
