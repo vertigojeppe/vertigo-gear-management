@@ -105,7 +105,9 @@ start, and help text under the fields that need it. The short version:
   price, discount and net price, with the quote PDF attached.
 - **Extra fields** (Settings › Extra fields): your own fields on models
   and items, for every category or just one (projectors get lumen and
-  throw ratio, LED controllers IP and firmware).
+  throw ratio, LED controllers IP and firmware). Tick *Show in the
+  inventory list* on a model field to see it on every row of the list,
+  next to the weight and power draw.
 
 ### Projects and calendar
 

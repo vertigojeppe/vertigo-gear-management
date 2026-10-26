@@ -287,7 +287,17 @@ a second entry that exports components only and never a service.
   categoryId)` only the applicable ones. Forms filter with
   `applicableDefs` as the category/model changes; actions validate with
   the category. Seeded sets: projectors, LED controllers, alu profiles,
-  computers, truss.
+  computers, truss. The seed never runs on a server, so the same list
+  (`FIELDS` in `prisma/seed/custom-fields.ts`) is also created by the
+  migration `extra_fields_standard_set` where the category path exists and
+  no field with that key does; keep the two in step when adding a standard
+  field (a new migration, never an edit of the old one).
+- `showInList` (models only, Settings › Extra fields) puts a field on the
+  inventory list: `listModels` returns `listFields` (`listFieldText` in
+  `src/lib/custom-fields.ts`: "3.500 Lumen", "Throw ratio 1.15–1.5"), and
+  `FamilyList` shows them with weight and power draw as aligned columns
+  from `lg` (one line under the name below that). Sizes in a family share
+  columns; models without sizes share one set across the page.
 
 ## Availability, projects, rentals
 

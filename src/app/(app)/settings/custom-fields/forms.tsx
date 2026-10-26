@@ -16,7 +16,7 @@ import { CUSTOM_FIELD_ENTITIES, CUSTOM_FIELD_TYPES } from "@/lib/custom-fields";
 import type { FormState } from "@/lib/forms";
 import { createCustomField, deleteCustomField, updateCustomField } from "@/modules/settings/actions";
 
-type FieldRow = { id: string; entity: string; categoryId: string | null; key: string; label: string; type: string; options: string[]; required: boolean; sortOrder: number };
+type FieldRow = { id: string; entity: string; categoryId: string | null; key: string; label: string; type: string; options: string[]; required: boolean; showInList: boolean; sortOrder: number };
 type CategoryOption = { id: string; name: string; depth: number };
 
 export function CustomFieldDialog({ field, trigger, categories }: { field?: FieldRow; trigger: "new" | "edit"; categories: CategoryOption[] }) {
@@ -94,6 +94,12 @@ export function CustomFieldDialog({ field, trigger, categories }: { field?: Fiel
                 <input type="checkbox" name="required" className="size-4" defaultChecked={state.values ? state.values.required === "on" : field?.required} />
                 {t("cfRequired")}
               </label>
+              {entity === "model" && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="showInList" className="size-4" defaultChecked={state.values ? state.values.showInList === "on" : field?.showInList} />
+                  {t("cfShowInList")}
+                </label>
+              )}
               <Field id="cf-order" label={t("cfOrder")} optional error={err.sortOrder}>
                 <Input id="cf-order" name="sortOrder" type="number" step="1" defaultValue={v("sortOrder", field?.sortOrder ?? 0)} />
               </Field>

@@ -12,6 +12,8 @@ export const customFieldDefinitionInput = z.object({
   /** One option per line for select fields. */
   optionsText: optionalText,
   required: checkbox,
+  /** Models only: show the value on each size in the inventory list. */
+  showInList: checkbox,
   sortOrder: optionalNumber.transform((v) => v ?? 0),
 });
 export type CustomFieldDefinitionInput = z.infer<typeof customFieldDefinitionInput>;

@@ -43,6 +43,7 @@ export default async function CustomFieldsPage() {
                         <span className="font-mono">{f.key}</span> · {t(`fieldType.${f.type as "text"}`)}
                         {f.category ? ` · ${f.category.name}` : ""}
                         {f.type === "select" && Array.isArray(f.options) ? ` · ${(f.options as string[]).join(", ")}` : ""}
+                        {f.showInList ? ` · ${t("cfInList")}` : ""}
                       </span>
                     </span>
                     <CustomFieldDialog
@@ -57,6 +58,7 @@ export default async function CustomFieldsPage() {
                         type: f.type,
                         options: Array.isArray(f.options) ? (f.options as string[]) : [],
                         required: f.required,
+                        showInList: f.showInList,
                         sortOrder: f.sortOrder,
                       }}
                     />

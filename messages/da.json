@@ -462,7 +462,9 @@
     "layout_roomyHelp": "Travle sider bruger mere af en bred skærm: pakkelisten i to eller tre kolonner, tidsplan og opgaver side om side i produktionsplanen, projektsiden i to kolonner, og pakke- og tjek-ind-tilstanden med linjerne i kolonner.",
     "layout_compact": "Kompakt",
     "layout_compactHelp": "Alle sider beholder den smallere bredde og viser én kolonne, som før.",
-    "layoutSaved": "Gemt. Alle sider bruger nu dette layout."
+    "layoutSaved": "Gemt. Alle sider bruger nu dette layout.",
+    "cfShowInList": "Vis i lagerlisten",
+    "cfInList": "vises i listen"
   },
   "roles": {
     "admin": "Administrator",
@@ -1406,10 +1408,12 @@
     "action_fill": "Udfyldes",
     "action_keep": "Beholdes",
     "action_same": "Findes allerede",
-    "action_unavailable": "Feltet findes ikke",
+    "action_unavailable": "Ekstrafeltet findes ikke",
     "applyNone": "Gem uden ændringer",
     "action_skip": "Springes over",
-    "action_replace": "Erstattes"
+    "action_replace": "Erstattes",
+    "summaryUnavailable": "{count, plural, one {# værdi} other {# værdier}} springes over",
+    "unavailableHelp": "Nogle værdier springes over, fordi modellens kategori ikke har et ekstrafelt til dem (f.eks. lumen i en kategori uden et Lumen-felt). Opret feltet under Indstillinger › Ekstra felter, og læs arket igen."
   },
   "board": {
     "title": "Det kommer",

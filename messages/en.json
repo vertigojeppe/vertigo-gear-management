@@ -462,7 +462,9 @@
     "layout_roomyHelp": "Busy pages use more of a wide screen: the packing list in two or three columns, schedule and tasks side by side on the production plan, the project page in two columns, and pack mode and check-in with their lines in columns.",
     "layout_compact": "Compact",
     "layout_compactHelp": "Every page keeps the narrower width and shows one column, as before.",
-    "layoutSaved": "Saved. Every page now uses this layout."
+    "layoutSaved": "Saved. Every page now uses this layout.",
+    "cfShowInList": "Show in the inventory list",
+    "cfInList": "shown in the list"
   },
   "roles": {
     "admin": "Admin",
@@ -1406,10 +1408,12 @@
     "action_fill": "Fill in",
     "action_keep": "Kept",
     "action_same": "Already there",
-    "action_unavailable": "No such field",
+    "action_unavailable": "No such extra field",
     "applyNone": "Save without changes",
     "action_skip": "Skip",
-    "action_replace": "Replace"
+    "action_replace": "Replace",
+    "summaryUnavailable": "{count, plural, one {# value} other {# values}} skipped",
+    "unavailableHelp": "Some values were skipped because the model's category has no extra field for them (lumen on a category without a Lumen field, for example). Add the field under Settings › Extra fields, then read the sheet again."
   },
   "board": {
     "title": "Coming up",

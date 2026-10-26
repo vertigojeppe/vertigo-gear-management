@@ -19,13 +19,14 @@ export class SettingsError extends Error {
   }
 }
 
-function toDef(row: { key: string; label: string; type: string; options: unknown; required: boolean; categoryId?: string | null }, categoryIds: string[] | null = null): CustomFieldDef {
+function toDef(row: { key: string; label: string; type: string; options: unknown; required: boolean; showInList?: boolean; categoryId?: string | null }, categoryIds: string[] | null = null): CustomFieldDef {
   return {
     key: row.key,
     label: row.label,
     type: row.type as CustomFieldDef["type"],
     options: Array.isArray(row.options) ? (row.options as string[]) : [],
     required: row.required,
+    showInList: row.showInList ?? false,
     categoryId: row.categoryId ?? null,
     categoryIds,
   };
@@ -91,6 +92,7 @@ function toData(input: CustomFieldDefinitionInput) {
     type: input.type,
     options,
     required: input.required,
+    showInList: input.entity === "model" ? input.showInList : false,
     categoryId: input.entity === "model" || input.entity === "item" ? (input.categoryId ?? null) : null,
     sortOrder: input.sortOrder,
   };
