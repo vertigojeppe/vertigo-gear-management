@@ -158,6 +158,10 @@ a second entry that exports components only and never a service.
   pending flag from it. Plain `<form action={serverFn}>` is fine for buttons
   (delete, status) and for the upload form, where a reset is wanted.
 - Native `<select>` (`NativeSelect`) in forms so FormData posts without JS.
+  On mouse screens in Chromium, globals.css turns them into customizable
+  selects (`appearance: base-select`) so the open list uses the app font
+  and colours; options are `display: block` because tree indents are
+  runs of spaces. Phones and other browsers keep the native picker.
 - List filters use `LiveFilterForm` (`src/components/form/live-filter-form.tsx`):
   a GET form that applies selects and checkboxes at once and typing after
   300 ms via `router.replace` (URL stays the source of truth, page number

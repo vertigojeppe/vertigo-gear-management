@@ -130,3 +130,71 @@
     @apply font-sans;
   }
 }
+
+/*
+ * Native <select> lists open in a browser popup that cannot use the web font.
+ * Chromium's customizable select draws the list in the page instead, in our
+ * font and colours. Mouse screens only: phones keep their own pickers, and
+ * other browsers ignore it.
+ */
+@supports (appearance: base-select) {
+  @media (pointer: fine) {
+    select:not([multiple]):not([size]),
+    select:not([multiple]):not([size])::picker(select) {
+      appearance: base-select;
+    }
+    select:not([multiple]):not([size]) {
+      align-items: center;
+    }
+    select:not([multiple]):not([size])::picker-icon {
+      color: var(--muted-foreground);
+      font-size: 0.75em;
+    }
+    ::picker(select) {
+      margin-block: 4px;
+      max-height: min(24rem, 60vh);
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--popover);
+      color: var(--popover-foreground);
+      box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+      font-size: 0.875rem;
+    }
+    select option {
+      /* Block, not the default flex: category trees indent with a run of
+         spaces, which a flex option drops. */
+      display: block;
+      white-space: pre;
+      padding: 4px 8px;
+      border-radius: calc(var(--radius) - 4px);
+    }
+    select option::checkmark {
+      display: none;
+    }
+    select option:checked {
+      background: var(--muted);
+      font-weight: 500;
+    }
+    select option:hover,
+    select option:focus-visible {
+      background: var(--accent);
+      color: var(--accent-foreground);
+      outline: none;
+    }
+    /* The group's label takes these; the options inside are reset. */
+    select optgroup {
+      padding: 6px 8px 0;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted-foreground);
+    }
+    select optgroup option {
+      margin-inline: -8px;
+      padding-inline-start: 16px;
+      font-size: 0.875rem;
+      font-weight: 400;
+      color: var(--popover-foreground);
+    }
+  }
+}
