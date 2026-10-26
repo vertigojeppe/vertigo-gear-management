@@ -41,6 +41,8 @@ model User {
   wishItems   WishItem[]
   purchases   Purchase[]
   stockMovements StockMovement[]
+  calendarEntries CalendarEntryPerson[]
+  createdCalendarEntries CalendarEntry[] @relation("CalendarEntryCreatedBy")
   apps        App[]        @relation("AppCreatedBy")
   appVersions AppVersion[] @relation("AppVersionUploadedBy")
 

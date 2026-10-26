@@ -1,5 +1,5 @@
 import { registerOutboxHandler } from "@/lib/outbox";
-import { syncProject, syncRental } from "./sync";
+import { googleRef, syncEntry, syncProject, syncRental } from "./sync";
 
 let registered = false;
 
@@ -9,6 +9,9 @@ export function registerCalendarHandlers() {
   registered = true;
   registerOutboxHandler("calendar.sync_project", async (payload) => {
     await syncProject(String(payload.id), undefined, idsFrom(payload.eventIds));
+  });
+  registerOutboxHandler("calendar.sync_entry", async (payload) => {
+    await syncEntry(String(payload.id), undefined, googleRef(payload.eventIds));
   });
   registerOutboxHandler("calendar.sync_rental", async (payload) => {
     await syncRental(String(payload.id), undefined, idsFrom(payload.eventIds));

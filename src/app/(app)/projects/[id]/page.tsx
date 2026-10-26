@@ -30,6 +30,7 @@ import { RemoveSubHireLineButton, RentInDialog, subHireLinesFor, subHireOptions 
 import { today } from "@/lib/dates";
 import { PACKING_STATUSES, PROJECT_STATUSES } from "../../../../../config/app.config";
 import { projectGearEnabled } from "@/lib/features";
+import { EntryDialog, EntryList, entriesForProject, entryPeopleOptions, entryProjectOptions } from "@/modules/agenda";
 
 export const metadata: Metadata = { title: "Project" };
 
@@ -47,6 +48,9 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
   const ts = await getTranslations("projectStatus");
   const tc = await getTranslations("common");
   const canEdit = can(actor.role, "projects.write");
+  const canAddEntry = can(actor.role, "agenda.write");
+  const ta = await getTranslations("agenda");
+  const [entryRows, entryPeople, entryProjects] = await Promise.all([entriesForProject(id, today()), canAddEntry ? entryPeopleOptions() : [], canAddEntry ? entryProjectOptions() : []]);
   const isAdmin = can(actor.role, "users.manage");
   const gear = projectGearEnabled();
 
@@ -281,6 +285,14 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
               )}
             </div>
             <p className="text-sm text-muted-foreground">{plan ? tplan("planSummary", { schedule: plan.schedule, done: plan.tasksDone, tasks: plan.tasks, logistics: plan.logistics }) : tplan("noPlanBody")}</p>
+          </section>
+
+          <section className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-medium">{ta("forJob")}</h2>
+              {canAddEntry && <EntryDialog people={entryPeople} projects={entryProjects} actorId={actor.id} defaults={{ projectId: id }} trigger={ta("new")} />}
+            </div>
+            <EntryList entries={entryRows} showJob={false} />
           </section>
         </div>
         <div className="flex min-w-0 flex-col gap-8">

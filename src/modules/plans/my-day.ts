@@ -18,6 +18,8 @@ export type MyScheduleRow = {
   /** True when this entry names me as responsible (otherwise it is on a project I crew). */
   mine: boolean;
   responsibleName: string | null;
+  /** Where the row links to, when it is not a plan entry (a meeting, time off, an assignment). "" time = all day. */
+  href?: string;
 };
 
 export type MyTaskRow = {

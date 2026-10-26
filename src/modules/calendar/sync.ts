@@ -4,7 +4,8 @@ import { appConfig } from "../../../config/app.config";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into the outbox worker and Vitest
 import { appSettings } from "@/modules/settings/app-settings";
 import { jobEvents, type JobDates } from "./job-events";
-import { GoogleCalendar, googleConfig, type GoogleEvent } from "./google";
+import { GoogleCalendar, GoogleDelegationError, googleConfig, type GoogleEvent } from "./google";
+import { entryGoogle, type GoogleEntry, type GoogleTarget } from "./entry-events";
 import { modelLabel } from "@/lib/format";
 
 /**
@@ -117,4 +118,84 @@ export async function syncRental(rentalId: string, client?: GoogleCalendar, dele
   const id = await google.upsert(cfg.calendars.rentals, ids.rental ?? null, event);
   await prisma.rental.update({ where: { id: rentalId }, data: { googleEventIds: { rental: id } } });
   return "synced";
+}
+
+/** Where an entry's Google event lives (CalendarEntry.googleEvent). */
+export type GoogleRef = { calendarId: string; subject: string | null; eventId: string };
+
+export function googleRef(v: unknown): GoogleRef | null {
+  if (!v || typeof v !== "object") return null;
+  const r = v as Record<string, unknown>;
+  return typeof r.calendarId === "string" && typeof r.eventId === "string" ? { calendarId: r.calendarId, subject: typeof r.subject === "string" ? r.subject : null, eventId: r.eventId } : null;
+}
+
+/**
+ * Push one calendar entry (meeting, time off, assignment) to Google, see
+ * entry-events.ts. When the target moves (invitations switched on or off,
+ * another creator, another person off), the old event is removed first.
+ * Someone Google will not let us act as (no delegation, not a Workspace
+ * address) falls back to the shared calendar. `deletedRef`: the event of
+ * an entry that no longer exists, handed over by its last job.
+ */
+export async function syncEntry(entryId: string, makeClient?: (subject?: string) => GoogleCalendar, deletedRef?: GoogleRef | null): Promise<"skipped" | "invited" | "shared" | "deleted"> {
+  const cfg = googleConfig();
+  if (!cfg) return "skipped";
+  const client = makeClient ?? ((subject?: string) => new GoogleCalendar(cfg.account, fetch, subject));
+  const e = await prisma.calendarEntry.findUnique({
+    where: { id: entryId },
+    include: { project: { select: { name: true } }, createdBy: { select: { name: true, email: true, googleEmail: true } }, people: { include: { user: { select: { name: true, email: true, googleEmail: true } } } } },
+  });
+  let old = e ? googleRef(e.googleEvent) : (deletedRef ?? null);
+  const remove = async (ref: GoogleRef) => {
+    try {
+      await client(ref.subject ?? undefined).delete(ref.calendarId, ref.eventId, { sendUpdates: Boolean(ref.subject) });
+    } catch (err) {
+      // Delegation withdrawn since: the event stays in that calendar; nothing else to do.
+      if (!(err instanceof GoogleDelegationError)) throw err;
+    }
+  };
+  if (!e) {
+    if (old) await remove(old);
+    return "deleted";
+  }
+  const entry: GoogleEntry = {
+    id: e.id,
+    kind: e.kind,
+    title: e.title,
+    notes: e.notes,
+    location: e.location,
+    projectName: e.project?.name ?? null,
+    allDay: e.allDay,
+    startsAt: e.startsAt,
+    endsAt: e.endsAt,
+    guests: e.guests,
+    creator: e.createdBy ? { name: e.createdBy.name, email: e.createdBy.googleEmail || e.createdBy.email } : null,
+    people: e.people.map((p) => ({ name: p.user.name, email: p.user.googleEmail || p.user.email })),
+  };
+  const opts = { sharedCalendarId: cfg.calendars.projects, appUrl };
+  const write = async (t: GoogleTarget) => {
+    if (old && (old.calendarId !== t.calendarId || old.subject !== (t.subject ?? null))) {
+      await remove(old);
+      old = null;
+    }
+    return client(t.subject).upsert(t.calendarId, old?.eventId ?? null, t.event, { sendUpdates: t.sendUpdates });
+  };
+  let used = entryGoogle(entry, { ...opts, invites: await appSettings.calendarInvites() });
+  let eventId: string;
+  try {
+    eventId = await write(used);
+  } catch (err) {
+    if (!(err instanceof GoogleDelegationError)) throw err;
+    used = entryGoogle(entry, { ...opts, invites: false });
+    eventId = await write(used);
+  }
+  await prisma.calendarEntry.update({ where: { id: entryId }, data: { googleEvent: { calendarId: used.calendarId, subject: used.subject ?? null, eventId } } });
+  return used.subject ? "invited" : "shared";
+}
+
+/** Queue a sync for every entry that has not ended, e.g. after invitations were switched on or off. */
+export async function queueAllEntrySyncs(): Promise<number> {
+  const rows = await prisma.calendarEntry.findMany({ where: { endsAt: { gte: new Date(Date.now() - 86_400_000) } }, select: { id: true } });
+  if (rows.length) await prisma.outbox.createMany({ data: rows.map((r) => ({ type: "calendar.sync_entry", payload: { id: r.id, event: "calendar.resync" } })) });
+  return rows.length;
 }

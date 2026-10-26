@@ -32,6 +32,10 @@ async function main() {
       OR: [{ entityId: { in: [...ids, ...items.map((i) => i.id)] } }, { summary: { contains: "test-" } }, { summary: { contains: '"e2e ' } }],
     },
   });
+  // Calendar entries (meetings, time off, assignments) the browser tests made.
+  const testEntries = await prisma.calendarEntry.findMany({ where: { title: { startsWith: "E2E " } }, select: { id: true } });
+  await prisma.activityLog.deleteMany({ where: { entityId: { in: testEntries.map((e) => e.id) } } });
+  await prisma.calendarEntry.deleteMany({ where: { id: { in: testEntries.map((e) => e.id) } } });
   // Projects and rentals created by the browser tests (names/dates only they use).
   const testProjects = await prisma.project.findMany({ where: { name: { startsWith: "E2E show " } }, select: { id: true } });
   await prisma.location.deleteMany({ where: { projectId: { in: testProjects.map((p) => p.id) } } });

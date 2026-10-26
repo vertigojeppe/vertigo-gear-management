@@ -21,9 +21,9 @@ export async function MyDaySection({ data, canEditPlans }: { data: MyDay; canEdi
     <ul className="divide-y rounded-md border text-sm">
       {rows.map((e) => (
         <li key={e.id}>
-          <Link href={`/projects/${e.projectId}/plan?day=${e.day}`} className="flex items-start gap-3 px-3 py-1.5 hover:bg-muted/50">
+          <Link href={e.href ?? `/projects/${e.projectId}/plan?day=${e.day}`} className="flex items-start gap-3 px-3 py-1.5 hover:bg-muted/50">
             <span className="w-24 shrink-0 font-mono text-xs leading-5">
-              {e.time}
+              {e.time || t("allDay")}
               {e.endTime ? `–${e.endTime}` : ""}
             </span>
             <span className="min-w-0 flex-1">

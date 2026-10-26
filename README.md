@@ -128,6 +128,16 @@ start, and help text under the fields that need it. The short version:
   projects, all rentals and "my jobs", for Google or Apple Calendar. The
   app can also push to a shared Google Calendar; see
   [Google Calendar push](#google-calendar-push-optional).
+- **Meetings, time off and assignments** (Calendar › *New entry*, or on a
+  project): a meeting with colleagues and outside guests, whole days
+  someone is off, or a small dated job that does not need a project. They
+  show on the calendar, the office screen, people's *My day* and their
+  calendar subscription, and each has *Add to Google Calendar* and a
+  download for other calendars. With Google Calendar push set up, they go
+  on the shared calendar; with *Invitations* switched on under Settings ›
+  Calendar (after a Workspace admin grants domain-wide delegation, the page
+  shows what to enter), they land in people's own Google calendars as
+  real invitations instead.
 - **My day** on the dashboard: today's and tomorrow's schedule on your
   projects, your open tasks (overdue first, tick them off right there),
   and this week's projects with your call time. *My plan (PDF)* prints

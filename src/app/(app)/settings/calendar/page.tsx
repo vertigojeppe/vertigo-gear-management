@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
-import { feedTokens, isGoogleConfigured } from "@/modules/calendar";
+import { CALENDAR_SCOPE, feedTokens, isGoogleConfigured, serviceAccountClientId } from "@/modules/calendar";
 import { appSettings } from "@/modules/settings";
-import { CallHoursForm, FeedRow, SyncNowButton } from "./forms";
+import { CallHoursForm, FeedRow, InvitesForm, SyncNowButton } from "./forms";
 
 export const metadata: Metadata = { title: "Calendar settings" };
 
@@ -41,6 +41,26 @@ export default async function CalendarSettingsPage() {
         <p className={`text-sm ${google ? "text-green-700 dark:text-green-300" : "text-muted-foreground"}`}>{google ? t("googleOn") : t("googleOff")}</p>
         {google && <SyncNowButton />}
       </section>
+      {google && (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-lg font-medium">{t("invitesTitle")}</h2>
+            <p className="max-w-2xl text-sm text-muted-foreground">{t("invitesIntro")}</p>
+          </div>
+          <ol className="max-w-2xl list-decimal space-y-1 pl-5 text-sm">
+            <li>{t("invitesStep1")}</li>
+            <li>
+              {t("invitesStep2")}{" "}
+              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{serviceAccountClientId() ?? "?"}</code>
+            </li>
+            <li>
+              {t("invitesStep3")} <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{CALENDAR_SCOPE}</code>
+            </li>
+            <li>{t("invitesStep4")}</li>
+          </ol>
+          <InvitesForm on={await appSettings.calendarInvites()} />
+        </section>
+      )}
     </div>
   );
 }
