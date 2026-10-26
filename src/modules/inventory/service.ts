@@ -13,6 +13,7 @@ import { parseLinksText, LengthColorInput } from "./schema";
 import { validateStatusChange } from "./status";
 import { descendantIds, wouldCycle } from "./tree";
 import { modelLabel, familyLabel } from "@/lib/format";
+import { planTrackingChange, type TrackingPlan } from "./tracking-change";
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
@@ -382,6 +383,77 @@ export const models = {
    * forces it: then the reservations, rental lines, packing lines,
    * template lines and items that use the model go with it.
    */
+  /** What converting the model's tracking would do (or why it cannot), for the confirmation; admins only. */
+  async trackingPlan(actor: Actor, id: string): Promise<TrackingPlan> {
+    assertCan(actor, "users.manage");
+    const m = await prisma.model.findUniqueOrThrow({ where: { id }, include: { items: { include: { _count: { select: { contents: true } } } } } });
+    if (m.consumable && m.unit === "m") return { to: "serialized", blocked: "Metre consumables have no items to convert." };
+    return planTrackingChange(m.trackingType === "bulk" ? "bulk" : "serialized", m.items.map((i) => ({ id: i.id, assetTag: i.assetTag, status: i.status, quantity: i.quantity, isKit: i.isKit, contents: i._count.contents, parentItemId: i.parentItemId })));
+  },
+
+  /**
+   * Switch a model with items between serialized and bulk (tracking-change.ts
+   * decides what happens to each item). Serialized → bulk deletes the merged
+   * units and their own data; bulk → serialized gives the new units fresh
+   * asset tags (the purchase date and supplier are copied, prices are not:
+   * on a bin it is unclear whether they were per unit). Unit pins on
+   * reservations, rental lines and draft packing lines are cleared.
+   */
+  async convertTracking(actor: Actor, id: string): Promise<{ to: "bulk" | "serialized"; summary: string; newTags: string[] }> {
+    assertCan(actor, "users.manage");
+    const plan = await models.trackingPlan(actor, id);
+    if ("blocked" in plan) throw new InventoryError(plan.blocked);
+    const ids = (await prisma.item.findMany({ where: { modelId: id }, select: { id: true } })).map((i) => i.id);
+    const newTags: string[] = [];
+    let summary: string;
+    await prisma.$transaction(
+      async (tx) => {
+        if (plan.to === "bulk") {
+          if (plan.keep) {
+            await tx.item.deleteMany({ where: { id: { in: plan.merge.map((u) => u.id) } } });
+            await tx.item.update({ where: { id: plan.keep.id }, data: { quantity: plan.merge.length + 1, serialNumber: null } });
+          }
+          summary = plan.keep
+            ? `Converted to bulk: ${plan.merge.length + 1} units in house merged into ${plan.keep.assetTag}${plan.merge.length ? ` (${plan.merge.map((u) => u.assetTag).join(", ")} deleted)` : ""}${plan.stay.length ? `; ${plan.stay.length} kept as their own rows (${plan.stay.map((u) => `${u.assetTag} ${u.status}`).join(", ")})` : ""}`
+            : `Converted to bulk: no units in house, ${plan.stay.length} kept as their own rows`;
+        } else {
+          for (const bin of plan.split) {
+            const src = await tx.item.update({ where: { id: bin.id }, data: { quantity: 1 } });
+            for (let n = 1; n < bin.quantity; n++) {
+              const assetTag = await nextAssetTag(tx);
+              const row = await tx.item.create({
+                data: {
+                  modelId: id,
+                  assetTag,
+                  status: "in_house",
+                  locationId: src.locationId,
+                  homeLocationId: src.homeLocationId,
+                  parentItemId: src.parentItemId,
+                  purchaseDate: src.purchaseDate,
+                  supplier: src.supplier,
+                  notForRental: src.notForRental,
+                },
+              });
+              await tx.statusLog.create({ data: { itemId: row.id, fromStatus: null, toStatus: "in_house", reason: `Split from bin ${src.assetTag}`, userId: actor.id } });
+              newTags.push(assetTag);
+            }
+          }
+          summary = plan.split.length
+            ? `Converted to serialized: ${plan.split.map((b) => `${b.assetTag} (${b.quantity})`).join(", ")} split into units, new tags ${newTags[0]}${newTags.length > 1 ? `–${newTags[newTags.length - 1]}` : ""}`
+            : "Converted to serialized: every bin already held one";
+        }
+        // Units no longer mean the same thing: drop the pins to specific units.
+        await tx.allocation.updateMany({ where: { itemId: { in: ids } }, data: { itemId: null } });
+        await tx.rentalLine.updateMany({ where: { itemId: { in: ids } }, data: { itemId: null } });
+        await tx.packingLine.updateMany({ where: { itemId: { in: ids }, caseItemId: null, list: { status: "draft" } }, data: { itemId: null } });
+        await tx.model.update({ where: { id }, data: { trackingType: plan.to } });
+        await logActivity(actor, { entityType: "model", entityId: id, action: "tracking_converted", summary: summary! }, tx);
+      },
+      { timeout: 60_000 },
+    );
+    return { to: plan.to, summary: summary!, newTags };
+  },
+
   async remove(actor: Actor, id: string, opts: { force?: boolean } = {}) {
     assertCan(actor, opts.force ? "users.manage" : "inventory.write");
     const usage = await modelUsage(id);

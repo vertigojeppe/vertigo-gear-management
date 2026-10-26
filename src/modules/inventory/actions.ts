@@ -373,3 +373,18 @@ export async function removePartFit(formData: FormData): Promise<void> {
   await partFits.remove(actor, String(formData.get("id") ?? ""));
   revalidatePath("/inventory", "layout");
 }
+
+/** Admin: switch a model with items between serialized and bulk (models.convertTracking). */
+export async function convertModelTracking(_prev: FormState<{ summary: string; newTags: string[] }>, formData: FormData): Promise<FormState<{ summary: string; newTags: string[] }>> {
+  const actor = await requirePermission("users.manage");
+  const id = String(formData.get("modelId") ?? "");
+  try {
+    const result = await models.convertTracking(actor, id);
+    revalidatePath(`/inventory/models/${id}`);
+    revalidatePath("/inventory", "layout");
+    return { ok: true, data: { summary: result.summary, newTags: result.newTags } };
+  } catch (err) {
+    const { error } = errorState(err);
+    return { ok: false, error };
+  }
+}

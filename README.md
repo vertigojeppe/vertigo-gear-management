@@ -60,6 +60,9 @@ start, and help text under the fields that need it. The short version:
   change a whole family at once with *Edit family* on the model page
   (name, manufacturer, category, flags). Choose *serialized* (one record
   per unit) or *bulk* (counted by quantity).
+- **Serialized or bulk** can be switched later by an admin on the model
+  page (*Convert to bulk* / *Convert to serialized*). The dialog lists
+  exactly which asset tags merge, split or stay before anything changes.
 - **Items**: *Add items* on a model creates units in one go. Every unit
   gets an asset tag like `VG-0042` and a QR code. On the item page you
   change its status (a reason is required for repair, missing and

@@ -283,7 +283,22 @@
       "added": "tilføjet {date}",
       "price": "{price}/dag",
       "weight": "{kg} kg"
-    }
+    },
+    "convertToBulk": "Skift til antal",
+    "convertToSerialized": "Skift til serienumre",
+    "convertToBulkHelp": "Fra én post pr. enhed til én post med et antal. Kun for administratorer.",
+    "convertToSerializedHelp": "Fra poster med et antal til én post pr. enhed, hver med sit eget asset tag. Kun for administratorer.",
+    "convertKeep": "{count, plural, one {Den # enhed på lager bliver} other {De # enheder på lager bliver}} til én beholder: {tag}, som beholder sit asset tag og sin historik.",
+    "convertDeleted": "{count, plural, one {Denne enhed slettes} other {Disse # enheder slettes}} med serienumre, noter, filer og historik: {tags}.",
+    "convertStay": "{count, plural, one {# enhed bliver} other {# enheder bliver}} som egen række, fordi {count, plural, one {den ikke er} other {de ikke er}} på lager eller ligger i en kasse: {tags}.",
+    "convertNothingInHouse": "Ingen enheder er på lager, så intet lægges sammen; enhederne bliver som egne rækker.",
+    "convertSplit": "{bins} deles op i enkelte enheder: {count, plural, one {# ny enhed} other {# nye enheder}} med nye asset tags, på samme hylde.",
+    "convertNothingToSplit": "Hver beholder har allerede kun én, så intet deles op.",
+    "convertPricesNote": "De nye enheder får beholderens købsdato og leverandør, ikke dens priser.",
+    "convertPinsNote": "Reservationer, udlejningslinjer og pakkelistelinjer i kladde, der nævnte en bestemt enhed af denne model, beder nu bare om modellen.",
+    "convertClose": "Luk",
+    "convertPrintLabels": "{count, plural, one {# nyt asset tag skal} other {# nye asset tags skal}} have en label: brug Udskriv labels på denne side.",
+    "convertInCase": "i en kasse"
   },
   "itemStatus": {
     "in_house": "På lager",

@@ -15,7 +15,7 @@ import { can, requireActor } from "@/lib/auth/session";
 import { formatNumber, formatMoney, modelLabel } from "@/lib/format";
 import { ModelName } from "@/components/model-name";
 import { AttachmentsSection } from "@/modules/files";
-import { ConsumableSection, EditFamilyDialog, LabelsDialog, SparePartsSection, categoryOptions, familyState, inventoryActions, modelDetail, modelOptions, modelUsage } from "@/modules/inventory";
+import { ConsumableSection, ConvertTrackingDialog, EditFamilyDialog, LabelsDialog, SparePartsSection, categoryOptions, familyState, inventoryActions, modelDetail, modelOptions, modelUsage, models } from "@/modules/inventory";
 import { customFieldDefinitions } from "@/modules/settings";
 import { modelAvailabilityView, upcomingProjects } from "@/modules/projects";
 import { PurchasesSection } from "@/modules/purchases";
@@ -43,6 +43,8 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
   const metres = model.consumable && model.unit === "m";
   const [projectChoices, modelChoices] = model.consumable && canEdit ? await Promise.all([upcomingProjects(40), modelOptions()]) : [[], []];
   const isAdmin = can(actor.role, "users.manage");
+  // Admins can switch a model that has items between serialized and bulk (the form refuses once items exist).
+  const trackingPlan = isAdmin && items.length > 0 && !metres ? await models.trackingPlan(actor, model.id) : null;
   const [family, categories] = isAdmin ? await Promise.all([familyState(model.id), categoryOptions()]) : [null, []];
 
   const specs: [string, string][] = [];
@@ -85,6 +87,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
               <Link href={`/inventory/models/new?from=${model.id}`} className={buttonVariants({ variant: "outline" })}>
                 {t("newVariant")}
               </Link>
+              {trackingPlan && <ConvertTrackingDialog modelId={model.id} plan={trackingPlan} />}
               <form action={inventoryActions.setModelArchived}>
                 <input type="hidden" name="id" value={model.id} />
                 <input type="hidden" name="archived" value={model.archived ? "false" : "true"} />
