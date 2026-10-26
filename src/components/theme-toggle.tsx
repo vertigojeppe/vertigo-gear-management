@@ -21,7 +21,7 @@ export function applyTheme(theme: Theme) {
   document.documentElement.style.colorScheme = dark ? "dark" : "light";
 }
 
-function readTheme(): Theme {
+export function readTheme(): Theme {
   try {
     const t = localStorage.getItem(KEY);
     return t === "dark" || t === "light" ? t : "system";

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { LanguageToggle } from "@/components/language-toggle";
 import { can, requireActor } from "@/lib/auth/session";
-import { AgendaDay, BoardClock, BoardRefresh, JobCard, LongTimeline, boardData } from "@/modules/board";
+import { AgendaDay, BoardClock, BoardRefresh, BoardThemeToggle, JobCard, LongTimeline, boardData, boardThemeScript } from "@/modules/board";
 import { signOutAction } from "../(app)/actions";
 import { appConfig } from "../../../config/app.config";
 
@@ -13,18 +13,23 @@ export const metadata: Metadata = { title: "Board" };
  * The office screen: one page, full screen, no navigation. Made for the
  * "display" role (Settings › Users), which sees nothing else, but anyone
  * signed in may open it. `?months=` (1–12, default 6) sets how far the
- * timeline at the bottom looks ahead.
+ * timeline at the bottom looks ahead; `?theme=light|dark` sets (and this
+ * screen remembers) its theme, dark by default, also switchable in the footer.
  */
-export default async function BoardPage(props: { searchParams: Promise<{ months?: string }> }) {
+export default async function BoardPage(props: { searchParams: Promise<{ months?: string; theme?: string }> }) {
   const actor = await requireActor();
   if (!can(actor.role, "board.read")) notFound();
-  const months = Math.min(12, Math.max(1, Math.round(Number((await props.searchParams).months) || 6)));
+  const sp = await props.searchParams;
+  const months = Math.min(12, Math.max(1, Math.round(Number(sp.months) || 6)));
+  const themeFromUrl = sp.theme === "light" || sp.theme === "dark" ? sp.theme : null;
   const data = await boardData({ months });
   const t = await getTranslations("board");
   const [todayAgenda, tomorrowAgenda] = data.agenda;
 
   return (
-    <div className="dark">
+    <div>
+      {/* The board's own theme, applied before the first paint (dark unless this screen chose light). */}
+      <script dangerouslySetInnerHTML={{ __html: boardThemeScript(themeFromUrl) }} />
       <main className="flex h-dvh flex-col gap-5 overflow-hidden bg-background p-6 text-foreground">
         <BoardRefresh />
         <header className="flex shrink-0 items-start justify-between gap-6">
@@ -59,6 +64,7 @@ export default async function BoardPage(props: { searchParams: Promise<{ months?
 
         <footer className="flex shrink-0 items-center justify-end gap-3 text-xs text-muted-foreground opacity-60 hover:opacity-100">
           <span>{actor.name}</span>
+          <BoardThemeToggle />
           <LanguageToggle compact />
           <form action={signOutAction}>
             <button type="submit" className="underline">

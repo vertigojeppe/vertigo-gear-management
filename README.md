@@ -224,7 +224,10 @@ start, and help text under the fields that need it. The short version:
   itself every minute. Make a user with the role *Office screen* under
   Settings › Users, sign in with it once in the screen's browser (full
   screen or kiosk mode), and it stays signed in and sees nothing but the
-  board. Anyone else can open it from the Calendar page.
+  board. Anyone else can open it from the Calendar page. It is dark
+  unless that screen picks light (sun / moon in the footer, remembered
+  by the screen's browser); `/board?theme=light` sets it without touching
+  the screen.
 - **Users** (Settings › Users): admin, member, viewer, or office screen.
   **Contacts** (Settings › Contacts): people and companies who are not
   users.
