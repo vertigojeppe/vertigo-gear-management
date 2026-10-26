@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { cn } from "cn";
 import { addDays, daysBetween, isoWeek, isoWeekday, today, type DateString } from "@/lib/dates";
-import { PROJECT_STATUSES, RENTAL_STATUSES } from "../../../../config/app.config";
+import { ENTRY_KINDS, PROJECT_STATUSES, RENTAL_STATUSES } from "../../../../config/app.config";
 import type { TimelineBar } from "../queries";
 
 /** Bar colours by status colour key; also used by the office screen's long timeline. */
@@ -17,7 +17,8 @@ export const BAR_COLORS: Record<string, string> = {
 
 /** The Tailwind classes for a bar: its status colour. */
 export function barColor(bar: Pick<TimelineBar, "kind" | "status">): string {
-  const key = bar.kind === "project" ? (PROJECT_STATUSES.find((s) => s.key === bar.status)?.color ?? "gray") : (RENTAL_STATUSES.find((s) => s.key === bar.status)?.color ?? "gray");
+  const list: readonly { key: string; color: string }[] = bar.kind === "project" ? PROJECT_STATUSES : bar.kind === "rental" ? RENTAL_STATUSES : ENTRY_KINDS;
+  const key = list.find((s) => s.key === bar.status)?.color ?? "gray";
   return BAR_COLORS[key] ?? BAR_COLORS.gray;
 }
 

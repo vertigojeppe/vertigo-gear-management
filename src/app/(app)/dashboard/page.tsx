@@ -12,6 +12,8 @@ import { dashboardStats, formatQty, lowStock } from "@/modules/inventory";
 import { wishFromModel } from "@/modules/wishlist/actions";
 import { upcomingProjects } from "@/modules/projects";
 import { MyDaySection, myDay } from "@/modules/plans";
+import { entriesBetween, entryLabel } from "@/modules/agenda";
+import { addDays, dateToZonedInput, today } from "@/lib/dates";
 import { overdueRentals } from "@/modules/rentals";
 import { StatusPill } from "@/components/status-pill";
 import { PROJECT_STATUSES } from "../../../../config/app.config";
@@ -22,7 +24,28 @@ export default async function DashboardPage() {
   const actor = await requireActor();
   const t = await getTranslations("dashboard");
   const tl = await getTranslations("locationType");
-  const [stats, activity, upcoming, overdue, mine, low] = await Promise.all([dashboardStats(), recentActivity(15), upcomingProjects(6), overdueRentals(), myDay(actor.id), lowStock()]);
+  const [stats, activity, upcoming, overdue, mine, low, myEntries] = await Promise.all([dashboardStats(), recentActivity(15), upcomingProjects(6), overdueRentals(), myDay(actor.id), lowStock(), entriesBetween(today(), addDays(today(), 1), { userId: actor.id })]);
+  // My meetings, time off and assignments sit among the plan rows of today and tomorrow (all-day ones first).
+  const ta = await getTranslations("agenda");
+  const time = (d: Date) => dateToZonedInput(d).slice(11, 16);
+  const entryRows = myEntries.flatMap((e) =>
+    [mine.today, addDays(mine.today, 1)]
+      .filter((day) => e.from <= day && e.to >= day)
+      .map((day) => ({
+        id: `${e.id}:${day}`,
+        projectId: e.projectId ?? "",
+        projectName: e.projectName ?? ta(`kind_${e.kind}`),
+        day,
+        time: e.allDay ? "" : e.from === day ? time(e.startsAt) : "",
+        endTime: e.allDay || e.to !== day ? null : time(e.endsAt),
+        title: entryLabel(e, ta("off")),
+        location: e.location,
+        mine: false,
+        responsibleName: null,
+        href: `/calendar/entries/${e.id}`,
+      })),
+  );
+  mine.schedule = [...entryRows, ...mine.schedule].sort((a, b) => a.day.localeCompare(b.day) || a.time.localeCompare(b.time));
   const tcons = await getTranslations("consumables");
   const canWish = can(actor.role, "inventory.write");
   const tp = await getTranslations("projectStatus");

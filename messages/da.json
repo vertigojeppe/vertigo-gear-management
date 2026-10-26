@@ -657,7 +657,7 @@
   },
   "calendar": {
     "title": "Kalender",
-    "subtitle": "Projekter og udlejninger på en tidslinje. Rødt markerer dage, hvor en model er overbooket.",
+    "subtitle": "Projekter, udlejninger, møder, fri og opgaver på en tidslinje. Rødt markerer dage, hvor en model er overbooket.",
     "previous": "Tidligere",
     "next": "Senere",
     "today": "I dag",
@@ -684,7 +684,16 @@
     "jobEventsHelp": "Hvert job er én heldagsbegivenhed over hele perioden, med alle faser i beskrivelsen. Opbygning og nedtagning er tidsbestemte begivenheder fra mødetiden (én pr. dag), og showet fra start til slut. En opbygning eller nedtagning uden mødetid vises kun i heldagsbegivenheden.",
     "callHours": "Opbygning og nedtagning varer (timer)",
     "callHoursHelp": "Fra mødetiden, i halve timer. Når du gemmer, opdateres alle jobs i Google Kalender; abonnerede kalendere følger med ved næste opdatering.",
-    "callHoursSaved": "Gemt: {hours} t. Alle jobs opdateres i Google Kalender."
+    "callHoursSaved": "Gemt: {hours} t. Alle jobs opdateres i Google Kalender.",
+    "invitesTitle": "Invitationer",
+    "invitesIntro": "Møder, fri og opgaver kan komme i folks egne Google-kalendere som rigtige invitationer (accepter eller afslå, opdateres når de ændres). Google skal tillade det én gang:",
+    "invitesStep1": "En Google Workspace-superadministrator åbner admin.google.com › Sikkerhed › Adgang og datakontrol › API-kontrolelementer › Administrer delegering på domæneniveau › Tilføj ny.",
+    "invitesStep2": "Klient-id:",
+    "invitesStep3": "OAuth-omfang:",
+    "invitesStep4": "Gem der, og sæt så kryds herunder. Indtil da kommer aftaler i den fælles kalender.",
+    "invites": "Send kalenderaftaler som invitationer",
+    "invitesHelp": "Fri kommer i personens egen kalender; møder og opgaver sendes fra kalenderen hos den, der oprettede dem. Folk uden en Vertigo Google-konto bliver i den fælles kalender.",
+    "invitesSaved": "Gemt. Kommende aftaler flyttes."
   },
   "packingStatus": {
     "draft": "Kladde",
@@ -1246,7 +1255,8 @@
     "callTime": "Mødetid {when}",
     "youAreResponsible": "dig",
     "openPlan": "Plan",
-    "myPlanPdf": "Min plan (PDF)"
+    "myPlanPdf": "Min plan (PDF)",
+    "allDay": "Hele dagen"
   },
   "colors": {
     "pickColor": "Kategorifarve",
@@ -1448,5 +1458,41 @@
     "timeline": "Tidslinje, de næste {months} måneder",
     "signOut": "Log ud",
     "openBoard": "Kontorskærm"
+  },
+  "agenda": {
+    "new": "Ny aftale",
+    "edit": "Ret aftale",
+    "kind": "Hvad",
+    "kind_meeting": "Møde",
+    "kind_time_off": "Fri",
+    "kind_assignment": "Opgave",
+    "help_meeting": "Et møde på et tidspunkt, med de kolleger og gæster der er inviteret.",
+    "help_time_off": "En eller flere hele dage, hvor nogen har fri.",
+    "help_assignment": "En lille opgave med en dato, som ikke kræver et helt projekt.",
+    "title": "Titel",
+    "titleOffHelp": "Valgfri: ferie, kursus, syg …",
+    "whoIsOff": "Hvem har fri",
+    "whoIsInvited": "Inviterede",
+    "whoDoesIt": "Hvem gør det",
+    "allDay": "Hele dage",
+    "date": "Dato",
+    "firstDay": "Første dag",
+    "lastDay": "Sidste dag",
+    "from": "Fra",
+    "to": "Til",
+    "guests": "Gæster uden for appen",
+    "guestsHelp": "E-mailadresser adskilt af komma. De får en invitation, når invitationer er slået til (Indstillinger › Kalender).",
+    "job": "Job",
+    "noJob": "Ikke knyttet til et job",
+    "location": "Sted",
+    "notes": "Noter",
+    "off": "Fri",
+    "none": "Intet planlagt.",
+    "forJob": "Møder og opgaver",
+    "addToGoogle": "Føj til Google Kalender",
+    "downloadIcs": "Hent til andre kalendere",
+    "deleteConfirm": "Slet denne aftale? Den forsvinder også fra folks kalendere.",
+    "createdBy": "Oprettet af",
+    "calendarHint": "Kolleger får den i deres egen kalender, når invitationer er slået til, og i deres \"Mine jobs\"-abonnement under alle omstændigheder. Knapperne ovenfor føjer den til enhver anden kalender."
   }
 }

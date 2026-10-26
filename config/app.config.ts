@@ -52,6 +52,8 @@ export const PERMISSIONS = [
   "apps.read",
   "apps.write",
   "share.create",
+  /** Meetings, time off and small assignments in the calendar (src/modules/agenda). */
+  "agenda.write",
   /** The office screen (/board): upcoming jobs, today and tomorrow, the long timeline. */
   "board.read",
   "users.manage",
@@ -332,3 +334,15 @@ export type Layout = (typeof LAYOUTS)[number];
  * Calendar), and the range allowed there.
  */
 export const CALL_HOURS = { default: 2, min: 0.5, max: 12 } as const;
+
+/**
+ * Calendar entries that are not projects or rentals (src/modules/agenda).
+ * `allDay`: always whole days (time off); otherwise the form offers both.
+ * `color`: the bar colour on the calendar timeline and the office screen.
+ */
+export const ENTRY_KINDS = [
+  { key: "meeting", color: "blue", allDay: false },
+  { key: "time_off", color: "amber", allDay: true },
+  { key: "assignment", color: "purple", allDay: false },
+] as const;
+export type EntryKind = (typeof ENTRY_KINDS)[number]["key"];

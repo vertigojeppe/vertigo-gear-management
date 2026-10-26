@@ -86,8 +86,11 @@ export async function AgendaDay({ title, day, items }: { title: string; day: Dat
   const t = await getTranslations("board");
   const tph = await getTranslations("phase");
   const locale = (await getLocale()) === "da" ? "da-DK" : "en-GB";
+  const ta = await getTranslations("agenda");
   const label = (i: AgendaItem) =>
-    i.kind === "phase" ? `${tph(i.phase!)} · ${i.title}` : i.kind === "rental_out" ? t("rentalOut", { client: i.title }) : i.kind === "rental_back" ? t("rentalBack", { client: i.title }) : i.title;
+    i.off
+      ? `${ta("off")}: ${i.title}`
+      : i.kind === "phase" ? `${tph(i.phase!)} · ${i.title}` : i.kind === "rental_out" ? t("rentalOut", { client: i.title }) : i.kind === "rental_back" ? t("rentalBack", { client: i.title }) : i.title;
   return (
     <section className="flex min-h-0 flex-col gap-2">
       <h2 className="text-xl font-semibold">

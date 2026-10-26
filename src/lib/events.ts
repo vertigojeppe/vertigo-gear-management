@@ -15,7 +15,7 @@ import type { WebhookEvent } from "../../config/app.config";
 export async function emitEvent(
   type: WebhookEvent,
   data: Record<string, unknown>,
-  opts: { calendar?: { kind: "project" | "rental"; id: string; eventIds?: unknown } } = {},
+  opts: { calendar?: { kind: CalendarKind; id: string; eventIds?: unknown } } = {},
 ): Promise<void> {
   const occurredAt = new Date().toISOString();
   const hooks = await prisma.webhook.findMany({ where: { active: true } });
@@ -25,13 +25,27 @@ export async function emitEvent(
     .map((h) => ({ type: "webhook.deliver", payload: json({ webhookId: h.id, event: type, data, occurredAt }) }));
 
   if (opts.calendar) {
-    const jobType = opts.calendar.kind === "project" ? "calendar.sync_project" : "calendar.sync_rental";
-    const eventIds = opts.calendar.eventIds && typeof opts.calendar.eventIds === "object" ? opts.calendar.eventIds : undefined;
-    // A pending sync of the same row will do, unless this one carries the ids of a deleted row.
-    const pending = eventIds
-      ? null
-      : await prisma.outbox.findFirst({ where: { type: jobType, status: "pending", payload: { path: ["id"], equals: opts.calendar.id } } });
-    if (!pending) rows.push({ type: jobType, payload: json({ id: opts.calendar.id, event: type, occurredAt, ...(eventIds ? { eventIds } : {}) }) });
+    const row = await calendarSyncRow(opts.calendar, type, occurredAt);
+    if (row) rows.push(row);
   }
   if (rows.length) await prisma.outbox.createMany({ data: rows });
+}
+
+export type CalendarKind = "project" | "rental" | "entry";
+const SYNC_JOB: Record<CalendarKind, string> = { project: "calendar.sync_project", rental: "calendar.sync_rental", entry: "calendar.sync_entry" };
+
+/** The outbox row for a calendar sync, or null when one for the same row is already pending. */
+async function calendarSyncRow(cal: { kind: CalendarKind; id: string; eventIds?: unknown }, event: string, occurredAt: string) {
+  const jobType = SYNC_JOB[cal.kind];
+  const eventIds = cal.eventIds && typeof cal.eventIds === "object" ? cal.eventIds : undefined;
+  // A pending sync of the same row will do, unless this one carries the ids of a deleted row.
+  const pending = eventIds ? null : await prisma.outbox.findFirst({ where: { type: jobType, status: "pending", payload: { path: ["id"], equals: cal.id } } });
+  if (pending) return null;
+  return { type: jobType, payload: JSON.parse(JSON.stringify({ id: cal.id, event, occurredAt, ...(eventIds ? { eventIds } : {}) })) as Prisma.InputJsonObject };
+}
+
+/** A calendar sync without a webhook event (calendar entries: meetings, time off, assignments). */
+export async function queueCalendarSync(cal: { kind: CalendarKind; id: string; eventIds?: unknown }, event: string): Promise<void> {
+  const row = await calendarSyncRow(cal, event, new Date().toISOString());
+  if (row) await prisma.outbox.create({ data: row });
 }

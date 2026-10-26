@@ -7,6 +7,9 @@ import { formatDateTime, modelLabel } from "@/lib/format";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { appSettings } from "@/modules/settings/app-settings";
 import { jobEvents } from "./job-events";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { entriesBetween } from "@/modules/agenda/queries";
+import { today } from "@/lib/dates";
 
 /**
  * Read-only iCal feeds with secret tokens. Users subscribe to the URL in
@@ -66,6 +69,23 @@ export async function buildFeed(scope: FeedScope, userId: string | null): Promis
           url,
         });
       }
+    }
+  }
+
+  // My meetings, time off and assignments, from two months back to a year ahead.
+  if (scope === "mine" && userId) {
+    for (const e of await entriesBetween(addDays(today(), -60), addDays(today(), 400), { userId })) {
+      const url = appUrl(`/calendar/entries/${e.id}`);
+      cal.createEvent({
+        id: `${e.id}-entry@vertigo-gear`,
+        start: e.allDay ? new Date(`${e.from}T00:00:00Z`) : e.startsAt,
+        end: e.allDay ? new Date(`${addDays(e.to, 1)}T00:00:00Z`) : e.endsAt,
+        allDay: e.allDay,
+        summary: e.kind === "time_off" ? `Off${e.title !== "Off" ? ` (${e.title})` : ""}` : e.title,
+        description: [e.notes, e.projectName ? `Job: ${e.projectName}` : null, e.people.map((p) => p.name).join(", ") || null, url].filter(Boolean).join("\n"),
+        location: e.location ?? undefined,
+        url,
+      });
     }
   }
 

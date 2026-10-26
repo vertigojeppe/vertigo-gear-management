@@ -52,12 +52,14 @@ export type AgendaItem = {
   /** null = all day (shown first). */
   time: string | null;
   endTime: string | null;
-  kind: "phase" | "schedule" | "rental_out" | "rental_back";
+  kind: "phase" | "schedule" | "rental_out" | "rental_back" | "entry";
   phase?: ProjectPhase;
   title: string;
   /** The job or client it belongs to. */
   context: string | null;
   where: string | null;
+  /** Time off: the title is the person, shown after the (translated) word for off. */
+  off?: boolean;
 };
 
 /** The phases of a job that fall on `day` as agenda items. */

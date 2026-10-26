@@ -3,23 +3,29 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
-import { requireActor } from "@/lib/auth/session";
+import { can, requireActor } from "@/lib/auth/session";
 import { addDays, today } from "@/lib/dates";
-import { Timeline, timeline } from "@/modules/projects";
+import { Timeline, timeline, type TimelineBar } from "@/modules/projects";
+import { EntryDialog, entriesBetween, entryLabel, entryPeopleOptions, entryProjectOptions } from "@/modules/agenda";
 
 export const metadata: Metadata = { title: "Calendar" };
 
 const DEFAULT_WEEKS = 6;
 
 export default async function CalendarPage(props: { searchParams: Promise<{ from?: string; weeks?: string }> }) {
-  await requireActor();
+  const actor = await requireActor();
   const sp = await props.searchParams;
   const t = await getTranslations("calendar");
   const tb = await getTranslations("board");
   const weeks = Math.min(16, Math.max(2, Number(sp.weeks) || DEFAULT_WEEKS));
   const from = /^\d{4}-\d{2}-\d{2}$/.test(sp.from ?? "") ? sp.from! : addDays(today(), -3);
   const to = addDays(from, weeks * 7 - 1);
-  const data = await timeline(from, to);
+  const ta = await getTranslations("agenda");
+  const canAdd = can(actor.role, "agenda.write");
+  const [data, entries, people, projects] = await Promise.all([timeline(from, to), entriesBetween(from, to), canAdd ? entryPeopleOptions() : [], canAdd ? entryProjectOptions() : []]);
+  // Meetings, time off and assignments as bars of their own, in date order with the jobs and rentals.
+  const entryBars: TimelineBar[] = entries.map((e) => ({ kind: "entry", id: e.id, label: entryLabel(e, ta("off")), sub: ta(`kind_${e.kind}`), status: e.kind, from: e.from, to: e.to, href: `/calendar/entries/${e.id}` }));
+  const bars = [...data.bars, ...entryBars].sort((a, b) => a.from.localeCompare(b.from) || a.to.localeCompare(b.to));
   const conflictDays = new Set(data.conflicts.flatMap((c) => c.days.map((d) => d.day)));
   const link = (f: string, w = weeks) => `/calendar?from=${f}&weeks=${w}`;
 
@@ -42,13 +48,14 @@ export default async function CalendarPage(props: { searchParams: Promise<{ from
             <Link href={link(from, weeks === 6 ? 12 : 6)} className={buttonVariants({ variant: "ghost", size: "sm" })}>
               {t("weeks", { count: weeks === 6 ? 12 : 6 })}
             </Link>
+            {canAdd && <EntryDialog people={people} projects={projects} actorId={actor.id} trigger={ta("new")} triggerVariant="default" />}
             <Link href="/board" className={buttonVariants({ variant: "ghost", size: "sm" })}>
               {tb("openBoard")}
             </Link>
           </>
         }
       />
-      <Timeline from={from} to={to} bars={data.bars} conflictDays={conflictDays} />
+      <Timeline from={from} to={to} bars={bars} conflictDays={conflictDays} />
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-medium">{t("conflicts")}</h2>
         {data.conflicts.length === 0 ? (

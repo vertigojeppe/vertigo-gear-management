@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { addDays, dayInZone, today, type DateString } from "@/lib/dates";
 import { listsForProject } from "@/modules/packing";
 import { timelineBars, type TimelineBar } from "@/modules/projects";
+import { entriesBetween } from "@/modules/agenda";
 import { phaseItems, phasesOf, sortAgenda, timeOf, type AgendaItem, type BoardPhase } from "./logic";
 
 /** Jobs on the board: confirmed and running ones. Quotes are not certain yet; done and cancelled are over. */
@@ -68,7 +69,7 @@ export async function boardData(opts: { cardDays?: number; months?: number } = {
   // Plan schedule entries on today and tomorrow (Copenhagen days; the UTC window is wide enough for any offset).
   const from = new Date(day(t).getTime() - 3 * 3600_000);
   const to = new Date(day(tomorrow).getTime() + 27 * 3600_000);
-  const [entries, rentals, bars] = await Promise.all([
+  const [entries, rentals, bars, calendarEntries] = await Promise.all([
     prisma.scheduleEntry.findMany({
       where: { startsAt: { gte: from, lte: to }, plan: { project: { status: { in: ON_BOARD } } } },
       include: { plan: { select: { project: { select: { name: true } } } } },
@@ -79,6 +80,7 @@ export async function boardData(opts: { cardDays?: number; months?: number } = {
       include: { client: { select: { name: true } } },
     }),
     timelineBars(t, timelineTo),
+    entriesBetween(t, tomorrow),
   ]);
 
   const agenda = [t, tomorrow].map((d) => {
@@ -101,6 +103,19 @@ export async function boardData(opts: { cardDays?: number; months?: number } = {
         if (r.endDate.toISOString().slice(0, 10) === d) out.push({ day: d, time: null, endTime: null, kind: "rental_back", title: r.client.name, context: null, where: null });
         return out;
       }),
+      // Meetings, time off and assignments: the time on the first day, the end on the last.
+      ...calendarEntries
+        .filter((e) => e.from <= d && e.to >= d)
+        .map((e) => ({
+          day: d,
+          time: e.allDay || e.from !== d ? null : timeOf(e.startsAt),
+          endTime: e.allDay || e.to !== d ? null : timeOf(e.endsAt),
+          kind: "entry" as const,
+          title: e.kind === "time_off" ? e.people.map((p) => p.name).join(", ") : e.title,
+          off: e.kind === "time_off",
+          context: [e.kind === "time_off" ? null : e.people.map((p) => p.name).join(", ") || null, e.projectName].filter(Boolean).join(" · ") || null,
+          where: e.location,
+        })),
     ];
     return { day: d, items: sortAgenda(items) };
   });

@@ -9,7 +9,30 @@ import { Field, FormError, FormSuccess } from "@/components/form/field";
 import { SubmitButton } from "@/components/form/submit-button";
 import { Input } from "@/components/ui/input";
 import type { FormState } from "@/lib/forms";
-import { rotateFeedToken, runOutboxNow, saveCallHours } from "@/modules/calendar/actions";
+import { rotateFeedToken, runOutboxNow, saveCallHours, saveCalendarInvites } from "@/modules/calendar/actions";
+
+/** On/off for sending calendar entries as invitations through Google. */
+export function InvitesForm({ on }: { on: boolean }) {
+  const t = useTranslations("calendar");
+  const tc = useTranslations("common");
+  const [state, action] = useActionState<FormState, FormData>(saveCalendarInvites, {});
+  return (
+    <ActionForm action={action} className="flex max-w-xl flex-col gap-3">
+      <FormError message={state.error} />
+      <FormSuccess message={state.ok ? t("invitesSaved") : undefined} />
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" name="invites" defaultChecked={on} className="mt-0.5 size-4" />
+        <span>
+          <span className="block font-medium">{t("invites")}</span>
+          <span className="block text-muted-foreground">{t("invitesHelp")}</span>
+        </span>
+      </label>
+      <div>
+        <SubmitButton pendingText={tc("loading")}>{tc("save")}</SubmitButton>
+      </div>
+    </ActionForm>
+  );
+}
 import { CALL_HOURS } from "../../../../../config/app.config";
 
 /** How long build-up and pack-down events last in the calendars, from their call time. */

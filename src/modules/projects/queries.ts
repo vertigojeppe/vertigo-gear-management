@@ -143,7 +143,8 @@ export async function modelAvailabilityView(modelId: string, from?: DateString, 
 /* Timeline (calendar page) */
 
 export type TimelineBar = {
-  kind: "project" | "rental";
+  /** "entry": a meeting, time off or assignment (agenda module); its status is the entry kind. */
+  kind: "project" | "rental" | "entry";
   id: string;
   label: string;
   sub: string | null;

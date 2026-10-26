@@ -29,6 +29,20 @@ export const appSettings = {
     return layout;
   },
 
+  /**
+   * Calendar entries go to people's own Google calendars as invitations (Settings › Calendar).
+   * Off until an admin has granted the service account domain-wide delegation in Google Workspace.
+   */
+  calendarInvites: cache(async (): Promise<boolean> => (await prisma.appSetting.findUnique({ where: { key: "calendarInvites" } }))?.value === true),
+
+  async setCalendarInvites(actor: Actor, on: boolean): Promise<void> {
+    assertCan(actor, "settings.manage");
+    await prisma.$transaction(async (tx) => {
+      await tx.appSetting.upsert({ where: { key: "calendarInvites" }, create: { key: "calendarInvites", value: on }, update: { value: on } });
+      await logActivity(actor, { entityType: "settings", entityId: "calendar", action: "invites_changed", summary: on ? "Calendar entries are sent as Google invitations" : "Calendar entries go to the shared calendar" }, tx);
+    });
+  },
+
   /** Hours a build-up / pack-down calendar event lasts from its call time (Settings › Calendar). */
   callHours: cache(async (): Promise<number> => {
     const row = await prisma.appSetting.findUnique({ where: { key: "calendarCallHours" } });

@@ -1,0 +1,42 @@
+/// Things in the calendar that are not projects or rentals (src/modules/agenda): meetings,
+/// time off and small assignments, optionally tied to a job. Shown on the calendar, the
+/// dashboard, the office screen and in people's "my jobs" feeds; pushed to Google as
+/// invitations from the creator's calendar when Settings › Calendar › Invitations is on.
+model CalendarEntry {
+  id          String   @id @default(cuid())
+  /// ENTRY_KINDS in config/app.config.ts: meeting | time_off | assignment
+  kind        String
+  title       String
+  notes       String?
+  location    String?
+  /// The job it belongs to; the entry stays (as an internal one) if the project goes.
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  allDay      Boolean  @default(false)
+  /// Timed: the start and end instants. All day: the first and last day (inclusive), stored as UTC midnight like other date-only values.
+  startsAt    DateTime
+  endsAt      DateTime
+  /// Email addresses of people outside the app, invited through Google when invitations are on.
+  guests      String[] @default([])
+  createdById String?
+  createdBy   User?    @relation("CalendarEntryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  /// Where the Google event lives: { calendarId, subject?, eventId } (calendar/sync.ts).
+  googleEvent Json?
+  people      CalendarEntryPerson[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([startsAt])
+  @@index([projectId])
+}
+
+/// Who an entry is for: the invited colleagues, the person who is off, the assignees.
+model CalendarEntryPerson {
+  entryId String
+  entry   CalendarEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([entryId, userId])
+  @@index([userId])
+}

@@ -514,6 +514,35 @@ a second entry that exports components only and never a service.
 - The importer writes the projector "Ønsker" rows and the Dirverse castor
   references as `WishOp`s (idempotent on `importSource` + name).
 
+## Calendar entries (agenda)
+
+- `CalendarEntry` (`src/modules/agenda`, `agenda.write`: admin, member) is
+  anything in the calendar that is not a project or rental: kind
+  `meeting | time_off | assignment` (`ENTRY_KINDS`, with bar colour), an
+  optional job (`projectId`, set null when the project goes), `allDay`
+  (time off always; whole days are UTC midnight first/last day like other
+  date-only values, timed ones are instants), `CalendarEntryPerson` rows
+  (time off is exactly one person, default the actor), `guests` (emails).
+  `logic.ts` is pure (`entryTimes`: an end before the start runs past
+  midnight; `entryTitle`, `parseGuests`, `googleTemplateLink`).
+- Shown on: the calendar timeline (bars of kind `entry`, merged in the
+  calendar page), `/calendar/entries/[id]` (edit, delete, "Add to Google
+  Calendar", `/api/agenda/[id]/entry.ics`), the project page ("Meetings and
+  assignments"), My day (rows with `href`), the office screen agenda, and
+  the "mine" iCal feed. The office screen account is never a person.
+- Google: every change queues `calendar.sync_entry` (`queueCalendarSync` in
+  `src/lib/events.ts`; a deleted entry hands its `googleEvent` to the job).
+  `syncEntry` (calendar/sync.ts) uses `entryGoogle` (`entry-events.ts`,
+  pure): with Settings › Calendar › Invitations on (`appSettings
+  .calendarInvites`, needs domain-wide delegation for `CALENDAR_SCOPE`)
+  the client acts as the person (`GoogleCalendar(account, fetch, subject)`,
+  JWT `sub`): time off in the person's own calendar, meetings and
+  assignments from the creator's with attendees and `sendUpdates=all`.
+  Off, or `GoogleDelegationError` (not a Workspace address, delegation
+  withdrawn): the shared projects calendar with names in the title. When
+  the target changes, the old event is deleted first. Toggling queues
+  `queueAllEntrySyncs`.
+
 ## Office screen
 
 - `/board` (`src/app/board/page.tsx`, outside the app shell, always

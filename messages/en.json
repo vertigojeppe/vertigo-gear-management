@@ -657,7 +657,7 @@
   },
   "calendar": {
     "title": "Calendar",
-    "subtitle": "Projects and rentals on a timeline. Red marks days where a model is over-booked.",
+    "subtitle": "Projects, rentals, meetings, time off and assignments on a timeline. Red marks days where a model is over-booked.",
     "previous": "Earlier",
     "next": "Later",
     "today": "Today",
@@ -684,7 +684,16 @@
     "jobEventsHelp": "Each job is one all-day event over its whole span, with every phase in the description. Build-up and pack-down are timed events from their call time (one per day), and the show from its start to its end. A build-up or pack-down without a call time only shows in the all-day event.",
     "callHours": "Build-up and pack-down events last (hours)",
     "callHoursHelp": "From the call time, in half hours. Saving updates every job in Google Calendar; subscribed feeds follow on their next refresh.",
-    "callHoursSaved": "Saved: {hours} h. Every job is being updated in Google Calendar."
+    "callHoursSaved": "Saved: {hours} h. Every job is being updated in Google Calendar.",
+    "invitesTitle": "Invitations",
+    "invitesIntro": "Meetings, time off and assignments can land in people's own Google calendars as real invitations (accept or decline, updates when they change). Google needs to allow that once:",
+    "invitesStep1": "A Google Workspace super admin opens admin.google.com › Security › Access and data control › API controls › Manage domain-wide delegation › Add new.",
+    "invitesStep2": "Client ID:",
+    "invitesStep3": "OAuth scope:",
+    "invitesStep4": "Save there, then tick the box below. Until then, entries go to the shared calendar.",
+    "invites": "Send calendar entries as invitations",
+    "invitesHelp": "Time off goes into the person's own calendar; meetings and assignments are sent from the calendar of whoever made them. People without a Vertigo Google account stay on the shared calendar.",
+    "invitesSaved": "Saved. Upcoming entries are being moved."
   },
   "packingStatus": {
     "draft": "Draft",
@@ -1246,7 +1255,8 @@
     "callTime": "Call {when}",
     "youAreResponsible": "you",
     "openPlan": "Plan",
-    "myPlanPdf": "My plan (PDF)"
+    "myPlanPdf": "My plan (PDF)",
+    "allDay": "All day"
   },
   "colors": {
     "pickColor": "Category colour",
@@ -1448,5 +1458,41 @@
     "timeline": "Timeline, next {months} months",
     "signOut": "Sign out",
     "openBoard": "Office screen"
+  },
+  "agenda": {
+    "new": "New entry",
+    "edit": "Edit entry",
+    "kind": "What",
+    "kind_meeting": "Meeting",
+    "kind_time_off": "Time off",
+    "kind_assignment": "Assignment",
+    "help_meeting": "A meeting at a time, with the colleagues and guests who are invited.",
+    "help_time_off": "One or more whole days someone is off work.",
+    "help_assignment": "A small job with a date that does not need a whole project.",
+    "title": "Title",
+    "titleOffHelp": "Optional: holiday, course, sick …",
+    "whoIsOff": "Who is off",
+    "whoIsInvited": "Invited",
+    "whoDoesIt": "Who does it",
+    "allDay": "Whole day(s)",
+    "date": "Date",
+    "firstDay": "First day",
+    "lastDay": "Last day",
+    "from": "From",
+    "to": "To",
+    "guests": "Guests outside the app",
+    "guestsHelp": "Email addresses, separated by commas. They get an invitation when invitations are on (Settings › Calendar).",
+    "job": "Job",
+    "noJob": "Not tied to a job",
+    "location": "Place",
+    "notes": "Notes",
+    "off": "Off",
+    "none": "Nothing planned.",
+    "forJob": "Meetings and assignments",
+    "addToGoogle": "Add to Google Calendar",
+    "downloadIcs": "Download for other calendars",
+    "deleteConfirm": "Delete this entry? It also disappears from people's calendars.",
+    "createdBy": "Made by",
+    "calendarHint": "Colleagues get it in their own calendar when invitations are on, and in their \"My jobs\" subscription either way. The buttons above add it to any other calendar."
   }
 }
