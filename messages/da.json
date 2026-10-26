@@ -1375,7 +1375,7 @@
   },
   "specImport": {
     "title": "Importér specifikationer",
-    "subtitle": "Udfyld vægt, mål, strømforbrug, beskrivelse, links, lumen og throw ratio på eksisterende modeller fra et ark. Intet gemmes, før du bekræfter.",
+    "subtitle": "Udfyld vægt, mål, strømforbrug, beskrivelse, links og ekstra felter på eksisterende modeller fra et ark. Intet gemmes, før du bekræfter.",
     "file": "Specifikationsark (.csv)",
     "fileHelp": "Semikolon eller komma, én række pr. model, med kolonnen Id fra Lager › Eksportér CSV.",
     "reading": "Læser…",
@@ -1394,7 +1394,7 @@
     "another": "Læs et andet ark",
     "howTitle": "Arket",
     "how1": "Start fra Lager › Eksportér CSV, som giver hver models Id.",
-    "how2": "Kolonner: Id, Weight (kg), Width (cm), Height (cm), Depth (cm), Power (W), Lumen, Throw ratio, Description, Links. Andre kolonner (kilder, noter) ignoreres. Lad en celle være tom for at lade feltet være.",
+    "how2": "Kolonner: Id, Weight (kg), Width (cm), Height (cm), Depth (cm), Power (W), Description, Links og én kolonne pr. ekstra felt, navngivet som feltet (Lumen, Throw ratio). Andre kolonner (kilder, noter) ignoreres. Lad en celle være tom for at lade feltet være.",
     "how3": "Description: én specifikation pr. linje (\"Max height: 366 cm\"). Links: ét pr. linje, \"Navn | https://…\".",
     "field_weightKg": "Vægt (kg)",
     "field_widthCm": "Bredde (cm)",

@@ -8,9 +8,11 @@ const model = (over: Partial<CurrentModel> = {}): CurrentModel => ({
   description: null,
   links: [],
   customFields: {},
-  customKeys: [],
+  defs: [],
   ...over,
 });
+const lumen = { key: "lumen", label: "Lumen", type: "number" };
+const throwRatio = { key: "throw_ratio", label: "Throw ratio", type: "text" };
 
 describe("parseDelimited", () => {
   it("reads semicolons, quotes and line breaks inside quoted cells", () => {
@@ -64,7 +66,8 @@ describe("readSpecSheet", () => {
     expect(sheet.rows[0]).toMatchObject({
       id: "m1",
       numbers: { weightKg: 3.6, powerDrawW: 3400 },
-      custom: { lumen: 3500, throw_ratio: "1.15–1.5" },
+      // Any other column is a candidate extra field, by its header as written; Sources is the review sheet's own.
+      extra: { Lumen: "3.500", "Throw ratio": "1.15–1.5" },
       description: "Resolution: WXGA",
       links: [{ label: "Product page", url: "https://example.com/p" }],
     });
@@ -79,7 +82,7 @@ describe("planSpecs", () => {
 
   it("fills empty fields, keeps different values, and lists unknown ids", () => {
     const current = new Map([
-      ["m1", model({ numbers: { weightKg: 32.5, widthCm: null, heightCm: 175, depthCm: null, powerDrawW: null }, description: "Ours", links: [{ label: "A", url: "https://example.com/a" }], customKeys: ["lumen"] })],
+      ["m1", model({ numbers: { weightKg: 32.5, widthCm: null, heightCm: 175, depthCm: null, powerDrawW: null }, description: "Ours", links: [{ label: "A", url: "https://example.com/a" }], defs: [lumen] })],
       ["m2", model({ id: "m2", label: "Clamp" })],
     ]);
     const plan = planSpecs(sheet, current);
@@ -96,11 +99,11 @@ describe("planSpecs", () => {
 
   it("does not write an extra field the model's category does not have", () => {
     const plan = planSpecs(sheet, new Map([["m1", model()]]));
-    expect(plan.models[0].changes.find((c) => c.field === "lumen")?.action).toBe("unavailable");
+    expect(plan.models[0].changes.find((c) => c.label === "Lumen")?.action).toBe("unavailable");
   });
 
   it("without ticks, writes only the fills, appending new links and merging extra fields", () => {
-    const m = model({ links: [{ label: "Old", url: "https://old" }], customFields: { throw_ratio: "1.2" }, customKeys: ["lumen", "throw_ratio"] });
+    const m = model({ links: [{ label: "Old", url: "https://old" }], customFields: { throw_ratio: "1.2" }, defs: [lumen, throwRatio] });
     const plan = planSpecs(sheet, new Map([["m1", m]]));
     const { data, changes } = specUpdate(sheet.rows[0], m, plan.models[0]);
     expect(changes.map((c) => c.field)).toEqual(["weightKg", "heightCm", "lumen", "description", "links"]);
@@ -117,7 +120,7 @@ describe("planSpecs", () => {
   });
 
   it("writes what is ticked: an unticked fill is skipped, a ticked kept value is replaced", () => {
-    const m = model({ numbers: { weightKg: 30, widthCm: null, heightCm: null, depthCm: null, powerDrawW: null }, customKeys: ["lumen"] });
+    const m = model({ numbers: { weightKg: 30, widthCm: null, heightCm: null, depthCm: null, powerDrawW: null }, defs: [lumen] });
     const plan = planSpecs(sheet, new Map([["m1", m]]));
     const picked = new Set([pickKey("m1", "weightKg"), pickKey("m1", "lumen"), pickKey("m1", "notAField")]);
     const { data, changes } = specUpdate(sheet.rows[0], m, plan.models[0], picked);
@@ -126,5 +129,22 @@ describe("planSpecs", () => {
       ["lumen", "fill"],
     ]);
     expect(data).toEqual({ weightKg: 32.5, customFields: { lumen: 3500 } });
+  });
+
+  it("fills an extra field by its label, whatever key it was given", () => {
+    const sheet2 = readSpecSheet("Id;LUMEN;throw-ratio;Comments\nm1;3.500;0,49:1;call Jens\n");
+    const m = model({ defs: [{ key: "lumens", label: "Lumen", type: "number" }, { key: "tr", label: "Throw ratio", type: "text" }] });
+    const plan = planSpecs(sheet2, new Map([["m1", m]]));
+    // Comments matches no field anywhere and is left alone.
+    expect(plan.models[0].changes.map((c) => [c.field, c.label, c.action, c.value])).toEqual([
+      ["lumens", "Lumen", "fill", 3500],
+      ["tr", "Throw ratio", "fill", "0,49:1"],
+    ]);
+    expect(specUpdate(sheet2.rows[0], m, plan.models[0]).data).toEqual({ customFields: { lumens: 3500, tr: "0,49:1" } });
+  });
+
+  it("reports a value that is not a number for a number field", () => {
+    const plan = planSpecs(readSpecSheet("Id;Lumen\nm1;bright\n"), new Map([["m1", model({ defs: [lumen] })]]));
+    expect(plan.errors).toEqual(['Row 2: "bright" in Lumen is not a number.']);
   });
 });

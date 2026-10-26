@@ -1375,7 +1375,7 @@
   },
   "specImport": {
     "title": "Import specs",
-    "subtitle": "Fill in weight, size, power draw, description, links, lumen and throw ratio on existing models from a sheet. Nothing is written until you confirm.",
+    "subtitle": "Fill in weight, size, power draw, description, links and extra fields on existing models from a sheet. Nothing is written until you confirm.",
     "file": "Spec sheet (.csv)",
     "fileHelp": "Semicolons or commas, one row per model, with the Id column from Inventory › Export CSV.",
     "reading": "Reading…",
@@ -1394,7 +1394,7 @@
     "another": "Read another sheet",
     "howTitle": "The sheet",
     "how1": "Start from Inventory › Export CSV, which gives each model's Id.",
-    "how2": "Columns: Id, Weight (kg), Width (cm), Height (cm), Depth (cm), Power (W), Lumen, Throw ratio, Description, Links. Other columns (sources, notes) are ignored. Leave a cell empty to leave the field alone.",
+    "how2": "Columns: Id, Weight (kg), Width (cm), Height (cm), Depth (cm), Power (W), Description, Links, and one column per extra field, named like the field (Lumen, Throw ratio). Other columns (sources, notes) are ignored. Leave a cell empty to leave the field alone.",
     "how3": "Description: one spec per line (\"Max height: 366 cm\"). Links: one per line, \"Label | https://…\".",
     "field_weightKg": "Weight (kg)",
     "field_widthCm": "Width (cm)",

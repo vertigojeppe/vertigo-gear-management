@@ -4,9 +4,12 @@ import { parseLinksText } from "@/modules/inventory/schema";
 /**
  * Spec sheet import (pure): a CSV with one row per model, keyed by the
  * model id from the models export, that fills in weight, dimensions,
- * power, description, links and the lumen / throw ratio fields. Only
- * empty fields are filled; a value already on the model is kept and the
- * preview shows the difference. Links are added when their URL is new.
+ * power, description, links and extra fields. Any other column whose name
+ * matches an extra field of the model's category (its label or its key,
+ * ignoring case, spaces and punctuation: "Lumen", "Throw ratio") fills
+ * that field, whatever key it was given. Only empty fields start ticked;
+ * a value already on the model is kept unless ticked. Links are added
+ * when their URL is new.
  */
 
 export type Link = { label: string; url: string };
@@ -20,17 +23,23 @@ export const SPEC_NUMBERS = [
 ] as const;
 export type SpecNumberField = (typeof SPEC_NUMBERS)[number]["field"];
 
-/** Sheet columns that go into the model's extra fields, when the model's category has that field. */
-export const SPEC_CUSTOM = [
-  { key: "lumen", header: "Lumen", integer: true },
-  { key: "throw_ratio", header: "Throw ratio", integer: false, text: true },
-] as const;
+/** Columns of the models export and the review sheet that are not extra fields. */
+const NOT_EXTRA = ["id", "manufacturer", "model", "variant", "product", "category", "tracking", "in house", "owned", "day price", "not for rental", "archived", "notes", "specs checked", "description", "links", "confidence", "sources", ...SPEC_NUMBERS.map((s) => s.header)].map((h) => squashHeader(h));
+
+/** Columns that are extra fields even where no category has them yet, so the preview says they were skipped. */
+const KNOWN_EXTRA = ["lumen", "throwratio"];
+
+/** "Throw ratio", "throw_ratio" and "THROW-RATIO" are the same column. */
+export function squashHeader(h: string): string {
+  return h.toLowerCase().replace(/[^a-z0-9æøå]/g, "");
+}
 
 export type SpecRow = {
   line: number;
   id: string;
   numbers: Partial<Record<SpecNumberField, number>>;
-  custom: Record<string, string | number>;
+  /** Other non-empty columns, by header as written: candidates for extra fields. */
+  extra: Record<string, string>;
   description?: string;
   links: Link[];
 };
@@ -108,23 +117,17 @@ export function readSpecSheet(text: string): SpecSheet {
     const line = n + 2;
     const id = (r[idCol] ?? "").trim();
     if (!id) return;
-    const row: SpecRow = { line, id, numbers: {}, custom: {}, links: [] };
+    const row: SpecRow = { line, id, numbers: {}, extra: {}, links: [] };
     for (const s of SPEC_NUMBERS) {
       const v = parseSpecNumber(get(r, s.header), s.integer);
       if (v === null) continue;
       if (Number.isNaN(v)) errors.push(`Row ${line}: "${get(r, s.header)}" in ${s.header} is not a ${s.integer ? "whole " : ""}number.`);
       else row.numbers[s.field] = v;
     }
-    for (const c of SPEC_CUSTOM) {
-      const raw = get(r, c.header);
-      if (!raw) continue;
-      if ("text" in c) row.custom[c.key] = raw;
-      else {
-        const v = parseSpecNumber(raw, c.integer);
-        if (v === null || Number.isNaN(v)) errors.push(`Row ${line}: "${raw}" in ${c.header} is not a whole number.`);
-        else row.custom[c.key] = v;
-      }
-    }
+    header.forEach((h, i) => {
+      const raw = (r[i] ?? "").trim();
+      if (raw && h.trim() && !NOT_EXTRA.includes(squashHeader(h))) row.extra[h.trim()] = raw;
+    });
     const description = get(r, "Description");
     if (description) row.description = description;
     row.links = parseLinksText(get(r, "Links"));
@@ -140,22 +143,40 @@ export type CurrentModel = {
   description: string | null;
   links: Link[];
   customFields: Record<string, unknown>;
-  /** Extra-field keys that apply to the model's category. */
-  customKeys: string[];
+  /** The extra fields that apply to the model's category. */
+  defs: { key: string; label: string; type: string }[];
 };
 
 /** fill: written; keep: the model already has a different value, which stays; same: already there; unavailable: no such extra field for the model's category. */
 export type ChangeAction = "fill" | "keep" | "same" | "unavailable";
-export type SpecChange = { field: string; from: string | null; to: string; action: ChangeAction };
+/** `field`: a model column, or an extra field's key (then `label` names it and `value` is what gets written). */
+export type SpecChange = { field: string; from: string | null; to: string; action: ChangeAction; label?: string; value?: unknown };
 export type ModelSpecPlan = { id: string; label: string; changes: SpecChange[] };
 export type SpecPlan = { models: ModelSpecPlan[]; unknownIds: { line: number; id: string }[]; errors: string[] };
 
 const blank = (v: unknown) => v === null || v === undefined || v === "";
 const show = (v: unknown) => (blank(v) ? null : String(v));
 
+const matches = (def: { key: string; label: string }, header: string) => squashHeader(def.label) === squashHeader(header) || squashHeader(def.key) === squashHeader(header);
+
+/** A sheet value read the way the field stores it; NaN for a number that is not one. */
+function extraValue(type: string, raw: string): unknown {
+  // "3.500" is three thousand five hundred (Danish Excel), "0,49" and "1.5" are decimals.
+  if (type === "number") {
+    const whole = parseSpecNumber(raw, true);
+    return whole !== null && !Number.isNaN(whole) ? whole : parseSpecNumber(raw, false);
+  }
+  if (type === "checkbox") return /^(1|x|yes|ja|true|✓)$/i.test(raw.trim());
+  return raw;
+}
+
 export function planSpecs(sheet: SpecSheet, current: Map<string, CurrentModel>): SpecPlan {
   const models: ModelSpecPlan[] = [];
   const unknownIds: { line: number; id: string }[] = [];
+  const errors = [...sheet.errors];
+  // A column counts as an extra field when some model in the sheet has a field by that name (or it is a well-known one).
+  const allDefs = [...current.values()].flatMap((m) => m.defs);
+  const isExtra = (header: string) => KNOWN_EXTRA.includes(squashHeader(header)) || allDefs.some((d) => matches(d, header));
   for (const row of sheet.rows) {
     const m = current.get(row.id);
     if (!m) {
@@ -171,12 +192,21 @@ export function planSpecs(sheet: SpecSheet, current: Map<string, CurrentModel>):
       const now = m.numbers[s.field];
       compare(s.field, now, to, now !== null && Math.abs(now - to) < 0.05);
     }
-    for (const c of SPEC_CUSTOM) {
-      const to = row.custom[c.key];
-      if (to === undefined) continue;
-      const now = m.customFields[c.key];
-      if (!m.customKeys.includes(c.key)) changes.push({ field: c.key, from: null, to: String(to), action: "unavailable" });
-      else compare(c.key, now, to, String(now).trim().toLowerCase() === String(to).trim().toLowerCase());
+    for (const [header, raw] of Object.entries(row.extra)) {
+      if (!isExtra(header)) continue;
+      const def = m.defs.find((d) => matches(d, header));
+      if (!def) {
+        changes.push({ field: header, label: header, from: null, to: raw, action: "unavailable" });
+        continue;
+      }
+      const value = extraValue(def.type, raw);
+      if (typeof value === "number" && Number.isNaN(value)) {
+        errors.push(`Row ${row.line}: "${raw}" in ${header} is not a number.`);
+        continue;
+      }
+      const now = m.customFields[def.key];
+      const same = typeof value === "number" ? Number(now) === value : String(now ?? "").trim().toLowerCase() === String(value).trim().toLowerCase();
+      changes.push({ field: def.key, label: def.label, from: show(now), to: String(value), action: blank(now) ? "fill" : same ? "same" : "keep", value });
     }
     if (row.description) compare("description", m.description, row.description, (m.description ?? "").trim() === row.description.trim());
     if (row.links.length) {
@@ -191,7 +221,7 @@ export function planSpecs(sheet: SpecSheet, current: Map<string, CurrentModel>):
     }
     models.push({ id: m.id, label: m.label, changes });
   }
-  return { models, unknownIds, errors: sheet.errors };
+  return { models, unknownIds, errors };
 }
 
 /** The preview's checkbox for one change ("<model id>.<field>"). */
@@ -215,7 +245,7 @@ export function specUpdate(row: SpecRow, m: CurrentModel, plan: ModelSpecPlan, p
     const have = new Set(m.links.map((l) => l.url));
     data.links = [...m.links, ...row.links.filter((l) => !have.has(l.url))];
   }
-  const custom = SPEC_CUSTOM.filter((c) => write.has(c.key));
-  if (custom.length) data.customFields = { ...m.customFields, ...Object.fromEntries(custom.map((c) => [c.key, row.custom[c.key]])) };
+  const extra = chosen.filter((c) => c.value !== undefined);
+  if (extra.length) data.customFields = { ...m.customFields, ...Object.fromEntries(extra.map((c) => [c.field, c.value])) };
   return { data, changes: chosen };
 }

@@ -290,7 +290,8 @@ a second entry that exports components only and never a service.
   computers, truss. The seed never runs on a server, so the same list
   (`FIELDS` in `prisma/seed/custom-fields.ts`) is also created by the
   migration `extra_fields_standard_set` where the category path exists and
-  no field with that key does; keep the two in step when adding a standard
+  no field with that key or label does (values stored under a standard key
+  are copied into a hand-made field of the same label); keep the two in step when adding a standard
   field (a new migration, never an edit of the old one).
 - `showInList` (models only, Settings › Extra fields) puts a field on the
   inventory list: `listModels` returns `listFields` (`listFieldText` in
@@ -601,14 +602,17 @@ a second entry that exports components only and never a service.
 - Server actions accept 25 MB bodies (`next.config.ts`) for the upload.
 - Spec sheets (`/settings/import/specs`, `settings.manage`): a CSV keyed
   by model `Id` (from the models export) with weight, width, height,
-  depth, power, lumen, throw ratio, description and links.
+  depth, power, description and links; any other column whose header
+  matches an extra field of the model's category by label or key
+  (`squashHeader`: case, spaces and punctuation ignored) fills that
+  field, read by its type (numbers take Danish thousands / decimals).
   `specs.ts` is pure (`readSpecSheet`, `planSpecs`, `specUpdate`;
   semicolons or commas, Danish decimals, Excel's Windows-1252),
   `specs-service.ts` plans against the models as they are now on both
   preview and apply. Each change is a checkbox (`pick` = `pickKey(model,
   field)`): empty fields start ticked, values the model already has start
-  unticked (ticked = replaced); links are appended by URL, lumen / throw
-  ratio only where the category has the extra field. Each changed model
+  unticked (ticked = replaced); links are appended by URL; a known extra column the category lacks
+  shows as skipped. Each changed model
   gets a `specs_imported` activity row (filled in / replaced). Every
   model in an applied sheet gets `Model.specsCheckedAt` (only shown in
   the models CSV export, "Specs checked"), so a later lookup can skip

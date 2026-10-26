@@ -123,10 +123,10 @@ function SpecPreview({ data, action, error }: { data: SpecPreviewData; action: (
                     <tr key={c.field} className="align-top">
                       <td className="w-6 py-0.5">
                         {pickable(c.action) && (
-                          <input type="checkbox" name="pick" value={key} checked={ticked} onChange={(e) => toggle(key, e.target.checked)} aria-label={`${t(`field_${c.field}`)}: ${m.label}`} className="mt-0.5" />
+                          <input type="checkbox" name="pick" value={key} checked={ticked} onChange={(e) => toggle(key, e.target.checked)} aria-label={`${(c.label ?? t(`field_${c.field}`))}: ${m.label}`} className="mt-0.5" />
                         )}
                       </td>
-                      <td className="w-32 py-0.5 pr-2 text-muted-foreground">{t(`field_${c.field}`)}</td>
+                      <td className="w-32 py-0.5 pr-2 text-muted-foreground">{(c.label ?? t(`field_${c.field}`))}</td>
                       <td className="w-28 py-0.5 pr-2">
                         <StatusPill color={label.color}>{t(label.key)}</StatusPill>
                       </td>

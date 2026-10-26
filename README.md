@@ -219,8 +219,8 @@ start, and help text under the fields that need it. The short version:
   shows what imports as is, what imports with a stated guess, and what
   needs your decision. Nothing is written until you confirm, and
   importing the same file again adds nothing. *Import specs* on the same
-  page fills in weight, size, power, description, links, lumen and throw
-  ratio on existing models from a CSV keyed by the export's Id column;
+  page fills in weight, size, power, description, links and extra fields
+  (a column named like the field: Lumen, Throw ratio) on existing models from a CSV keyed by the export's Id column;
   the preview lets you tick which values to save.
 - **Export CSV** on every list, with the filters you have set,
   semicolon-separated so Danish Excel opens it straight away.
