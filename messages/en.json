@@ -283,7 +283,22 @@
       "added": "added {date}",
       "price": "{price}/day",
       "weight": "{kg} kg"
-    }
+    },
+    "convertToBulk": "Convert to bulk",
+    "convertToSerialized": "Convert to serialized",
+    "convertToBulkHelp": "From one record per unit to one bin with a quantity. Only for admins.",
+    "convertToSerializedHelp": "From bins with a quantity to one record per unit, each with its own asset tag. Only for admins.",
+    "convertKeep": "{count, plural, one {The # unit in house becomes} other {The # units in house become}} one bin: {tag}, which keeps its asset tag and history.",
+    "convertDeleted": "{count, plural, one {This unit is} other {These # units are}} deleted, with {count, plural, one {its} other {their}} serial numbers, notes, files and history: {tags}.",
+    "convertStay": "{count, plural, one {# unit stays} other {# units stay}} as {count, plural, one {its} other {their}} own row, because {count, plural, one {it is} other {they are}} not in house or packed in a case: {tags}.",
+    "convertNothingInHouse": "No unit is in house, so nothing is merged; the units stay as their own rows.",
+    "convertSplit": "{bins} {count, plural, one {split into single units: # new unit} other {split into single units: # new units}} with new asset tags, on the same shelf.",
+    "convertNothingToSplit": "Every bin already holds one, so nothing is split.",
+    "convertPricesNote": "The new units get the bin's purchase date and supplier, not its prices.",
+    "convertPinsNote": "Reservations, rental lines and draft packing lines that named a specific unit of this model now just ask for the model.",
+    "convertClose": "Close",
+    "convertPrintLabels": "{count, plural, one {# new asset tag needs} other {# new asset tags need}} a label: use Print labels on this page.",
+    "convertInCase": "in a case"
   },
   "itemStatus": {
     "in_house": "In house",

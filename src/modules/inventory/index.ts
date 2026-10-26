@@ -39,6 +39,8 @@ export { buildTree, flattenTree, pathNames } from "./tree";
 export * as inventoryActions from "./actions";
 export { InventoryTabs } from "./components/inventory-tabs";
 export { FamilyList } from "./components/family-list";
+export { ConvertTrackingDialog } from "./components/convert-tracking-dialog";
+export type { TrackingPlan } from "./tracking-change";
 export { EditFamilyDialog, type FamilyState } from "./components/edit-family-dialog";
 export { LabelsDialog } from "./components/labels-dialog";
 export { CategoryColorPicker, LengthColorsToggle, LengthColorsTable } from "./components/color-controls";

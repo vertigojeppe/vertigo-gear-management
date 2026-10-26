@@ -239,6 +239,16 @@ a second entry that exports components only and never a service.
   PDF with react-pdf + qrcode. `GET /api/labels/sheet.pdf` takes `ids=` or
   the item list's filters plus `size` and `offset`; `LabelsDialog` builds
   that URL (with the browser origin for the QR, like `QrImage`).
+- Tracking (serialized / bulk) is fixed in the model form once items
+  exist, but admins can convert on the model page (`ConvertTrackingDialog`
+  → `models.convertTracking`; `planTrackingChange` in `tracking-change.ts`
+  is pure). To bulk: in-house loose units merge into one bin, the lowest
+  asset tag, and the other units are deleted with their own data; units
+  that are out, in repair, missing, retired or in a case stay as their own
+  rows; cases with contents block it. To serialized: bins of several in
+  house split into units with new asset tags (date and supplier copied,
+  prices not); a bin of several that is out blocks it. Unit pins on
+  allocations, rental lines and draft packing lines are cleared.
 - Asset tags come from `nextAssetTag(tx)` inside the creating transaction.
   The seed sets the counter past its highest tag.
 - Statuses include `under_construction` (exists, not usable, no reason
