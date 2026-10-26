@@ -7,7 +7,7 @@ import type { PrismaClient } from "../../src/generated/prisma/client";
  */
 type FieldSeed = { entity: string; category?: string; key: string; label: string; type: string; options?: string[]; required?: boolean; sortOrder: number };
 
-const FIELDS: FieldSeed[] = [
+export const FIELDS: FieldSeed[] = [
   // Projectors
   { entity: "model", category: "Video/Projectors", key: "lumen", label: "Lumen", type: "number", sortOrder: 0 },
   { entity: "model", category: "Video/Projectors", key: "throw_ratio", label: "Throw ratio", type: "text", sortOrder: 1 },

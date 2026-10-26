@@ -27,7 +27,7 @@ async function currentModels(ids: string[]): Promise<Map<string, CurrentModel>> 
         description: m.description,
         links: Array.isArray(m.links) ? (m.links as Link[]) : [],
         customFields: (m.customFields ?? {}) as Record<string, unknown>,
-        customKeys: applicableDefs(defs, m.categoryId).map((d) => d.key),
+        defs: applicableDefs(defs, m.categoryId).map((d) => ({ key: d.key, label: d.label, type: d.type })),
       },
     ]),
   );
@@ -52,6 +52,7 @@ export const specImport = {
     if (sheet.errors.length) throw new ImportError(sheet.errors[0]);
     const current = await currentModels(sheet.rows.map((r) => r.id));
     const plan = planSpecs(sheet, current);
+    if (plan.errors.length) throw new ImportError(plan.errors[0]);
     const picked = picks ? new Set(picks) : undefined;
     let models = 0;
     let fields = 0;

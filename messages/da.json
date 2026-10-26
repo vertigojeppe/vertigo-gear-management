@@ -462,7 +462,9 @@
     "layout_roomyHelp": "Travle sider bruger mere af en bred skærm: pakkelisten i to eller tre kolonner, tidsplan og opgaver side om side i produktionsplanen, projektsiden i to kolonner, og pakke- og tjek-ind-tilstanden med linjerne i kolonner.",
     "layout_compact": "Kompakt",
     "layout_compactHelp": "Alle sider beholder den smallere bredde og viser én kolonne, som før.",
-    "layoutSaved": "Gemt. Alle sider bruger nu dette layout."
+    "layoutSaved": "Gemt. Alle sider bruger nu dette layout.",
+    "cfShowInList": "Vis i lagerlisten",
+    "cfInList": "vises i listen"
   },
   "roles": {
     "admin": "Administrator",
@@ -1373,7 +1375,7 @@
   },
   "specImport": {
     "title": "Importér specifikationer",
-    "subtitle": "Udfyld vægt, mål, strømforbrug, beskrivelse, links, lumen og throw ratio på eksisterende modeller fra et ark. Intet gemmes, før du bekræfter.",
+    "subtitle": "Udfyld vægt, mål, strømforbrug, beskrivelse, links og ekstra felter på eksisterende modeller fra et ark. Intet gemmes, før du bekræfter.",
     "file": "Specifikationsark (.csv)",
     "fileHelp": "Semikolon eller komma, én række pr. model, med kolonnen Id fra Lager › Eksportér CSV.",
     "reading": "Læser…",
@@ -1392,7 +1394,7 @@
     "another": "Læs et andet ark",
     "howTitle": "Arket",
     "how1": "Start fra Lager › Eksportér CSV, som giver hver models Id.",
-    "how2": "Kolonner: Id, Weight (kg), Width (cm), Height (cm), Depth (cm), Power (W), Lumen, Throw ratio, Description, Links. Andre kolonner (kilder, noter) ignoreres. Lad en celle være tom for at lade feltet være.",
+    "how2": "Kolonner: Id, Weight (kg), Width (cm), Height (cm), Depth (cm), Power (W), Description, Links og én kolonne pr. ekstra felt, navngivet som feltet (Lumen, Throw ratio). Andre kolonner (kilder, noter) ignoreres. Lad en celle være tom for at lade feltet være.",
     "how3": "Description: én specifikation pr. linje (\"Max height: 366 cm\"). Links: ét pr. linje, \"Navn | https://…\".",
     "field_weightKg": "Vægt (kg)",
     "field_widthCm": "Bredde (cm)",
@@ -1406,10 +1408,12 @@
     "action_fill": "Udfyldes",
     "action_keep": "Beholdes",
     "action_same": "Findes allerede",
-    "action_unavailable": "Feltet findes ikke",
+    "action_unavailable": "Ekstrafeltet findes ikke",
     "applyNone": "Gem uden ændringer",
     "action_skip": "Springes over",
-    "action_replace": "Erstattes"
+    "action_replace": "Erstattes",
+    "summaryUnavailable": "{count, plural, one {# værdi} other {# værdier}} springes over",
+    "unavailableHelp": "Nogle værdier springes over, fordi modellens kategori ikke har et ekstrafelt til dem (f.eks. lumen i en kategori uden et Lumen-felt). Opret feltet under Indstillinger › Ekstra felter, og læs arket igen."
   },
   "board": {
     "title": "Det kommer",

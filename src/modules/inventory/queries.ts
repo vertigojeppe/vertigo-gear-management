@@ -13,6 +13,9 @@ import { bestMatches } from "@/lib/search";
 import { itemOrderBy, sortFamilies } from "./sorting";
 // eslint-disable-next-line no-restricted-imports -- the barrel loads server actions, which do not load under Vitest
 import { glossary } from "@/modules/settings/glossary";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { customFieldDefinitions } from "@/modules/settings/service";
+import { applicableDefs, listFieldText } from "@/lib/custom-fields";
 
 const PAGE = appConfig.pageSize;
 
@@ -75,6 +78,8 @@ export type ModelListRow = ModelDto & {
   owned: number;
   inHouse: number;
   thumbUrl: string | null;
+  /** Extra fields marked "show in the inventory list" that this model has a value for, as cell text ("3.500 Lumen"). */
+  listFields: { key: string; text: string }[];
 };
 
 /** Models that share a name: one row in the list, the variants inside it. */
@@ -104,11 +109,13 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
   if (filters.trackingType) where.trackingType = filters.trackingType;
 
   // Every model the other filters allow, searched here (forgiving: spaces, case, typos), grouped into families, then paginated by family (a few hundred rows at most).
-  const [candidates, cats, colors] = await Promise.all([
+  const [candidates, cats, colors, defs] = await Promise.all([
     prisma.model.findMany({ where, orderBy: [{ name: "asc" }, { manufacturer: "asc" }], include: { defaultPhoto: { select: { id: true, thumbKey: true } } } }),
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
     loadColorMaps(),
+    customFieldDefinitions.forEntity("model"),
   ]);
+  const listDefs = defs.filter((d) => d.showInList);
   // Category names count too, so "projektor" (via the search words) finds a "PT-RZ21K" filed under Projectors.
   const { rows: models, close: closeMatches } = bestMatches(candidates, (m) => [m.manufacturer, m.name, m.variant, m.description, ...pathNames(cats, m.categoryId)], filters.q, await glossary.load());
   const ids = models.map((m) => m.id);
@@ -130,6 +137,10 @@ export async function listModels(filters: ModelFilters): Promise<{ families: Mod
     owned: metreStock.get(m.id) ?? owned.get(m.id) ?? 0,
     inHouse: metreStock.get(m.id) ?? inHouse.get(m.id) ?? 0,
     thumbUrl: m.defaultPhoto?.thumbKey ? `/api/files/${m.defaultPhoto.id}?thumb=1` : null,
+    listFields: applicableDefs(listDefs, m.categoryId).flatMap((d) => {
+      const text = listFieldText(d, (m.customFields as Record<string, unknown> | null)?.[d.key]);
+      return text ? [{ key: d.key, text }] : [];
+    }),
   }));
   const grouped = groupFamilies(rows);
   if (filters.sort === "packed") {

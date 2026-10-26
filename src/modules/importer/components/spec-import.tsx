@@ -93,6 +93,7 @@ function SpecPreview({ data, action, error }: { data: SpecPreviewData; action: (
         <span className="font-medium">{data.fileName}</span>
         <StatusPill color="green">{t("summaryFill", { count: count("fill") })}</StatusPill>
         {count("keep") > 0 && <StatusPill color="amber">{t("summaryKeep", { count: count("keep") })}</StatusPill>}
+        {count("unavailable") > 0 && <StatusPill color="red">{t("summaryUnavailable", { count: count("unavailable") })}</StatusPill>}
         {plan.unknownIds.length > 0 && <StatusPill color="red">{t("summaryUnknown", { count: plan.unknownIds.length })}</StatusPill>}
         <span className="ml-auto">
           {plan.models.length > 0 && plan.errors.length === 0 && (
@@ -101,6 +102,7 @@ function SpecPreview({ data, action, error }: { data: SpecPreviewData; action: (
         </span>
       </div>
       <p className="text-sm text-muted-foreground">{t("explain")}</p>
+      {count("unavailable") > 0 && <p className="text-sm text-destructive">{t("unavailableHelp")}</p>}
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
         {t("showAll")}
@@ -121,10 +123,10 @@ function SpecPreview({ data, action, error }: { data: SpecPreviewData; action: (
                     <tr key={c.field} className="align-top">
                       <td className="w-6 py-0.5">
                         {pickable(c.action) && (
-                          <input type="checkbox" name="pick" value={key} checked={ticked} onChange={(e) => toggle(key, e.target.checked)} aria-label={`${t(`field_${c.field}`)}: ${m.label}`} className="mt-0.5" />
+                          <input type="checkbox" name="pick" value={key} checked={ticked} onChange={(e) => toggle(key, e.target.checked)} aria-label={`${(c.label ?? t(`field_${c.field}`))}: ${m.label}`} className="mt-0.5" />
                         )}
                       </td>
-                      <td className="w-32 py-0.5 pr-2 text-muted-foreground">{t(`field_${c.field}`)}</td>
+                      <td className="w-32 py-0.5 pr-2 text-muted-foreground">{(c.label ?? t(`field_${c.field}`))}</td>
                       <td className="w-28 py-0.5 pr-2">
                         <StatusPill color={label.color}>{t(label.key)}</StatusPill>
                       </td>

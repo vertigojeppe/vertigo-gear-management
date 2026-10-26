@@ -200,6 +200,8 @@ model CustomFieldDefinition {
   /// Options for type = select.
   options   Json     @default("[]")
   required  Boolean  @default(false)
+  /// Models only: shown as a column on each size in the inventory list (lumen, throw ratio).
+  showInList Boolean @default(false)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

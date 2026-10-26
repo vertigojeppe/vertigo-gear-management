@@ -17,6 +17,8 @@ export type CustomFieldDef = {
   type: CustomFieldType;
   options: string[];
   required: boolean;
+  /** Models: shown as a column on each size in the inventory list. */
+  showInList?: boolean;
   /** Category the field is limited to (models/items only); null = every category. */
   categoryId?: string | null;
   /** That category plus its sub-categories, resolved by the settings service. */
@@ -119,4 +121,12 @@ export function formatCustomFieldValue(def: CustomFieldDef, value: unknown): str
   if (value === null || value === undefined || value === "") return "";
   if (def.type === "checkbox") return value ? "Yes" : "No";
   return String(value);
+}
+
+/** The text of a field in a list cell, or null when the model has no value: "3.500 Lumen", "Throw ratio 1.15–1.5". */
+export function listFieldText(def: Pick<CustomFieldDef, "label" | "type">, value: unknown): string | null {
+  if (value === null || value === undefined || value === "" || value === false) return null;
+  if (def.type === "number" && typeof value === "number") return `${new Intl.NumberFormat("da-DK", { maximumFractionDigits: 2 }).format(value)} ${def.label}`;
+  if (def.type === "checkbox") return def.label;
+  return `${def.label} ${String(value)}`;
 }

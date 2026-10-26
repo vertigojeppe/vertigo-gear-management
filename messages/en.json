@@ -462,7 +462,9 @@
     "layout_roomyHelp": "Busy pages use more of a wide screen: the packing list in two or three columns, schedule and tasks side by side on the production plan, the project page in two columns, and pack mode and check-in with their lines in columns.",
     "layout_compact": "Compact",
     "layout_compactHelp": "Every page keeps the narrower width and shows one column, as before.",
-    "layoutSaved": "Saved. Every page now uses this layout."
+    "layoutSaved": "Saved. Every page now uses this layout.",
+    "cfShowInList": "Show in the inventory list",
+    "cfInList": "shown in the list"
   },
   "roles": {
     "admin": "Admin",
@@ -1373,7 +1375,7 @@
   },
   "specImport": {
     "title": "Import specs",
-    "subtitle": "Fill in weight, size, power draw, description, links, lumen and throw ratio on existing models from a sheet. Nothing is written until you confirm.",
+    "subtitle": "Fill in weight, size, power draw, description, links and extra fields on existing models from a sheet. Nothing is written until you confirm.",
     "file": "Spec sheet (.csv)",
     "fileHelp": "Semicolons or commas, one row per model, with the Id column from Inventory › Export CSV.",
     "reading": "Reading…",
@@ -1392,7 +1394,7 @@
     "another": "Read another sheet",
     "howTitle": "The sheet",
     "how1": "Start from Inventory › Export CSV, which gives each model's Id.",
-    "how2": "Columns: Id, Weight (kg), Width (cm), Height (cm), Depth (cm), Power (W), Lumen, Throw ratio, Description, Links. Other columns (sources, notes) are ignored. Leave a cell empty to leave the field alone.",
+    "how2": "Columns: Id, Weight (kg), Width (cm), Height (cm), Depth (cm), Power (W), Description, Links, and one column per extra field, named like the field (Lumen, Throw ratio). Other columns (sources, notes) are ignored. Leave a cell empty to leave the field alone.",
     "how3": "Description: one spec per line (\"Max height: 366 cm\"). Links: one per line, \"Label | https://…\".",
     "field_weightKg": "Weight (kg)",
     "field_widthCm": "Width (cm)",
@@ -1406,10 +1408,12 @@
     "action_fill": "Fill in",
     "action_keep": "Kept",
     "action_same": "Already there",
-    "action_unavailable": "No such field",
+    "action_unavailable": "No such extra field",
     "applyNone": "Save without changes",
     "action_skip": "Skip",
-    "action_replace": "Replace"
+    "action_replace": "Replace",
+    "summaryUnavailable": "{count, plural, one {# value} other {# values}} skipped",
+    "unavailableHelp": "Some values were skipped because the model's category has no extra field for them (lumen on a category without a Lumen field, for example). Add the field under Settings › Extra fields, then read the sheet again."
   },
   "board": {
     "title": "Coming up",

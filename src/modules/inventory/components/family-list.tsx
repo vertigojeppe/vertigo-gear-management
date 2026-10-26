@@ -57,6 +57,8 @@ export function FamilyList({ families, sort = "name", canEdit, isAdmin, returnTo
     });
   const tracking = (f: ModelFamily) => (f.trackingType === "mixed" ? `${t("serialized")} + ${t("bulk")}` : t(f.trackingType));
   const refused = state.data?.refused ?? [];
+  // Models without sizes share one set of columns across the page, so their values line up like a table.
+  const singleColumns = specColumns(families.filter((f) => f.variants.length === 1).map((f) => f.variants[0]));
 
   return (
     <ActionForm action={action} className="flex flex-col gap-3">
@@ -132,7 +134,7 @@ export function FamilyList({ families, sort = "name", canEdit, isAdmin, returnTo
                 <ColorBar color={f.color} className="ml-1" />
                 {canEdit && <Check checked={selected.has(v.id)} onChange={(on) => toggle([v.id], on)} label={modelLabel(v)} />}
                 <ColorDot color={v.lengthColor} className="ml-3" />
-                <ModelRow m={v} label={modelLabel(v)} maker={v.manufacturer} sub={withMetric(`${f.categoryPath.join(" › ")} · ${t(v.trackingType)}`, f)} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} />
+                <ModelRow m={v} label={modelLabel(v)} maker={v.manufacturer} sub={withMetric(`${f.categoryPath.join(" › ")} · ${t(v.trackingType)}`, f)} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} columns={singleColumns} />
                 </li>
               </Fragment>
             );
@@ -170,11 +172,11 @@ export function FamilyList({ families, sort = "name", canEdit, isAdmin, returnTo
                   </span>
                 </summary>
                 <ul className="divide-y border-t bg-muted/20">
-                  {f.variants.map((v) => (
+                  {f.variants.map((v, _, all) => (
                     <li key={v.id} className="flex items-center pl-6">
                       {canEdit && <Check checked={selected.has(v.id)} onChange={(on) => toggle([v.id], on)} label={modelLabel(v)} />}
                       <ColorDot color={v.lengthColor} className="ml-3" />
-                      <ModelRow m={v} label={v.variant ?? modelLabel(v)} maker={f.manufacturer.includes(",") ? v.manufacturer : ""} sub={v.trackingType !== f.trackingType ? t(v.trackingType) : ""} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} compact />
+                      <ModelRow m={v} label={v.variant ?? modelLabel(v)} maker={f.manufacturer.includes(",") ? v.manufacturer : ""} sub={v.trackingType !== f.trackingType ? t(v.trackingType) : ""} archivedLabel={t("archived")} inHouseLabel={t("inHouse")} compact columns={specColumns(all)} />
                     </li>
                   ))}
                 </ul>
@@ -186,6 +188,25 @@ export function FamilyList({ families, sort = "name", canEdit, isAdmin, returnTo
       </ul>
     </ActionForm>
   );
+}
+
+/** A value shown on a row: weight, power draw, and extra fields marked "show in the inventory list". */
+type Spec = { key: string; text: string };
+type SpecColumn = { key: string; ch: number };
+
+function specsOf(m: ModelListRow): Spec[] {
+  const out: Spec[] = [];
+  if (m.weightKg !== null) out.push({ key: "weight", text: `${formatNumber(m.weightKg, 2)} kg` });
+  if (m.powerDrawW !== null) out.push({ key: "power", text: `${formatNumber(m.powerDrawW, 0)} W` });
+  for (const f of m.listFields) out.push({ key: `cf.${f.key}`, text: f.text });
+  return out;
+}
+
+/** The columns a family's rows share: every value any size has, as wide as its longest text, so they line up. */
+function specColumns(rows: ModelListRow[]): SpecColumn[] {
+  const cols = new Map<string, number>();
+  for (const r of rows) for (const sp of specsOf(r)) cols.set(sp.key, Math.max(cols.get(sp.key) ?? 0, sp.text.length));
+  return [...cols].map(([key, ch]) => ({ key, ch }));
 }
 
 function Check({ checked, indeterminate = false, onChange, label }: { checked: boolean; indeterminate?: boolean; onChange: (on: boolean) => void; label: string }) {
@@ -217,18 +238,31 @@ function Thumb({ url }: { url: string | null }) {
   );
 }
 
-function ModelRow({ m, label, maker = "", sub, archivedLabel, inHouseLabel, compact = false }: { m: ModelListRow; label: string; maker?: string; sub: string; archivedLabel: string; inHouseLabel: string; compact?: boolean }) {
+function ModelRow({ m, label, maker = "", sub, archivedLabel, inHouseLabel, compact = false, columns }: { m: ModelListRow; label: string; maker?: string; sub: string; archivedLabel: string; inHouseLabel: string; compact?: boolean; columns: SpecColumn[] }) {
+  const specs = new Map(specsOf(m).map((sp) => [sp.key, sp.text]));
   return (
     <Link href={`/inventory/models/${m.id}`} className={`flex min-w-0 flex-1 items-center gap-3 px-3 hover:bg-muted/50 ${compact ? "py-1.5" : "py-2"}`}>
       {!compact && <Thumb url={m.thumbUrl} />}
-      <span className="min-w-0 flex-1">
+      {/* On wide screens the name has a fixed width and the values follow it as columns; the count stays at the far right. */}
+      <span className={`min-w-0 flex-1 ${columns.length > 0 ? (compact ? "lg:w-72 lg:flex-none" : "lg:w-80 lg:flex-none") : ""}`}>
         <span className={`block truncate ${compact ? "" : "font-medium"}`}>
           {label}
           {maker && <> <span className="ml-1 text-[0.85em] font-normal text-muted-foreground">{maker}</span></>}
           {m.archived && <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">{archivedLabel}</span>}
         </span>
         {sub && <span className="block truncate text-xs text-muted-foreground">{sub}</span>}
+        {specs.size > 0 && <span className="block truncate text-xs text-muted-foreground lg:hidden">{[...specs.values()].join(" · ")}</span>}
       </span>
+      {columns.length > 0 && (
+        <span className="hidden shrink-0 gap-5 text-sm tabular-nums text-muted-foreground lg:flex">
+          {columns.map((c) => (
+            <span key={c.key} className="whitespace-nowrap" style={{ width: `${c.ch + 1}ch` }}>
+              {specs.get(c.key) ?? ""}
+            </span>
+          ))}
+        </span>
+      )}
+      {columns.length > 0 && <span className="hidden flex-1 lg:block" />}
       <span className="shrink-0 text-right text-sm">
         <span className="block">
           {m.consumable && m.unit === "m" ? (
