@@ -34,6 +34,21 @@ test.describe("office screen", () => {
     await expect(page.getByRole("region", { name: "Timeline, next 12 months" })).toBeVisible();
   });
 
+  test("the board is dark until this screen picks light, and the address can set it", async ({ page }) => {
+    await signIn(page, "viewer@vertigo.test");
+    await expect(page).toHaveURL(/\/dashboard/);
+    await page.goto("/board");
+    const html = page.locator("html");
+    await expect(html).toHaveClass(/\bdark\b/);
+    await page.getByRole("radio", { name: "Light" }).click();
+    await expect(html).not.toHaveClass(/\bdark\b/);
+    await page.reload();
+    await expect(html).not.toHaveClass(/\bdark\b/); // remembered by this browser
+    await page.goto("/board?theme=dark");
+    await expect(html).toHaveClass(/\bdark\b/);
+    await expect(page.getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
+  });
+
   test("the screen account is not offered as crew", async ({ page }) => {
     await signIn(page, "member@vertigo.test");
     await expect(page).toHaveURL(/\/dashboard/);

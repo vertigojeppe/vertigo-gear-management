@@ -545,8 +545,8 @@ a second entry that exports components only and never a service.
 
 ## Office screen
 
-- `/board` (`src/app/board/page.tsx`, outside the app shell, always
-  dark) is the screen on the office wall: job cards for the next 14 days
+- `/board` (`src/app/board/page.tsx`, outside the app shell) is the
+  screen on the office wall: job cards for the next 14 days
   (confirmed / in progress, with phases, crew and packing progress),
   today and tomorrow (phases with call times, plan schedule, rentals out
   and back) and a long timeline at the bottom (`?months=` 1–12, default
@@ -555,6 +555,11 @@ a second entry that exports components only and never a service.
   (`src/modules/board`, pure parts in `logic.ts`). `BoardRefresh`
   re-reads every minute and touches `/api/auth/session` every half hour
   so the cookie never expires.
+- Its theme is its own, per screen: localStorage `boardTheme`, dark
+  unless set to light. `boardThemeScript` (`theme-script.ts`, a plain
+  module so the server page can call it) runs inline before paint and
+  stores `?theme=light|dark`; `BoardThemeToggle` in the footer switches
+  it and puts the app's theme back when the board unmounts.
 - Permission `board.read` (every role). The `display` role has only that:
   the (app) layout redirects it to `/board`, the APIs refuse it, and the
   user pickers (crew, assignees, person locations) leave it out. The seed
