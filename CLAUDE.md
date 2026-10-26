@@ -296,7 +296,8 @@ a second entry that exports components only and never a service.
   inventory list: `listModels` returns `listFields` (`listFieldText` in
   `src/lib/custom-fields.ts`: "3.500 Lumen", "Throw ratio 1.15–1.5"), and
   `FamilyList` shows them with weight and power draw as aligned columns
-  from `lg` (one line under the name below that). Sizes in a family share
+  right after the name (fixed name width from `lg`; one line under the
+  name below that), the count stays at the far right. Sizes in a family share
   columns; models without sizes share one set across the page.
 
 ## Availability, projects, rentals

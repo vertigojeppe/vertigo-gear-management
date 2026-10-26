@@ -243,7 +243,8 @@ function ModelRow({ m, label, maker = "", sub, archivedLabel, inHouseLabel, comp
   return (
     <Link href={`/inventory/models/${m.id}`} className={`flex min-w-0 flex-1 items-center gap-3 px-3 hover:bg-muted/50 ${compact ? "py-1.5" : "py-2"}`}>
       {!compact && <Thumb url={m.thumbUrl} />}
-      <span className="min-w-0 flex-1">
+      {/* On wide screens the name has a fixed width and the values follow it as columns; the count stays at the far right. */}
+      <span className={`min-w-0 flex-1 ${columns.length > 0 ? (compact ? "lg:w-72 lg:flex-none" : "lg:w-80 lg:flex-none") : ""}`}>
         <span className={`block truncate ${compact ? "" : "font-medium"}`}>
           {label}
           {maker && <> <span className="ml-1 text-[0.85em] font-normal text-muted-foreground">{maker}</span></>}
@@ -255,12 +256,13 @@ function ModelRow({ m, label, maker = "", sub, archivedLabel, inHouseLabel, comp
       {columns.length > 0 && (
         <span className="hidden shrink-0 gap-5 text-sm tabular-nums text-muted-foreground lg:flex">
           {columns.map((c) => (
-            <span key={c.key} className="whitespace-nowrap text-right" style={{ width: `${c.ch + 1}ch` }}>
+            <span key={c.key} className="whitespace-nowrap" style={{ width: `${c.ch + 1}ch` }}>
               {specs.get(c.key) ?? ""}
             </span>
           ))}
         </span>
       )}
+      {columns.length > 0 && <span className="hidden flex-1 lg:block" />}
       <span className="shrink-0 text-right text-sm">
         <span className="block">
           {m.consumable && m.unit === "m" ? (
