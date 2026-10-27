@@ -444,8 +444,9 @@ a second entry that exports components only and never a service.
 - "My day" (`myDay(userId)` in `src/modules/plans/my-day.ts`,
   `MyDaySection` on the dashboard): today's and tomorrow's schedule on
   the projects I crew (or where I am responsible), my open tasks with
-  overdue / due-this-week flags and a done button, and this week's
-  projects with my call time. Finished and cancelled projects are left
+  overdue / due-soon flags and a done button, and "Coming up": projects
+  starting in the next seven days (not the calendar week) with my call
+  time. Finished and cancelled projects are left
   out. `renderPlan(detail, { forUser })` is the "my plan" PDF (whole
   schedule, only my tasks and call time), served with `?me=1`.
 - PDFs: `renderPlan(detail, { day? })` renders the full plan or one day
