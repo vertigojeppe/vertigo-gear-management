@@ -337,7 +337,11 @@ a second entry that exports components only and never a service.
   model, quantity, optional unit, inclusive dates) are the only source for
   availability. `computeAvailability` / `checkRequest` in
   `src/modules/projects/availability.ts` are pure and unit-tested; services
-  load items + allocations with `itemsForModel` / `allocationsFor`. The
+  load items + allocations with `itemsForModel` / `allocationsFor`, pages
+  that check many models with `itemsForModels` / `allocationsForModels`
+  (one query each, maps by model id). Pass the window being checked:
+  only live allocations (holder not done, cancelled or returned) that
+  touch it are loaded, never a model's whole history. The
   rentals service and rental pages pass `{ forRental: true }`, which
   leaves units flagged not-for-rental out of `owned` (reported as
   `notRentable`), so a rental can never be promised gear it cannot have.

@@ -6,7 +6,7 @@ import type { CustomFieldValues } from "@/lib/custom-fields";
 import { dateFromString, dateToString, dayInZone, maxDate, minDate, zonedInputToDate, type DateString } from "@/lib/dates";
 import { emitEvent } from "@/lib/events";
 import { PROJECT_STATUSES, type ProjectStatus } from "../../../config/app.config";
-import { checkRequest, type AllocationLike, type Availability } from "./availability";
+import { checkRequest, type AllocationLike, type Availability, type Window } from "./availability";
 import { linksToText, parseLinks, type AllocationInput, type ClientInput, type ContactInput, type CrewInput, type Link, type ProjectInput } from "./schema";
 import { modelLabel } from "@/lib/format";
 
@@ -340,14 +340,27 @@ export const projects = {
 /* Reservations (allocations)                                               */
 /* ------------------------------------------------------------------------ */
 
-export async function allocationsFor(modelId: string): Promise<AllocationLike[]> {
+/**
+ * Allocations that still hold gear (the project is not done or cancelled,
+ * the rental not returned) for some models, by model id. With a window,
+ * only those touching it; either end may be left open. Every holder is a
+ * project or a rental, so the OR keeps exactly the live ones.
+ */
+export async function allocationsForModels(modelIds: string[], window: Partial<Window> = {}): Promise<Map<string, AllocationLike[]>> {
+  const out = new Map<string, AllocationLike[]>(modelIds.map((id) => [id, []]));
+  if (!modelIds.length) return out;
   const rows = await prisma.allocation.findMany({
-    where: { modelId },
-    include: { project: { select: { id: true, name: true, status: true } }, rental: { select: { id: true, client: { select: { name: true } }, status: true } } },
+    where: {
+      modelId: { in: modelIds },
+      ...(window.to ? { startDate: { lte: dateFromString(window.to) } } : {}),
+      ...(window.from ? { endDate: { gte: dateFromString(window.from) } } : {}),
+      OR: [{ project: { status: { notIn: ["cancelled", "done"] } } }, { rental: { status: { not: "returned" } } }],
+    },
+    include: { project: { select: { name: true } }, rental: { select: { client: { select: { name: true } } } } },
+    orderBy: [{ startDate: "asc" }, { createdAt: "asc" }],
   });
-  return rows
-    .filter((a) => (a.project ? a.project.status !== "cancelled" && a.project.status !== "done" : true) && (a.rental ? a.rental.status !== "returned" : true))
-    .map((a) => ({
+  for (const a of rows) {
+    out.get(a.modelId)?.push({
       id: a.id,
       holderType: a.holderType as "project" | "rental",
       holderId: a.projectId ?? a.rentalId ?? "",
@@ -357,16 +370,34 @@ export async function allocationsFor(modelId: string): Promise<AllocationLike[]>
       itemId: a.itemId,
       startDate: dateToString(a.startDate),
       endDate: dateToString(a.endDate),
-    }));
+    });
+  }
+  return out;
 }
 
-export async function itemsForModel(modelId: string) {
-  return prisma.item.findMany({ where: { modelId }, select: { id: true, quantity: true, status: true, notForRental: true } });
+/** Live allocations of one model (see allocationsForModels); pass the window being checked. */
+export async function allocationsFor(modelId: string, window?: Partial<Window>): Promise<AllocationLike[]> {
+  return (await allocationsForModels([modelId], window)).get(modelId) ?? [];
+}
+
+export type ItemStock = { id: string; quantity: number; status: string; notForRental: boolean };
+
+/** Units and bins of some models, by model id. */
+export async function itemsForModels(modelIds: string[]): Promise<Map<string, ItemStock[]>> {
+  const out = new Map<string, ItemStock[]>(modelIds.map((id) => [id, []]));
+  if (!modelIds.length) return out;
+  const rows = await prisma.item.findMany({ where: { modelId: { in: modelIds } }, select: { id: true, modelId: true, quantity: true, status: true, notForRental: true } });
+  for (const { modelId, ...i } of rows) out.get(modelId)?.push(i);
+  return out;
+}
+
+export async function itemsForModel(modelId: string): Promise<ItemStock[]> {
+  return (await itemsForModels([modelId])).get(modelId) ?? [];
 }
 
 /** Availability of a model in a window, optionally ignoring one holder. */
 export async function modelAvailability(modelId: string, from: DateString, to: DateString, exclude?: { holderType: "project" | "rental"; holderId: string }): Promise<Availability> {
-  const [items, allocs] = await Promise.all([itemsForModel(modelId), allocationsFor(modelId)]);
+  const [items, allocs] = await Promise.all([itemsForModel(modelId), allocationsFor(modelId, { from, to })]);
   return checkRequest(items, allocs, { from, to }, 0, exclude);
 }
 
@@ -375,8 +406,9 @@ export const allocations = {
   async reserve(actor: Actor, projectId: string, input: AllocationInput) {
     assertCan(actor, "projects.write");
     const project = await prisma.project.findUniqueOrThrow({ where: { id: projectId } });
-    const [items, allocs] = await Promise.all([itemsForModel(input.modelId), allocationsFor(input.modelId)]);
-    const check = checkRequest(items, allocs, { from: input.startDate, to: input.endDate }, input.quantity);
+    const window = { from: input.startDate, to: input.endDate };
+    const [items, allocs] = await Promise.all([itemsForModel(input.modelId), allocationsFor(input.modelId, window)]);
+    const check = checkRequest(items, allocs, window, input.quantity);
     if (!check.ok && !input.force) throw new ConflictError(check);
     const listPrice = (await prisma.model.findUnique({ where: { id: input.modelId }, select: { rentalDayPrice: true } }))?.rentalDayPrice ?? null;
     const row = await prisma.allocation.create({
@@ -406,8 +438,9 @@ export const allocations = {
   async update(actor: Actor, allocationId: string, input: AllocationInput) {
     assertCan(actor, "projects.write");
     const existing = await prisma.allocation.findUniqueOrThrow({ where: { id: allocationId } });
-    const [items, allocs] = await Promise.all([itemsForModel(input.modelId), allocationsFor(input.modelId)]);
-    const check = checkRequest(items, allocs, { from: input.startDate, to: input.endDate }, input.quantity, { allocationId });
+    const window = { from: input.startDate, to: input.endDate };
+    const [items, allocs] = await Promise.all([itemsForModel(input.modelId), allocationsFor(input.modelId, window)]);
+    const check = checkRequest(items, allocs, window, input.quantity, { allocationId });
     if (!check.ok && !input.force) throw new ConflictError(check);
     const row = await prisma.allocation.update({
       where: { id: allocationId },

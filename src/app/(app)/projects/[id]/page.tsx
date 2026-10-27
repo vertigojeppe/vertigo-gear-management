@@ -37,7 +37,21 @@ export const metadata: Metadata = { title: "Project" };
 export default async function ProjectPage(props: { params: Promise<{ id: string }> }) {
   const actor = await requireActor();
   const { id } = await props.params;
-  const [detail, defs, models, users, packingLists, plan, planTemplates, quote, rateTables, subHire, subHireChoices] = await Promise.all([projectDetail(id), customFieldDefinitions.forEntity("project"), modelOptions(), crewOptions(), listsForProject(id), planSummary(id), planTemplateOptions(), quoteFor("project", id), rateTableOptions(), subHireLinesFor(id), subHireOptions()]);
+  const gear = projectGearEnabled();
+  // The gear parts (reservations, rent in, quote) are only loaded when they are shown.
+  const [detail, defs, models, users, packingLists, plan, planTemplates, quote, rateTables, subHire, subHireChoices] = await Promise.all([
+    projectDetail(id),
+    customFieldDefinitions.forEntity("project"),
+    gear ? modelOptions() : [],
+    crewOptions(),
+    listsForProject(id),
+    planSummary(id),
+    planTemplateOptions(),
+    gear ? quoteFor("project", id) : null,
+    gear ? rateTableOptions() : [],
+    gear ? subHireLinesFor(id) : [],
+    gear ? subHireOptions() : [],
+  ]);
   const tsh = await getTranslations("subhire");
   const tpack = await getTranslations("packing");
   const tplan = await getTranslations("plans");
@@ -52,7 +66,6 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
   const ta = await getTranslations("agenda");
   const [entryRows, entryPeople, entryProjects] = await Promise.all([entriesForProject(id, today()), canAddEntry ? entryPeopleOptions() : [], canAddEntry ? entryProjectOptions() : []]);
   const isAdmin = can(actor.role, "users.manage");
-  const gear = projectGearEnabled();
 
   const tph = await getTranslations("phase");
   const withCall = (range: string, call: string | null) => (call ? `${range} · ${t("callAt", { time: call })}` : range);

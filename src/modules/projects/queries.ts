@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
 import { activityFor } from "@/lib/activity";
-import { addDays, dateToString, today, type DateString } from "@/lib/dates";
+import { addDays, dateFromString, dateToString, maxDate, minDate, today, type DateString } from "@/lib/dates";
 import { appConfig, PROJECT_STATUSES } from "../../../config/app.config";
 import { checkRequest, overbookedDays, type AllocationLike } from "./availability";
 import type { ProjectFilters } from "./schema";
-import { allocationsFor, itemsForModel, toProjectDto, type ProjectDto } from "./service";
+import { allocationsFor, allocationsForModels, itemsForModel, itemsForModels, toProjectDto, type ProjectDto } from "./service";
 import { modelLabel } from "@/lib/format";
 import { bestMatches } from "@/lib/search";
 
@@ -92,10 +92,14 @@ export async function projectDetail(id: string) {
   });
   if (!p) return null;
 
+  // One query each for the units and the competing allocations of every reserved model.
+  const modelIds = [...new Set(p.allocations.map((a) => a.modelId))];
+  const span = { from: minDate(...p.allocations.map((a) => dateToString(a.startDate))) ?? undefined, to: maxDate(...p.allocations.map((a) => dateToString(a.endDate))) ?? undefined };
+  const [itemsBy, allocsBy, location, activity] = await Promise.all([itemsForModels(modelIds), allocationsForModels(modelIds, span), prisma.location.findFirst({ where: { projectId: id }, include: { _count: { select: { items: true } } } }), activityFor("project", id, 30)]);
+
   const reservations: ReservationRow[] = [];
   for (const a of p.allocations) {
-    const [items, allocs] = await Promise.all([itemsForModel(a.modelId), allocationsFor(a.modelId)]);
-    const check = checkRequest(items, allocs, { from: dateToString(a.startDate), to: dateToString(a.endDate) }, a.quantity, { allocationId: a.id });
+    const check = checkRequest(itemsBy.get(a.modelId) ?? [], allocsBy.get(a.modelId) ?? [], { from: dateToString(a.startDate), to: dateToString(a.endDate) }, a.quantity, { allocationId: a.id });
     reservations.push({
       id: a.id,
       modelId: a.modelId,
@@ -115,8 +119,6 @@ export async function projectDetail(id: string) {
     });
   }
 
-  const location = await prisma.location.findFirst({ where: { projectId: id }, include: { _count: { select: { items: true } } } });
-
   return {
     project: toProjectDto(p),
     client: p.client,
@@ -125,16 +127,17 @@ export async function projectDetail(id: string) {
     reservations,
     itemsOnSite: location?._count.items ?? 0,
     locationId: location?.id ?? null,
-    activity: await activityFor("project", id, 30),
+    activity,
   };
 }
 
 /* Per-model availability (model page + API) */
 
 export async function modelAvailabilityView(modelId: string, from?: DateString, to?: DateString) {
-  const [items, allocs] = await Promise.all([itemsForModel(modelId), allocationsFor(modelId)]);
   const t = today();
   const window = { from: from ?? t, to: to ?? addDays(t, 30) };
+  // Everything still running from the window or today on: the window check plus the upcoming list.
+  const [items, allocs] = await Promise.all([itemsForModel(modelId), allocationsFor(modelId, { from: minDate(window.from, t) ?? t })]);
   const check = checkRequest(items, allocs, window, 0);
   const upcoming = allocs.filter((a) => a.endDate >= t).sort((a, b) => a.startDate.localeCompare(b.startDate));
   return { window, ...check, upcoming, overbooked: overbookedDays(items, allocs, window) };
@@ -194,14 +197,24 @@ export async function timelineBars(from: DateString, to: DateString): Promise<Ti
 }
 
 export async function timeline(from: DateString, to: DateString) {
-  const bars = await timelineBars(from, to);
+  const window = { from, to };
+  const [bars, inWindow] = await Promise.all([
+    timelineBars(from, to),
+    prisma.allocation.findMany({ where: { startDate: { lte: dateFromString(to) }, endDate: { gte: dateFromString(from) } }, distinct: ["modelId"], select: { modelId: true } }),
+  ]);
 
-  // Over-booked models in the window.
-  const modelIds = [...new Set((await prisma.allocation.findMany({ where: { startDate: { lte: new Date(`${to}T00:00:00Z`) }, endDate: { gte: new Date(`${from}T00:00:00Z`) } }, select: { modelId: true } })).map((a) => a.modelId))];
+  // Over-booked models in the window: one query each for their allocations, units and names.
+  const modelIds = inWindow.map((a) => a.modelId);
+  const [allocsBy, itemsBy, models] = await Promise.all([
+    allocationsForModels(modelIds, window),
+    itemsForModels(modelIds),
+    prisma.model.findMany({ where: { id: { in: modelIds } }, select: { id: true, manufacturer: true, name: true, variant: true } }),
+  ]);
+  const modelById = new Map(models.map((m) => [m.id, m]));
   const conflicts: { modelId: string; modelLabel: string; days: { day: DateString; shortfall: number }[]; holders: string[] }[] = [];
-  for (const modelId of modelIds) {
-    const [items, allocs, model] = await Promise.all([itemsForModel(modelId), allocationsFor(modelId), prisma.model.findUnique({ where: { id: modelId }, select: { manufacturer: true, name: true, variant: true } })]);
-    const days = overbookedDays(items, allocs, { from, to });
+  for (const [modelId, allocs] of allocsBy) {
+    const model = modelById.get(modelId);
+    const days = overbookedDays(itemsBy.get(modelId) ?? [], allocs, window);
     if (days.length && model) {
       const holders = [...new Set(allocs.filter((a) => days.some((d) => a.startDate <= d.day && a.endDate >= d.day)).map((a) => a.holderName))];
       conflicts.push({ modelId, modelLabel: `${modelLabel(model)}`, days, holders });
