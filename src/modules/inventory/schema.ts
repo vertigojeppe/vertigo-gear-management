@@ -2,7 +2,7 @@ import { z } from "zod";
 import { isColorKey } from "@/lib/colors";
 import { CONSUMABLE_UNITS } from "./consumables-logic";
 import { ITEM_STATUS_KEYS, LOCATION_TYPES, RETIREMENT_REASONS } from "../../../config/app.config";
-import { checkbox, optionalDate, optionalId, optionalNumber, optionalText } from "@/lib/forms";
+import { checkbox, decimal, optionalDate, optionalId, optionalNumber, optionalText } from "@/lib/forms";
 import { ITEM_SORTS, MODEL_SORTS } from "./sorting";
 
 /* Categories */
@@ -15,7 +15,7 @@ export type CategoryInput = z.infer<typeof categoryInput>;
 
 /** One row of the tape-colour table: length in metres and a palette key. */
 export const lengthColorInput = z.object({
-  metres: z.coerce.number().positive("Enter the length in metres.").max(1000),
+  metres: decimal(z.coerce.number().positive("Enter the length in metres.").max(1000)),
   color: z.string().refine(isColorKey, "Pick a colour."),
 });
 export type LengthColorInput = z.infer<typeof lengthColorInput>;
@@ -70,7 +70,7 @@ export type ModelInput = z.infer<typeof modelInput>;
 /** "Used 2 m" / "used 1 lamp in VG-0123 on Roskilde". */
 export const consumableUseInput = z.object({
   modelId: z.string().min(1),
-  quantity: z.coerce.number({ message: "Enter a quantity." }).positive("Enter a quantity above zero.").max(100_000),
+  quantity: decimal(z.coerce.number({ message: "Enter a quantity." }).positive("Enter a quantity above zero.").max(100_000)),
   /** Asset tag of the unit it went into. */
   itemTag: optionalText,
   projectId: optionalId,
@@ -80,14 +80,14 @@ export type ConsumableUseInput = z.infer<typeof consumableUseInput>;
 
 export const consumableReceiveInput = z.object({
   modelId: z.string().min(1),
-  quantity: z.coerce.number({ message: "Enter a quantity." }).positive("Enter a quantity above zero.").max(100_000),
+  quantity: decimal(z.coerce.number({ message: "Enter a quantity." }).positive("Enter a quantity above zero.").max(100_000)),
   note: optionalText,
 });
 export type ConsumableReceiveInput = z.infer<typeof consumableReceiveInput>;
 
 export const consumableCountInput = z.object({
   modelId: z.string().min(1),
-  quantity: z.coerce.number({ message: "Enter what is on the shelf." }).min(0, "Cannot be negative.").max(100_000),
+  quantity: decimal(z.coerce.number({ message: "Enter what is on the shelf." }).min(0, "Cannot be negative.").max(100_000)),
   note: optionalText,
 });
 export type ConsumableCountInput = z.infer<typeof consumableCountInput>;

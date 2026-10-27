@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { checkbox, optionalId, optionalNumber, optionalText } from "@/lib/forms";
+import { checkbox, decimal, optionalId, optionalNumber, optionalText } from "@/lib/forms";
 import { RATE_EXTRA_RULES } from "../../../config/app.config";
 
 const extraRuleKeys = RATE_EXTRA_RULES.map((r) => r.key) as [string, ...string[]];
@@ -28,7 +28,7 @@ export type QuoteSettingsInput = z.infer<typeof quoteSettingsInput>;
 export const extraLineInput = z.object({
   description: z.string().trim().min(1, "Describe the line.").max(200),
   quantity: optionalNumber.transform((v) => Math.max(1, Math.round(v ?? 1))),
-  unitPrice: z.preprocess((v) => (typeof v === "string" ? v.trim().replace(",", ".") : v), z.coerce.number({ message: "Enter a price." }).min(0, "Enter a price.")),
+  unitPrice: decimal(z.coerce.number({ message: "Enter a price." }).min(0, "Enter a price.")),
   discountPct: percent,
 });
 export type ExtraLineInput = z.infer<typeof extraLineInput>;

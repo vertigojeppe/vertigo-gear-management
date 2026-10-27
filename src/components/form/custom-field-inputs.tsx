@@ -1,5 +1,6 @@
 import { CF_PREFIX, formatCustomFieldValue, type CustomFieldDef, type CustomFieldValues } from "@/lib/custom-fields";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "./decimal-input";
 import { Field } from "./field";
 import { NativeSelect } from "./native-select";
 
@@ -54,12 +55,13 @@ export function CustomFieldInputs({
                   </option>
                 ))}
               </NativeSelect>
+            ) : def.type === "number" ? (
+              <DecimalInput id={id} name={name} defaultValue={current(def.key)} required={def.required} aria-invalid={error ? true : undefined} />
             ) : (
               <Input
                 id={id}
                 name={name}
-                type={def.type === "number" ? "number" : def.type === "date" ? "date" : def.type === "url" ? "url" : "text"}
-                step={def.type === "number" ? "any" : undefined}
+                type={def.type === "date" ? "date" : def.type === "url" ? "url" : "text"}
                 defaultValue={current(def.key)}
                 required={def.required}
                 aria-invalid={error ? true : undefined}

@@ -10,6 +10,7 @@ import { NativeSelect } from "@/components/form/native-select";
 import { SubmitButton } from "@/components/form/submit-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormState } from "@/lib/forms";
 import { RATE_EXTRA_RULES, type RateExtraRule } from "../../../../config/app.config";
@@ -70,7 +71,7 @@ export function RateTableForm({ table }: { table?: RateTableDto }) {
           {rows.map((r, i) => (
             <div key={r.key} className="contents">
               <Input name="tierDays" type="number" min="1" step="1" value={r.days} onChange={(e) => setRow(r.key, { days: e.target.value })} aria-label={`${t("days")} ${i + 1}`} className="h-8 text-sm" />
-              <Input name="tierFactor" type="number" min="0" step="0.001" value={r.factor} onChange={(e) => setRow(r.key, { factor: e.target.value })} aria-label={`${t("factor")} ${i + 1}`} className="h-8 text-sm" />
+              <DecimalInput name="tierFactor" value={r.factor} onChange={(e) => setRow(r.key, { factor: e.target.value })} aria-label={`${t("factor")} ${i + 1}`} className="h-8 text-sm" />
               <Button type="button" variant="ghost" size="xs" onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))} disabled={rows.length === 1} aria-label={t("removeTier")}>
                 ×
               </Button>
@@ -95,7 +96,7 @@ export function RateTableForm({ table }: { table?: RateTableDto }) {
           </NativeSelect>
         </Field>
         <Field id="rt-extra" label={t("extraFactor")} error={err.extraFactor}>
-          <Input id="rt-extra" name="extraFactor" type="number" min="0" step="0.001" value={extraFactor} onChange={(e) => setExtraFactor(e.target.value)} disabled={extraRule === "none"} />
+          <DecimalInput id="rt-extra" name="extraFactor" value={extraFactor} onChange={(e) => setExtraFactor(e.target.value)} disabled={extraRule === "none"} />
         </Field>
       </div>
 

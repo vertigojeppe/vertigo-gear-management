@@ -12,12 +12,11 @@ import { useActionDialog } from "@/components/form/use-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import type { FormState } from "@/lib/forms";
 import { addPartFit, countConsumable, receiveConsumable, removePartFit, useConsumable } from "../actions";
 
 type ProjectChoice = { id: string; name: string };
-
-const step = (unit: string) => (unit === "m" ? "0.01" : "1");
 
 /** "Use": take pieces or metres off the shelf, optionally into a unit and on a project. */
 export function UseConsumableDialog({ modelId, unit, projects }: { modelId: string; unit: string; projects: ProjectChoice[] }) {
@@ -42,7 +41,7 @@ export function UseConsumableDialog({ modelId, unit, projects }: { modelId: stri
             <input type="hidden" name="modelId" value={modelId} />
             <FormError message={state.error} />
             <Field id="cu-qty" label={unit === "m" ? t("metres") : t("pieces")} error={err.quantity}>
-              <Input id="cu-qty" name="quantity" type="number" min={step(unit)} step={step(unit)} defaultValue={v("quantity", "1")} required autoFocus />
+              <DecimalInput id="cu-qty" name="quantity" defaultValue={v("quantity", "1")} required autoFocus />
             </Field>
             <Field id="cu-tag" label={t("intoUnit")} help={t("intoUnitHelp")} optional error={err.itemTag}>
               <Input id="cu-tag" name="itemTag" placeholder="VG-0123" defaultValue={v("itemTag")} />
@@ -96,7 +95,7 @@ export function MetresDialog({ modelId, mode }: { modelId: string; mode: "receiv
             <input type="hidden" name="modelId" value={modelId} />
             <FormError message={state.error} />
             <Field id={`cm-${mode}-qty`} label={t("metres")} error={err.quantity}>
-              <Input id={`cm-${mode}-qty`} name="quantity" type="number" min={mode === "receive" ? "0.01" : "0"} step="0.01" defaultValue={v("quantity")} required autoFocus />
+              <DecimalInput id={`cm-${mode}-qty`} name="quantity" defaultValue={v("quantity")} required autoFocus />
             </Field>
             <Field id={`cm-${mode}-note`} label={t("note")} optional error={err.note}>
               <Input id={`cm-${mode}-note`} name="note" defaultValue={v("note")} />

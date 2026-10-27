@@ -12,6 +12,7 @@ import { useActionDialog } from "@/components/form/use-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import type { FormState } from "@/lib/forms";
 import { ConflictNotice } from "@/components/conflict-notice";
 import { appConfig } from "../../../../config/app.config";
@@ -58,10 +59,10 @@ export function RentalLineDialog({ rentalId, models, existing }: { rentalId: str
                 <Input id="line-qty" name="quantity" type="number" min="1" step="1" defaultValue={v("quantity", existing?.quantity ?? 1)} required />
               </Field>
               <Field id="line-day" label={t("pricePerDay", { currency })} optional error={err.pricePerDay}>
-                <Input id="line-day" name="pricePerDay" type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
+                <DecimalInput id="line-day" name="pricePerDay" value={price} onChange={(e) => setPrice(e.target.value)} />
               </Field>
               <Field id="line-disc" label={t("lineDiscount")} optional error={err.discountPct}>
-                <Input id="line-disc" name="discountPct" type="number" min="0" max="100" step="0.01" defaultValue={v("discountPct", existing?.discountPct)} />
+                <DecimalInput id="line-disc" name="discountPct" defaultValue={v("discountPct", existing?.discountPct)} />
               </Field>
             </div>
             <Field id="line-note" label={t("note")} optional error={err.note}>

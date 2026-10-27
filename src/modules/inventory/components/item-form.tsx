@@ -10,6 +10,7 @@ import { ModelSelect } from "@/components/form/model-select";
 import { NativeSelect } from "@/components/form/native-select";
 import { SubmitButton } from "@/components/form/submit-button";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import { Textarea } from "@/components/ui/textarea";
 import { buttonVariants } from "@/components/ui/button";
 import { applicableDefs, type CustomFieldDef } from "@/lib/custom-fields";
@@ -131,13 +132,13 @@ export function ItemForm({
               <Input id="supplier" name="supplier" defaultValue={v("supplier", item?.supplier)} />
             </Field>
             <Field id="purchasePrice" label={t("purchasePrice", { currency })} optional error={err.purchasePrice}>
-              <Input id="purchasePrice" name="purchasePrice" type="number" step="0.01" min="0" defaultValue={v("purchasePrice", item?.purchasePrice)} />
+              <DecimalInput id="purchasePrice" name="purchasePrice" defaultValue={v("purchasePrice", item?.purchasePrice)} />
             </Field>
             <Field id="insuredValue" label={t("insuredValue", { currency })} optional error={err.insuredValue}>
-              <Input id="insuredValue" name="insuredValue" type="number" step="0.01" min="0" defaultValue={v("insuredValue", item?.insuredValue)} />
+              <DecimalInput id="insuredValue" name="insuredValue" defaultValue={v("insuredValue", item?.insuredValue)} />
             </Field>
             <Field id="replacementValue" label={t("replacementValue", { currency })} optional error={err.replacementValue}>
-              <Input id="replacementValue" name="replacementValue" type="number" step="0.01" min="0" defaultValue={v("replacementValue", item?.replacementValue)} />
+              <DecimalInput id="replacementValue" name="replacementValue" defaultValue={v("replacementValue", item?.replacementValue)} />
             </Field>
           </div>
         </fieldset>

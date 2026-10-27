@@ -11,6 +11,7 @@ import { useActionDialog } from "@/components/form/use-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormState } from "@/lib/forms";
 import { deleteSubHireItem, saveSubHireItem, setSubHireItemArchived } from "../actions";
@@ -75,10 +76,10 @@ export function SubHireItemDialog({ item, owners, categories, trigger }: { item?
                 </NativeSelect>
               </Field>
               <Field id="sh-cost" label={t("costPerDay")} help={t("costPerDayHelp")} optional error={err.costPerDay}>
-                <Input id="sh-cost" name="costPerDay" type="number" min="0" step="0.01" defaultValue={v("costPerDay", item?.costPerDay)} />
+                <DecimalInput id="sh-cost" name="costPerDay" defaultValue={v("costPerDay", item?.costPerDay)} />
               </Field>
               <Field id="sh-price" label={t("rentalDayPrice")} help={t("rentalDayPriceHelp")} optional error={err.rentalDayPrice}>
-                <Input id="sh-price" name="rentalDayPrice" type="number" min="0" step="0.01" defaultValue={v("rentalDayPrice", item?.rentalDayPrice)} />
+                <DecimalInput id="sh-price" name="rentalDayPrice" defaultValue={v("rentalDayPrice", item?.rentalDayPrice)} />
               </Field>
             </div>
             <Field id="sh-description" label={t("description")} help={t("descriptionHelp")} optional error={err.description}>

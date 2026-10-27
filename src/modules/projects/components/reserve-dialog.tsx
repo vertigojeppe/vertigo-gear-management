@@ -10,6 +10,7 @@ import { useActionDialog } from "@/components/form/use-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import { reserve, type ReserveState } from "../actions";
 import { ConflictNotice } from "@/components/conflict-notice";
 
@@ -78,10 +79,10 @@ export function ReserveDialog({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Field id="res-price" label={t("dayPrice")} help={t("dayPriceHelp")} optional error={err.pricePerDay}>
-                <Input id="res-price" name="pricePerDay" type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
+                <DecimalInput id="res-price" name="pricePerDay" value={price} onChange={(e) => setPrice(e.target.value)} />
               </Field>
               <Field id="res-disc" label={t("lineDiscount")} optional error={err.discountPct}>
-                <Input id="res-disc" name="discountPct" type="number" min="0" max="100" step="0.01" defaultValue={v("discountPct", existing?.discountPct)} />
+                <DecimalInput id="res-disc" name="discountPct" defaultValue={v("discountPct", existing?.discountPct)} />
               </Field>
             </div>
             <Field id="res-note" label={t("note")} optional error={err.note}>

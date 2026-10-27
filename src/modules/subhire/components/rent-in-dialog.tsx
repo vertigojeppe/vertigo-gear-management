@@ -11,6 +11,7 @@ import { useActionDialog } from "@/components/form/use-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import type { FormState } from "@/lib/forms";
 import { removeSubHireLine, saveSubHireLine } from "../actions";
 import type { SubHireLineRow, SubHireOption } from "../queries";
@@ -83,13 +84,13 @@ export function RentInDialog({ projectId, options, defaultFrom, defaultTo, exist
             </div>
             <div className="grid grid-cols-3 gap-3">
               <Field id="sh-line-cost" label={t("costPerDay")} optional error={err.costPerDay}>
-                <Input id="sh-line-cost" name="costPerDay" type="number" min="0" step="0.01" value={cost} onChange={(e) => setCost(e.target.value)} />
+                <DecimalInput id="sh-line-cost" name="costPerDay" value={cost} onChange={(e) => setCost(e.target.value)} />
               </Field>
               <Field id="sh-line-price" label={tp("dayPrice")} optional error={err.pricePerDay}>
-                <Input id="sh-line-price" name="pricePerDay" type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
+                <DecimalInput id="sh-line-price" name="pricePerDay" value={price} onChange={(e) => setPrice(e.target.value)} />
               </Field>
               <Field id="sh-line-disc" label={tp("lineDiscount")} optional error={err.discountPct}>
-                <Input id="sh-line-disc" name="discountPct" type="number" min="0" max="100" step="0.01" defaultValue={v("discountPct", existing?.discountPct)} />
+                <DecimalInput id="sh-line-disc" name="discountPct" defaultValue={v("discountPct", existing?.discountPct)} />
               </Field>
             </div>
             <Field id="sh-line-note" label={tp("note")} optional error={err.note}>

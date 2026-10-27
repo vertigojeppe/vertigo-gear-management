@@ -11,6 +11,7 @@ import { useActionDialog } from "@/components/form/use-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormState } from "@/lib/forms";
 import { deleteWish, saveWish, setWishStatus } from "../actions";
@@ -65,10 +66,10 @@ export function WishDialog({ wish, categories, trigger }: { wish?: WishRow; cate
                 <Input id="w-quantity" name="quantity" type="number" min="1" step="1" defaultValue={v("quantity", wish?.quantity ?? 1)} />
               </Field>
               <Field id="w-price" label={t("price")} help={t("priceHelp")} optional error={err.price}>
-                <Input id="w-price" name="price" type="number" min="0" step="0.01" defaultValue={v("price", wish?.price)} />
+                <DecimalInput id="w-price" name="price" defaultValue={v("price", wish?.price)} />
               </Field>
               <Field id="w-dayprice" label={t("rentalDayPrice")} help={t("rentalDayPriceHelp")} optional error={err.rentalDayPrice}>
-                <Input id="w-dayprice" name="rentalDayPrice" type="number" min="0" step="0.01" defaultValue={v("rentalDayPrice", wish?.rentalDayPrice)} />
+                <DecimalInput id="w-dayprice" name="rentalDayPrice" defaultValue={v("rentalDayPrice", wish?.rentalDayPrice)} />
               </Field>
               <Field id="w-link" label={t("link")} optional error={err.link}>
                 <Input id="w-link" name="link" type="url" placeholder="https://" defaultValue={v("link", wish?.link)} />

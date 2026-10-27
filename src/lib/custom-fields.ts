@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { decimalText } from "./forms";
 
 /**
  * Custom fields: admins define extra fields per entity; values live in a
@@ -45,7 +46,7 @@ export function fieldSchema(def: CustomFieldDef) {
   let s: z.ZodTypeAny;
   switch (def.type) {
     case "number":
-      s = z.coerce.number().finite();
+      s = z.preprocess(decimalText, z.coerce.number().finite());
       break;
     case "date":
       s = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD.");
