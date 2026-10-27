@@ -42,6 +42,9 @@ model PackingLine {
   createdAt  DateTime       @default(now())
 
   @@index([listId])
+  @@index([modelId])
+  @@index([itemId])
+  @@index([caseItemId])
 }
 
 /// One row per packed unit (serialized) or per packed quantity (bulk),
@@ -78,6 +81,7 @@ model PackingCheck {
   @@index([lineId, phase])
   @@index([itemId])
   @@index([outCheckId])
+  @@index([resultItemId])
 }
 
 model PackingTemplate {
@@ -100,6 +104,7 @@ model PackingTemplateLine {
   sortOrder  Int             @default(0)
 
   @@index([templateId])
+  @@index([modelId])
 }
 
 /// Read-only share links for packing lists (and plans in Phase 4).

@@ -70,3 +70,18 @@ describe("iCal feeds", () => {
     }
   });
 });
+
+describe("feed history", () => {
+  it("leaves out jobs that ended more than a year ago", async () => {
+    const old = await prisma.project.create({
+      data: { name: `Old feed ${marker}`, status: "done", buildStart: new Date("2020-03-01T00:00:00Z"), reserveFrom: new Date("2020-03-01T00:00:00Z"), reserveTo: new Date("2020-03-02T00:00:00Z") },
+    });
+    try {
+      const ics = await buildFeed("projects", null);
+      expect(ics).toContain(`Feed ${marker}`);
+      expect(ics).not.toContain(`Old feed ${marker}`);
+    } finally {
+      await prisma.project.delete({ where: { id: old.id } });
+    }
+  });
+});

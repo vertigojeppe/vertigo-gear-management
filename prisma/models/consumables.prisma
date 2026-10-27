@@ -45,4 +45,5 @@ model StockMovement {
 
   @@index([modelId, createdAt])
   @@index([itemId])
+  @@index([projectId])
 }

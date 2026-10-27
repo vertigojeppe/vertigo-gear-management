@@ -17,6 +17,9 @@ import { today } from "@/lib/dates";
  */
 export type FeedScope = "projects" | "rentals" | "mine";
 
+/** How far back the project feeds go; older jobs drop out of subscribed calendars. */
+export const FEED_HISTORY_DAYS = 365;
+
 function appUrl(path: string) {
   return `${(process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "")}${path}`;
 }
@@ -47,9 +50,11 @@ export async function buildFeed(scope: FeedScope, userId: string | null): Promis
   const cal = ical({ name: `${appConfig.name} – ${scope === "mine" ? "My jobs" : scope === "projects" ? "Projects" : "Rentals"}`, timezone: appConfig.timezone, method: ICalCalendarMethod.PUBLISH });
 
   if (scope === "projects" || scope === "mine") {
+    // Jobs that ended within the last year or are still to come (or have no dates yet); calendar apps poll this often.
+    const since = new Date(`${addDays(today(), -FEED_HISTORY_DAYS)}T00:00:00Z`);
     const projects = await prisma.project.findMany({
-      where: { status: { not: "cancelled" }, ...(scope === "mine" && userId ? { crew: { some: { userId } } } : {}) },
-      include: { client: true, crew: { include: { user: true } } },
+      where: { status: { not: "cancelled" }, OR: [{ reserveTo: { gte: since } }, { reserveTo: null }], ...(scope === "mine" && userId ? { crew: { some: { userId } } } : {}) },
+      include: { client: { select: { name: true } }, crew: { where: { userId: userId ?? "" }, select: { userId: true, callTime: true } } },
     });
     const callHours = await appSettings.callHours();
     for (const p of projects) {
@@ -90,7 +95,7 @@ export async function buildFeed(scope: FeedScope, userId: string | null): Promis
   }
 
   if (scope === "rentals") {
-    const rentals = await prisma.rental.findMany({ where: { status: { not: "returned" } }, include: { client: true, lines: { include: { model: true } } } });
+    const rentals = await prisma.rental.findMany({ where: { status: { not: "returned" } }, include: { client: { select: { name: true } }, lines: { include: { model: { select: { name: true, variant: true } } } } } });
     for (const r of rentals) {
       const url = appUrl(`/rentals/${r.id}`);
       cal.createEvent({

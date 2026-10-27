@@ -741,7 +741,12 @@ a second entry that exports components only and never a service.
   `googleEventIds` on the row; the REST client is `google.ts` (service
   account JWT, no SDK). Tests inject a fake client.
 - iCal feeds: `src/modules/calendar/feeds.ts`, served at
-  `/api/calendar/<token>.ics`.
+  `/api/calendar/<token>.ics`. Project feeds go back
+  `FEED_HISTORY_DAYS` (a year, by `reserveTo`); calendar apps poll them,
+  so they select only the fields the events use.
+- Foreign keys get an `@@index` when anything filters on them or the
+  referenced row can be deleted (Postgres does not index them itself, and
+  SetNull / Restrict then scan the table).
 - Set `OUTBOX_DISABLED=1` when running one-off scripts or tests that must
   not deliver anything.
 

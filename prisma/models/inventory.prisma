@@ -136,6 +136,7 @@ model Item {
   @@index([locationId])
   @@index([parentItemId])
   @@index([serialNumber])
+  @@index([homeLocationId])
 }
 
 /// Where things are: warehouse zone/shelf, a project, a renter, a repair shop.
