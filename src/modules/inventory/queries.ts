@@ -333,12 +333,13 @@ export async function itemDetail(id: string) {
     },
   });
   if (!i) return null;
-  const cats = await prisma.category.findMany({ select: { id: true, name: true, parentId: true } });
+  const [cats, activity] = await Promise.all([prisma.category.findMany({ select: { id: true, name: true, parentId: true } }), activityFor("item", id, 30)]);
   return {
     item: toItemDto(i),
     model: toModelDto(i.model),
     categoryPath: pathNames(cats, i.model.categoryId),
     photoUrl: i.model.defaultPhoto ? `/api/files/${i.model.defaultPhoto.id}` : null,
+    thumbUrl: i.model.defaultPhoto?.thumbKey ? `/api/files/${i.model.defaultPhoto.id}?thumb=1` : null,
     location: i.location ? { id: i.location.id, name: i.location.name, type: i.location.type } : null,
     parentItem: i.parentItem ? { id: i.parentItem.id, label: i.parentItem.name ?? i.parentItem.assetTag } : null,
     contents: i.contents.map((c) => ({ ...toItemDto(c), modelLabel: `${modelLabel(c.model)}` })),
@@ -350,7 +351,7 @@ export async function itemDetail(id: string) {
       userName: l.user?.name ?? null,
       createdAt: l.createdAt,
     })),
-    activity: await activityFor("item", id, 30),
+    activity,
   };
 }
 

@@ -41,11 +41,16 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
   const label = `${modelLabel(model)}`;
   // Metre consumables (LED strip, alu profile) have no units: stock and use live in the consumable section.
   const metres = model.consumable && model.unit === "m";
-  const [projectChoices, modelChoices] = model.consumable && canEdit ? await Promise.all([upcomingProjects(40), modelOptions()]) : [[], []];
   const isAdmin = can(actor.role, "users.manage");
-  // Admins can switch a model that has items between serialized and bulk (the form refuses once items exist).
-  const trackingPlan = isAdmin && items.length > 0 && !metres ? await models.trackingPlan(actor, model.id) : null;
-  const [family, categories] = isAdmin ? await Promise.all([familyState(model.id), categoryOptions()]) : [null, []];
+  const useStock = model.consumable && canEdit;
+  const [projectChoices, modelChoices, trackingPlan, family, categories] = await Promise.all([
+    useStock ? upcomingProjects(40) : [],
+    useStock ? modelOptions() : [],
+    // Admins can switch a model that has items between serialized and bulk (the form refuses once items exist).
+    isAdmin && items.length > 0 && !metres ? models.trackingPlan(actor, model.id) : null,
+    isAdmin ? familyState(model.id) : null,
+    isAdmin ? categoryOptions() : [],
+  ]);
 
   const specs: [string, string][] = [];
   if (model.weightKg !== null) specs.push([t("weightKg"), formatNumber(model.weightKg, 3)]);

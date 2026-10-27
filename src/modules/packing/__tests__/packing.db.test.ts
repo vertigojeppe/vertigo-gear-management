@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import type { Actor } from "@/lib/auth/session";
 import { PackingError, packingChecks, packingLines, packingLists, packingTemplates, shareLinks, undoCheckIn } from "../service";
-import { listDetail } from "../queries";
+import { listDetail, listsForProject, listsForProjects } from "../queries";
 
 /**
  * Integration test: a packing list goes draft → checked_out → checked_in.
@@ -67,6 +67,13 @@ describe("packing list lifecycle", () => {
     expect(detail?.lines).toHaveLength(1);
     expect(detail?.lines[0].quantity).toBe(2);
     expect(detail?.progress.units).toBe(2);
+  });
+
+  it("lists a project's lists, one query for several projects", async () => {
+    const byProject = await listsForProjects([projectId, "no-such-project"]);
+    expect(byProject.get("no-such-project")).toEqual([]);
+    expect(byProject.get(projectId)).toEqual(await listsForProject(projectId));
+    expect(byProject.get(projectId)?.map((l) => [l.id, l.lineCount, l.progress.units])).toEqual([[listId, 1, 2]]);
   });
 
   it("merges a plain line of the same model, and adds bulk and kit lines", async () => {

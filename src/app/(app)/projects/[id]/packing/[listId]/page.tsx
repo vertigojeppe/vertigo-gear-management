@@ -60,7 +60,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
   const canEdit = can(actor.role, "packing.write");
   const editable = canEdit && canEditLines(list.status);
   const ids = { projectId: id, listId };
-  const [catalog, templates, share, spares] = await Promise.all([editable ? gearCatalog({ listId }) : [], editable ? templateOptions() : [], shareLinks.current("packing_list", listId), editable ? spareSuggestions(listId) : []]);
+  const [catalog, templates, share, spares, glossaryGroups] = await Promise.all([editable ? gearCatalog({ listId }) : [], editable ? templateOptions() : [], shareLinks.current("packing_list", listId), editable ? spareSuggestions(listId) : [], editable ? glossary.groups() : []]);
   const caseOptions = lines.filter((l) => l.isKit && l.itemId).map((l) => ({ id: l.itemId!, label: l.itemName ?? l.itemTag ?? "" }));
   const groups = groupLines(lines, list.groupBy);
 
@@ -122,7 +122,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
 
       {editable && (
         <>
-          <GearPicker target={{ kind: "list", ...ids }} catalog={catalog} cases={caseOptions} glossaryGroups={await glossary.groups()} />
+          <GearPicker target={{ kind: "list", ...ids }} catalog={catalog} cases={caseOptions} glossaryGroups={glossaryGroups} />
           <SpareSuggestions ids={ids} rows={spares} />
           <div className="flex flex-wrap gap-2">
             {templates.length > 0 && <ApplyTemplateDialog ids={ids} templates={templates.map((x) => ({ id: x.id, label: `${x.name} (${x._count.lines})` }))} />}

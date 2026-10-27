@@ -56,7 +56,15 @@ export async function processOutbox(limit = 20): Promise<{ processed: number; fa
   return { processed, failed };
 }
 
+/** Delete delivered rows older than `doneRetentionDays`; failed rows stay for Settings. */
+export async function pruneOutbox(now = new Date()): Promise<number> {
+  const before = new Date(now.getTime() - outboxConfig.doneRetentionDays * 86_400_000);
+  const { count } = await prisma.outbox.deleteMany({ where: { status: "done", updatedAt: { lt: before } } });
+  return count;
+}
+
 let timer: NodeJS.Timeout | null = null;
+let lastPrune = 0;
 
 /** Start the poller once per process. Safe to call repeatedly. */
 export function startOutboxWorker() {
@@ -64,6 +72,10 @@ export function startOutboxWorker() {
   const tick = async () => {
     try {
       await processOutbox();
+      if (Date.now() - lastPrune > 3_600_000) {
+        lastPrune = Date.now();
+        await pruneOutbox();
+      }
     } catch (err) {
       console.error("[outbox] tick failed", err);
     }
