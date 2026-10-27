@@ -29,6 +29,7 @@ model Rental {
 
   @@index([status])
   @@index([startDate, endDate])
+  @@index([clientId])
 }
 
 model RentalLine {
@@ -49,4 +50,6 @@ model RentalLine {
   createdAt    DateTime    @default(now())
 
   @@index([rentalId])
+  @@index([modelId])
+  @@index([itemId])
 }

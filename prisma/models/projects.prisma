@@ -70,6 +70,7 @@ model Project {
 
   @@index([status])
   @@index([reserveFrom, reserveTo])
+  @@index([clientId])
 }
 
 model ProjectContact {
@@ -96,6 +97,7 @@ model ProjectCrew {
   notes     String?
 
   @@unique([projectId, userId])
+  @@index([userId])
 }
 
 /// THE availability table. A project or a rental line reserves `quantity`
