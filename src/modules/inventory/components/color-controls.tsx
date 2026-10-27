@@ -8,7 +8,7 @@ import { NativeSelect } from "@/components/form/native-select";
 import { SubmitButton } from "@/components/form/submit-button";
 import { ConfirmButton } from "@/components/form/confirm-button";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import { COLOR_PALETTE, colorHex, needsOutline } from "@/lib/colors";
 import type { FormState } from "@/lib/forms";
 import { cn } from "cn";
@@ -88,7 +88,7 @@ export function LengthColorsTable({ rows }: { rows: LengthColorRow[] }) {
       <ActionForm action={action} className="flex flex-wrap items-end gap-2 text-sm">
         <label className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">{t("metres")}</span>
-          <Input name="metres" type="number" min="0.1" step="0.1" placeholder="15" required className="w-24" />
+          <DecimalInput name="metres" placeholder="15" required className="w-24" />
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">{t("color")}</span>

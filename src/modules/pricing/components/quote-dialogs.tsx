@@ -11,6 +11,7 @@ import { useActionDialog } from "@/components/form/use-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormState } from "@/lib/forms";
 import { appConfig } from "../../../../config/app.config";
@@ -58,7 +59,7 @@ export function QuoteSettingsDialog({ holder, tables, current, windowDays }: { h
                 <Input id="qs-days" name="chargeDays" type="number" min="1" step="1" defaultValue={v("chargeDays", current.chargeDays)} placeholder={windowDays ? String(windowDays) : ""} />
               </Field>
               <Field id="qs-discount" label={t("documentDiscount")} optional error={err.discountPct}>
-                <Input id="qs-discount" name="discountPct" type="number" min="0" max="100" step="0.01" defaultValue={v("discountPct", current.discountPct)} />
+                <DecimalInput id="qs-discount" name="discountPct" defaultValue={v("discountPct", current.discountPct)} />
               </Field>
             </div>
             <Field id="qs-terms" label={t("terms")} help={t("termsHelp")} optional error={err.terms}>
@@ -110,10 +111,10 @@ export function ExtraLineDialog({ holder, existing }: { holder: Holder; existing
                 <Input id="xl-qty" name="quantity" type="number" min="1" step="1" defaultValue={v("quantity", existing?.quantity ?? 1)} required />
               </Field>
               <Field id="xl-price" label={t("unitPrice", { currency: appConfig.currency })} error={err.unitPrice}>
-                <Input id="xl-price" name="unitPrice" type="number" min="0" step="0.01" defaultValue={v("unitPrice", existing?.unitPrice)} required />
+                <DecimalInput id="xl-price" name="unitPrice" defaultValue={v("unitPrice", existing?.unitPrice)} required />
               </Field>
               <Field id="xl-disc" label={t("lineDiscount")} optional error={err.discountPct}>
-                <Input id="xl-disc" name="discountPct" type="number" min="0" max="100" step="0.01" defaultValue={v("discountPct", existing?.discountPct)} />
+                <DecimalInput id="xl-disc" name="discountPct" defaultValue={v("discountPct", existing?.discountPct)} />
               </Field>
             </div>
             <div className="flex justify-end gap-2">

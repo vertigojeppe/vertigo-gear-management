@@ -157,6 +157,14 @@ a second entry that exports components only and never a service.
   user's input when the action returns an error. `SubmitButton` reads the
   pending flag from it. Plain `<form action={serverFn}>` is fine for buttons
   (delete, status) and for the upload form, where a reset is wanted.
+- Numbers with decimals (prices, weights, sizes, discounts, factors,
+  metres, number extra fields) use `DecimalInput`
+  (`src/components/form/decimal-input.tsx`: text with the decimal keypad,
+  since `type="number"` drops a comma) and parse through `decimalText`
+  (`optionalNumber`, `decimal(schema)` in `src/lib/forms.ts`): "12,5" and
+  "12.5" both work, and with both marks the last is the decimal point
+  ("1.234,50"). Whole-number fields (quantities, sort order) stay
+  `type="number"`.
 - Native `<select>` (`NativeSelect`) in forms so FormData posts without JS.
   On mouse screens in Chromium, globals.css turns them into customizable
   selects (`appearance: base-select`) so the open list uses the app font

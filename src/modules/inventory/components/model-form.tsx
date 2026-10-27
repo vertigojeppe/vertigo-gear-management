@@ -9,6 +9,7 @@ import { CustomFieldInputs } from "@/components/form/custom-field-inputs";
 import { NativeSelect } from "@/components/form/native-select";
 import { SubmitButton } from "@/components/form/submit-button";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import { Textarea } from "@/components/ui/textarea";
 import { buttonVariants } from "@/components/ui/button";
 import { applicableDefs, type CustomFieldDef } from "@/lib/custom-fields";
@@ -97,16 +98,16 @@ export function ModelForm({
         <legend className="mb-2 text-sm font-medium">{t("specs")}</legend>
         <div className="grid gap-4 sm:grid-cols-4">
           <Field id="weightKg" label={t("weightKg")} optional error={err.weightKg}>
-            <Input id="weightKg" name="weightKg" type="number" step="0.001" min="0" defaultValue={v("weightKg", base?.weightKg)} />
+            <DecimalInput id="weightKg" name="weightKg" defaultValue={v("weightKg", base?.weightKg)} />
           </Field>
           <Field id="widthCm" label={`${t("widthCm")} (cm)`} optional error={err.widthCm}>
-            <Input id="widthCm" name="widthCm" type="number" step="0.1" min="0" defaultValue={v("widthCm", base?.widthCm)} />
+            <DecimalInput id="widthCm" name="widthCm" defaultValue={v("widthCm", base?.widthCm)} />
           </Field>
           <Field id="heightCm" label={`${t("heightCm")} (cm)`} optional error={err.heightCm}>
-            <Input id="heightCm" name="heightCm" type="number" step="0.1" min="0" defaultValue={v("heightCm", base?.heightCm)} />
+            <DecimalInput id="heightCm" name="heightCm" defaultValue={v("heightCm", base?.heightCm)} />
           </Field>
           <Field id="depthCm" label={`${t("depthCm")} (cm)`} optional error={err.depthCm}>
-            <Input id="depthCm" name="depthCm" type="number" step="0.1" min="0" defaultValue={v("depthCm", base?.depthCm)} />
+            <DecimalInput id="depthCm" name="depthCm" defaultValue={v("depthCm", base?.depthCm)} />
           </Field>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -114,7 +115,7 @@ export function ModelForm({
             <Input id="powerDrawW" name="powerDrawW" type="number" step="1" min="0" defaultValue={v("powerDrawW", base?.powerDrawW)} />
           </Field>
           <Field id="rentalDayPrice" label={t("rentalDayPrice", { currency: appConfig.currency })} help={t("rentalDayPriceHelp")} optional error={err.rentalDayPrice}>
-            <Input id="rentalDayPrice" name="rentalDayPrice" type="number" step="0.01" min="0" defaultValue={v("rentalDayPrice", base?.rentalDayPrice)} />
+            <DecimalInput id="rentalDayPrice" name="rentalDayPrice" defaultValue={v("rentalDayPrice", base?.rentalDayPrice)} />
           </Field>
         </div>
         <Field id="linksText" label={t("links")} optional help={t("linksHelp")} error={err.linksText}>
@@ -150,7 +151,7 @@ export function ModelForm({
               </NativeSelect>
             </Field>
             <Field id="minStock" label={t("minStock")} help={t("minStockHelp")} optional error={err.minStock}>
-              <Input id="minStock" name="minStock" type="number" min="0" step={unit === "m" ? "0.01" : "1"} defaultValue={v("minStock", base?.minStock)} />
+              <DecimalInput id="minStock" name="minStock" defaultValue={v("minStock", base?.minStock)} />
             </Field>
           </div>
         )}

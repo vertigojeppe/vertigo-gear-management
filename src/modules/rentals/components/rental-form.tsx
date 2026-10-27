@@ -10,6 +10,7 @@ import { NativeSelect } from "@/components/form/native-select";
 import { SubmitButton } from "@/components/form/submit-button";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DecimalInput } from "@/components/form/decimal-input";
 import { Textarea } from "@/components/ui/textarea";
 import type { CustomFieldDef } from "@/lib/custom-fields";
 import type { FormState } from "@/lib/forms";
@@ -61,7 +62,7 @@ export function RentalForm({ rental, clients, defs }: { rental?: RentalDto; clie
           <Input id="endDate" name="endDate" type="date" defaultValue={v("endDate", rental?.endDate)} required />
         </Field>
         <Field id="deposit" label={t("deposit", { currency: appConfig.currency })} optional error={err.deposit}>
-          <Input id="deposit" name="deposit" type="number" step="0.01" min="0" defaultValue={v("deposit", rental?.deposit)} />
+          <DecimalInput id="deposit" name="deposit" defaultValue={v("deposit", rental?.deposit)} />
         </Field>
       </div>
       <Field id="notes" label={t("notes")} optional error={err.notes}>

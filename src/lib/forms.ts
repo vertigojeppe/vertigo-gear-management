@@ -63,9 +63,27 @@ export function parseForm<S extends z.ZodTypeAny>(
 /** Optional text: "" becomes undefined. */
 export const optionalText = z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().max(5000).optional());
 
-/** Optional number from a text input. */
+/**
+ * A typed number as JavaScript reads it: "12,5" and "12.5" are both 12.5,
+ * spaces go, and with both marks the last one is the decimal point
+ * ("1.234,50" and "1,234.50" are 1234.5). Anything else passes through.
+ */
+export function decimalText(v: unknown): unknown {
+  if (typeof v !== "string") return v;
+  const s = v.replace(/[\s ]/g, "");
+  const comma = s.lastIndexOf(",");
+  const dot = s.lastIndexOf(".");
+  if (comma >= 0 && dot >= 0) return comma > dot ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, "");
+  if (comma >= 0 && s.indexOf(",") === comma) return s.replace(",", ".");
+  return s;
+}
+
+/** A number from a text input, with a decimal comma or point. */
+export const decimal = <S extends z.ZodTypeAny>(schema: S) => z.preprocess(decimalText, schema);
+
+/** Optional number from a text input ("12,5" or "12.5"). */
 export const optionalNumber = z.preprocess(
-  (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+  (v) => (typeof v === "string" && v.trim() === "" ? undefined : decimalText(v)),
   z.coerce.number().finite().optional(),
 );
 

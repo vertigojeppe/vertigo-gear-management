@@ -22,9 +22,10 @@ test.describe("inventory", () => {
     const category = page.getByLabel("Category");
     const movingHeads = await category.locator("option", { hasText: "Moving heads" }).first().getAttribute("value");
     await category.selectOption(movingHeads!);
-    await page.getByLabel("Weight (kg)").fill("12.5");
+    await page.getByLabel("Weight (kg)").fill("12,5"); // a decimal comma works as well as a point
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("heading", { name: `Beam ${stamp} Testlight` })).toBeVisible();
+    await expect(page.getByText("12,5", { exact: true })).toBeVisible();
 
     // Add 2 units with serial numbers
     await page.getByRole("link", { name: "Add items" }).first().click();
