@@ -573,9 +573,10 @@ the module.
   and back) and a long timeline at the bottom (`?months=` 1–12, default
   6; bars packed into rows by `packLanes`, from `timelineBars`, which
   skips the calendar's conflict check). Data: `boardData`
-  (`src/modules/board`, pure parts in `logic.ts`). `BoardRefresh`
-  re-reads every minute and touches `/api/auth/session` every half hour
-  so the cookie never expires.
+  (`src/modules/board`, pure parts in `logic.ts`; packing lists of all
+  jobs in one query via `listsForProjects`). `BoardRefresh` re-reads
+  every minute while the page is visible (at once when it comes back) and
+  touches `/api/auth/session` every half hour so the cookie never expires.
 - Its theme is its own, per screen: localStorage `boardTheme`, dark
   unless set to light. `boardThemeScript` (`theme-script.ts`, a plain
   module so the server page can call it) runs inline before paint and
@@ -745,6 +746,8 @@ the module.
   backoff). Handlers register by type; calendar handlers are in
   `src/modules/calendar/handlers.ts`, started from `src/instrumentation.ts`.
   `POST /api/cron/outbox` processes the queue for serverless hosts.
+  The worker prunes `done` rows older than `outboxConfig.doneRetentionDays`
+  once an hour (`pruneOutbox`); failed rows stay until retried.
 - Google push (`src/modules/calendar/sync.ts`) is idempotent via
   `googleEventIds` on the row; the REST client is `google.ts` (service
   account JWT, no SDK). Tests inject a fake client.

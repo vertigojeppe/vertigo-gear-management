@@ -8,18 +8,26 @@ import { appConfig } from "../../../../config/app.config";
 
 /**
  * Keeps the office screen current without anyone touching it: the data is
- * re-read every minute, and the session is touched every half hour so the
- * screen account never gets signed out by an expiring cookie.
+ * re-read every minute while the page is visible (and at once when it
+ * becomes visible again), and the session is touched every half hour so
+ * the screen account never gets signed out by an expiring cookie.
  */
 export function BoardRefresh({ everySeconds = 60 }: { everySeconds?: number }) {
   const router = useRouter();
   useEffect(() => {
-    const data = setInterval(() => router.refresh(), everySeconds * 1000);
+    const data = setInterval(() => {
+      if (document.visibilityState === "visible") router.refresh();
+    }, everySeconds * 1000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") router.refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     // Reading the session re-issues the session cookie with a fresh expiry.
     const session = setInterval(() => void fetch("/api/auth/session", { cache: "no-store" }).catch(() => undefined), 30 * 60_000);
     return () => {
       clearInterval(data);
       clearInterval(session);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [router, everySeconds]);
   return null;

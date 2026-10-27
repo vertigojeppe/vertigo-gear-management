@@ -223,6 +223,8 @@ export const outboxConfig = {
   maxAttempts: 8,
   /** Backoff base: attempt n waits base * 2^n seconds. */
   backoffBaseSeconds: 30,
+  /** Delivered rows are deleted after this many days; failed ones stay until retried. */
+  doneRetentionDays: 30,
 } as const;
 
 /* ---------------------------------------------------------------------- */

@@ -131,8 +131,10 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
           </a>
           <LabelsDialog query={`ids=${item.id}`} count={1} variant="ghost" />
           {detail.photoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={detail.photoUrl} alt={label} className="mt-2 w-full rounded object-cover" />
+            <a href={detail.photoUrl} className="mt-2 w-full">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={detail.thumbUrl ?? detail.photoUrl} alt={label} className="w-full rounded object-cover" />
+            </a>
           )}
         </div>
       </div>

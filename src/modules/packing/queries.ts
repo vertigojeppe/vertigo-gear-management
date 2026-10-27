@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@/generated/prisma/client";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { loadColorMaps } from "@/modules/inventory/queries";
 // eslint-disable-next-line no-restricted-imports -- pure helper
@@ -222,8 +223,21 @@ export function groupLines(lines: LineRow[], groupBy: "category" | "case"): { ke
 }
 
 export async function listsForProject(projectId: string) {
-  const rows = await prisma.packingList.findMany({ where: { projectId }, orderBy: { createdAt: "asc" }, include: { lines: { include: { model: { select: { trackingType: true } }, checks: true } } } });
-  return rows.map((r) => ({
+  return (await listsForProjects([projectId])).get(projectId) ?? [];
+}
+
+/** The packing lists of several projects in one query, by project id. */
+export async function listsForProjects(projectIds: string[]) {
+  const rows = projectIds.length ? await prisma.packingList.findMany({ where: { projectId: { in: projectIds } }, orderBy: { createdAt: "asc" }, include: { lines: { include: { model: { select: { trackingType: true } }, checks: true } } } }) : [];
+  const out = new Map(projectIds.map((id) => [id, [] as ListSummary[]]));
+  for (const r of rows) out.get(r.projectId)?.push(summary(r));
+  return out;
+}
+
+export type ListSummary = ReturnType<typeof summary>;
+
+function summary(r: Prisma.PackingListGetPayload<{ include: { lines: { include: { model: { select: { trackingType: true } }; checks: true } } } }>) {
+  return {
     id: r.id,
     name: r.name,
     status: r.status as PackingStatus,
@@ -231,7 +245,7 @@ export async function listsForProject(projectId: string) {
     progress: listProgress(r.lines.map((l) => ({ quantity: l.quantity, trackingType: l.model.trackingType === "bulk" ? "bulk" : "serialized", checks: l.checks.map((c) => ({ phase: c.phase as "out" | "in", quantity: c.quantity, outcome: c.outcome })) }))),
     checkedOutAt: r.checkedOutAt,
     checkedInAt: r.checkedInAt,
-  }));
+  };
 }
 
 export async function kitOptions() {
