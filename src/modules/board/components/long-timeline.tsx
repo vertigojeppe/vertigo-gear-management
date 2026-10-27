@@ -1,7 +1,8 @@
 import { getLocale } from "next-intl/server";
 import { cn } from "cn";
 import { addDays, daysBetween, type DateString } from "@/lib/dates";
-import { barColor, type TimelineBar } from "@/modules/projects";
+import { type TimelineBar } from "@/modules/projects";
+import { barColor } from "@/modules/projects/components/timeline";
 import { barSpan, packLanes } from "../logic";
 
 /**

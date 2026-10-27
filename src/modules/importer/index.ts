@@ -6,7 +6,4 @@ export { buildPlan, resolveOps, modelKey } from "./plan";
 export type { Plan, PlanRow, PlanContext, Bucket, Op } from "./plan";
 export { applyOps } from "./commit";
 export type { CommitResult } from "./commit";
-export { ImportPreview } from "./components/import-preview";
-export { ImportUploadForm } from "./components/import-upload-form";
 export { specImport } from "./specs-service";
-export { SpecImport } from "./components/spec-import";

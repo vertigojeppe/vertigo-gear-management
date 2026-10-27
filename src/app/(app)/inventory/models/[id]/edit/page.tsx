@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
-import { ModelForm, categoryOptions, modelDetail } from "@/modules/inventory";
+import { categoryOptions, modelDetail } from "@/modules/inventory";
+import { ModelForm } from "@/modules/inventory/components/model-form";
 import { customFieldDefinitions } from "@/modules/settings";
 import { modelLabel } from "@/lib/format";
 

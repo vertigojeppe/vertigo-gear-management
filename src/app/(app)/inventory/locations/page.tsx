@@ -5,7 +5,9 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
 import { personOptions } from "@/modules/contacts";
-import { DeleteLocationButton, InventoryTabs, LocationDialog, locationList, locationOptions } from "@/modules/inventory";
+import { locationList, locationOptions } from "@/modules/inventory";
+import { DeleteLocationButton, LocationDialog } from "@/modules/inventory/components/tree-forms";
+import { InventoryTabs } from "@/modules/inventory/components/inventory-tabs";
 
 export const metadata: Metadata = { title: "Locations" };
 

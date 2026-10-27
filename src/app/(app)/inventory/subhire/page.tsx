@@ -6,8 +6,10 @@ import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatMoney } from "@/lib/format";
 import { contactOptions } from "@/modules/contacts";
-import { InventoryTabs, categoryOptions } from "@/modules/inventory";
-import { ArchiveSubHireItemButton, DeleteSubHireItemButton, SubHireItemDialog, subHireCatalog } from "@/modules/subhire";
+import { categoryOptions } from "@/modules/inventory";
+import { InventoryTabs } from "@/modules/inventory/components/inventory-tabs";
+import { subHireCatalog } from "@/modules/subhire";
+import { ArchiveSubHireItemButton, DeleteSubHireItemButton, SubHireItemDialog } from "@/modules/subhire/components/subhire-item-dialog";
 
 export const metadata: Metadata = { title: "Sub-hire catalog" };
 

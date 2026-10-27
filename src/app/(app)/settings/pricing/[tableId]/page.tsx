@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
-import { DeleteRateTableButton, RateTableForm, rateTables } from "@/modules/pricing";
+import { rateTables } from "@/modules/pricing";
+import { DeleteRateTableButton, RateTableForm } from "@/modules/pricing/components/rate-table-form";
 
 export const metadata: Metadata = { title: "Rate table" };
 

@@ -4,5 +4,3 @@ export { subHireItemInput, subHireLineInput, parseLinks, linksToText } from "./s
 export type { SubHireItemInput, SubHireLineInput } from "./schema";
 export { subHireCatalog, subHireOptions, subHireLinesFor } from "./queries";
 export type { SubHireItemRow, SubHireOwnerGroup, SubHireOption, SubHireLineRow } from "./queries";
-export { SubHireItemDialog, DeleteSubHireItemButton, ArchiveSubHireItemButton } from "./components/subhire-item-dialog";
-export { RentInDialog, RemoveSubHireLineButton } from "./components/rent-in-dialog";

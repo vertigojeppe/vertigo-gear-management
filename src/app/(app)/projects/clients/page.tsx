@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
-import { ClientDialog, DeleteClientButton, clients } from "@/modules/projects";
+import { clients } from "@/modules/projects";
+import { ClientDialog, DeleteClientButton } from "@/modules/projects/components/client-dialog";
 
 export const metadata: Metadata = { title: "Clients" };
 

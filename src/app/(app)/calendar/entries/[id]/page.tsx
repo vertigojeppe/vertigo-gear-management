@@ -10,7 +10,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { activityFor } from "@/lib/activity";
 import { can, requireActor } from "@/lib/auth/session";
 import { dateToZonedInput } from "@/lib/dates";
-import { EntryDialog, agendaActions, entryDetail, entryFormValues, entryLabel, entryPeopleOptions, entryProjectOptions, entryWhen, googleTemplateLink } from "@/modules/agenda";
+import { agendaActions, entryDetail, entryFormValues, entryPeopleOptions, entryProjectOptions, googleTemplateLink } from "@/modules/agenda";
+import { EntryDialog } from "@/modules/agenda/components/entry-dialog";
+import { entryLabel, entryWhen } from "@/modules/agenda/components/entry-list";
 import { ENTRY_KINDS } from "../../../../../../config/app.config";
 
 export const metadata: Metadata = { title: "Calendar entry" };

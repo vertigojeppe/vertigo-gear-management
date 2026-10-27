@@ -8,30 +8,11 @@ import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/format";
-import {
-  AddReservedButton,
-  ApplyTemplateDialog,
-  CheckOutButton,
-  DeleteListButton,
-  EditLineDialog,
-  EditListDialog,
-  FinishCheckInButton,
-  GearPicker,
-  RemoveLineButton,
-  SaveAsTemplateDialog,
-  ShareLinkControls,
-  canCheckIn,
-  canEditLines,
-  gearCatalog,
-  groupLines,
-  listDetail,
-  shareLinks,
-  templateOptions,
-  type LineProgress,
-  listTitle,
-  spareSuggestions,
-  SpareSuggestions,
-} from "@/modules/packing";
+import { canCheckIn, canEditLines, gearCatalog, groupLines, listDetail, shareLinks, templateOptions, type LineProgress, listTitle, spareSuggestions } from "@/modules/packing";
+import { AddReservedButton, CheckOutButton, DeleteListButton, FinishCheckInButton, ShareLinkControls } from "@/modules/packing/components/list-buttons";
+import { ApplyTemplateDialog, EditLineDialog, EditListDialog, RemoveLineButton, SaveAsTemplateDialog } from "@/modules/packing/components/list-dialogs";
+import { GearPicker } from "@/modules/packing/components/gear-picker";
+import { SpareSuggestions } from "@/modules/packing/components/spare-suggestions";
 import { PACKING_STATUSES } from "../../../../../../../config/app.config";
 import { glossary } from "@/modules/settings";
 

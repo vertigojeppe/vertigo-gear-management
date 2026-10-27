@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { StatusPill } from "@/components/status-pill";
 import { can, requireActor } from "@/lib/auth/session";
-import { DeletePlanTemplateButton, PlanTemplateDialog, RemoveTemplateEntryButton, TemplateEntryDialog, planTemplateDetail } from "@/modules/plans";
+import { planTemplateDetail } from "@/modules/plans";
+import { DeletePlanTemplateButton, PlanTemplateDialog, RemoveTemplateEntryButton, TemplateEntryDialog } from "@/modules/plans/components/template-forms";
 
 export const metadata: Metadata = { title: "Plan template" };
 

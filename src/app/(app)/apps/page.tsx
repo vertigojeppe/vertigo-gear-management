@@ -10,7 +10,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can, requirePermission } from "@/lib/auth/session";
 import { formatBytes } from "@/lib/format";
-import { AppAction, AppDialog, appFilters, appList, type AppRow } from "@/modules/apps";
+import { appFilters, appList, type AppRow } from "@/modules/apps";
+import { AppAction } from "@/modules/apps/components/app-action";
+import { AppDialog } from "@/modules/apps/components/app-forms";
 import { APP_KINDS } from "../../../../config/app.config";
 
 export const metadata: Metadata = { title: "Apps" };

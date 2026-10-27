@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { CustomFieldDef } from "@/lib/custom-fields";
 import type { FormState } from "@/lib/forms";
 import { appConfig } from "../../../../config/app.config";
-import { ClientDialog } from "@/modules/projects/ui";
+import { ClientDialog } from "@/modules/projects/components/client-dialog";
 import { saveRental } from "../actions";
 import type { RentalDto } from "../service";
 

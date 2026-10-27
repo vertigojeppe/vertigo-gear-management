@@ -60,11 +60,15 @@ src/generated/prisma   generated client (gitignored)
 e2e/                   Playwright specs
 ```
 
-Modules import each other only via `@/modules/<name>` (ESLint-enforced).
-Client components import server actions from `@/modules/<name>/actions`
-and, when they need another module's client component (the rental form
-renders the projects module's `ClientDialog`), from `@/modules/<name>/ui`,
-a second entry that exports components only and never a service.
+Modules import each other only through three entries (ESLint-enforced):
+`@/modules/<name>` (the barrel: services, queries, schemas, logic; server
+code only, never a component), `@/modules/<name>/actions` (server actions,
+what client components import) and `@/modules/<name>/components/<file>`
+(one component file; pages and other modules' components import
+components this way). The barrel must not re-export components: Next puts
+every client component the server code can reach into the page's bundle,
+so one re-export made `/board` and the share pages ship every dialog of
+the module.
 
 ## Language
 
@@ -826,7 +830,7 @@ a second entry that exports components only and never a service.
 - A service that needs another module imports `@/modules/<name>/service`
   (or `/tree`, `/logic`) directly with an eslint-disable comment, not the
   barrel: barrels re-export server actions, which import next-auth, which
-  does not load under Vitest. Pages and components keep using the barrel.
+  does not load under Vitest. Pages keep using the barrel for queries and services.
 - `ActionForm` passes the clicked submit button to `new FormData(form,
   submitter)`, so buttons with `name="outcome" value="ok"` work like a
   native submit. Keep that when touching it.

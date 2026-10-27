@@ -15,6 +15,8 @@ import { buildGlossary } from "@/lib/search";
 type Target = { kind: "list"; projectId: string; listId: string } | { kind: "template"; templateId: string };
 type Option = { id: string; label: string };
 type RowState = { type: "pending" } | { type: "added"; count: number } | { type: "error"; message: string };
+/** What this picker added on top of the catalog's `onList` it saw then (`base`). */
+type Added = { base: number; n: number };
 
 /**
  * Type-to-add: one search box over every model and kit. Matches are shown
@@ -31,7 +33,7 @@ export function GearPicker({ target, catalog, cases = [], glossaryGroups = [] }:
   const [qty, setQty] = useState<Record<string, string>>({});
   const [caseId, setCaseId] = useState("");
   const [rows, setRows] = useState<Record<string, RowState>>({});
-  const [added, setAdded] = useState<Record<string, number>>({});
+  const [added, setAdded] = useState<Record<string, Added>>({});
   const [, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -48,7 +50,8 @@ export function GearPicker({ target, catalog, cases = [], glossaryGroups = [] }:
   }
 
   const quantityOf = (e: CatalogEntry) => Math.max(1, Math.round(Number(qty[e.id] ?? "1")) || 1);
-  const onListNow = (e: CatalogEntry) => e.onList + (added[e.id] ?? 0);
+  // The page refreshes after each add; once the catalog counts the new lines (onList moved), the local count is dropped.
+  const onListNow = (e: CatalogEntry) => e.onList + (added[e.id]?.base === e.onList ? added[e.id].n : 0);
 
   const add = (e: CatalogEntry) => {
     if (rows[e.id]?.type === "pending") return;
@@ -73,7 +76,10 @@ export function GearPicker({ target, catalog, cases = [], glossaryGroups = [] }:
     startTransition(async () => {
       const result = target.kind === "template" ? await addTemplateLine({}, fd) : e.kind === "kit" ? await addKitLine({}, fd) : await addLine({}, fd);
       if (result.ok) {
-        setAdded((a) => ({ ...a, [e.id]: (a[e.id] ?? 0) + n }));
+        setAdded((a) => {
+          const cur = a[e.id];
+          return { ...a, [e.id]: cur?.base === e.onList ? { base: cur.base, n: cur.n + n } : { base: e.onList, n } };
+        });
         setRows((r) => ({ ...r, [e.id]: { type: "added", count: n } }));
       } else {
         setRows((r) => ({ ...r, [e.id]: { type: "error", message: result.error ?? Object.values(result.fieldErrors ?? {})[0] ?? tc("error") } }));

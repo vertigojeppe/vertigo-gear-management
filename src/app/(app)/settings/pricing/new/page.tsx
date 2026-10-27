@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
-import { RateTableForm } from "@/modules/pricing";
+import { RateTableForm } from "@/modules/pricing/components/rate-table-form";
 
 export const metadata: Metadata = { title: "New rate table" };
 

@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
-import { PlanTemplateDialog, planTemplateOptions } from "@/modules/plans";
+import { planTemplateOptions } from "@/modules/plans";
+import { PlanTemplateDialog } from "@/modules/plans/components/template-forms";
 
 export const metadata: Metadata = { title: "Plan templates" };
 

@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
-import { DeleteTemplateButton, GearPicker, RemoveTemplateLineButton, TemplateDialog, gearCatalog, templateDetail } from "@/modules/packing";
+import { gearCatalog, templateDetail } from "@/modules/packing";
+import { DeleteTemplateButton, RemoveTemplateLineButton, TemplateDialog } from "@/modules/packing/components/template-forms";
+import { GearPicker } from "@/modules/packing/components/gear-picker";
 import { glossary } from "@/modules/settings";
 
 export const metadata: Metadata = { title: "Packing template" };

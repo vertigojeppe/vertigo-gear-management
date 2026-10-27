@@ -10,27 +10,24 @@ import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatDayRange, formatMoney } from "@/lib/format";
 import { modelOptions } from "@/modules/inventory";
-import {
-  ContactDialog,
-  CrewDialog,
-  DeleteProjectButton,
-  ProjectStatusButtons,
-  RemoveContactButton,
-  RemoveCrewButton,
-  RemoveReservationButton,
-  ReserveDialog,
-  crewOptions,
-  projectDetail,
-} from "@/modules/projects";
+import { crewOptions, projectDetail } from "@/modules/projects";
+import { ContactDialog, CrewDialog, RemoveContactButton, RemoveCrewButton } from "@/modules/projects/components/crew-contact-dialogs";
+import { DeleteProjectButton, ProjectStatusButtons, RemoveReservationButton } from "@/modules/projects/components/project-buttons";
+import { ReserveDialog } from "@/modules/projects/components/reserve-dialog";
 import { customFieldDefinitions } from "@/modules/settings";
 import { listsForProject } from "@/modules/packing";
-import { CreatePlanDialog, defaultAnchor, planSummary, planTemplateOptions } from "@/modules/plans";
-import { QuoteSection, quoteFor, rateTableOptions } from "@/modules/pricing";
-import { RemoveSubHireLineButton, RentInDialog, subHireLinesFor, subHireOptions } from "@/modules/subhire";
+import { defaultAnchor, planSummary, planTemplateOptions } from "@/modules/plans";
+import { CreatePlanDialog } from "@/modules/plans/components/plan-dialogs";
+import { quoteFor, rateTableOptions } from "@/modules/pricing";
+import { QuoteSection } from "@/modules/pricing/components/quote-section";
+import { subHireLinesFor, subHireOptions } from "@/modules/subhire";
+import { RemoveSubHireLineButton, RentInDialog } from "@/modules/subhire/components/rent-in-dialog";
 import { today } from "@/lib/dates";
 import { PACKING_STATUSES, PROJECT_STATUSES } from "../../../../../config/app.config";
 import { projectGearEnabled } from "@/lib/features";
-import { EntryDialog, EntryList, entriesForProject, entryPeopleOptions, entryProjectOptions } from "@/modules/agenda";
+import { entriesForProject, entryPeopleOptions, entryProjectOptions } from "@/modules/agenda";
+import { EntryDialog } from "@/modules/agenda/components/entry-dialog";
+import { EntryList } from "@/modules/agenda/components/entry-list";
 
 export const metadata: Metadata = { title: "Project" };
 

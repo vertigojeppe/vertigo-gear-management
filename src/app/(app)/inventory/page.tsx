@@ -9,7 +9,9 @@ import { Pagination } from "@/components/pagination";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can, requireActor } from "@/lib/auth/session";
-import { FamilyList, InventoryTabs, MODEL_SORTS, categoryOptions, listModels, modelFilters, TRACKING_TYPES } from "@/modules/inventory";
+import { MODEL_SORTS, categoryOptions, listModels, modelFilters, TRACKING_TYPES } from "@/modules/inventory";
+import { FamilyList } from "@/modules/inventory/components/family-list";
+import { InventoryTabs } from "@/modules/inventory/components/inventory-tabs";
 
 export const metadata: Metadata = { title: "Inventory" };
 

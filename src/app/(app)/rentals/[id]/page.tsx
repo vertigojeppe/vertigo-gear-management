@@ -10,8 +10,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { modelOptions } from "@/modules/inventory";
-import { QuoteSection, rateTableOptions } from "@/modules/pricing";
-import { AssignUnitForm, DeleteRentalButton, RemoveLineButton, RentalLineDialog, RentalStatusButtons, assignableUnits, rentalDetail } from "@/modules/rentals";
+import { rateTableOptions } from "@/modules/pricing";
+import { QuoteSection } from "@/modules/pricing/components/quote-section";
+import { assignableUnits, rentalDetail } from "@/modules/rentals";
+import { AssignUnitForm, RemoveLineButton, RentalLineDialog } from "@/modules/rentals/components/rental-line-dialog";
+import { DeleteRentalButton, RentalStatusButtons } from "@/modules/rentals/components/rental-buttons";
 import { customFieldDefinitions } from "@/modules/settings";
 import { RENTAL_STATUSES, appConfig } from "../../../../../config/app.config";
 

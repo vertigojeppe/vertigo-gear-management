@@ -7,8 +7,9 @@ import { PageHeader } from "@/components/page-header";
 import { can, requirePermission } from "@/lib/auth/session";
 import { formatDate, formatMoney } from "@/lib/format";
 import { contactOptions } from "@/modules/contacts";
-import { AttachmentsSection } from "@/modules/files";
-import { PurchaseDialog, purchaseActions, purchaseRow } from "@/modules/purchases";
+import { AttachmentsSection } from "@/modules/files/components/attachments";
+import { purchaseActions, purchaseRow } from "@/modules/purchases";
+import { PurchaseDialog } from "@/modules/purchases/components/purchase-forms";
 
 export const metadata: Metadata = { title: "Purchase" };
 

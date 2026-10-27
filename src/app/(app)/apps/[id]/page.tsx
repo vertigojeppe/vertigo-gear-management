@@ -9,7 +9,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { activityFor } from "@/lib/activity";
 import { can, requirePermission } from "@/lib/auth/session";
 import { formatBytes, formatDateTime } from "@/lib/format";
-import { AppAction, AppDialog, AppVersionUploader, appDetail, appList, deleteApp, deleteAppVersion, setAppArchived } from "@/modules/apps";
+import { appDetail, appList, deleteApp, deleteAppVersion, setAppArchived } from "@/modules/apps";
+import { AppAction } from "@/modules/apps/components/app-action";
+import { AppDialog, AppVersionUploader } from "@/modules/apps/components/app-forms";
 
 export const metadata: Metadata = { title: "App" };
 

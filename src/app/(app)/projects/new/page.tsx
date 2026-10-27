@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
-import { ProjectForm, clientOptions } from "@/modules/projects";
+import { clientOptions } from "@/modules/projects";
+import { ProjectForm } from "@/modules/projects/components/project-form";
 import { customFieldDefinitions } from "@/modules/settings";
 
 export const metadata: Metadata = { title: "New project" };

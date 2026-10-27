@@ -4,7 +4,8 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requirePermission } from "@/lib/auth/session";
-import { ContactDialog, DeleteContactButton, contactList } from "@/modules/contacts";
+import { contactList } from "@/modules/contacts";
+import { ContactDialog, DeleteContactButton } from "@/modules/contacts/components/contact-forms";
 
 export const metadata: Metadata = { title: "Contacts" };
 

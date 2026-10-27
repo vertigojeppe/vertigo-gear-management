@@ -13,8 +13,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatMoney, modelLabel } from "@/lib/format";
 import { ModelName } from "@/components/model-name";
-import { AttachmentsSection } from "@/modules/files";
-import { KitSection, MoveDialog, StatusDialog, inventoryActions, itemDetail, locationOptions, LabelsDialog } from "@/modules/inventory";
+import { AttachmentsSection } from "@/modules/files/components/attachments";
+import { inventoryActions, itemDetail, locationOptions } from "@/modules/inventory";
+import { KitSection } from "@/modules/inventory/components/kit-section";
+import { MoveDialog, StatusDialog } from "@/modules/inventory/components/item-actions";
+import { LabelsDialog } from "@/modules/inventory/components/labels-dialog";
 import { customFieldDefinitions } from "@/modules/settings";
 
 export const metadata: Metadata = { title: "Item" };

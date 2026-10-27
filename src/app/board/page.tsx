@@ -3,7 +3,11 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { LanguageToggle } from "@/components/language-toggle";
 import { can, requireActor } from "@/lib/auth/session";
-import { AgendaDay, BoardClock, BoardRefresh, BoardThemeToggle, JobCard, LongTimeline, boardData, boardThemeScript } from "@/modules/board";
+import { boardData, boardThemeScript } from "@/modules/board";
+import { AgendaDay, JobCard } from "@/modules/board/components/board-sections";
+import { BoardClock, BoardRefresh } from "@/modules/board/components/board-live";
+import { BoardThemeToggle } from "@/modules/board/components/board-theme";
+import { LongTimeline } from "@/modules/board/components/long-timeline";
 import { signOutAction } from "../(app)/actions";
 import { appConfig } from "../../../config/app.config";
 
