@@ -3,7 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/auth/session";
-import { RestoreForm, TABLES } from "@/modules/backup";
+import { TABLES } from "@/modules/backup";
+import { RestoreForm } from "@/modules/backup/components/restore-form";
 
 export const metadata: Metadata = { title: "Backup" };
 

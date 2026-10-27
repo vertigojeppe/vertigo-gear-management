@@ -11,27 +11,12 @@ import { dateFromString, dateToZonedInput, today } from "@/lib/dates";
 import { formatBytes, formatDate, formatDateTime } from "@/lib/format";
 import { Paperclip } from "lucide-react";
 import { shareLinks } from "@/modules/packing";
-import {
-  ApplyPlanTemplateDialog,
-  CreatePlanDialog,
-  DeletePlanButton,
-  DocumentUploader,
-  LogisticsDialog,
-  PlanNotesForm,
-  PlanShareControls,
-  RemoveLogisticsButton,
-  RemoveScheduleEntryButton,
-  RemoveTaskButton,
-  SavePlanAsTemplateDialog,
-  ScheduleEntryDialog,
-  TaskDialog,
-  TaskDoneButton,
-  datesLine,
-  defaultAnchor,
-  documentsForPlan,
-  planDetail,
-  planTemplateOptions,
-} from "@/modules/plans";
+import { datesLine, defaultAnchor, documentsForPlan, planDetail, planTemplateOptions } from "@/modules/plans";
+import { ApplyPlanTemplateDialog, CreatePlanDialog, DeletePlanButton, PlanNotesForm, PlanShareControls, SavePlanAsTemplateDialog } from "@/modules/plans/components/plan-dialogs";
+import { DocumentUploader } from "@/modules/plans/components/document-uploader";
+import { LogisticsDialog, RemoveLogisticsButton } from "@/modules/plans/components/logistics-dialogs";
+import { RemoveScheduleEntryButton, ScheduleEntryDialog } from "@/modules/plans/components/schedule-dialogs";
+import { RemoveTaskButton, TaskDialog, TaskDoneButton } from "@/modules/plans/components/task-dialogs";
 import { crewOptions, projects } from "@/modules/projects";
 import { PACKING_STATUSES, PLAN_PHASES } from "../../../../../../config/app.config";
 

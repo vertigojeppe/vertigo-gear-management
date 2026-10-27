@@ -5,7 +5,10 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
 import { ColorBar } from "@/components/color-marks";
-import { CategoryColorPicker, CategoryDialog, DeleteCategoryButton, InventoryTabs, LengthColorsTable, LengthColorsToggle, categoryOptions, categoryTree, lengthColorRows } from "@/modules/inventory";
+import { categoryOptions, categoryTree, lengthColorRows } from "@/modules/inventory";
+import { CategoryColorPicker, LengthColorsTable, LengthColorsToggle } from "@/modules/inventory/components/color-controls";
+import { CategoryDialog, DeleteCategoryButton } from "@/modules/inventory/components/tree-forms";
+import { InventoryTabs } from "@/modules/inventory/components/inventory-tabs";
 
 export const metadata: Metadata = { title: "Categories" };
 

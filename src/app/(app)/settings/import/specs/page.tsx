@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
-import { SpecImport } from "@/modules/importer";
+import { SpecImport } from "@/modules/importer/components/spec-import";
 
 export const metadata: Metadata = { title: "Import specs" };
 

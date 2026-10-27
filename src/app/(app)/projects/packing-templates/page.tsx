@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
-import { TemplateDialog, templateOptions } from "@/modules/packing";
+import { templateOptions } from "@/modules/packing";
+import { TemplateDialog } from "@/modules/packing/components/template-forms";
 
 export const metadata: Metadata = { title: "Packing templates" };
 

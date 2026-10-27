@@ -49,16 +49,16 @@ export function searchCatalog(entries: CatalogEntry[], query: string, limit = 60
   const words = queryTerms(query, glossary);
   if (words.length === 0) return { results: [], close: false };
   const q = squash(query);
-  const hays = entries.map((e) => haystack([e.label, e.manufacturer, e.category, ...e.tags]));
+  const { hays, labels, tags } = indexOf(entries);
   const scored: { e: CatalogEntry; score: number; i: number }[] = [];
   entries.forEach((e, i) => {
     if (!exactHit(hays[i], words)) return;
-    const label = squash(e.label);
+    const label = labels[i];
     let score = 2;
     if (label.startsWith(q)) score = 0;
     else if (label.includes(q)) score = 1;
     else if (words.every((alts) => alts.some((w) => label.includes(w)))) score = 1;
-    if (e.tags.some((t) => squash(t) === q)) score = -1; // an exact tag is what a scanner sends
+    if (tags[i].includes(q)) score = -1; // an exact tag is what a scanner sends
     scored.push({ e, score, i });
   });
   let close = false;
@@ -73,6 +73,17 @@ export function searchCatalog(entries: CatalogEntry[], query: string, limit = 60
     .slice(0, limit)
     .map((x) => x.e);
   return { results, close };
+}
+
+/** Normalised text per entry, built once per catalog array (the picker searches the same one on every keystroke). */
+const indexCache = new WeakMap<CatalogEntry[], { hays: string[]; labels: string[]; tags: string[][] }>();
+function indexOf(entries: CatalogEntry[]) {
+  let index = indexCache.get(entries);
+  if (!index) {
+    index = { hays: entries.map((e) => haystack([e.label, e.manufacturer, e.category, ...e.tags])), labels: entries.map((e) => squash(e.label)), tags: entries.map((e) => e.tags.map(squash)) };
+    indexCache.set(entries, index);
+  }
+  return index;
 }
 
 /** `searchCatalog` without the close-match flag. */

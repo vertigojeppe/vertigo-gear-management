@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { can, requirePermission } from "@/lib/auth/session";
-import { ItemForm, items, locationOptions, modelOptions } from "@/modules/inventory";
+import { items, locationOptions, modelOptions } from "@/modules/inventory";
+import { ItemForm } from "@/modules/inventory/components/item-form";
 import { customFieldDefinitions } from "@/modules/settings";
 
 export const metadata: Metadata = { title: "Edit item" };

@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
 import { clientOptions } from "@/modules/projects";
-import { RentalForm, rentals } from "@/modules/rentals";
+import { rentals } from "@/modules/rentals";
+import { RentalForm } from "@/modules/rentals/components/rental-form";
 import { customFieldDefinitions } from "@/modules/settings";
 
 export const metadata: Metadata = { title: "Edit rental" };

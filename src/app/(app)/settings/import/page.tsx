@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
-import { ImportUploadForm } from "@/modules/importer";
+import { ImportUploadForm } from "@/modules/importer/components/import-upload-form";
 
 export const metadata: Metadata = { title: "Import spreadsheet" };
 

@@ -3,4 +3,3 @@ export { backup, BackupError } from "./service";
 export { TABLES, sortSelfRefs, validateBackup } from "./tables";
 export type { BackupFile, TableDef } from "./tables";
 export * as backupActions from "./actions";
-export { RestoreForm } from "./components/restore-form";

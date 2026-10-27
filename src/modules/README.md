@@ -4,7 +4,7 @@ One folder per domain. Every module has the same layout:
 
 ```
 src/modules/<name>/
-  index.ts        public interface: the ONLY thing other code may import
+  index.ts        public interface for server code (services, queries, schemas, logic); no components
   schema.ts       zod schemas (form validation, REST bodies, OpenAPI)
   service.ts      business logic; takes the db and an actor, returns plain data
   actions.ts      "use server" actions: auth check → service call → revalidate
@@ -17,7 +17,11 @@ Rules:
 
 - Pages in `src/app/` compose modules. They contain no business logic.
 - Modules never import another module's internals. Import from
-  `@/modules/<name>` (its `index.ts`) only. ESLint enforces this.
+  `@/modules/<name>` (its `index.ts`), `@/modules/<name>/actions`, or one
+  component file, `@/modules/<name>/components/<file>`. ESLint enforces this.
+- The barrel never re-exports components. Next ships every client component
+  the server code can reach, so a page that only needs a query would carry
+  the module's dialogs too. Pages import each component from its file.
 - Client components (`"use client"`) import server actions from
   `@/modules/<name>/actions`, never from the barrel: the barrel also exports
   services that touch the database and the browser bundle cannot load them.

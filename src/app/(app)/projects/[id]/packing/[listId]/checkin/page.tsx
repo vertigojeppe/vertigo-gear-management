@@ -5,7 +5,9 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/auth/session";
-import { CheckInMode, FinishCheckInButton, canCheckIn, listDetail } from "@/modules/packing";
+import { canCheckIn, listDetail } from "@/modules/packing";
+import { CheckInMode } from "@/modules/packing/components/checkin-mode";
+import { FinishCheckInButton } from "@/modules/packing/components/list-buttons";
 
 export const metadata: Metadata = { title: "Check-in" };
 

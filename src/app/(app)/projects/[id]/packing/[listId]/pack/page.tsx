@@ -5,7 +5,8 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/auth/session";
-import { PackMode, canPack, listDetail } from "@/modules/packing";
+import { canPack, listDetail } from "@/modules/packing";
+import { PackMode } from "@/modules/packing/components/pack-mode";
 
 export const metadata: Metadata = { title: "Packing" };
 

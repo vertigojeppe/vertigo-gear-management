@@ -5,8 +5,11 @@ import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { addDays, today } from "@/lib/dates";
-import { Timeline, timeline, type TimelineBar } from "@/modules/projects";
-import { EntryDialog, entriesBetween, entryLabel, entryPeopleOptions, entryProjectOptions } from "@/modules/agenda";
+import { timeline, type TimelineBar } from "@/modules/projects";
+import { Timeline } from "@/modules/projects/components/timeline";
+import { entriesBetween, entryPeopleOptions, entryProjectOptions } from "@/modules/agenda";
+import { EntryDialog } from "@/modules/agenda/components/entry-dialog";
+import { entryLabel } from "@/modules/agenda/components/entry-list";
 
 export const metadata: Metadata = { title: "Calendar" };
 

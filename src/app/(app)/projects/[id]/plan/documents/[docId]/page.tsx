@@ -7,7 +7,10 @@ import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatBytes, formatDateTime } from "@/lib/format";
-import { DocumentUploader, DocumentViewer, PinDocumentForm, RemoveDocumentButton, RemoveVersionButton, documentDetail, documentsForPlan } from "@/modules/plans";
+import { documentDetail, documentsForPlan } from "@/modules/plans";
+import { DocumentUploader } from "@/modules/plans/components/document-uploader";
+import { DocumentViewer } from "@/modules/plans/components/document-viewer";
+import { PinDocumentForm, RemoveDocumentButton, RemoveVersionButton } from "@/modules/plans/components/document-forms";
 
 export const metadata: Metadata = { title: "Document" };
 

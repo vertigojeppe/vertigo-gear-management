@@ -110,6 +110,9 @@ test.describe("packing lists", () => {
     await page.getByLabel("Search gear").press("Enter");
     await expect(page.getByRole("button", { name: "Add MAC Aura XB" })).toHaveText(/Added/);
     await expect(page.getByRole("link", { name: "MAC Aura XB" })).toBeVisible();
+    // The refreshed catalog already counts the new line; the picker must not add it on top.
+    await expect(page.getByText(/· 1 on the list/)).toBeVisible();
+    await expect(page.getByText(/· 2 on the list/)).toHaveCount(0);
 
     // Packing mode: unknown tag is reported, choosing a unit ticks it.
     await page.getByRole("link", { name: "Pack", exact: true }).click();

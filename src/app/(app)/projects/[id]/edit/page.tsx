@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requirePermission } from "@/lib/auth/session";
-import { ProjectForm, clientOptions, projects } from "@/modules/projects";
+import { clientOptions, projects } from "@/modules/projects";
+import { ProjectForm } from "@/modules/projects/components/project-form";
 import { customFieldDefinitions } from "@/modules/settings";
 
 export const metadata: Metadata = { title: "Edit project" };

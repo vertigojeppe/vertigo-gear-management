@@ -6,6 +6,3 @@ export type { RentalListRow } from "./queries";
 export { rentalInput, rentalLineInput, assignItemInput, rentalFilters } from "./schema";
 export type { RentalInput, RentalLineInput, RentalFilters } from "./schema";
 export * as rentalActions from "./actions";
-export { RentalForm } from "./components/rental-form";
-export { RentalLineDialog, AssignUnitForm, RemoveLineButton } from "./components/rental-line-dialog";
-export { RentalStatusButtons, DeleteRentalButton } from "./components/rental-buttons";

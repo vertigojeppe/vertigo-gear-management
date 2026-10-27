@@ -531,3 +531,15 @@ second step re-posts email and password with the code rather than
 keeping a half-signed-in session, which would need its own cookie and
 expiry rules.
 
+## Components are imported from their own file (October 2026)
+
+The barrels re-exported every component of their module. Next adds each
+client component the server code can reach to the page's client bundle,
+and that includes re-exports nothing renders. The office screen, which
+uses a few queries from packing, projects and agenda, shipped the gear
+picker, pack mode and every project dialog: 113 KB gzipped, against
+34 KB now. A separate `ui.ts` barrel per module was tried first and only
+moved the problem: a page that imported one inventory component still
+got all thirteen. So barrels are for server code only, and components
+are imported from `@/modules/<name>/components/<file>` (the ESLint rule
+allows exactly that path). The `projects/ui` entry is gone.

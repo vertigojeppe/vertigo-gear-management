@@ -7,8 +7,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatMoney } from "@/lib/format";
 import { ModelName } from "@/components/model-name";
-import { InventoryTabs, categoryOptions } from "@/modules/inventory";
-import { DeleteWishButton, WishDialog, WishStatusButton, wishCounts, wishList, type WishStatus } from "@/modules/wishlist";
+import { categoryOptions } from "@/modules/inventory";
+import { InventoryTabs } from "@/modules/inventory/components/inventory-tabs";
+import { wishCounts, wishList, type WishStatus } from "@/modules/wishlist";
+import { DeleteWishButton, WishDialog, WishStatusButton } from "@/modules/wishlist/components/wish-forms";
 import { cn } from "cn";
 
 export const metadata: Metadata = { title: "Wish list" };

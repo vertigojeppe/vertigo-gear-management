@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/auth/session";
-import { ImportError, ImportPreview, importer } from "@/modules/importer";
+import { ImportError, importer } from "@/modules/importer";
+import { ImportPreview } from "@/modules/importer/components/import-preview";
 
 export const metadata: Metadata = { title: "Import preview" };
 

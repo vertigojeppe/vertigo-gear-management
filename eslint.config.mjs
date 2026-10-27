@@ -7,15 +7,15 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      // Modules talk through their index.ts only. See src/modules/README.md.
+      // Modules talk through their index.ts (server code), actions.ts and components/<file>. See src/modules/README.md.
       "no-restricted-imports": [
         "error",
         {
           patterns: [
             {
-              group: ["@/modules/*/*", "!@/modules/*/index", "!@/modules/*/actions", "!@/modules/*/ui"],
+              regex: "^@/modules/[^/]+/(?!(index|actions)$|components/[^/]+$)",
               message:
-                "Import from the module's public interface (@/modules/<name>). Client components import server actions from @/modules/<name>/actions and shared client components from @/modules/<name>/ui.",
+                "Import from the module's public interface: @/modules/<name> for services and queries, @/modules/<name>/actions for server actions, @/modules/<name>/components/<file> for components.",
             },
           ],
         },
