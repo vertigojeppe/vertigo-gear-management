@@ -85,19 +85,32 @@ export async function listDetail(listId: string) {
     },
   });
   if (!list) return null;
-  const [cats, colors] = await Promise.all([prisma.category.findMany({ select: { id: true, name: true, parentId: true } }), loadColorMaps()]);
-  // What the project rents in: shown with the list so nothing is forgotten at the partner's door, never ticked or checked.
-  const subHire: SubHireRow[] = (await prisma.subHireLine.findMany({ where: { projectId: list.projectId }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }], include: { item: { include: { owner: { select: { name: true } } } } } })).map((l) => ({
+  const modelIds = [...new Set(list.lines.map((l) => l.modelId))];
+  const [cats, colors, subHireRows, stockRows, shelf] = await Promise.all([
+    prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
+    loadColorMaps(),
+    // What the project rents in: shown with the list so nothing is forgotten at the partner's door, never ticked or checked.
+    prisma.subHireLine.findMany({ where: { projectId: list.projectId }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }], include: { item: { include: { owner: { select: { name: true } } } } } }),
+    prisma.item.groupBy({ by: ["modelId", "status"], where: { modelId: { in: modelIds } }, _sum: { quantity: true } }),
+    // While drafting: the loose units and bins in house, for picking a unit or a bin per line.
+    prisma.item.findMany({ where: { modelId: { in: list.status === "draft" ? modelIds : [] }, status: "in_house", parentItemId: null }, orderBy: { assetTag: "asc" }, select: { id: true, modelId: true, assetTag: true, serialNumber: true, quantity: true, isKit: true, location: { select: { name: true } } } }),
+  ]);
+  const subHire: SubHireRow[] = subHireRows.map((l) => ({
     id: l.id,
     label: modelLabel(l.item),
     ownerName: l.item.owner.name,
     quantity: l.quantity,
     note: l.note,
   }));
+  const shelfByModel = new Map<string, typeof shelf>();
+  for (const i of shelf) {
+    const rows = shelfByModel.get(i.modelId);
+    if (rows) rows.push(i);
+    else shelfByModel.set(i.modelId, [i]);
+  }
   const packedUnitIds = new Set(list.lines.flatMap((l) => l.checks.filter((c) => c.phase === "out" && c.itemId).map((c) => c.itemId!)));
 
   const lines: LineRow[] = [];
-  const stockRows = await prisma.item.groupBy({ by: ["modelId", "status"], where: { modelId: { in: [...new Set(list.lines.map((l) => l.modelId))] } }, _sum: { quantity: true } });
   const stockByModel = new Map<string, { owned: number; inHouse: number }>();
   for (const r of stockRows) {
     const cur = stockByModel.get(r.modelId) ?? { owned: 0, inHouse: 0 };
@@ -126,11 +139,11 @@ export async function listDetail(listId: string) {
     const progress = lineProgress({ quantity: l.quantity, trackingType: tracking, checks });
     const availableUnits =
       tracking === "serialized" && list.status === "draft" && !l.itemId
-        ? (await prisma.item.findMany({ where: { modelId: l.modelId, status: "in_house", parentItemId: null, isKit: false }, orderBy: { assetTag: "asc" }, select: { id: true, assetTag: true, serialNumber: true } })).filter((u) => !packedUnitIds.has(u.id))
+        ? (shelfByModel.get(l.modelId) ?? []).filter((u) => !u.isKit && !packedUnitIds.has(u.id)).map((u) => ({ id: u.id, assetTag: u.assetTag, serialNumber: u.serialNumber }))
         : [];
     const bins =
       tracking === "bulk" && list.status === "draft"
-        ? (await prisma.item.findMany({ where: { modelId: l.modelId, status: "in_house", parentItemId: null }, orderBy: { quantity: "desc" }, include: { location: { select: { name: true } } } })).map((b) => ({ id: b.id, assetTag: b.assetTag, quantity: b.quantity, locationName: b.location?.name ?? null }))
+        ? [...(shelfByModel.get(l.modelId) ?? [])].sort((a, b) => b.quantity - a.quantity).map((b) => ({ id: b.id, assetTag: b.assetTag, quantity: b.quantity, locationName: b.location?.name ?? null }))
         : [];
     const path = pathNames(cats, l.model.categoryId);
     const stock = stockByModel.get(l.modelId) ?? { owned: 0, inHouse: 0 };

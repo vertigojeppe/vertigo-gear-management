@@ -55,9 +55,16 @@ export function descendantIds<T extends TreeRow>(rows: T[], rootId: string): str
   return out;
 }
 
+/** Lookup maps per rows array, so a list calling pathNames once per model builds the map once. */
+const byIdCache = new WeakMap<TreeRow[], Map<string, TreeRow>>();
+
 /** "Video › Projectors › Laser" style path for a node. */
 export function pathNames<T extends TreeRow>(rows: T[], id: string): string[] {
-  const byId = new Map(rows.map((r) => [r.id, r]));
+  let byId = byIdCache.get(rows);
+  if (!byId) {
+    byId = new Map(rows.map((r) => [r.id, r]));
+    byIdCache.set(rows, byId);
+  }
   const names: string[] = [];
   let cur = byId.get(id);
   let guard = 0;

@@ -1,6 +1,6 @@
 // Public interface of the projects module: clients, projects, crew,
 // contacts and the availability engine shared with rentals and the calendar.
-export { clients, projects, allocations, allocationsFor, itemsForModel, modelAvailability, deriveWindow, ProjectError, ConflictError } from "./service";
+export { clients, projects, allocations, allocationsFor, allocationsForModels, itemsForModel, itemsForModels, modelAvailability, deriveWindow, ProjectError, ConflictError } from "./service";
 export { linksToText, parseLinks } from "./schema";
 export type { ProjectDto, Link as ProjectLink } from "./service";
 export { computeAvailability, checkRequest, unitDoubleBookings, overbookedDays } from "./availability";

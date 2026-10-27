@@ -4,7 +4,7 @@ import { activityFor } from "@/lib/activity";
 import { dateToString, today } from "@/lib/dates";
 import { appConfig } from "../../../config/app.config";
 import { checkRequest } from "@/modules/projects";
-import { allocationsFor, itemsForModel } from "@/modules/projects";
+import { allocationsForModels, itemsForModels } from "@/modules/projects";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { quoteFor, rentalSubtotals } from "@/modules/pricing/queries";
 import type { RentalFilters } from "./schema";
@@ -65,11 +65,14 @@ export async function rentalDetail(id: string) {
   ]);
   if (!r || !quote) return null;
   const dto = toRentalDto(r);
+  const window = { from: dto.startDate, to: dto.endDate };
+  const modelIds = [...new Set(r.lines.map((l) => l.modelId))];
+  const [itemsBy, allocsBy, activity] = await Promise.all([itemsForModels(modelIds), allocationsForModels(modelIds, window), activityFor("rental", id, 30)]);
   const lines: (RentalLineDto & { available: number; shortfall: number; conflicts: string[] })[] = [];
   for (const l of r.lines) {
-    const [items, allocs] = await Promise.all([itemsForModel(l.modelId), allocationsFor(l.modelId)]);
+    const allocs = allocsBy.get(l.modelId) ?? [];
     const alloc = allocs.find((a) => a.holderType === "rental" && a.holderId === id && a.modelId === l.modelId);
-    const check = checkRequest(items, allocs, { from: dto.startDate, to: dto.endDate }, l.quantity, alloc ? { allocationId: alloc.id } : undefined, { forRental: true });
+    const check = checkRequest(itemsBy.get(l.modelId) ?? [], allocs, window, l.quantity, alloc ? { allocationId: alloc.id } : undefined, { forRental: true });
     const priced = quote.gearLines.find((g) => g.id === l.id);
     lines.push({
       id: l.id,
@@ -94,7 +97,7 @@ export async function rentalDetail(id: string) {
     lines,
     quote,
     totals: quote.totals,
-    activity: await activityFor("rental", id, 30),
+    activity,
   };
 }
 

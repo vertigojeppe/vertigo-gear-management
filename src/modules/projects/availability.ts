@@ -105,11 +105,12 @@ export function unitDoubleBookings(allocations: AllocationLike[]): [AllocationLi
 export function overbookedDays(items: ItemLike[], allocations: AllocationLike[], window: Window): { day: DateString; shortfall: number }[] {
   const out: { day: DateString; shortfall: number }[] = [];
   const supply = computeAvailability(items, [], window).available;
+  const inWindow = allocations.filter((a) => rangesOverlap(a.startDate, a.endDate, window.from, window.to));
   const cursor = new Date(`${window.from}T00:00:00Z`);
   const end = new Date(`${window.to}T00:00:00Z`);
   while (cursor <= end) {
     const day = cursor.toISOString().slice(0, 10);
-    const demand = allocations.filter((a) => a.startDate <= day && a.endDate >= day).reduce((s, a) => s + a.quantity, 0);
+    const demand = inWindow.filter((a) => a.startDate <= day && a.endDate >= day).reduce((s, a) => s + a.quantity, 0);
     if (demand > supply) out.push({ day, shortfall: demand - supply });
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }

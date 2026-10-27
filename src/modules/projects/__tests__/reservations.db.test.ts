@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import type { Actor } from "@/lib/auth/session";
-import { allocations, ConflictError, projects, clients, modelAvailability } from "../service";
+import { allocations, allocationsFor, allocationsForModels, ConflictError, projects, clients, modelAvailability } from "../service";
+import { projectDetail, timeline } from "../queries";
 
 /** Integration test: reservations across a project and a rental compete for the same units. */
 const marker = `res-${Date.now()}`;
@@ -118,5 +119,36 @@ describe("reservations", () => {
   it("queues a calendar sync job when a project is confirmed", async () => {
     const jobs = await prisma.outbox.findMany({ where: { type: "calendar.sync_project", payload: { path: ["id"], equals: projectId } } });
     expect(jobs.length).toBeGreaterThan(0);
+  });
+});
+
+describe("batched availability", () => {
+  it("loads only live allocations that touch the window", async () => {
+    const all = await allocationsFor(modelId);
+    expect(all.map((a) => a.holderId).sort()).toEqual([projectId, projectBId].sort());
+    expect(await allocationsFor(modelId, { from: "2030-06-01" })).toEqual([]);
+    expect(await allocationsFor(modelId, { to: "2030-05-08" })).toEqual([]);
+    expect((await allocationsFor(modelId, { from: "2030-05-09", to: "2030-05-09" })).map((a) => a.holderId)).toEqual([projectId]);
+
+    await prisma.project.update({ where: { id: projectBId }, data: { status: "done" } });
+    try {
+      const byModel = await allocationsForModels([modelId, "no-such-model"]);
+      expect(byModel.get(modelId)?.map((a) => a.holderId)).toEqual([projectId]);
+      expect(byModel.get("no-such-model")).toEqual([]);
+    } finally {
+      await prisma.project.update({ where: { id: projectBId }, data: { status: "quote" } });
+    }
+  });
+
+  it("checks every reservation on the project page and flags the model on the calendar", async () => {
+    const detail = await projectDetail(projectBId);
+    expect(detail?.reservations).toHaveLength(1);
+    expect(detail?.reservations[0]).toMatchObject({ shortfall: 1, available: 1 });
+    expect(detail?.reservations[0].conflicts.map((c) => c.holderId)).toEqual([projectId]);
+
+    const { conflicts } = await timeline("2030-05-01", "2030-05-31");
+    const mine = conflicts.find((c) => c.modelId === modelId);
+    expect(mine?.days.map((d) => d.day)).toEqual(["2030-05-13", "2030-05-14", "2030-05-15"]);
+    expect(mine?.holders.sort()).toEqual([`Project A ${marker}`, `Project B ${marker}`].sort());
   });
 });
