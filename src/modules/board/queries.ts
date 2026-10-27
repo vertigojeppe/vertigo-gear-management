@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { addDays, dayInZone, today, type DateString } from "@/lib/dates";
-import { listsForProject } from "@/modules/packing";
+import { listsForProjects, type ListSummary } from "@/modules/packing";
 import { timelineBars, type TimelineBar } from "@/modules/projects";
 import { entriesBetween } from "@/modules/agenda";
 import { phaseItems, phasesOf, sortAgenda, timeOf, type AgendaItem, type BoardPhase } from "./logic";
@@ -18,7 +18,7 @@ export type BoardJob = {
   to: DateString;
   phases: BoardPhase[];
   crew: { name: string; role: string | null }[];
-  lists: Awaited<ReturnType<typeof listsForProject>>;
+  lists: ListSummary[];
 };
 
 export type BoardData = {
@@ -45,31 +45,17 @@ export async function boardData(opts: { cardDays?: number; months?: number } = {
   const timelineTo = addDays(t, Math.round(months * 30.44) - 1);
   const day = (s: DateString) => new Date(`${s}T00:00:00Z`);
 
-  const projects = await prisma.project.findMany({
-    where: { status: { in: ON_BOARD }, reserveFrom: { lte: day(cardsTo) }, reserveTo: { gte: day(t) } },
-    include: { client: { select: { name: true } }, crew: { include: { user: { select: { name: true } } }, orderBy: { user: { name: "asc" } } } },
-    orderBy: { reserveFrom: "asc" },
-  });
-
-  const jobs: BoardJob[] = await Promise.all(
-    projects.map(async (p) => ({
-      id: p.id,
-      name: p.name,
-      status: p.status,
-      clientName: p.client?.name ?? null,
-      venueName: p.venueName,
-      from: p.reserveFrom!.toISOString().slice(0, 10),
-      to: p.reserveTo!.toISOString().slice(0, 10),
-      phases: phasesOf(p),
-      crew: p.crew.map((c) => ({ name: c.user.name, role: c.role })),
-      lists: await listsForProject(p.id),
-    })),
-  );
-
   // Plan schedule entries on today and tomorrow (Copenhagen days; the UTC window is wide enough for any offset).
   const from = new Date(day(t).getTime() - 3 * 3600_000);
   const to = new Date(day(tomorrow).getTime() + 27 * 3600_000);
-  const [entries, rentals, bars, calendarEntries] = await Promise.all([
+  const [{ projects, lists }, entries, rentals, bars, calendarEntries] = await Promise.all([
+    prisma.project
+      .findMany({
+        where: { status: { in: ON_BOARD }, reserveFrom: { lte: day(cardsTo) }, reserveTo: { gte: day(t) } },
+        include: { client: { select: { name: true } }, crew: { include: { user: { select: { name: true } } }, orderBy: { user: { name: "asc" } } } },
+        orderBy: { reserveFrom: "asc" },
+      })
+      .then(async (projects) => ({ projects, lists: await listsForProjects(projects.map((p) => p.id)) })),
     prisma.scheduleEntry.findMany({
       where: { startsAt: { gte: from, lte: to }, plan: { project: { status: { in: ON_BOARD } } } },
       include: { plan: { select: { project: { select: { name: true } } } } },
@@ -82,6 +68,19 @@ export async function boardData(opts: { cardDays?: number; months?: number } = {
     timelineBars(t, timelineTo),
     entriesBetween(t, tomorrow),
   ]);
+
+  const jobs: BoardJob[] = projects.map((p) => ({
+    id: p.id,
+    name: p.name,
+    status: p.status,
+    clientName: p.client?.name ?? null,
+    venueName: p.venueName,
+    from: p.reserveFrom!.toISOString().slice(0, 10),
+    to: p.reserveTo!.toISOString().slice(0, 10),
+    phases: phasesOf(p),
+    crew: p.crew.map((c) => ({ name: c.user.name, role: c.role })),
+    lists: lists.get(p.id) ?? [],
+  }));
 
   const agenda = [t, tomorrow].map((d) => {
     const items: AgendaItem[] = [
