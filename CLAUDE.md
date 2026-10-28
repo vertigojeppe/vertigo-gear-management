@@ -276,8 +276,22 @@ the module.
 - Locations of type `person` carry `userId` or `contactId`; the dialog
   posts `person=user:<id>|contact:<id>` and `personRefs()` maps it. Cases
   are not locations (kit membership via `parentItemId` already covers it).
-- Contacts (`src/modules/contacts`) are people and companies who are not
-  users; permissions `contacts.read/write`. Clients stay separate for now.
+- Contacts (`src/modules/contacts`) are the contact library: people and
+  companies who are not users (venue people, freelancers, suppliers,
+  partners, borrowers); permissions `contacts.read/write`. Own nav item
+  `/contacts` (forgiving search over name, organisation, email, phone,
+  address; person / company filter) and a page per contact
+  (`contactDetail`: its projects with the job's role, gear it holds,
+  sub-hire items it owns, purchases for finance readers, activity).
+  `/settings/contacts` redirects there. `ProjectContact` is a link
+  (`contactId`, Restrict) plus the job's `role` and `notes`; name, phone
+  and email come from the contact (`projectContactsInclude` +
+  `projectContactRow` in projects/queries.ts flatten it for the project
+  page, plan, PDF and API). `projects.addContact` takes a `contactId`
+  or a new person (`contacts.write`), who is created in the library in
+  the same transaction; a contact is on a project once. `contacts.remove`
+  is refused while the contact is on a project, owns sub-hire items or
+  holds gear. Clients stay separate for now.
 - Colour coding (screen only): `Category.color` is a palette key from
   `COLOR_PALETTE` (`src/lib/colors.ts`, hex rendered inline, never
   Tailwind classes), set on top-level categories by admins

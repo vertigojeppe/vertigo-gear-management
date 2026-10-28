@@ -3,6 +3,8 @@ import type { Prisma } from "@/generated/prisma/client";
 import { dateToString, type DateString } from "@/lib/dates";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { listsForProject } from "@/modules/packing/queries";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { projectContactRow, projectContactsInclude } from "@/modules/projects/queries";
 import type { LogisticsKind, PlanPhase } from "../../../config/app.config";
 import { endTime, groupByDay, sortTasks, taskProgress, timeOfDay } from "./logic";
 
@@ -39,7 +41,7 @@ export type LogisticsRow = { id: string; kind: LogisticsKind; title: string; det
 export type PlanDetail = NonNullable<Awaited<ReturnType<typeof planDetailById>>>;
 
 const planInclude = {
-  project: { include: { client: { select: { name: true } }, contacts: { orderBy: { name: "asc" as const } }, crew: { include: { user: { select: { id: true, name: true, email: true, phone: true } } }, orderBy: { user: { name: "asc" as const } } } } },
+  project: { include: { client: { select: { name: true } }, contacts: projectContactsInclude, crew: { include: { user: { select: { id: true, name: true, email: true, phone: true } } }, orderBy: { user: { name: "asc" as const } } } } },
   schedule: { include: { responsible: { select: { name: true } } }, orderBy: [{ startsAt: "asc" as const }, { sortOrder: "asc" as const }] },
   tasks: { include: { assignee: { select: { name: true } } }, orderBy: { sortOrder: "asc" as const } },
   logistics: { orderBy: [{ at: "asc" as const }, { sortOrder: "asc" as const }] },
@@ -121,7 +123,7 @@ async function shape(plan: PlanRow) {
     taskProgress: taskProgress(tasks),
     logistics,
     crew: p.crew.map((c) => ({ id: c.id, userId: c.userId, name: c.user.name, email: c.user.email, phone: c.user.phone, role: c.role, callTime: c.callTime, notes: c.notes })),
-    contacts: p.contacts.map((c) => ({ id: c.id, name: c.name, role: c.role, phone: c.phone, email: c.email, notes: c.notes })),
+    contacts: p.contacts.map(projectContactRow),
     packingLists,
   };
 }

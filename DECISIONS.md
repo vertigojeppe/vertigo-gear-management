@@ -543,3 +543,18 @@ moved the problem: a page that imported one inventory component still
 got all thirteen. So barrels are for server code only, and components
 are imported from `@/modules/<name>/components/<file>` (the ESLint rule
 allows exactly that path). The `projects/ui` entry is gone.
+
+## Project contacts come from the contact library (October 2026)
+
+Project contacts were typed in per job, so the same venue technician was
+retyped on every show and a changed phone number had to be fixed
+everywhere. They are now links to `Contact`, which moved out of Settings
+into its own section: the person (name, organisation, phone, email) lives
+once in the library, and the job keeps only the role and notes. Adding a
+contact on a project picks someone from the library or creates them there
+on the way. The migration matched existing project contacts to library
+contacts by name when their email and phone did not contradict, and made
+new person contacts for the rest. Deleting a contact that is on a project
+is refused rather than cascading, so a job never silently loses who to
+call. Clients (renters) stay a separate table; unifying them is still on
+the backlog.

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { BookUser, CalendarDays, Coins, Columns3, DatabaseBackup, FileSpreadsheet, KeyRound, Languages, ListPlus, Users, Webhook } from "lucide-react";
+import { CalendarDays, Coins, Columns3, DatabaseBackup, FileSpreadsheet, KeyRound, Languages, ListPlus, Users, Webhook } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { can, requireActor } from "@/lib/auth/session";
 
@@ -12,7 +12,6 @@ export default async function SettingsPage() {
   const t = await getTranslations("settings");
   const cards = [
     { href: "/settings/account", icon: KeyRound, title: t("account"), body: t("accountHelp"), show: true },
-    { href: "/settings/contacts", icon: BookUser, title: t("contacts"), body: t("contactsHelp"), show: can(actor.role, "contacts.read") },
     { href: "/settings/users", icon: Users, title: t("users"), body: t("usersHelp"), show: can(actor.role, "users.manage") },
     { href: "/settings/custom-fields", icon: ListPlus, title: t("customFields"), body: t("customFieldsHelp"), show: can(actor.role, "settings.manage") },
     { href: "/settings/layout", icon: Columns3, title: t("layout"), body: t("layoutHelp"), show: can(actor.role, "settings.manage") },

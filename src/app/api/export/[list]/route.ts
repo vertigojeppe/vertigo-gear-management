@@ -3,7 +3,7 @@ import { can, getActor } from "@/lib/auth/session";
 import { toCsv, type CsvColumn } from "@/lib/csv";
 import { modelLabel } from "@/lib/format";
 import type { Permission } from "../../../../../config/app.config";
-import { contactList } from "@/modules/contacts";
+import { contactFilters, contactList } from "@/modules/contacts";
 import { itemFilters, listItems, listModels, modelFilters, type ItemListRow, type ModelListRow } from "@/modules/inventory";
 import { listProjects, projectFilters, type ProjectListRow } from "@/modules/projects";
 import { listRentals, rentalFilters, type RentalListRow } from "@/modules/rentals";
@@ -171,7 +171,7 @@ const LISTS: Record<string, ListDef<any>> = {
   },
   contacts: {
     permission: "contacts.read",
-    rows: () => contactList(),
+    rows: async (sp) => (await contactList(contactFilters.parse(sp))).rows,
     columns: [
       { key: "name", header: "Name", value: (c: ContactRow) => c.name },
       { key: "kind", header: "Kind", value: (c: ContactRow) => c.kind },
@@ -185,4 +185,4 @@ const LISTS: Record<string, ListDef<any>> = {
   },
 };
 
-type ContactRow = Awaited<ReturnType<typeof contactList>>[number];
+type ContactRow = Awaited<ReturnType<typeof contactList>>["rows"][number];

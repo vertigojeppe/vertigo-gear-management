@@ -1,5 +1,6 @@
 import {
   AppWindow,
+  BookUser,
   Box,
   Calendar,
   CalendarDays,
@@ -16,7 +17,7 @@ import {
  * set, in that order, and everything else goes behind "More".
  */
 export type NavItem = {
-  key: "dashboard" | "inventory" | "scan" | "projects" | "rentals" | "calendar" | "apps" | "settings";
+  key: "dashboard" | "inventory" | "scan" | "projects" | "rentals" | "calendar" | "contacts" | "apps" | "settings";
   href: string;
   icon: LucideIcon;
   group: "main" | "tools";
@@ -30,6 +31,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "projects", href: "/projects", icon: CalendarDays, group: "main", tab: 4 },
   { key: "rentals", href: "/rentals", icon: Truck, group: "main" },
   { key: "calendar", href: "/calendar", icon: Calendar, group: "main" },
+  { key: "contacts", href: "/contacts", icon: BookUser, group: "main" },
   { key: "scan", href: "/scan", icon: QrCode, group: "tools", tab: 3 },
   { key: "apps", href: "/apps", icon: AppWindow, group: "tools" },
   { key: "settings", href: "/settings", icon: Settings, group: "tools" },

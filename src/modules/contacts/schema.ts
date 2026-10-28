@@ -16,3 +16,10 @@ export const contactInput = z.object({
   notes: optionalText,
 });
 export type ContactInput = z.infer<typeof contactInput>;
+
+/** The contacts page: forgiving search and the person / company filter. */
+export const contactFilters = z.object({
+  q: optionalText,
+  kind: z.preprocess((v) => (v === "" ? undefined : v), z.enum(CONTACT_KINDS).optional()),
+});
+export type ContactFilters = z.infer<typeof contactFilters>;

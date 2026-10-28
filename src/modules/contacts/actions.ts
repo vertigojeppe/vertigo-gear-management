@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth/session";
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { contactInput } from "./schema";
@@ -17,7 +18,9 @@ export async function saveContact(_prev: FormState, formData: FormData): Promise
   } catch (err) {
     return errorState(err, echoValues(formData));
   }
-  revalidatePath("/settings/contacts");
+  // Name, phone and email show on every project the contact is on.
+  revalidatePath("/contacts", "layout");
+  revalidatePath("/projects", "layout");
   revalidatePath("/inventory/locations");
   return { ok: true };
 }
@@ -29,6 +32,8 @@ export async function deleteContact(_prev: FormState, formData: FormData): Promi
   } catch (err) {
     return errorState(err);
   }
-  revalidatePath("/settings/contacts");
+  revalidatePath("/contacts");
+  // From the contact's own page, go back to the library.
+  if (formData.get("back")) redirect("/contacts");
   return { ok: true };
 }

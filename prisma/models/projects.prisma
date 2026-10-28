@@ -73,17 +73,19 @@ model Project {
   @@index([clientId])
 }
 
+/// A library contact on a project: the person (name, phone, email) lives in
+/// Contact, the job-specific role and notes here.
 model ProjectContact {
   id        String  @id @default(cuid())
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  name      String
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Restrict)
   role      String?
-  phone     String?
-  email     String?
   notes     String?
 
   @@index([projectId])
+  @@index([contactId])
 }
 
 model ProjectCrew {

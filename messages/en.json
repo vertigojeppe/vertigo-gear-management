@@ -48,7 +48,8 @@
     "scan": "Scan",
     "more": "More",
     "tools": "Tools",
-    "apps": "Apps"
+    "apps": "Apps",
+    "contacts": "Contacts"
   },
   "auth": {
     "title": "Sign in",
@@ -439,8 +440,6 @@
       "done": "Done",
       "failed": "Failed"
     },
-    "contacts": "Contacts",
-    "contactsHelp": "People and companies who are not users: borrowers, suppliers, partners, key-fob holders.",
     "cfCategory": "Category",
     "cfCategoryHelp": "Only models or items in this category (and its sub-categories) get the field. Leave empty for all.",
     "allCategories": "All categories",
@@ -608,7 +607,11 @@
     "dayPrice": "Day price",
     "dayPriceHelp": "Filled from the model's list price; change it for this project only.",
     "lineDiscount": "Line discount %",
-    "notRentableNote": "{count, plural, one {# unit is} other {# units are}} own-projects-only and not counted for rentals."
+    "notRentableNote": "{count, plural, one {# unit is} other {# units are}} own-projects-only and not counted for rentals.",
+    "fromLibrary": "Contact",
+    "newContactOption": "New contact…",
+    "chooseContact": "Choose a contact",
+    "newContactHint": "The new contact is added to the contact library, so the next project can pick them."
   },
   "rentals": {
     "title": "Rentals",
@@ -859,7 +862,24 @@
     "noContacts": "No contacts yet",
     "noContactsBody": "Add the people and companies you lend gear to, buy from, or rent in from.",
     "deleteConfirm": "Delete this contact?",
-    "holdsGear": "holds gear"
+    "holdsGear": "holds gear",
+    "subtitle": "Everyone you work with who is not a user: venue people, freelancers, suppliers, partners, borrowers.",
+    "searchPlaceholder": "Search name, organisation, phone or email",
+    "allKinds": "People and companies",
+    "personPlural": "People",
+    "companyPlural": "Companies",
+    "noMatches": "No contacts match",
+    "onProjects": "{count, plural, one {# project} other {# projects}}",
+    "subHireCount": "{count, plural, one {# sub-hire item} other {# sub-hire items}}",
+    "supplier": "supplier",
+    "projects": "Projects",
+    "noProjects": "Not on any project yet.",
+    "noDates": "No dates yet",
+    "gearHeld": "Gear they hold",
+    "subHireOwned": "Sub-hire items they own",
+    "archived": "archived",
+    "openSubHire": "Open the sub-hire catalog",
+    "purchases": "Purchases from them"
   },
   "planPhase": {
     "pre_production": "Pre-production",

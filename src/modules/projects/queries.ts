@@ -80,12 +80,21 @@ export type ReservationRow = {
   conflicts: AllocationLike[];
 };
 
+/** A project's contacts with their library details, by name. */
+export const projectContactsInclude = { orderBy: { contact: { name: "asc" as const } }, include: { contact: { select: { id: true, kind: true, name: true, organisation: true, phone: true, email: true } } } };
+
+/** Flat row for pages, PDFs and the API: the person from the library, role and notes from the job. */
+export function projectContactRow(pc: { id: string; role: string | null; notes: string | null; contact: { id: string; kind: string; name: string; organisation: string | null; phone: string | null; email: string | null } }) {
+  return { id: pc.id, contactId: pc.contact.id, kind: pc.contact.kind, name: pc.contact.name, organisation: pc.contact.organisation, phone: pc.contact.phone, email: pc.contact.email, role: pc.role, notes: pc.notes };
+}
+export type ProjectContactRow = ReturnType<typeof projectContactRow>;
+
 export async function projectDetail(id: string) {
   const p = await prisma.project.findUnique({
     where: { id },
     include: {
       client: true,
-      contacts: { orderBy: { name: "asc" } },
+      contacts: projectContactsInclude,
       crew: { include: { user: { select: { id: true, name: true, email: true, phone: true } } }, orderBy: { user: { name: "asc" } } },
       allocations: { include: { model: { select: { id: true, manufacturer: true, name: true, variant: true, trackingType: true } }, item: { select: { assetTag: true } } }, orderBy: [{ startDate: "asc" }, { createdAt: "asc" }] },
     },
@@ -122,7 +131,7 @@ export async function projectDetail(id: string) {
   return {
     project: toProjectDto(p),
     client: p.client,
-    contacts: p.contacts,
+    contacts: p.contacts.map(projectContactRow),
     crew: p.crew.map((c) => ({ id: c.id, userId: c.userId, name: c.user.name, email: c.user.email, phone: c.user.phone, role: c.role, callTime: c.callTime, notes: c.notes })),
     reservations,
     itemsOnSite: location?._count.items ?? 0,
