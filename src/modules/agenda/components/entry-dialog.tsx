@@ -103,7 +103,7 @@ export function EntryDialog({
               </label>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Field id="en-from" label={wholeDays ? t("firstDay") : t("date")} error={err.fromDate}>
                 <Input id="en-from" name="fromDate" type="date" defaultValue={v("fromDate", entry?.fromDate ?? defaults.fromDate ?? "")} required />
               </Field>
@@ -127,7 +127,7 @@ export function EntryDialog({
               <>
                 <fieldset className="flex flex-col gap-1.5">
                   <legend className="mb-1 text-sm font-medium">{kind === "assignment" ? t("whoDoesIt") : t("whoIsInvited")}</legend>
-                  <div className="grid max-h-48 gap-1 overflow-y-auto rounded-md border p-2 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 max-h-48 gap-1 overflow-y-auto rounded-md border p-2 sm:grid-cols-2">
                     {people.map((p) => (
                       <label key={p.id} className="flex items-center gap-2 text-sm">
                         <input type="checkbox" name="people" value={p.id} defaultChecked={picked.has(p.id)} className="size-4" />

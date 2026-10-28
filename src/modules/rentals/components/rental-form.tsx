@@ -35,7 +35,7 @@ export function RentalForm({ rental, clients, defs }: { rental?: RentalDto; clie
     <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
       {rental && <input type="hidden" name="id" value={rental.id} />}
       <FormError message={state.error} />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field id="clientId" label={t("client")} error={err.clientId} className="sm:col-span-2">
           <div className="flex gap-2">
             <NativeSelect id="clientId" name="clientId" value={clientId} onChange={(e) => setClientId(e.target.value)} required className="min-w-0 flex-1">

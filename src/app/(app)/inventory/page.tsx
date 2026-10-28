@@ -53,7 +53,7 @@ export default async function ModelsPage(props: { searchParams: Promise<Record<s
         </p>
       )}
 
-      <LiveFilterForm className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:items-end">
+      <LiveFilterForm className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:items-end">
         <Input name="q" defaultValue={filters.q ?? ""} placeholder={tc("search")} aria-label={tc("search")} />
         <NativeSelect name="categoryId" defaultValue={filters.categoryId ?? ""} aria-label={t("category")} className="sm:w-48">
           <option value="">{t("allCategories")}</option>

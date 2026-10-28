@@ -107,7 +107,7 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
       {/* With the roomy layout (Settings › Layout), wide screens get two columns: the job on the left, the people on the right. */}
       <div className="flex flex-col gap-8 roomy:xl:grid roomy:xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] roomy:xl:items-start">
         <div className="flex min-w-0 flex-col gap-8">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <section className="flex flex-col gap-2">
               <h2 className="text-sm font-medium">{t("dates")}</h2>
               {dates.length === 0 ? (
@@ -308,7 +308,7 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
           </section>
         </div>
         <div className="flex min-w-0 flex-col gap-8">
-          <div className="grid gap-8 md:grid-cols-2 roomy:xl:grid-cols-1">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 roomy:xl:grid-cols-1">
             <section className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-medium">

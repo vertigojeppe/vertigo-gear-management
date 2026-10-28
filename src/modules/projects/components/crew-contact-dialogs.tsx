@@ -45,7 +45,7 @@ export function CrewDialog({ projectId, users }: { projectId: string; users: Use
                 ))}
               </NativeSelect>
             </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field id="crew-role" label={t("role")} optional error={err.role}>
                 <Input id="crew-role" name="role" defaultValue={state.values?.role ?? ""} placeholder="Lighting op" />
               </Field>
@@ -131,7 +131,7 @@ export function ContactDialog({ projectId, contacts, canCreate }: { projectId: s
               </NativeSelect>
             </Field>
             {isNew && canCreate && (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field id="ct-name" label={tc("name")} error={err.name}>
                   <Input id="ct-name" name="name" defaultValue={state.values?.name ?? ""} autoFocus />
                 </Field>
@@ -146,7 +146,7 @@ export function ContactDialog({ projectId, contacts, canCreate }: { projectId: s
                 </Field>
               </div>
             )}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field id="ct-role" label={t("role")} optional error={err.role}>
                 <Input id="ct-role" name="role" defaultValue={state.values?.role ?? ""} placeholder="Venue tech" />
               </Field>

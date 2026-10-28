@@ -93,7 +93,7 @@ export default async function DashboardPage() {
             ))}
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <section className="flex flex-col gap-3">
               <div>
                 <h2 className="text-lg font-medium">{t("outNow")}</h2>
@@ -169,7 +169,7 @@ export default async function DashboardPage() {
         </>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium">{t("upcoming")}</h2>

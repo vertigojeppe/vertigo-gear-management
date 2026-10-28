@@ -40,7 +40,7 @@ export function PurchaseDialog({ modelId, purchase, suppliers, trigger }: { mode
             {purchase && <input type="hidden" name="id" value={purchase.id} />}
             <input type="hidden" name="modelId" value={modelId} />
             <FormError message={state.error} />
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field id="p-supplier" label={t("supplier")} help={t("supplierHelp")} optional error={err.supplierContactId}>
                 <NativeSelect id="p-supplier" name="supplierContactId" defaultValue={v("supplierContactId", purchase?.supplierContactId)}>
                   <option value="">—</option>

@@ -52,7 +52,7 @@ export async function MyDaySection({ data, canEditPlans }: { data: MyDay; canEdi
       {nothing ? (
         <p className="text-sm text-muted-foreground">{t("nothing")}</p>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="flex flex-col gap-3">
             <h3 className="text-sm font-medium">{t("today")}</h3>
             {todayEntries.length === 0 ? <p className="text-sm text-muted-foreground">{t("todayEmpty")}</p> : entryList(todayEntries)}

@@ -54,7 +54,7 @@ export function ClientDialog({ client, trigger, onCreated }: { client?: ClientRo
             <Field id="client-name" label={t("clientName")} error={err.name}>
               <Input id="client-name" name="name" defaultValue={v("name", client?.name)} required autoFocus />
             </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field id="client-contact" label={t("contactName")} optional error={err.contactName}>
                 <Input id="client-contact" name="contactName" defaultValue={v("contactName", client?.contactName)} />
               </Field>

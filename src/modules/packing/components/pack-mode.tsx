@@ -110,7 +110,7 @@ export function PackMode({ ids, lines, units, packed }: { ids: Ids; lines: LineR
 
       {current.length === 0 && <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">{t("allPacked")}</p>}
 
-      <ul className="grid items-start gap-3 roomy:lg:grid-cols-2 roomy:2xl:grid-cols-3">
+      <ul className="grid grid-cols-1 items-start gap-3 roomy:lg:grid-cols-2 roomy:2xl:grid-cols-3">
         {current.map((line) => (
           <LineCard key={line.id} ids={ids} line={line} />
         ))}
@@ -121,7 +121,7 @@ export function PackMode({ ids, lines, units, packed }: { ids: Ids; lines: LineR
           <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
             {t("packedLines", { count: done.length })} <span className="text-muted-foreground transition-transform group-open:rotate-90">›</span>
           </summary>
-          <ul className="grid items-start gap-3 roomy:lg:grid-cols-2 roomy:2xl:grid-cols-3 border-t p-3">
+          <ul className="grid grid-cols-1 items-start gap-3 roomy:lg:grid-cols-2 roomy:2xl:grid-cols-3 border-t p-3">
             {done.map((line) => (
               <LineCard key={line.id} ids={ids} line={line} />
             ))}

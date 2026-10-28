@@ -55,7 +55,7 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
       <InventoryTabs />
 
       <LiveFilterForm className="flex flex-col gap-2">
-        <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto]">
           <Input name="q" defaultValue={filters.q ?? ""} placeholder={`${tc("search")}: ${t("assetTag")}, ${t("serialNumber")}, ${t("model")}`} aria-label={tc("search")} />
           <Button type="submit" variant="outline" className="group-data-[live]:hidden">
             {tc("filter")}
@@ -66,7 +66,7 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
             </Link>
           )}
         </div>
-        <div className="grid gap-2 sm:grid-cols-6">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-6">
           <NativeSelect name="status" defaultValue={filters.status ?? ""} aria-label={t("status")}>
             <option value="">{t("allStatuses")}</option>
             {ITEM_STATUSES.map((s) => (
@@ -114,7 +114,7 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
           </NativeSelect>
         </div>
         {defs.length > 0 && (
-          <div className="grid gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-5">
             {defs.map((d) => (
               <Input key={d.key} name={`cf.${d.key}`} defaultValue={sp[`cf.${d.key}`] ?? ""} placeholder={d.label} aria-label={d.label} />
             ))}

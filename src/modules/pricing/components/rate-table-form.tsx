@@ -43,7 +43,7 @@ export function RateTableForm({ table }: { table?: RateTableDto }) {
       {table && <input type="hidden" name="id" value={table.id} />}
       <FormError message={state.error} />
       <FormSuccess message={state.ok && table ? tc("saved") : undefined} />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field id="rt-name" label={t("tableName")} error={err.name}>
           <Input id="rt-name" name="name" defaultValue={v("name", table?.name)} required autoFocus={!table} />
         </Field>
@@ -85,7 +85,7 @@ export function RateTableForm({ table }: { table?: RateTableDto }) {
         </div>
       </fieldset>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field id="rt-rule" label={t("extraRule")} help={t("extraRuleHelp")} error={err.extraRule}>
           <NativeSelect id="rt-rule" name="extraRule" value={extraRule} onChange={(e) => setExtraRule(e.target.value)}>
             {RATE_EXTRA_RULES.map((r) => (

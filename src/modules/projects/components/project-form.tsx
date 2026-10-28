@@ -38,7 +38,7 @@ export function ProjectForm({ project, clients, defs }: { project?: ProjectDto; 
       {project && <input type="hidden" name="id" value={project.id} />}
       <FormError message={state.error} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field id="name" label={tc("name")} error={err.name} className="sm:col-span-2">
           <Input id="name" name="name" defaultValue={v("name", project?.name)} required autoFocus={!project} />
         </Field>
@@ -82,7 +82,7 @@ export function ProjectForm({ project, clients, defs }: { project?: ProjectDto; 
         <legend className="mb-1 text-sm font-medium">{t("dates")}</legend>
         <p className="text-xs text-muted-foreground">{t("datesHelp")}</p>
         {/* One row per phase: first day, last day, call time. */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field id="prepStart" label={t("prepStart")} optional error={err.prepStart}>
             <Input id="prepStart" name="prepStart" type="date" defaultValue={v("prepStart", project?.prepStart)} />
           </Field>

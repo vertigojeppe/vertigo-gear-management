@@ -140,7 +140,7 @@ export function AppVersionUploader({ appId, kind }: { appId: string; kind: "file
         void run(e.dataTransfer.files[0]);
       }}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field id="ver-label" label={t("versionLabel")} optional help={t("versionLabelHelp")}>
           <Input id="ver-label" value={label} onChange={(e) => setLabel(e.target.value)} disabled={Boolean(progress)} />
         </Field>

@@ -184,7 +184,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
         </section>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {/* Crew & contacts (from the project) */}
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
@@ -259,7 +259,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
         {docs.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("noDocuments")}</p>
         ) : (
-          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 roomy:2xl:grid-cols-4">
+          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 roomy:2xl:grid-cols-4">
             {docs.map((d) => (
               <li key={d.id}>
                 <Link href={`/projects/${id}/plan/documents/${d.id}`} className="flex gap-3 rounded-md border p-2 hover:bg-muted/50">

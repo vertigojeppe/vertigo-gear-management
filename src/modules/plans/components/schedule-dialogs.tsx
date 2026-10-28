@@ -55,7 +55,7 @@ export function ScheduleEntryDialog({ ids, entry, people, defaultDay }: { ids: I
                 <Input id="se-dur" name="durationMin" type="number" min="0" step="15" defaultValue={v("durationMin", entry?.durationMin)} />
               </Field>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field id="se-loc" label={t("where")} optional error={err.location}>
                 <Input id="se-loc" name="location" defaultValue={v("location", entry?.location)} />
               </Field>
