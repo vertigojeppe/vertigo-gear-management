@@ -26,7 +26,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | users | User, ApiToken | `users.*`, `apiTokens.*`, user/account actions |
 | settings | CustomFieldDefinition | `customFieldDefinitions.*` |
 | inventory | Category, Model, Item, Location, StatusLog | `categories`, `locations`, `models`, `items`, list/detail queries, forms |
-| contacts | Contact | `contacts`, `contactList`, `personOptions`, contact dialog |
+| contacts | Contact | `contacts`, `contactList`, `contactDetail`, `personOptions`, contact dialog; the library at `/contacts` |
 | subhire | SubHireItem, SubHireLine | `subHireItems`, `subHireLines`, `subHireCatalog`, `subHireLinesFor`, catalog page, rent-in dialog; lines feed `quoteFor` and `listDetail` |
 | purchases | Purchase | `purchases` (create/update/remove), `purchasesForModel`, `purchaseList`, purchase dialog and section, record page with attachments |
 | wishlist | WishItem | `wishes` (create/update/setStatus/markBought/remove), `wishList`, wish dialog; converts through the model form |
@@ -255,6 +255,7 @@ erDiagram
   Project ||--o{ ProjectCrew : crew
   User ||--o{ ProjectCrew : assigned
   Project ||--o{ ProjectContact : contacts
+  Contact ||--o{ ProjectContact : "on projects"
   Project ||--o{ Allocation : reserves
   Rental ||--o{ RentalLine : lines
   RentalLine ||--o| Allocation : mirrors

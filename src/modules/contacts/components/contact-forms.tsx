@@ -80,13 +80,14 @@ export function ContactDialog({ contact, trigger }: { contact?: ContactRow; trig
   );
 }
 
-export function DeleteContactButton({ id }: { id: string }) {
+export function DeleteContactButton({ id, back = false }: { id: string; back?: boolean }) {
   const t = useTranslations("contacts");
   const tc = useTranslations("common");
   const [state, action] = useActionState<FormState, FormData>(deleteContact, {});
   return (
     <ActionForm action={action} className="flex items-center gap-2">
       <input type="hidden" name="id" value={id} />
+      {back && <input type="hidden" name="back" value="1" />}
       {state.error && <span className="text-xs text-destructive">{state.error}</span>}
       <ConfirmButton confirm={t("deleteConfirm")} variant="ghost" size="xs" className="text-destructive">
         {tc("delete")}

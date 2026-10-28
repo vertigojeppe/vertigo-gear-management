@@ -7,6 +7,8 @@ export { computeAvailability, checkRequest, unitDoubleBookings, overbookedDays }
 export type { Availability, AllocationLike, ItemLike, Window } from "./availability";
 export { clientOptions, crewOptions, listProjects, projectDetail, modelAvailabilityView, timeline, timelineBars, upcomingProjects } from "./queries";
 export type { ProjectListRow, ReservationRow, TimelineBar } from "./queries";
+export { projectContactsInclude, projectContactRow } from "./queries";
+export type { ProjectContactRow } from "./queries";
 export { clientInput, projectInput, projectStatusInput, contactInput, crewInput, allocationInput, projectFilters, availabilityQuery, PROJECT_STATUS_KEYS } from "./schema";
 export type { ProjectInput, ClientInput, AllocationInput, ProjectFilters } from "./schema";
 export * as projectActions from "./actions";

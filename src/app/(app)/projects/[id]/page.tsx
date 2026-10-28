@@ -11,6 +11,7 @@ import { can, requireActor } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatDayRange, formatMoney } from "@/lib/format";
 import { modelOptions } from "@/modules/inventory";
 import { crewOptions, projectDetail } from "@/modules/projects";
+import { contactOptions } from "@/modules/contacts";
 import { ContactDialog, CrewDialog, RemoveContactButton, RemoveCrewButton } from "@/modules/projects/components/crew-contact-dialogs";
 import { DeleteProjectButton, ProjectStatusButtons, RemoveReservationButton } from "@/modules/projects/components/project-buttons";
 import { ReserveDialog } from "@/modules/projects/components/reserve-dialog";
@@ -36,7 +37,7 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
   const { id } = await props.params;
   const gear = projectGearEnabled();
   // The gear parts (reservations, rent in, quote) are only loaded when they are shown.
-  const [detail, defs, models, users, packingLists, plan, planTemplates, quote, rateTables, subHire, subHireChoices] = await Promise.all([
+  const [detail, defs, models, users, packingLists, plan, planTemplates, quote, rateTables, subHire, subHireChoices, contactChoices] = await Promise.all([
     projectDetail(id),
     customFieldDefinitions.forEntity("project"),
     gear ? modelOptions() : [],
@@ -48,6 +49,7 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
     gear ? rateTableOptions() : [],
     gear ? subHireLinesFor(id) : [],
     gear ? subHireOptions() : [],
+    contactOptions(),
   ]);
   const tsh = await getTranslations("subhire");
   const tpack = await getTranslations("packing");
@@ -341,7 +343,7 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
                 <h2 className="text-lg font-medium">
                   {t("contacts")} <span className="text-sm font-normal text-muted-foreground">({contacts.length})</span>
                 </h2>
-                {canEdit && <ContactDialog projectId={project.id} />}
+                {canEdit && <ContactDialog projectId={project.id} contacts={contactChoices.filter((o) => !contacts.some((c) => c.contactId === o.id))} canCreate={can(actor.role, "contacts.write")} />}
               </div>
               {contacts.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t("noContacts")}</p>
@@ -351,7 +353,14 @@ export default async function ProjectPage(props: { params: Promise<{ id: string 
                     <li key={c.id} className="flex items-center gap-3 px-3 py-2">
                       <span className="min-w-0 flex-1">
                         <span className="block font-medium">
-                          {c.name}
+                          {can(actor.role, "contacts.read") ? (
+                            <Link href={`/contacts/${c.contactId}`} className="hover:underline">
+                              {c.name}
+                            </Link>
+                          ) : (
+                            c.name
+                          )}
+                          {c.organisation ? <span className="font-normal text-muted-foreground"> ({c.organisation})</span> : null}
                           {c.role ? <span className="font-normal text-muted-foreground"> · {c.role}</span> : null}
                         </span>
                         <span className="block text-xs text-muted-foreground">{[c.phone, c.email, c.notes].filter(Boolean).join(" · ")}</span>

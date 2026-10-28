@@ -302,16 +302,31 @@ export const projects = {
   },
 
   /* Contacts */
+  /** Puts a library contact on the project, or adds a new person to the library first. */
   async addContact(actor: Actor, projectId: string, input: ContactInput) {
     assertCan(actor, "projects.write");
-    const c = await prisma.projectContact.create({ data: { projectId, ...input, role: input.role ?? null, phone: input.phone ?? null, email: input.email ?? null, notes: input.notes ?? null } });
-    await logActivity(actor, { entityType: "project", entityId: projectId, action: "contact_added", summary: `Added contact ${c.name}` });
-    return c;
+    if (!input.contactId) assertCan(actor, "contacts.write");
+    return prisma.$transaction(async (tx) => {
+      let contact: { id: string; name: string };
+      if (input.contactId) {
+        const found = await tx.contact.findUnique({ where: { id: input.contactId }, select: { id: true, name: true } });
+        if (!found) throw new ProjectError("That contact no longer exists.", "contactId");
+        if (await tx.projectContact.findFirst({ where: { projectId, contactId: found.id } })) throw new ProjectError(`${found.name} is already on this project.`, "contactId");
+        contact = found;
+      } else {
+        contact = await tx.contact.create({ data: { kind: "person", name: input.name!, organisation: input.organisation ?? null, phone: input.phone ?? null, email: input.email ?? null }, select: { id: true, name: true } });
+        await logActivity(actor, { entityType: "contact", entityId: contact.id, action: "created", summary: `Created contact ${contact.name}` }, tx);
+      }
+      const c = await tx.projectContact.create({ data: { projectId, contactId: contact.id, role: input.role ?? null, notes: input.notes ?? null } });
+      await logActivity(actor, { entityType: "project", entityId: projectId, action: "contact_added", summary: `Added contact ${contact.name}` }, tx);
+      return c;
+    });
   },
-  async removeContact(actor: Actor, contactId: string) {
+  /** Takes the contact off the project; it stays in the library. */
+  async removeContact(actor: Actor, projectContactId: string) {
     assertCan(actor, "projects.write");
-    const c = await prisma.projectContact.delete({ where: { id: contactId } });
-    await logActivity(actor, { entityType: "project", entityId: c.projectId, action: "contact_removed", summary: `Removed contact ${c.name}` });
+    const c = await prisma.projectContact.delete({ where: { id: projectContactId }, include: { contact: { select: { name: true } } } });
+    await logActivity(actor, { entityType: "project", entityId: c.projectId, action: "contact_removed", summary: `Removed contact ${c.contact.name}` });
   },
 
   /* Crew */

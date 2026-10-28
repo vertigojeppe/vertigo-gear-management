@@ -55,13 +55,24 @@ export const projectStatusInput = z.object({
   status: z.enum(PROJECT_STATUS_KEYS as [string, ...string[]]),
 });
 
-export const contactInput = z.object({
-  name: z.string().trim().min(1, "Name is required.").max(100),
-  role: optionalText,
-  phone: optionalText,
-  email: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().email("Enter a valid email.").optional()),
-  notes: optionalText,
-});
+/**
+ * A contact on a project: someone from the library (`contactId`), or a new
+ * person (name, organisation, phone, email) who is added to the library on
+ * the way. Role and notes belong to this job.
+ */
+export const contactInput = z
+  .object({
+    contactId: optionalText,
+    name: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().max(120).optional()),
+    organisation: optionalText,
+    phone: optionalText,
+    email: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().email("Enter a valid email.").optional()),
+    role: optionalText,
+    notes: optionalText,
+  })
+  .superRefine((v, ctx) => {
+    if (!v.contactId && !v.name) ctx.addIssue({ code: "custom", path: ["name"], message: "Choose a contact or enter a name." });
+  });
 export type ContactInput = z.infer<typeof contactInput>;
 
 export const crewInput = z.object({

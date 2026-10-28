@@ -64,7 +64,7 @@ export async function confirmImport(_prev: FormState, formData: FormData): Promi
   }
   revalidatePath("/inventory", "layout");
   revalidatePath("/rentals", "layout");
-  revalidatePath("/settings/contacts");
+  revalidatePath("/contacts");
   revalidatePath("/dashboard");
   redirect(`/settings/import/${id}`);
 }

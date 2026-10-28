@@ -52,8 +52,10 @@ export const contacts = {
 
   async remove(actor: Actor, id: string) {
     assertCan(actor, "contacts.write");
-    const used = await prisma.location.count({ where: { contactId: id } });
-    if (used > 0) throw new ContactError("This contact holds gear (it is a location). Delete that location first.");
+    const [locations, projects, subHire] = await Promise.all([prisma.location.count({ where: { contactId: id } }), prisma.projectContact.count({ where: { contactId: id } }), prisma.subHireItem.count({ where: { ownerContactId: id } })]);
+    if (locations > 0) throw new ContactError("This contact holds gear (it is a location). Delete that location first.");
+    if (projects > 0) throw new ContactError(`This contact is on ${projects} project${projects === 1 ? "" : "s"}. Remove it there first.`);
+    if (subHire > 0) throw new ContactError("This contact owns sub-hire items. Delete them or give them another owner first.");
     const c = await prisma.contact.delete({ where: { id } });
     await logActivity(actor, { entityType: "contact", entityId: id, action: "deleted", summary: `Deleted contact ${c.name}` });
   },

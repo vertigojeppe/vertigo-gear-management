@@ -16,6 +16,7 @@ model Contact {
   locations    Location[]
   purchases    Purchase[]
   subHireItems SubHireItem[]
+  projects     ProjectContact[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

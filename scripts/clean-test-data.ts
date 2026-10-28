@@ -4,7 +4,8 @@ import { getStorage } from "../src/lib/storage";
 
 /**
  * Removes what the browser tests leave behind in a dev database:
- * "Testlight" models/items, "e2e …" API tokens and their activity rows.
+ * "Testlight" models/items, "e2e …" API tokens, "E2E …" projects and
+ * contacts, and their activity rows.
  * CI starts from a fresh database, so this is for local use:
  *   npm run db:clean-tests
  */
@@ -50,6 +51,10 @@ async function main() {
   const testClients = await prisma.client.findMany({ where: { name: { startsWith: "E2E client " } }, select: { id: true } });
   await prisma.location.deleteMany({ where: { renterId: { in: testClients.map((c) => c.id) } } });
   await prisma.client.deleteMany({ where: { id: { in: testClients.map((c) => c.id) }, projects: { none: {} }, rentals: { none: {} } } });
+  // Contacts the browser tests made ("E2E …"), once no project, sub-hire item or location points at them.
+  const testContacts = await prisma.contact.findMany({ where: { name: { startsWith: "E2E " }, projects: { none: {} }, subHireItems: { none: {} }, locations: { none: {} } }, select: { id: true } });
+  await prisma.activityLog.deleteMany({ where: { entityType: "contact", entityId: { in: testContacts.map((c) => c.id) } } });
+  const contacts = await prisma.contact.deleteMany({ where: { id: { in: testContacts.map((c) => c.id) } } });
   // Spreadsheet imports made by the browser test (file name "E2E import …"):
   // the import's activity row lists every id it created.
   const imports = await prisma.activityLog.findMany({ where: { action: "spreadsheet_imported", summary: { contains: "E2E import" } } });
@@ -72,7 +77,7 @@ async function main() {
     await prisma.activityLog.delete({ where: { id: log.id } });
   }
   await prisma.outbox.deleteMany({ where: { status: { in: ["done", "failed"] } } });
-  console.log(`Removed ${tokens.count} tokens, ${removedUsers.count} test users, ${testApps.length} test apps, ${ids.length} models, ${wishes.count} wishes, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${rentals.count} test rentals, ${imports.length} test imports.`);
+  console.log(`Removed ${tokens.count} tokens, ${removedUsers.count} test users, ${testApps.length} test apps, ${ids.length} models, ${wishes.count} wishes, ${items.length} items, ${logs.count} activity rows, ${projects.count} test projects, ${contacts.count} test contacts, ${rentals.count} test rentals, ${imports.length} test imports.`);
   await prisma.$disconnect();
 }
 

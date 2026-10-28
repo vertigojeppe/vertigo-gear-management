@@ -159,9 +159,11 @@ export async function seedProjects(prisma: PrismaClient) {
         create: { projectId: project.id, userId: user.id, role: c.role, callTime: (c as { callTime?: Date }).callTime ?? null },
       });
     }
-    for (const c of p.contacts ?? []) {
-      const exists = await prisma.projectContact.findFirst({ where: { projectId: project.id, name: c.name } });
-      if (!exists) await prisma.projectContact.create({ data: { projectId: project.id, ...c } });
+    for (const { role, ...person } of p.contacts ?? []) {
+      // The person lives in the contact library; the project links to them with this job's role.
+      const contact = (await prisma.contact.findFirst({ where: { name: person.name } })) ?? (await prisma.contact.create({ data: { kind: "person", ...person } }));
+      const exists = await prisma.projectContact.findFirst({ where: { projectId: project.id, contactId: contact.id } });
+      if (!exists) await prisma.projectContact.create({ data: { projectId: project.id, contactId: contact.id, role } });
     }
     for (const r of p.reservations) {
       const model = await prisma.model.findFirst({ where: splitVariant(r.model) });

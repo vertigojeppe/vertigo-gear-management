@@ -48,7 +48,8 @@
     "scan": "Scan",
     "more": "Mere",
     "tools": "Værktøjer",
-    "apps": "Apps"
+    "apps": "Apps",
+    "contacts": "Kontakter"
   },
   "auth": {
     "title": "Log ind",
@@ -439,8 +440,6 @@
       "done": "Færdig",
       "failed": "Fejlet"
     },
-    "contacts": "Kontakter",
-    "contactsHelp": "Personer og firmaer som ikke er brugere: lånere, leverandører, partnere, nøglebrik-holdere.",
     "cfCategory": "Kategori",
     "cfCategoryHelp": "Kun modeller eller enheder i denne kategori (og underkategorier) får feltet. Tom = alle.",
     "allCategories": "Alle kategorier",
@@ -608,7 +607,11 @@
     "dayPrice": "Dagspris",
     "dayPriceHelp": "Udfyldes fra modellens listepris; ret den kun for dette projekt.",
     "lineDiscount": "Linjerabat %",
-    "notRentableNote": "{count, plural, one {# enhed er} other {# enheder er}} kun til egne projekter og tælles ikke med til udlejning."
+    "notRentableNote": "{count, plural, one {# enhed er} other {# enheder er}} kun til egne projekter og tælles ikke med til udlejning.",
+    "fromLibrary": "Kontakt",
+    "newContactOption": "Ny kontakt…",
+    "chooseContact": "Vælg en kontakt",
+    "newContactHint": "Den nye kontakt kommer i kontaktbiblioteket, så næste projekt kan vælge dem."
   },
   "rentals": {
     "title": "Udlejning",
@@ -859,7 +862,24 @@
     "noContacts": "Ingen kontakter endnu",
     "noContactsBody": "Tilføj de personer og firmaer I låner udstyr til, køber fra eller lejer ind fra.",
     "deleteConfirm": "Slet denne kontakt?",
-    "holdsGear": "har udstyr"
+    "holdsGear": "har udstyr",
+    "subtitle": "Alle I arbejder med, som ikke er brugere: venuefolk, freelancere, leverandører, partnere, lånere.",
+    "searchPlaceholder": "Søg navn, organisation, telefon eller e-mail",
+    "allKinds": "Personer og firmaer",
+    "personPlural": "Personer",
+    "companyPlural": "Firmaer",
+    "noMatches": "Ingen kontakter passer",
+    "onProjects": "{count, plural, one {# projekt} other {# projekter}}",
+    "subHireCount": "{count, plural, one {# emne til indleje} other {# emner til indleje}}",
+    "supplier": "leverandør",
+    "projects": "Projekter",
+    "noProjects": "Ikke på noget projekt endnu.",
+    "noDates": "Ingen datoer endnu",
+    "gearHeld": "Udstyr de har",
+    "subHireOwned": "Udstyr til indleje, som de ejer",
+    "archived": "arkiveret",
+    "openSubHire": "Åbn Indleje",
+    "purchases": "Indkøb fra dem"
   },
   "planPhase": {
     "pre_production": "Forproduktion",

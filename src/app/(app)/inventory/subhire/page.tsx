@@ -38,7 +38,7 @@ export default async function SubHirePage(props: { searchParams: Promise<{ archi
       {canEdit && owners.length === 0 && (
         <p className="text-sm text-amber-700 dark:text-amber-300">
           {t("noOwners")}{" "}
-          <Link href="/settings/contacts" className="underline">
+          <Link href="/contacts" className="underline">
             {t("contacts")}
           </Link>
         </p>
