@@ -56,7 +56,7 @@ export function ItemForm({
       {item && <input type="hidden" name="id" value={item.id} />}
       <FormError message={state.error} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field id="modelId" label={t("model")} error={err.modelId} className="sm:col-span-2">
           <ModelSelect id="modelId" name="modelId" value={modelId} onChange={(e) => setModelId(e.target.value)} required models={models} trackingLabels={{ bulk: t("bulk"), serialized: t("serialized") }} />
         </Field>
@@ -124,7 +124,7 @@ export function ItemForm({
       {canSeeFinance && (
         <fieldset className="flex flex-col gap-4">
           <legend className="mb-2 text-sm font-medium">{t("finance")}</legend>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field id="purchaseDate" label={t("purchaseDate")} optional error={err.purchaseDate}>
               <Input id="purchaseDate" name="purchaseDate" type="date" defaultValue={v("purchaseDate", item?.purchaseDate)} />
             </Field>

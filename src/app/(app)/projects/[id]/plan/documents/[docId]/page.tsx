@@ -55,7 +55,7 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
         <DocumentUploader planId={plan.id} previewFor={document.id} accept="image/*" compact />
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <section className="flex flex-col gap-2">
           <h2 className="text-sm font-medium">{t("versions")}</h2>
           <ul className="divide-y rounded-md border text-sm">

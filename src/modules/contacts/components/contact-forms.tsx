@@ -38,7 +38,7 @@ export function ContactDialog({ contact, trigger }: { contact?: ContactRow; trig
           <ActionForm action={action} className="flex flex-col gap-4">
             {contact && <input type="hidden" name="id" value={contact.id} />}
             <FormError message={state.error} />
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field id="ct-kind" label={t("kind")} error={err.kind}>
                 <NativeSelect id="ct-kind" name="kind" defaultValue={v("kind", contact?.kind ?? "person")}>
                   {CONTACT_KINDS.map((k) => (

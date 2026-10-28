@@ -102,6 +102,13 @@ the module.
   `src/components/navigation.ts`; add a section there, not in the components.
 - Every nav item has a route. Unbuilt sections render `ComingSoon`.
 - Page headings are `<h1>` so the e2e tests and screen readers can find them.
+- Nothing may make a page wider than a phone: the content box scrolls
+  (overflow-y: auto), so anything too wide makes the whole page scroll
+  sideways. A grid that sets columns only from a breakpoint starts with
+  `grid-cols-1` (minmax(0, 1fr); an implicit column cannot shrink below a
+  truncated name), rows with buttons `flex-wrap`, and tables sit in an
+  `overflow-x-auto` box. `e2e/phone-width.spec.ts` checks the main pages
+  at 360 px.
 
 ## Auth and permissions
 

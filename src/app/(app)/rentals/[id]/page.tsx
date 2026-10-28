@@ -64,7 +64,7 @@ export default async function RentalPage(props: { params: Promise<{ id: string }
         }
       />
 
-      <div className="grid gap-6 text-sm md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 text-sm md:grid-cols-2">
         <div>
           <h2 className="text-sm font-medium">{t("client")}</h2>
           <p>{[client.contactName, client.phone, client.email, client.address].filter(Boolean).join(" · ") || "—"}</p>

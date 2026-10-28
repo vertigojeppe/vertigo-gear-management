@@ -54,7 +54,7 @@ export function SubHireItemDialog({ item, owners, categories, trigger }: { item?
                 ))}
               </NativeSelect>
             </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field id="sh-manufacturer" label={ti("manufacturer")} optional error={err.manufacturer}>
                 <Input id="sh-manufacturer" name="manufacturer" defaultValue={v("manufacturer", item?.manufacturer)} />
               </Field>

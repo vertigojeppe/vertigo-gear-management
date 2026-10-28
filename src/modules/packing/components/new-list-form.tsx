@@ -32,7 +32,7 @@ export function NewListForm({ projectId, defaultName, templates, otherLists, has
       <Field id="nl-name" label={t("name")} error={err.name}>
         <Input id="nl-name" name="name" defaultValue={state.values?.name ?? defaultName} required autoFocus />
       </Field>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field id="nl-group" label={t("groupBy")} error={err.groupBy}>
           <NativeSelect id="nl-group" name="groupBy" defaultValue={state.values?.groupBy ?? "category"}>
             {PACKING_GROUPINGS.map((g) => (

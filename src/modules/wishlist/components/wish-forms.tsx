@@ -41,7 +41,7 @@ export function WishDialog({ wish, categories, trigger }: { wish?: WishRow; cate
           <ActionForm action={action} className="flex flex-col gap-4">
             {wish && <input type="hidden" name="id" value={wish.id} />}
             <FormError message={state.error} />
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field id="w-manufacturer" label={ti("manufacturer")} optional error={err.manufacturer}>
                 <Input id="w-manufacturer" name="manufacturer" defaultValue={v("manufacturer", wish?.manufacturer)} />
               </Field>

@@ -25,7 +25,7 @@ export default async function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t("title")} />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
           <Link key={c.href} href={c.href} className="flex gap-3 rounded-md border p-4 hover:bg-muted/50">
             <c.icon className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />

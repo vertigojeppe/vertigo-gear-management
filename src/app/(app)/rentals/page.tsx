@@ -44,7 +44,7 @@ export default async function RentalsPage(props: { searchParams: Promise<Record<
           </>
         }
       />
-      <LiveFilterForm className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end">
+      <LiveFilterForm className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end">
         <Input name="q" defaultValue={filters.q ?? ""} placeholder={tc("search")} aria-label={tc("search")} />
         <NativeSelect name="status" defaultValue={filters.status ?? ""} aria-label={t("status")} className="sm:w-40">
           <option value="">{t("allStatuses")}</option>

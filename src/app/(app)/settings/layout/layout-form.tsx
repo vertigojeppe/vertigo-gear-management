@@ -19,7 +19,7 @@ export function LayoutForm({ layout }: { layout: Layout }) {
     <ActionForm action={action} className="flex max-w-2xl flex-col gap-3">
       <FormError message={state.error ?? state.fieldErrors?.layout} />
       <FormSuccess message={state.ok ? t("layoutSaved") : undefined} />
-      <fieldset className="grid gap-3 sm:grid-cols-2">
+      <fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <legend className="sr-only">{t("layout")}</legend>
         {LAYOUTS.map((key) => (
           <label key={key} className={cn("flex cursor-pointer gap-3 rounded-md border p-4 has-[:checked]:border-foreground has-[:checked]:bg-muted/50")}>

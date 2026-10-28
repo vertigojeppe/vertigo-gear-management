@@ -43,7 +43,7 @@ export function CustomFieldDialog({ field, trigger, categories }: { field?: Fiel
           <ActionForm action={action} className="flex flex-col gap-4">
             {field && <input type="hidden" name="id" value={field.id} />}
             <FormError message={state.error} />
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field id="cf-entity" label={t("cfEntity")} error={err.entity}>
                 <NativeSelect id="cf-entity" name="entity" value={entity} onChange={(e) => setEntity(e.target.value)} disabled={Boolean(field)}>
                   {CUSTOM_FIELD_ENTITIES.map((e) => (
@@ -89,7 +89,7 @@ export function CustomFieldDialog({ field, trigger, categories }: { field?: Fiel
                 <Textarea id="cf-options" name="optionsText" rows={4} defaultValue={v("optionsText", field?.options.join("\n"))} />
               </Field>
             )}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" name="required" className="size-4" defaultChecked={state.values ? state.values.required === "on" : field?.required} />
                 {t("cfRequired")}

@@ -113,38 +113,40 @@ function SpecPreview({ data, action, error }: { data: SpecPreviewData; action: (
             <Link href={`/inventory/models/${m.id}`} className="font-medium hover:underline">
               {m.label}
             </Link>
-            <table className="text-xs">
-              <tbody>
-                {m.changes.map((c) => {
-                  const key = pickKey(m.id, c.field);
-                  const ticked = picked.has(key);
-                  const label = changeLabel(c, ticked);
-                  return (
-                    <tr key={c.field} className="align-top">
-                      <td className="w-6 py-0.5">
-                        {pickable(c.action) && (
-                          <input type="checkbox" name="pick" value={key} checked={ticked} onChange={(e) => toggle(key, e.target.checked)} aria-label={`${(c.label ?? t(`field_${c.field}`))}: ${m.label}`} className="mt-0.5" />
-                        )}
-                      </td>
-                      <td className="w-32 py-0.5 pr-2 text-muted-foreground">{(c.label ?? t(`field_${c.field}`))}</td>
-                      <td className="w-28 py-0.5 pr-2">
-                        <StatusPill color={label.color}>{t(label.key)}</StatusPill>
-                      </td>
-                      <td className="whitespace-pre-line py-0.5">
-                        {c.action === "keep" ? (
-                          <>
-                            <span className={ticked ? "line-through text-muted-foreground" : ""}>{c.from}</span>{" "}
-                            <span className={ticked ? "" : "text-muted-foreground"}>({t("sheetSays", { value: c.to })})</span>
-                          </>
-                        ) : (
-                          <span className={c.action === "fill" && !ticked ? "text-muted-foreground" : ""}>{c.to}</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="text-xs">
+                <tbody>
+                  {m.changes.map((c) => {
+                    const key = pickKey(m.id, c.field);
+                    const ticked = picked.has(key);
+                    const label = changeLabel(c, ticked);
+                    return (
+                      <tr key={c.field} className="align-top">
+                        <td className="w-6 py-0.5">
+                          {pickable(c.action) && (
+                            <input type="checkbox" name="pick" value={key} checked={ticked} onChange={(e) => toggle(key, e.target.checked)} aria-label={`${(c.label ?? t(`field_${c.field}`))}: ${m.label}`} className="mt-0.5" />
+                          )}
+                        </td>
+                        <td className="w-32 py-0.5 pr-2 text-muted-foreground">{(c.label ?? t(`field_${c.field}`))}</td>
+                        <td className="w-28 py-0.5 pr-2">
+                          <StatusPill color={label.color}>{t(label.key)}</StatusPill>
+                        </td>
+                        <td className="whitespace-pre-line py-0.5">
+                          {c.action === "keep" ? (
+                            <>
+                              <span className={ticked ? "line-through text-muted-foreground" : ""}>{c.from}</span>{" "}
+                              <span className={ticked ? "" : "text-muted-foreground"}>({t("sheetSays", { value: c.to })})</span>
+                            </>
+                          ) : (
+                            <span className={c.action === "fill" && !ticked ? "text-muted-foreground" : ""}>{c.to}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </li>
         ))}
       </ul>

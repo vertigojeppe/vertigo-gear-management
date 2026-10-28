@@ -97,7 +97,7 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
         }
       />
 
-      <div className="grid gap-6 md:grid-cols-[1fr_200px]">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_200px]">
         <div className="flex flex-col gap-6">
           <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 text-sm">
             {facts.map(([k, v]) => (
@@ -145,30 +145,32 @@ export default async function ItemPage(props: { params: Promise<{ id: string }>;
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-medium">{t("statusHistory")}</h2>
-        <table className="w-full text-sm">
-          <thead className="text-left text-xs text-muted-foreground">
-            <tr>
-              <th className="py-1 pr-3 font-medium">{t("when")}</th>
-              <th className="py-1 pr-3 font-medium">{t("fromStatus")}</th>
-              <th className="py-1 pr-3 font-medium">{t("toStatus")}</th>
-              <th className="py-1 pr-3 font-medium">{t("reason")}</th>
-              <th className="py-1 font-medium">{t("who")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {detail.statusLogs.map((l) => (
-              <tr key={l.id}>
-                <td className="py-1.5 pr-3 whitespace-nowrap text-muted-foreground">{formatDateTime(l.createdAt)}</td>
-                <td className="py-1.5 pr-3">{l.fromStatus ? <StatusBadge status={l.fromStatus} /> : "—"}</td>
-                <td className="py-1.5 pr-3">
-                  <StatusBadge status={l.toStatus} />
-                </td>
-                <td className="py-1.5 pr-3">{l.reason ?? ""}</td>
-                <td className="py-1.5">{l.userName ?? ""}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="py-1 pr-3 font-medium">{t("when")}</th>
+                <th className="py-1 pr-3 font-medium">{t("fromStatus")}</th>
+                <th className="py-1 pr-3 font-medium">{t("toStatus")}</th>
+                <th className="py-1 pr-3 font-medium">{t("reason")}</th>
+                <th className="py-1 font-medium">{t("who")}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {detail.statusLogs.map((l) => (
+                <tr key={l.id}>
+                  <td className="py-1.5 pr-3 whitespace-nowrap text-muted-foreground">{formatDateTime(l.createdAt)}</td>
+                  <td className="py-1.5 pr-3">{l.fromStatus ? <StatusBadge status={l.fromStatus} /> : "—"}</td>
+                  <td className="py-1.5 pr-3">
+                    <StatusBadge status={l.toStatus} />
+                  </td>
+                  <td className="py-1.5 pr-3">{l.reason ?? ""}</td>
+                  <td className="py-1.5">{l.userName ?? ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="flex flex-col gap-2">

@@ -47,7 +47,7 @@ export function TaskDialog({ ids, task, people, defaultPhase }: { ids: Ids; task
             <Field id="tk-title" label={t("task")} error={err.title}>
               <Input id="tk-title" name="title" defaultValue={v("title", task?.title)} required autoFocus />
             </Field>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Field id="tk-phase" label={t("phase")} error={err.phase}>
                 <NativeSelect id="tk-phase" name="phase" defaultValue={v("phase", task?.phase ?? defaultPhase ?? "pre_production")}>
                   {PLAN_PHASES.map((p) => (

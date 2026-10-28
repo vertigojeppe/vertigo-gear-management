@@ -42,7 +42,7 @@ export function LogisticsDialog({ ids, entry }: { ids: Ids; entry?: LogisticsFor
             <input type="hidden" name="planId" value={ids.planId} />
             {entry && <input type="hidden" name="id" value={entry.id} />}
             <FormError message={state.error} />
-            <div className="grid gap-3 sm:grid-cols-[10rem_1fr]">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[10rem_1fr]">
               <Field id="lg-kind" label={t("kind")} error={err.kind}>
                 <NativeSelect id="lg-kind" name="kind" defaultValue={v("kind", entry?.kind ?? "vehicle")}>
                   {LOGISTICS_KINDS.map((k) => (

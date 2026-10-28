@@ -130,7 +130,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
         }
       />
 
-      <div className="grid gap-6 md:grid-cols-[200px_1fr]">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[200px_1fr]">
         <div className="flex aspect-square items-center justify-center overflow-hidden rounded-md border bg-muted text-muted-foreground">
           {detail.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -141,7 +141,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
         </div>
         <div className="flex flex-col gap-4">
           {model.description && <p className="text-sm whitespace-pre-line">{model.description}</p>}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <h2 className="mb-1 text-sm font-medium">{t("byStatus")}</h2>
               <ul className="flex flex-wrap gap-2 text-sm">

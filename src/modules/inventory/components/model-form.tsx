@@ -57,7 +57,7 @@ export function ModelForm({
       {wishId && <input type="hidden" name="wishId" value={wishId} />}
       <FormError message={state.error} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field id="manufacturer" label={t("manufacturer")} help={t("manufacturerHelp")} optional error={err.manufacturer}>
           <Input id="manufacturer" name="manufacturer" defaultValue={v("manufacturer", base?.manufacturer)} autoFocus={!model} />
         </Field>
@@ -96,7 +96,7 @@ export function ModelForm({
 
       <fieldset className="flex flex-col gap-4">
         <legend className="mb-2 text-sm font-medium">{t("specs")}</legend>
-        <div className="grid gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <Field id="weightKg" label={t("weightKg")} optional error={err.weightKg}>
             <DecimalInput id="weightKg" name="weightKg" defaultValue={v("weightKg", base?.weightKg)} />
           </Field>
@@ -110,7 +110,7 @@ export function ModelForm({
             <DecimalInput id="depthCm" name="depthCm" defaultValue={v("depthCm", base?.depthCm)} />
           </Field>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field id="powerDrawW" label={t("powerDrawW")} optional error={err.powerDrawW}>
             <Input id="powerDrawW" name="powerDrawW" type="number" step="1" min="0" defaultValue={v("powerDrawW", base?.powerDrawW)} />
           </Field>
@@ -143,7 +143,7 @@ export function ModelForm({
           </span>
         </label>
         {consumable && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field id="unit" label={t("unit")} help={unit === "m" ? t("unitMetresHelp") : t("unitPiecesHelp")} error={err.unit}>
               <NativeSelect id="unit" name="unit" value={unit} onChange={(e) => setUnit(e.target.value)}>
                 <option value="pcs">{t("unitPcs")}</option>

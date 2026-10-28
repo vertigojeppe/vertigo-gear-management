@@ -24,8 +24,8 @@ export default async function LocationsPage() {
     <ul className={nodes[0]?.depth ? "ml-5 border-l pl-3" : ""}>
       {nodes.map((n) => (
         <li key={n.id} className="py-1">
-          <div className="flex items-center gap-3">
-            <Link href={`/inventory/items?locationId=${n.id}`} className="font-medium hover:underline">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Link href={`/inventory/items?locationId=${n.id}`} className="min-w-0 break-words font-medium hover:underline">
               {n.name}
             </Link>
             <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{tl(n.type as "warehouse")}</span>
