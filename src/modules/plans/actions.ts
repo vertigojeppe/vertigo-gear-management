@@ -240,6 +240,19 @@ export async function attachUploadedFile(input: { planId: string; fileId: string
   }
 }
 
+/** Make (or remake) the PDF copy of a Word version. */
+export async function makeDocumentPdf(_prev: FormState, formData: FormData): Promise<FormState> {
+  const actor = await requirePermission("plans.write");
+  const projectId = projectIdOf(formData);
+  try {
+    await documents.makePdf(actor, String(formData.get("versionId")));
+  } catch (err) {
+    return errorState(err);
+  }
+  revalidatePlan(projectId);
+  return { ok: true };
+}
+
 export async function setDocumentPreview(input: { documentId: string; fileId: string | null }): Promise<Result> {
   const actor = await requirePermission("plans.write");
   try {

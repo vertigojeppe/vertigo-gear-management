@@ -142,12 +142,17 @@ model PlanDocumentVersion {
   document   PlanDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
   version    Int
   fileId     String
-  file       File         @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  file       File         @relation("DocumentVersionFile", fields: [fileId], references: [id], onDelete: Restrict)
+  /// PDF made from a Word file on upload (LibreOffice); viewed, marked up and
+  /// put in the plan PDF instead of the original, which stays downloadable.
+  pdfFileId  String?
+  pdfFile    File?        @relation("DocumentVersionPdf", fields: [pdfFileId], references: [id], onDelete: SetNull)
   note       String?
   markups    Markup[]
   createdAt  DateTime     @default(now())
 
   @@unique([documentId, version])
+  @@index([pdfFileId])
 }
 
 /// Drawings on top of an image or a PDF page: a separate layer, never baked

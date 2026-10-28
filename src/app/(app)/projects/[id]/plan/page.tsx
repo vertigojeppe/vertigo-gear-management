@@ -272,7 +272,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
                   <span className="min-w-0 flex-1 text-sm">
                     <span className="block truncate font-medium">{d.name}</span>
                     <span className="block text-xs text-muted-foreground">
-                      {t(`kind_doc_${d.kind}` as "kind_doc_image")} · {t("version")} {d.latest.version} · {formatBytes(d.latest.size)}
+                      {d.latest.convertible && d.latest.pdfUrl ? t("kind_doc_word") : t(`kind_doc_${d.kind}` as "kind_doc_image")} · {t("version")} {d.latest.version} · {formatBytes(d.latest.size)}
                     </span>
                     <span className="block truncate text-xs text-muted-foreground">
                       {d.latest.uploaderName ?? ""} · {formatDate(d.latest.createdAt)}

@@ -504,6 +504,19 @@ the module.
   rasterised with `pdftoppm` when poppler is installed (the Docker image
   has it), otherwise listed by name. Day sheets include documents pinned
   to that day's entries.
+- Word files (`fileConfig.convertToPdf`: .docx .doc .odt .rtf,
+  `convertsToPdf` in logic.ts) get a PDF copy when added:
+  `documents.add` runs `convertToPdf` (`src/lib/office-convert.ts`:
+  LibreOffice headless, one at a time, own profile dir per run, 2 min
+  timeout; `SOFFICE_PATH` or `soffice` on the PATH; the Docker image has
+  libreoffice-writer plus Carlito/Liberation fonts) and stores it as
+  `PlanDocumentVersion.pdfFileId`. A version with a copy has `kind` "pdf"
+  and `viewUrl` = the copy: viewer, markup pages and plan PDF use it,
+  `url` stays the original (download). No LibreOffice or a file it cannot
+  read: the version stays a download, and the document page offers *Make
+  PDF* (`documents.makePdf`) when the server can convert. Tests pass a
+  fake converter (`{ convert }`). `deleteFileIfUnused` and
+  `fileIdsForPlan` know the copies.
 
 ## Pricing (Phase 6)
 

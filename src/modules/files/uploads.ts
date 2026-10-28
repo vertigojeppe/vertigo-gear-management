@@ -109,7 +109,7 @@ export async function deleteFileIfUnused(fileId: string) {
   const [attachments, photos, versions, previews, appVersions] = await Promise.all([
     prisma.attachment.count({ where: { fileId } }),
     prisma.model.count({ where: { defaultPhotoId: fileId } }),
-    prisma.planDocumentVersion.count({ where: { fileId } }),
+    prisma.planDocumentVersion.count({ where: { OR: [{ fileId }, { pdfFileId: fileId }] } }),
     prisma.planDocument.count({ where: { previewFileId: fileId } }),
     prisma.appVersion.count({ where: { fileId } }),
   ]);

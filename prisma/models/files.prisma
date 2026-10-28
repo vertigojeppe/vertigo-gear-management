@@ -17,7 +17,8 @@ model File {
 
   attachments       Attachment[]
   modelDefaultPhoto Model[]      @relation("ModelDefaultPhoto")
-  documentVersions  PlanDocumentVersion[]
+  documentVersions  PlanDocumentVersion[] @relation("DocumentVersionFile")
+  documentPdfs      PlanDocumentVersion[] @relation("DocumentVersionPdf")
   documentPreviews  PlanDocument[] @relation("DocumentPreview")
   appVersions       AppVersion[]
 }

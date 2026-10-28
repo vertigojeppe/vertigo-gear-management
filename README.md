@@ -175,6 +175,8 @@ start, and help text under the fields that need it. The short version:
   models. Uploads go up in chunks, so large files from a phone survive.
   The same name again adds a version. Images and PDFs open with a
   **markup** layer (pen, arrow, box, text) that shows who drew what.
+  **Word files** (DOCX, DOC, ODT, RTF) get a PDF copy when they are added,
+  so they open and take markup like a PDF; the original stays a download.
   glTF/GLB, OBJ and STL open in a 3D viewer with a measure tool. SketchUp,
   DWG, DXF, Vectorworks, AI and PSD are stored for download with an
   optional preview image. A document pinned to a schedule entry or task
@@ -643,6 +645,7 @@ docker compose --profile tunnel up -d --force-recreate app
 | `PROJECT_GEAR=on` | Brings back gear on projects: reserving gear, renting in sub-hire gear, the project quote, and starting a packing list from the reservations. Off by default; nothing is deleted while it is off. Rentals are not affected. |
 | `TWO_FACTOR_REQUIRED_ROLES` | Who must use two-factor sign-in: `admin` when unset, `admin,member`, or `none`. |
 | `MAX_UPLOAD_MB` | Largest document upload (500 by default). |
+| `SOFFICE_PATH` | Where LibreOffice's `soffice` is, for turning Word plan documents into PDFs. The Docker image has it on the path; set this only when running the app outside Docker. |
 | `BACKUP_REMOTE`, `BACKUP_KEEP_DAYS` | Where backups are copied and how many days are kept (see [Backups](#backups)). |
 
 ### Google Calendar push (optional)
@@ -754,9 +757,9 @@ fails.
 ### Vercel and managed Postgres
 
 The app runs on Vercel with a managed database and object storage, with
-two gaps: PDF pages in plan exports need poppler, which Vercel does not
-have (documents are listed by name instead), and the outbox worker needs
-a scheduler.
+three gaps: PDF pages in plan exports need poppler and Word documents need
+LibreOffice, which Vercel does not have (documents are listed by name, and
+Word files stay downloads), and the outbox worker needs a scheduler.
 
 1. Create a Postgres database (Neon, Supabase, Vercel Postgres) and a
    bucket on Cloudflare R2 or another S3-compatible store.

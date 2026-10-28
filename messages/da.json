@@ -982,7 +982,7 @@
     "anchorDay": "dag 0",
     "documents": "Dokumenter",
     "noDocuments": "Ingen dokumenter endnu. Riders, stage plots, tegninger, risikovurderinger, 3D-modeller.",
-    "documentsHelp": "Alle filtyper. Billeder, PDF og glTF/GLB/OBJ/STL åbner i browseren; SketchUp, DWG, DXF, Vectorworks, AI og PSD gemmes til download, og en GLB-eksport af samme model uploadet ved siden af giver 3D-visning. Upload af en fil med samme navn tilføjer en version.",
+    "documentsHelp": "Alle filtyper. Billeder, PDF og glTF/GLB/OBJ/STL åbner i browseren; Word-filer (DOCX, DOC, ODT, RTF) får en PDF-kopi, der åbner på samme måde; SketchUp, DWG, DXF, Vectorworks, AI og PSD gemmes til download, og en GLB-eksport af samme model uploadet ved siden af giver 3D-visning. Upload af en fil med samme navn tilføjer en version.",
     "uploadFiles": "Upload filer",
     "uploadPreview": "Upload et preview-billede",
     "dropHere": "eller slip filer her",
@@ -1028,7 +1028,16 @@
     "noWebGL": "3D-visning kræver WebGL — slå hardwareacceleration til eller åbn i en anden browser. Selve filen fejler intet; download den herunder.",
     "viewerFailed": "Visningen fejlede. Selve filen fejler intet; download den herunder.",
     "fileUnits": "Filens enhed",
-    "unitsHint": "STL- og OBJ-filer har ingen enhed; vælg hvad filen er eksporteret i. glTF er i meter per definition."
+    "unitsHint": "STL- og OBJ-filer har ingen enhed; vælg hvad filen er eksporteret i. glTF er i meter per definition.",
+    "kind_doc_word": "Word, vist som PDF",
+    "downloadOriginal": "Hent original",
+    "downloadPdf": "Hent PDF",
+    "wordAsPdf": "En Word-fil, vist her som en PDF-kopi lavet da den blev tilføjet. Markeringer lægges på PDF'en; originalen ligger under Hent original.",
+    "wordNoPdf": "En Word-fil uden PDF-kopi endnu, så den kan kun hentes.",
+    "wordNoConverter": "En Word-fil. Serveren har ikke LibreOffice, så den kan kun hentes.",
+    "makePdf": "Lav PDF",
+    "remakePdf": "Lav PDF igen",
+    "makingPdf": "Laver PDF…"
   },
   "importer": {
     "title": "Importér regneark",

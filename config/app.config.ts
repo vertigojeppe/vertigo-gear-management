@@ -295,6 +295,8 @@ export const fileConfig = {
     pdf: ["application/pdf"],
     model3d: [".glb", ".gltf", ".obj", ".stl"],
   },
+  /** Office text files a plan document turns into a PDF on upload (LibreOffice, src/lib/office-convert.ts). */
+  convertToPdf: [".docx", ".doc", ".odt", ".rtf"],
   /** Stored and downloadable, shown with an icon and an optional preview image. */
   nativeOnly: [".skp", ".blend", ".dwg", ".dxf", ".vwx", ".ai", ".psd"],
   /** Resumable upload chunk size (bytes). */

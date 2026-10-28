@@ -13,7 +13,8 @@ import { MarkupLayer, type Shape } from "./markup-layer";
 const PdfViewer = dynamic(() => import("./pdf-viewer").then((m) => m.PdfViewer), { ssr: false });
 const ModelViewer = dynamic(() => import("./model-viewer").then((m) => m.ModelViewer), { ssr: false });
 
-export type ViewerVersion = { id: string; url: string; name: string; mimeType: string; size: number; markups: { page: number; shapes: Shape[] }[] };
+/** `url` is what the viewer shows; `downloadUrl` the original when that differs (a Word file shown as its PDF copy). */
+export type ViewerVersion = { id: string; url: string; downloadUrl?: string; name: string; mimeType: string; size: number; markups: { page: number; shapes: Shape[] }[] };
 
 /**
  * Picks the viewer for a document version and, for images and PDFs, puts
@@ -38,7 +39,7 @@ export function DocumentViewer(props: { kind: string; version: ViewerVersion; ca
             </span>
           </p>
           <p className="text-muted-foreground">{t("viewerFailed")}</p>
-          <a href={`${version.url}?download=1`} className="self-start rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted">
+          <a href={`${version.downloadUrl ?? version.url}?download=1`} className="self-start rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted">
             {t("download")}
           </a>
         </div>
@@ -168,7 +169,7 @@ function DocumentViewerInner({ kind, version, canEdit, userId, mtlUrl, previewUr
         ext={ext}
         mtlUrl={mtlUrl}
         labels={{ measure: t("measure"), measureHint: t("measureHint"), resetView: t("resetView"), loading: t("loadingModel"), distance: t("distance"), failed: t("modelFailed"), noWebGL: t("noWebGL"), download: t("download"), fileUnits: t("fileUnits"), unitsHint: t("unitsHint") }}
-        file={{ name: version.name, size: version.size, mimeType: version.mimeType, downloadUrl: `${version.url}?download=1`, previewUrl }}
+        file={{ name: version.name, size: version.size, mimeType: version.mimeType, downloadUrl: `${version.downloadUrl ?? version.url}?download=1`, previewUrl }}
       />
     );
   }

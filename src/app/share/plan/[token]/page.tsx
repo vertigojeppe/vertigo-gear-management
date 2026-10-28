@@ -144,6 +144,11 @@ export default async function SharedPlanPage(props: { params: Promise<{ token: s
                     {d.pinnedTo ? ` · ${d.pinnedTo}` : ""}
                   </span>
                 </span>
+                {d.latest.pdfUrl && (
+                  <a href={fileUrl(d.latest.pdfUrl)} className="text-xs underline">
+                    PDF
+                  </a>
+                )}
                 <a href={fileUrl(`${d.latest.url}?download=1`)} className="text-xs underline">
                   {t("download")}
                 </a>
