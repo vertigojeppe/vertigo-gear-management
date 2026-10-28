@@ -380,7 +380,10 @@ the module.
   and return one day. One end alone means a single day (`dayRange`). The
   calendar phase keys stay `load_in` / `load_out` (Google event ids are
   stored under them) but read "Build-up" / "Pack-down"; `PHASE_DATES`
-  maps each phase to its fields. Calendars (Google push and iCal feeds)
+  maps each phase to its fields. In the project form every later date
+  field gets a `min` from `dateFloors` (projects/date-floors.ts, pure): the
+  latest phase start filled in above it, so its picker opens on the job;
+  phases may overlap but not start before an earlier phase. Calendars (Google push and iCal feeds)
   use `jobEvents` (`src/modules/calendar/job-events.ts`, pure): one
   all-day banner per job over its whole span with every phase in the
   description, build-up / pack-down as timed events from the call time

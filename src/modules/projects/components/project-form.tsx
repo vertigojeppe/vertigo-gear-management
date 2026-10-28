@@ -18,6 +18,7 @@ import { PROJECT_STATUSES } from "../../../../config/app.config";
 import { saveProject } from "../actions";
 import { ClientDialog } from "./client-dialog";
 import { linksToText } from "../schema";
+import { dateFloors, type PhaseDateValues } from "../date-floors";
 import type { ProjectDto } from "../service";
 
 type ClientOption = { id: string; name: string };
@@ -32,6 +33,18 @@ export function ProjectForm({ project, clients, defs }: { project?: ProjectDto; 
   const [clientId, setClientId] = useState(v("clientId", project?.clientId));
   const [addedClients, setAddedClients] = useState<ClientOption[]>([]);
   const clientOptions = [...clients, ...addedClients.filter((a) => !clients.some((c) => c.id === a.id))];
+  // Each date field opens on the job: no earlier than the latest phase start above it (date-floors.ts).
+  const [dates, setDates] = useState<PhaseDateValues>(() => ({
+    prepStart: v("prepStart", project?.prepStart),
+    buildStart: v("buildStart", project?.buildStart),
+    showStart: v("showStart", dateToZonedInput(project?.showStart)),
+    packStart: v("packStart", project?.packStart),
+  }));
+  const floors = dateFloors(dates);
+  const track = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setDates((d) => ({ ...d, [name]: value }));
+  };
 
   return (
     <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
@@ -84,37 +97,37 @@ export function ProjectForm({ project, clients, defs }: { project?: ProjectDto; 
         {/* One row per phase: first day, last day, call time. */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field id="prepStart" label={t("prepStart")} optional error={err.prepStart}>
-            <Input id="prepStart" name="prepStart" type="date" defaultValue={v("prepStart", project?.prepStart)} />
+            <Input id="prepStart" name="prepStart" type="date" min={floors.prepStart} onChange={track} defaultValue={v("prepStart", project?.prepStart)} />
           </Field>
           <Field id="prepEnd" label={t("prepEnd")} optional error={err.prepEnd}>
-            <Input id="prepEnd" name="prepEnd" type="date" defaultValue={v("prepEnd", project?.prepEnd)} />
+            <Input id="prepEnd" name="prepEnd" type="date" min={floors.prepEnd} defaultValue={v("prepEnd", project?.prepEnd)} />
           </Field>
           <Field id="buildStart" label={t("buildStart")} optional error={err.buildStart} className="sm:col-start-1">
-            <Input id="buildStart" name="buildStart" type="date" defaultValue={v("buildStart", project?.buildStart)} />
+            <Input id="buildStart" name="buildStart" type="date" min={floors.buildStart} onChange={track} defaultValue={v("buildStart", project?.buildStart)} />
           </Field>
           <Field id="buildEnd" label={t("buildEnd")} optional error={err.buildEnd}>
-            <Input id="buildEnd" name="buildEnd" type="date" defaultValue={v("buildEnd", project?.buildEnd)} />
+            <Input id="buildEnd" name="buildEnd" type="date" min={floors.buildEnd} defaultValue={v("buildEnd", project?.buildEnd)} />
           </Field>
           <Field id="buildCall" label={t("buildCall")} optional error={err.buildCall}>
             <Input id="buildCall" name="buildCall" type="time" defaultValue={v("buildCall", project?.buildCall)} />
           </Field>
           <Field id="showStart" label={t("showStart")} optional error={err.showStart} className="sm:col-start-1">
-            <Input id="showStart" name="showStart" type="datetime-local" defaultValue={v("showStart", dateToZonedInput(project?.showStart))} />
+            <Input id="showStart" name="showStart" type="datetime-local" min={floors.showStart} onChange={track} defaultValue={v("showStart", dateToZonedInput(project?.showStart))} />
           </Field>
           <Field id="showEnd" label={t("showEnd")} optional error={err.showEnd}>
-            <Input id="showEnd" name="showEnd" type="datetime-local" defaultValue={v("showEnd", dateToZonedInput(project?.showEnd))} />
+            <Input id="showEnd" name="showEnd" type="datetime-local" min={floors.showEnd} defaultValue={v("showEnd", dateToZonedInput(project?.showEnd))} />
           </Field>
           <Field id="packStart" label={t("packStart")} optional error={err.packStart} className="sm:col-start-1">
-            <Input id="packStart" name="packStart" type="date" defaultValue={v("packStart", project?.packStart)} />
+            <Input id="packStart" name="packStart" type="date" min={floors.packStart} onChange={track} defaultValue={v("packStart", project?.packStart)} />
           </Field>
           <Field id="packEnd" label={t("packEnd")} optional error={err.packEnd}>
-            <Input id="packEnd" name="packEnd" type="date" defaultValue={v("packEnd", project?.packEnd)} />
+            <Input id="packEnd" name="packEnd" type="date" min={floors.packEnd} defaultValue={v("packEnd", project?.packEnd)} />
           </Field>
           <Field id="packCall" label={t("packCall")} optional error={err.packCall}>
             <Input id="packCall" name="packCall" type="time" defaultValue={v("packCall", project?.packCall)} />
           </Field>
           <Field id="returnDate" label={t("returnDate")} optional error={err.returnDate} className="sm:col-start-1">
-            <Input id="returnDate" name="returnDate" type="date" defaultValue={v("returnDate", project?.returnDate)} />
+            <Input id="returnDate" name="returnDate" type="date" min={floors.returnDate} defaultValue={v("returnDate", project?.returnDate)} />
           </Field>
         </div>
       </fieldset>

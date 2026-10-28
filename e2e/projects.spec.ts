@@ -50,6 +50,9 @@ test.describe("projects and rentals", () => {
     await page.goto("/projects/new");
     await page.getByLabel("Name", { exact: true }).fill(`E2E show sub-hire ${stamp}`);
     await page.getByLabel("Prep start").fill("2033-04-01");
+    // Later date pickers open on the job, not on today.
+    await expect(page.getByLabel(/^Return/)).toHaveAttribute("min", "2033-04-01");
+    await expect(page.getByLabel("Show start")).toHaveAttribute("min", "2033-04-01T00:00");
     await page.getByLabel(/^Return/).fill("2033-04-03");
     await page.getByRole("button", { name: "Create" }).click();
     await expect(page.getByRole("heading", { name: `E2E show sub-hire ${stamp}` })).toBeVisible();
