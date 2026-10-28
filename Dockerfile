@@ -30,7 +30,9 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 # poppler-utils provides pdftoppm for PDF thumbnails (Phase 4).
-RUN apk add --no-cache poppler-utils && \
+# libreoffice-writer turns Word plan documents into PDFs (src/lib/office-convert.ts);
+# Carlito and Liberation stand in for Calibri, Arial and Times so layouts hold.
+RUN apk add --no-cache poppler-utils libreoffice-writer font-carlito font-liberation font-dejavu && \
     addgroup -S app && adduser -S app -G app
 
 # Production node_modules first (Prisma CLI + deps for migrations), then the

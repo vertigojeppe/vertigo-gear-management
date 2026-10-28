@@ -558,3 +558,19 @@ new person contacts for the rest. Deleting a contact that is on a project
 is refused rather than cascading, so a job never silently loses who to
 call. Clients (renters) stay a separate table; unifying them is still on
 the backlog.
+
+## Word plan documents become PDFs on the server (October 2026)
+
+Riders and tech specs often arrive as Word files, which the plan could
+only offer as downloads. A browser-side Word viewer (docx-preview,
+mammoth) would have cost nothing on the server, but it only shows the
+file: no markup, nothing in the plan PDF, and complex layouts drift. So
+the server turns Word files into a PDF copy with LibreOffice when they are
+added, and from then on they are PDFs everywhere (viewer, markup, day
+sheets, share link) while the original stays the download. LibreOffice
+runs headless in the app image (libreoffice-writer, with Carlito and
+Liberation as metric-compatible stand-ins for Calibri, Arial and Times),
+one conversion at a time with its own profile directory, so a stuck or
+parallel run never blocks the next. The price is a bigger image and a few
+seconds per upload. Without LibreOffice (dev machines, Vercel) Word files
+stay downloads and nothing else changes.

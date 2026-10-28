@@ -8,7 +8,7 @@ import { NativeSelect } from "@/components/form/native-select";
 import { SubmitButton } from "@/components/form/submit-button";
 import { ConfirmButton } from "@/components/form/confirm-button";
 import type { FormState } from "@/lib/forms";
-import { pinDocument, removeDocument, removeDocumentVersion } from "../actions";
+import { makeDocumentPdf, pinDocument, removeDocument, removeDocumentVersion } from "../actions";
 
 type Option = { id: string; label: string };
 
@@ -50,6 +50,22 @@ export function PinDocumentForm({ projectId, documentId, scheduleEntryId, taskId
       </SubmitButton>
       <FormError message={state.error} />
       <FormSuccess message={state.ok ? tc("saved") : undefined} />
+    </ActionForm>
+  );
+}
+
+/** Make (or remake) the PDF copy of a Word version. */
+export function MakePdfButton({ projectId, versionId, again = false }: { projectId: string; versionId: string; again?: boolean }) {
+  const t = useTranslations("plans");
+  const [state, action] = useActionState<FormState, FormData>(makeDocumentPdf, {});
+  return (
+    <ActionForm action={action} className="flex flex-wrap items-center gap-2">
+      <input type="hidden" name="projectId" value={projectId} />
+      <input type="hidden" name="versionId" value={versionId} />
+      <SubmitButton size="sm" variant="outline" pendingText={t("makingPdf")}>
+        {again ? t("remakePdf") : t("makePdf")}
+      </SubmitButton>
+      <FormError message={state.error} />
     </ActionForm>
   );
 }

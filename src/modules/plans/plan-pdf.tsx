@@ -25,7 +25,7 @@ async function renderDocuments(docs: DocumentRow[]): Promise<{ rendered: Rendere
   const skippedPdf: string[] = [];
   for (const d of docs) {
     if (d.kind !== "image" && d.kind !== "pdf") continue;
-    const file = await prisma.file.findUnique({ where: { id: d.latest.fileId } });
+    const file = await prisma.file.findUnique({ where: { id: d.latest.pdfFileId ?? d.latest.fileId } });
     if (!file) continue;
     let bytes: Buffer;
     try {

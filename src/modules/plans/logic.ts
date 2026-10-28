@@ -4,6 +4,14 @@ import { formatDateTime, formatDayRange } from "@/lib/format";
 
 export type DocumentKind = "image" | "pdf" | "model3d" | "native" | "other";
 
+/** A Word (or other office text) file that becomes a PDF when added to a plan. */
+export function convertsToPdf(name: string): boolean {
+  const dot = name.lastIndexOf(".");
+  if (dot <= 0) return false;
+  const ext = name.slice(dot).toLowerCase();
+  return (fileConfig.convertToPdf as readonly string[]).includes(ext);
+}
+
 /** Which viewer a document gets, by MIME type first, then extension. */
 export function documentKind(name: string, mimeType: string): DocumentKind {
   const ext = "." + (name.split(".").pop() ?? "").toLowerCase();

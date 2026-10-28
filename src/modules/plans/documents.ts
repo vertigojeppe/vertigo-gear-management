@@ -1,12 +1,15 @@
+import { createId } from "@paralleldrive/cuid2";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { getStorage, storageKeyFor } from "@/lib/storage";
+import { convertToPdf, type OfficeConverter } from "@/lib/office-convert";
 import { logActivity } from "@/lib/activity";
 import { assertCan } from "@/lib/auth/permissions";
 import type { Actor } from "@/lib/auth/session";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { deleteFileIfUnused } from "@/modules/files/uploads";
 import { MARKUP_COLORS } from "../../../config/app.config";
-import { documentKind, type DocumentKind } from "./logic";
+import { convertsToPdf, documentKind, type DocumentKind } from "./logic";
 import { PlanError } from "./service";
 
 /* Shapes ----------------------------------------------------------------- */
@@ -33,12 +36,39 @@ async function loadDocument(documentId: string) {
   return doc;
 }
 
+/**
+ * Makes the PDF copy of a Word version and links it (replacing an older
+ * copy). False when LibreOffice is missing or cannot read the file; the
+ * original stays as it is either way.
+ */
+async function attachPdf(versionId: string, convert: OfficeConverter): Promise<boolean> {
+  const v = await prisma.planDocumentVersion.findUnique({ where: { id: versionId }, include: { file: true } });
+  if (!v || !convertsToPdf(v.file.name)) return false;
+  const storage = getStorage();
+  let pdf: Buffer | null;
+  try {
+    pdf = await convert(await storage.get(v.file.storageKey), v.file.name);
+  } catch {
+    pdf = null;
+  }
+  if (!pdf || pdf.subarray(0, 5).toString() !== "%PDF-") return false;
+  const id = createId();
+  const name = `${v.file.name.replace(/\.[^.]*$/, "")}.pdf`;
+  const storageKey = storageKeyFor(id, name);
+  await storage.put(storageKey, pdf, "application/pdf");
+  await prisma.file.create({ data: { id, name, mimeType: "application/pdf", size: pdf.length, storageKey, uploaderId: v.file.uploaderId } });
+  await prisma.planDocumentVersion.update({ where: { id: versionId }, data: { pdfFileId: id } });
+  if (v.pdfFileId) await deleteFileIfUnused(v.pdfFileId);
+  return true;
+}
+
 export const documents = {
   /**
    * Attach an uploaded file to the plan. The same name on the same plan
-   * becomes a new version; the old versions stay downloadable.
+   * becomes a new version; the old versions stay downloadable. A Word file
+   * also gets its PDF copy (`pdf` says whether that worked).
    */
-  async add(actor: Actor, planId: string, input: { fileId: string; name?: string; note?: string; scheduleEntryId?: string | null; taskId?: string | null }) {
+  async add(actor: Actor, planId: string, input: { fileId: string; name?: string; note?: string; scheduleEntryId?: string | null; taskId?: string | null }, opts: { convert?: OfficeConverter } = {}) {
     assertCan(actor, "plans.write");
     const plan = await prisma.productionPlan.findUnique({ where: { id: planId }, include: { project: { select: { id: true, name: true } } } });
     if (!plan) throw new PlanError("Plan not found.");
@@ -57,15 +87,28 @@ export const documents = {
       return { doc, version };
     });
     await logActivity(actor, { entityType: "project", entityId: plan.project.id, action: "document_added", summary: `${plan.project.name}: ${result.version.version === 1 ? "added document" : `new version ${result.version.version} of`} "${name}"` });
-    return result;
+    const pdf = convertsToPdf(file.name) ? await attachPdf(result.version.id, opts.convert ?? convertToPdf) : null;
+    return { ...result, pdf };
+  },
+
+  /** (Re)make the PDF copy of a Word version, e.g. one added before LibreOffice was there. */
+  async makePdf(actor: Actor, versionId: string, opts: { convert?: OfficeConverter } = {}) {
+    assertCan(actor, "plans.write");
+    const v = await prisma.planDocumentVersion.findUnique({ where: { id: versionId }, include: { file: { select: { name: true } } } });
+    if (!v) throw new PlanError("Document not found.");
+    if (!convertsToPdf(v.file.name)) throw new PlanError("Only Word files are turned into PDFs.");
+    if (!(await attachPdf(versionId, opts.convert ?? convertToPdf))) throw new PlanError("Could not make a PDF of this file. Download the original instead.");
   },
 
   async remove(actor: Actor, documentId: string) {
     assertCan(actor, "plans.write");
     const doc = await loadDocument(documentId);
-    const versions = await prisma.planDocumentVersion.findMany({ where: { documentId }, select: { fileId: true } });
+    const versions = await prisma.planDocumentVersion.findMany({ where: { documentId }, select: { fileId: true, pdfFileId: true } });
     await prisma.planDocument.delete({ where: { id: documentId } });
-    for (const v of versions) await deleteFileIfUnused(v.fileId);
+    for (const v of versions) {
+      await deleteFileIfUnused(v.fileId);
+      if (v.pdfFileId) await deleteFileIfUnused(v.pdfFileId);
+    }
     if (doc.previewFileId) await deleteFileIfUnused(doc.previewFileId);
     await logActivity(actor, { entityType: "project", entityId: doc.plan.project.id, action: "document_removed", summary: `${doc.plan.project.name}: removed document "${doc.name}"` });
   },
@@ -77,6 +120,7 @@ export const documents = {
     if (count <= 1) throw new PlanError("Delete the document instead of its only version.");
     await prisma.planDocumentVersion.delete({ where: { id: versionId } });
     await deleteFileIfUnused(v.fileId);
+    if (v.pdfFileId) await deleteFileIfUnused(v.pdfFileId);
     await logActivity(actor, { entityType: "project", entityId: v.document.plan.project.id, action: "document_version_removed", summary: `${v.document.plan.project.name}: removed version ${v.version} of "${v.document.name}"` });
   },
 
@@ -133,8 +177,18 @@ export const documents = {
 export type DocumentVersionRow = {
   id: string;
   version: number;
+  /** How this version is shown: a Word file with its PDF copy is a "pdf". */
+  kind: DocumentKind;
   fileId: string;
+  /** The original file (download). */
   url: string;
+  /** The PDF copy of a Word file, if made. */
+  pdfFileId: string | null;
+  pdfUrl: string | null;
+  /** What the viewer, markup and plan PDF use: the PDF copy, else the original. */
+  viewUrl: string;
+  /** A Word file (has or could have a PDF copy). */
+  convertible: boolean;
   thumbUrl: string | null;
   name: string;
   mimeType: string;
@@ -161,12 +215,18 @@ export type DocumentRow = {
 
 const versionInclude = { file: { include: { uploader: { select: { name: true } } } }, markups: { orderBy: { page: "asc" as const } } };
 
-function toVersion(v: { id: string; version: number; fileId: string; note: string | null; createdAt: Date; file: { name: string; mimeType: string; size: number; thumbKey: string | null; uploader: { name: string } | null }; markups: { page: number; shapes: unknown }[] }): DocumentVersionRow {
+function toVersion(v: { id: string; version: number; fileId: string; pdfFileId: string | null; note: string | null; createdAt: Date; file: { name: string; mimeType: string; size: number; thumbKey: string | null; uploader: { name: string } | null }; markups: { page: number; shapes: unknown }[] }): DocumentVersionRow {
+  const pdfUrl = v.pdfFileId ? `/api/files/${v.pdfFileId}` : null;
   return {
     id: v.id,
     version: v.version,
+    kind: v.pdfFileId ? "pdf" : documentKind(v.file.name, v.file.mimeType),
     fileId: v.fileId,
     url: `/api/files/${v.fileId}`,
+    pdfFileId: v.pdfFileId,
+    pdfUrl,
+    viewUrl: pdfUrl ?? `/api/files/${v.fileId}`,
+    convertible: convertsToPdf(v.file.name),
     thumbUrl: v.file.thumbKey ? `/api/files/${v.fileId}?thumb=1` : null,
     name: v.file.name,
     mimeType: v.file.mimeType,
@@ -191,7 +251,7 @@ export async function documentsForPlan(planId: string): Promise<DocumentRow[]> {
       return {
         id: d.id,
         name: d.name,
-        kind: documentKind(versions[0].name, versions[0].mimeType),
+        kind: versions[0].kind,
         scheduleEntryId: d.scheduleEntryId,
         taskId: d.taskId,
         pinnedTo: d.scheduleEntry?.title ?? d.task?.title ?? null,
@@ -215,7 +275,7 @@ export async function documentDetail(documentId: string) {
   if (!d || d.versions.length === 0) return null;
   const versions = d.versions.map(toVersion);
   return {
-    document: { id: d.id, name: d.name, kind: documentKind(versions[0].name, versions[0].mimeType), scheduleEntryId: d.scheduleEntryId, taskId: d.taskId, previewFileId: d.previewFileId, previewUrl: d.previewFileId ? `/api/files/${d.previewFileId}` : null },
+    document: { id: d.id, name: d.name, kind: versions[0].kind, scheduleEntryId: d.scheduleEntryId, taskId: d.taskId, previewFileId: d.previewFileId, previewUrl: d.previewFileId ? `/api/files/${d.previewFileId}` : null },
     plan: { id: d.plan.id, projectId: d.plan.project.id, projectName: d.plan.project.name },
     scheduleEntries: d.plan.schedule,
     tasks: d.plan.tasks,
@@ -225,11 +285,14 @@ export async function documentDetail(documentId: string) {
 
 /** Every file a plan's share link may serve: all versions and preview images. */
 export async function fileIdsForPlan(planId: string): Promise<Set<string>> {
-  const docs = await prisma.planDocument.findMany({ where: { planId }, select: { previewFileId: true, versions: { select: { fileId: true } } } });
+  const docs = await prisma.planDocument.findMany({ where: { planId }, select: { previewFileId: true, versions: { select: { fileId: true, pdfFileId: true } } } });
   const ids = new Set<string>();
   for (const d of docs) {
     if (d.previewFileId) ids.add(d.previewFileId);
-    for (const v of d.versions) ids.add(v.fileId);
+    for (const v of d.versions) {
+      ids.add(v.fileId);
+      if (v.pdfFileId) ids.add(v.pdfFileId);
+    }
   }
   return ids;
 }

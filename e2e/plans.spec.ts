@@ -146,5 +146,12 @@ test.describe("production plans", () => {
     await expect(page.getByRole("button", { name: "Measure" })).toBeVisible();
     await expect(page.locator("canvas")).toBeVisible({ timeout: 15000 });
     await expect(page.getByText("Could not load the model.")).toHaveCount(0);
+
+    // A Word file says what happens to it and stays downloadable (the PDF copy needs LibreOffice, which only the Docker image has).
+    await page.goto(planUrl);
+    await page.getByLabel("Upload files").setInputFiles({ name: `brief-${stamp}.docx`, mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", buffer: Buffer.from("PK not really a word file") });
+    await page.getByRole("link", { name: new RegExp(`brief-${stamp}.docx`) }).click();
+    await expect(page.getByTestId("word-notice")).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Download/ }).first()).toBeVisible();
   });
 });
