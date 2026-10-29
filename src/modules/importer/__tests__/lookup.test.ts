@@ -141,7 +141,7 @@ describe("Gemini", () => {
     expect(x.findings).toEqual([{ field: "weightKg", value: "21.7", evidence: "21.7 kg" }]);
     expect(calls[0].url).toBe("https://generativelanguage.googleapis.com/v1beta/interactions");
     const sent = JSON.parse(String(calls[0].init.body));
-    expect(sent).toMatchObject({ model: "gemini-3.8-flash", store: false, generation_config: { thinking_level: "low" }, response_format: { type: "text", mime_type: "application/json" } });
+    expect(sent).toMatchObject({ model: "gemini-3.5-flash", store: false, generation_config: { thinking_level: "low" }, response_format: { type: "text", mime_type: "application/json" } });
     expect(sent.tools).toBeUndefined();
     expect((calls[0].init.headers as Record<string, string>)["x-goog-api-key"]).toBe("test-key");
   });
@@ -164,7 +164,7 @@ describe("Gemini", () => {
 
   it("is only set up with a key", () => {
     expect(configuredExtractor(env({}))).toBeNull();
-    expect(configuredExtractor(env({ GEMINI_API_KEY: "k" }))?.name).toBe("Gemini (gemini-3.8-flash)");
+    expect(configuredExtractor(env({ GEMINI_API_KEY: "k" }))?.name).toBe("Gemini (gemini-3.5-flash)");
     expect(configuredExtractor(env({ GEMINI_API_KEY: "k", SPEC_LOOKUP_MODEL: "gemini-3.5-flash-lite" }))?.name).toBe("Gemini (gemini-3.5-flash-lite)");
     expect(configuredExtractor(env({ GEMINI_API_KEY: "k", SPEC_LOOKUP_PROVIDER: "none" }))).toBeNull();
   });
