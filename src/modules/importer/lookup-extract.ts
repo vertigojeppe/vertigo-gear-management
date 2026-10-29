@@ -186,11 +186,14 @@ export function geminiExtractor(opts: { apiKey: string; model?: string; fetchImp
         res = await fetchImpl("https://generativelanguage.googleapis.com/v1beta/interactions", {
           method: "POST",
           headers: { "content-type": "application/json", "x-goog-api-key": opts.apiKey },
-          body: JSON.stringify({ model, system_instruction: instructions, input, store: false, response_format: { type: "text", mime_type: "application/json", schema } }),
-          signal: AbortSignal.timeout(90_000),
+          // Low thinking: copying values out of a document needs little, and the
+          // default (medium) can take over a minute on a long datasheet.
+          body: JSON.stringify({ model, system_instruction: instructions, input, store: false, generation_config: { thinking_level: "low" }, response_format: { type: "text", mime_type: "application/json", schema } }),
+          // Under Cloudflare's 100-second limit for the whole request.
+          signal: AbortSignal.timeout(75_000),
         });
-      } catch {
-        throw new LookupError("Gemini did not answer in time. Try again.");
+      } catch (e) {
+        throw new LookupError(geminiUnreachable(e));
       }
       if (res.status === 429) throw new LookupError("Gemini's free limit is used up for now. Try again later.");
       if (res.status === 400 || res.status === 401 || res.status === 403) {
@@ -203,6 +206,19 @@ export function geminiExtractor(opts: { apiKey: string; model?: string; fetchImp
       return readExtraction(interactionText(await res.json()));
     },
   };
+}
+
+/**
+ * Why the request to Gemini failed before an answer: its own timeout, or the
+ * server could not reach Google at all (DNS, firewall, proxy), with Node's
+ * reason (`fetch failed` hides it in `cause`). Logged as well for the server log.
+ */
+export function geminiUnreachable(e: unknown): string {
+  const err = e as { name?: string; message?: string; cause?: { code?: string; message?: string } };
+  if (err?.name === "TimeoutError" || err?.name === "AbortError") return "Gemini did not answer within 75 seconds. Try again, or paste the datasheet PDF instead of the product page.";
+  const reason = err?.cause?.code || err?.cause?.message || err?.message || String(e);
+  console.error("[spec lookup] Gemini unreachable:", e);
+  return `The server could not reach Gemini (${reason}). Check that it can reach generativelanguage.googleapis.com.`;
 }
 
 /** The extractor the server is set up for (env), or null when spec lookup is off. */

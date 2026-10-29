@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { buildRequest, configuredExtractor, foundNumber, geminiExtractor, interactionText, readExtraction, toSpecRow, type ExtractModel } from "../lookup-extract";
+import { describe, expect, it, vi } from "vitest";
+import { buildRequest, configuredExtractor, foundNumber, geminiExtractor, geminiUnreachable, interactionText, readExtraction, toSpecRow, type ExtractModel } from "../lookup-extract";
 import { datasheetLinks, embeddedText, fetchPublic, htmlToText, isPrivateAddress, LookupError } from "../lookup-source";
 
 const defs: ExtractModel["defs"] = [
@@ -128,7 +128,7 @@ describe("Gemini", () => {
     expect(x.findings).toEqual([{ field: "weightKg", value: "21.7", evidence: "21.7 kg" }]);
     expect(calls[0].url).toBe("https://generativelanguage.googleapis.com/v1beta/interactions");
     const sent = JSON.parse(String(calls[0].init.body));
-    expect(sent).toMatchObject({ model: "gemini-3.8-flash", store: false, response_format: { type: "text", mime_type: "application/json" } });
+    expect(sent).toMatchObject({ model: "gemini-3.8-flash", store: false, generation_config: { thinking_level: "low" }, response_format: { type: "text", mime_type: "application/json" } });
     expect(sent.tools).toBeUndefined();
     expect((calls[0].init.headers as Record<string, string>)["x-goog-api-key"]).toBe("test-key");
   });
@@ -137,6 +137,14 @@ describe("Gemini", () => {
     const status = (code: number, body: unknown = {}) => (async () => Response.json(body, { status: code })) as unknown as typeof fetch;
     await expect(geminiExtractor({ apiKey: "k", fetchImpl: status(429) }).extract({ model, documents: [] })).rejects.toThrow(/free limit is used up/);
     await expect(geminiExtractor({ apiKey: "k", fetchImpl: status(400, [{ error: { code: 400, message: "API key not valid. Please pass a valid API key.", status: "INVALID_ARGUMENT" } }]) }).extract({ model, documents: [] })).rejects.toThrow("Gemini refused the request: API key not valid. Please pass a valid API key. Check GEMINI_API_KEY and SPEC_LOOKUP_MODEL.");
+  });
+
+  it("says whether Gemini was slow or could not be reached at all", () => {
+    expect(geminiUnreachable(new DOMException("The operation timed out.", "TimeoutError"))).toMatch(/did not answer within 75 seconds/);
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    const offline = Object.assign(new TypeError("fetch failed"), { cause: { code: "ENOTFOUND", message: "getaddrinfo ENOTFOUND generativelanguage.googleapis.com" } });
+    expect(geminiUnreachable(offline)).toBe("The server could not reach Gemini (ENOTFOUND). Check that it can reach generativelanguage.googleapis.com.");
+    quiet.mockRestore();
   });
 
   const env = (vars: Record<string, string>) => vars as unknown as NodeJS.ProcessEnv;
