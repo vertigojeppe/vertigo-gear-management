@@ -5,7 +5,7 @@ import { logActivity, type ActivityEntity } from "@/lib/activity";
 import { assertCan } from "@/lib/auth/permissions";
 import type { Actor } from "@/lib/auth/session";
 import { getStorage, storageKeyFor } from "@/lib/storage";
-import { cutOutBackground } from "./cutout";
+import { removeBackground } from "./background";
 import { ATTACHMENT_KINDS, fileConfig, type AttachmentKind } from "../../../config/app.config";
 
 export class FileError extends Error {
@@ -125,10 +125,10 @@ export const files = {
   },
 };
 
-/** Model photo thumbnail with a plain background cut out; the original file stays as it was. */
+/** Model photo thumbnail with the background cut out; the original file stays as it was. */
 async function productThumb(bytes: Buffer) {
   const { data, info } = await sharp(bytes).rotate().resize({ width: THUMB_WIDTH, withoutEnlargement: true }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const cut = cutOutBackground(data, info.width, info.height);
+  const cut = await removeBackground(bytes, data, info.width, info.height);
   return sharp(cut ?? data, { raw: { width: info.width, height: info.height, channels: 4 } }).webp({ quality: 80, alphaQuality: 90 }).toBuffer();
 }
 

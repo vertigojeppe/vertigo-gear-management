@@ -732,11 +732,15 @@ the module.
   reliable, so the reviewer picks one or none); `apply` fetches the chosen
   one with `fetchPublic`, checks it with sharp, attaches it through
   `files.upload` and makes it the model's default photo. Every model
-  photo (`entityType` model, kind photo) gets its thumbnail with a plain
-  background made transparent (`cutOutBackground` in
-  `src/modules/files/cutout.ts`, pure: border colour, flood fill, soft
-  edge; busy or already transparent pictures are left alone); the
-  original file is never changed.
+  photo (`entityType` model, kind photo) gets its thumbnail with the
+  background made transparent (`removeBackground` in
+  `src/modules/files/background.ts`); the original file is never
+  changed. With `BG_REMOVE_MODEL` + `BG_REMOVE_DEVICE` (the image ships
+  BiRefNet; `docker-compose.gpu.yml` sets `cuda`) onnxruntime-node draws
+  the mask (1024² planar ImageNet input, sigmoid output; pure helpers
+  tested). Otherwise, or when it fails, `cutOutBackground`
+  (`cutout.ts`, pure: border colour, flood fill, soft edge; busy or
+  already transparent pictures are left alone).
 - Spec sheets (`/settings/import/specs`, `settings.manage`): a CSV keyed
   by model `Id` (from the models export) with weight, width, height,
   depth, power, description and links; any other column whose header
@@ -769,6 +773,13 @@ the module.
   use; SSH reaches the server on the LAN and over Tailscale (README,
   *Remote access*). The container
   healthcheck and `deploy.yml` poll `GET /api/health`.
+- The image is Debian (build) and `nvidia/cuda` Ubuntu (runtime), not
+  Alpine: onnxruntime-node and CUDA need glibc. The app user keeps the
+  Alpine ids 100:101 so the uploads volume stays writable. CI sets
+  `ONNXRUNTIME_NODE_INSTALL=skip` (no CUDA download); the image fetches
+  the CUDA provider in `deps-prod`. The GPU is opt-in via
+  `COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml` in `.env`,
+  since a GPU reservation fails on a host without the NVIDIA toolkit.
 - The production image has no `tsx` and no `src/`, so the dev seed cannot
   run there (and would load demo data). The first admin on a server comes
   from `scripts/create-admin.mjs` (plain Node, `pg` + `bcryptjs`, copied

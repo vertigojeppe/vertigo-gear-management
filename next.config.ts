@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   experimental: { serverActions: { bodySizeLimit: "25mb" } },
   // The spec lookup reads datasheet PDFs with pdf.js on the server; loaded
   // from node_modules as is (bundling breaks its fake worker).
-  serverExternalPackages: ["pdfjs-dist"],
+  serverExternalPackages: ["pdfjs-dist", "onnxruntime-node"],
   // Dev only: let phones and other machines on the local network load the
   // dev server (HMR, scripts) when testing via http(s)://<pc-ip>:3000.
   // Add more hostnames with DEV_ORIGINS="name.local,other.host".
