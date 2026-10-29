@@ -1539,6 +1539,12 @@
     "save": "Save {fields, plural, one {# ticked field} other {# ticked fields}}",
     "markChecked": "Mark as checked",
     "saving": "Saving…",
-    "saved": "{fields, plural, =0 {Marked as checked; nothing changed.} one {Saved # field.} other {Saved # fields.}}"
+    "saved": "{fields, plural, =0 {Marked as checked; nothing changed.} one {Saved # field.} other {Saved # fields.}}",
+    "photo": "Photo",
+    "photoHelp": "Pick the picture that shows the product to make it the model's photo.",
+    "photoReplaces": "The model has a photo. Pick a picture to replace it.",
+    "noPhoto": "None",
+    "photoOption": "Picture from the product page",
+    "photoSaved": "The photo was added."
   }
 }

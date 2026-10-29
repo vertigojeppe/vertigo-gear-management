@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { buildRequest, configuredExtractor, foundNumber, geminiExtractor, geminiUnreachable, interactionText, readExtraction, toSpecRow, type ExtractModel } from "../lookup-extract";
-import { datasheetLinks, embeddedText, fetchPublic, htmlToText, isPrivateAddress, LookupError } from "../lookup-source";
+import { datasheetLinks, embeddedText, fetchPublic, htmlToText, isPrivateAddress, LookupError, productImages } from "../lookup-source";
 
 const defs: ExtractModel["defs"] = [
   { key: "lumen", label: "Lumen", type: "number", options: [] },
@@ -37,6 +37,19 @@ describe("reading pages", () => {
     expect(datasheetLinks(html, "https://pro.example.com/products/rz990/")).toEqual([
       { label: "Spec sheet", url: "https://cdn.example.com/rz990_spec.pdf?v=2" },
       { label: "Operating manual", url: "https://pro.example.com/files/manual.pdf" },
+    ]);
+  });
+
+  it("offers the product's pictures: Product data and og:image first, then the page's images, no logos or thumbnails", () => {
+    const html = `<head><meta property="og:image" content="/static/og.png"><meta content="/static/og.png" name="twitter:image">
+      <script type="application/ld+json">{"@graph":[{"@type":"Organization","image":"/logo.png"},{"@type":"Product","image":[{"url":"https://cdn.example.com/rz990.jpg"}]}]}</script></head>
+      <body><img src="/static/logo.svg"><img src="https://cdn.example.com/resize/abc?width=452&amp;height=452"><img src="/icon.png" width="48" height="48">
+      <img data-src="/lazy.webp"><img src="https://cdn.example.com/resize/def?width=48"></body>`;
+    expect(productImages(html, "https://pro.example.com/products/rz990")).toEqual([
+      "https://cdn.example.com/rz990.jpg",
+      "https://pro.example.com/static/og.png",
+      "https://cdn.example.com/resize/abc?width=452&height=452",
+      "https://pro.example.com/lazy.webp",
     ]);
   });
 

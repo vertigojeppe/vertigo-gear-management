@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { assertCan } from "@/lib/auth/permissions";
@@ -6,8 +7,10 @@ import type { Actor } from "@/lib/auth/session";
 import { pathNames } from "@/modules/inventory/tree";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { customFieldDefinitions } from "@/modules/settings/service";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { files } from "@/modules/files/service";
 import { configuredExtractor, toSpecRow, type SpecExtractor } from "./lookup-extract";
-import { linkSource, LookupError, type SpecSource } from "./lookup-source";
+import { fetchPublic, linkSource, LookupError, type SpecSource } from "./lookup-source";
 import { planSpecs, type ModelSpecPlan, type SpecRow } from "./specs";
 import { currentModels, writeSpecRow } from "./specs-service";
 
@@ -32,6 +35,9 @@ export type LookupPreview = {
   product: string;
   notes: string;
   extractor: string;
+  /** Pictures from the product page to choose the model's photo from. */
+  images: string[];
+  hasPhoto: boolean;
 };
 
 const rowSchema = z.object({
@@ -50,7 +56,7 @@ export function specLookupAvailable(): boolean {
 
 /** The model, its category path, and the extra fields of its category with their options (a select's answer must be one of them). */
 async function modelContext(modelId: string) {
-  const m = await prisma.model.findUnique({ where: { id: modelId }, select: { id: true, manufacturer: true, name: true, variant: true, categoryId: true } });
+  const m = await prisma.model.findUnique({ where: { id: modelId }, select: { id: true, manufacturer: true, name: true, variant: true, categoryId: true, defaultPhotoId: true } });
   if (!m) throw new LookupError("Model not found.");
   const [current, cats, defs] = await Promise.all([currentModels([modelId]), prisma.category.findMany({ select: { id: true, name: true, parentId: true } }), customFieldDefinitions.forEntity("model", m.categoryId)]);
   return { m, current: current.get(modelId)!, category: pathNames(cats, m.categoryId).join(" › "), defs: defs.map((d) => ({ key: d.key, label: d.label, type: d.type, options: d.options })) };
@@ -78,23 +84,48 @@ export const specLookup = {
       product: extraction.product,
       notes: extraction.notes,
       extractor: extractor.name,
+      images: gathered.images ?? [],
+      hasPhoto: m.defaultPhotoId !== null,
     };
   },
 
-  /** Write the ticked changes (planned again against the model as it is now) and stamp `specsCheckedAt`. */
-  async apply(actor: Actor, modelId: string, rawRow: unknown, picks: string[], from: string): Promise<{ fields: number }> {
+  /**
+   * Write the ticked changes (planned again against the model as it is now)
+   * and stamp `specsCheckedAt`; with `image`, that picture becomes the
+   * model's photo (fetched before anything is written, so a bad picture
+   * leaves the model as it was).
+   */
+  async apply(actor: Actor, modelId: string, rawRow: unknown, picks: string[], from: string, opts: { image?: string; fetchImpl?: typeof fetch } = {}): Promise<{ fields: number; photo: boolean }> {
     assertCan(actor, "inventory.write");
     const parsed = rowSchema.safeParse(rawRow);
     if (!parsed.success || parsed.data.id !== modelId) throw new LookupError("The lookup could not be read. Look it up again.");
     const row = parsed.data as SpecRow;
     const current = (await currentModels([modelId])).get(modelId);
     if (!current) throw new LookupError("Model not found.");
+    const photo = opts.image ? await fetchImage(opts.image, opts.fetchImpl) : null;
     const plan = planSpecs({ rows: [row], errors: [] }, new Map([[modelId, current]])).models[0];
     let fields = 0;
     await prisma.$transaction(async (tx) => {
       if (plan) fields = await writeSpecRow(tx, actor, row, current, plan, new Set(picks), from, { lookup: true });
       await tx.model.update({ where: { id: modelId }, data: { specsCheckedAt: new Date() } });
     });
-    return { fields };
+    if (photo) {
+      const att = await files.upload(actor, { entityType: "model", entityId: modelId, kind: "photo", file: photo });
+      await prisma.model.update({ where: { id: modelId }, data: { defaultPhotoId: att.fileId } });
+    }
+    return { fields, photo: photo !== null };
   },
 };
+
+/** The chosen picture, checked to really be a PNG, JPEG, WebP or GIF (the link comes back from the browser). */
+async function fetchImage(raw: string, fetchImpl?: typeof fetch): Promise<File> {
+  const { url, bytes } = await fetchPublic(raw, fetchImpl);
+  const format = await sharp(bytes)
+    .metadata()
+    .then((m) => m.format)
+    .catch(() => undefined);
+  const type = ({ jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif" } as Record<string, string>)[format ?? ""];
+  if (!type) throw new LookupError("That picture could not be read. Pick another one, or none.");
+  const name = decodeURIComponent(new URL(url).pathname.split("/").pop() || "photo").replace(/\.[^.]*$/, "");
+  return new File([new Uint8Array(bytes)], `${name || "photo"}.${format === "jpeg" ? "jpg" : format}`, { type });
+}

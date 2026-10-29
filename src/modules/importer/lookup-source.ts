@@ -13,6 +13,8 @@ export type GatheredSources = {
   documents: SourceDocument[];
   /** Product page / datasheet links worth keeping on the model (the page itself, PDFs it links to). */
   links: { label: string; url: string }[];
+  /** Pictures that may show the product, for the reviewer to pick one (`productImages`). */
+  images?: string[];
 };
 export type SourceRequest = { manufacturer: string; name: string; variant: string | null; url?: string };
 export type SpecSource = { kind: string; gather(req: SourceRequest): Promise<GatheredSources> };
@@ -137,6 +139,49 @@ export function datasheetLinks(html: string, base: string): { label: string; url
   return [...found.values()].sort((a, b) => b.score - a.score).map(({ label, url }) => ({ label, url }));
 }
 
+/**
+ * Pictures on a product page that could be the product, for the reviewer to
+ * pick from: the schema.org Product image, og:image / twitter:image, then the
+ * page's own images. No single marker is reliable (Robe's og:image is a site
+ * banner and its Product image is empty), so a person chooses. Icons, logos
+ * (SVG) and thumbnails under 120 px are left out.
+ */
+export function productImages(html: string, base: string, max = 8): string[] {
+  const found: string[] = [];
+  const add = (raw: unknown) => {
+    if (typeof raw !== "string" || !raw.trim()) return;
+    try {
+      const url = new URL(decodeEntities(raw.trim()), base);
+      if (!/^https?:$/.test(url.protocol) || /\.svg$|\.ico$/i.test(url.pathname)) return;
+      if (Number(url.searchParams.get("width") ?? url.searchParams.get("w") ?? 999) < 120 || found.includes(url.toString())) return;
+      found.push(url.toString());
+    } catch {
+      /* not a link */
+    }
+  };
+  for (const m of html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      const data = JSON.parse(m[1]);
+      for (const d of [data, ...(Array.isArray(data) ? data : []), ...(data?.["@graph"] ?? [])]) {
+        if (d?.["@type"] !== "Product") continue;
+        for (const img of [d.image].flat()) add(typeof img === "object" ? img?.url : img);
+      }
+    } catch {
+      /* not JSON after all */
+    }
+  }
+  for (const m of html.matchAll(/<meta\b[^>]*>/gi)) {
+    if (/(property|name)\s*=\s*["'](og:image|twitter:image)["']/i.test(m[0])) add(m[0].match(/content\s*=\s*["']([^"']+)["']/i)?.[1]);
+  }
+  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
+    const tag = m[0];
+    const attr = (n: string) => tag.match(new RegExp(`\\s${n}\\s*=\\s*["']([^"']+)["']`, "i"))?.[1];
+    if (Number(attr("width") ?? 999) < 120 || Number(attr("height") ?? 999) < 120) continue;
+    add(attr("src") ?? attr("data-src"));
+  }
+  return found.slice(0, max);
+}
+
 /* Fetching ---------------------------------------------------------------- */
 
 async function assertPublic(url: URL) {
@@ -236,7 +281,7 @@ export function linkSource(fetchImpl: typeof fetch = fetch): SpecSource {
         }
       }
       if (documents.every((d) => d.text.length < 200)) throw new LookupError("The page has almost no text (it may be built by scripts). Try the datasheet PDF link instead.", "url");
-      return { documents, links };
+      return { documents, links, images: first.html ? productImages(first.html, first.doc.url) : [] };
     },
   };
 }
