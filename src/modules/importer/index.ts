@@ -7,3 +7,5 @@ export type { Plan, PlanRow, PlanContext, Bucket, Op } from "./plan";
 export { applyOps } from "./commit";
 export type { CommitResult } from "./commit";
 export { specImport } from "./specs-service";
+export { specLookup, specLookupAvailable } from "./lookup";
+export type { LookupPreview } from "./lookup";

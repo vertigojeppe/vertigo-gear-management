@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import type { FormState } from "@/lib/forms";
 import { applySpecs, previewSpecs, type SpecPreviewData } from "../actions";
 import { pickable, pickKey, type SpecChange } from "../specs";
+import { SpecChangeTable } from "./spec-changes";
 import type { SpecImportResult } from "../specs-service";
 
 /**
@@ -49,12 +50,6 @@ export function SpecImport() {
       )}
     </div>
   );
-}
-
-function changeLabel(c: SpecChange, ticked: boolean) {
-  if (c.action === "fill") return ticked ? { key: "action_fill", color: "green" } : { key: "action_skip", color: "gray" };
-  if (c.action === "keep") return ticked ? { key: "action_replace", color: "amber" } : { key: "action_keep", color: "gray" };
-  return { key: `action_${c.action}`, color: "gray" };
 }
 
 function SpecPreview({ data, action, error }: { data: SpecPreviewData; action: (fd: FormData) => void; error?: string }) {
@@ -113,40 +108,7 @@ function SpecPreview({ data, action, error }: { data: SpecPreviewData; action: (
             <Link href={`/inventory/models/${m.id}`} className="font-medium hover:underline">
               {m.label}
             </Link>
-            <div className="overflow-x-auto">
-              <table className="text-xs">
-                <tbody>
-                  {m.changes.map((c) => {
-                    const key = pickKey(m.id, c.field);
-                    const ticked = picked.has(key);
-                    const label = changeLabel(c, ticked);
-                    return (
-                      <tr key={c.field} className="align-top">
-                        <td className="w-6 py-0.5">
-                          {pickable(c.action) && (
-                            <input type="checkbox" name="pick" value={key} checked={ticked} onChange={(e) => toggle(key, e.target.checked)} aria-label={`${(c.label ?? t(`field_${c.field}`))}: ${m.label}`} className="mt-0.5" />
-                          )}
-                        </td>
-                        <td className="w-32 py-0.5 pr-2 text-muted-foreground">{(c.label ?? t(`field_${c.field}`))}</td>
-                        <td className="w-28 py-0.5 pr-2">
-                          <StatusPill color={label.color}>{t(label.key)}</StatusPill>
-                        </td>
-                        <td className="whitespace-pre-line py-0.5">
-                          {c.action === "keep" ? (
-                            <>
-                              <span className={ticked ? "line-through text-muted-foreground" : ""}>{c.from}</span>{" "}
-                              <span className={ticked ? "" : "text-muted-foreground"}>({t("sheetSays", { value: c.to })})</span>
-                            </>
-                          ) : (
-                            <span className={c.action === "fill" && !ticked ? "text-muted-foreground" : ""}>{c.to}</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <SpecChangeTable modelId={m.id} modelLabel={m.label} changes={m.changes} picked={picked} onToggle={toggle} />
           </li>
         ))}
       </ul>

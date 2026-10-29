@@ -8,14 +8,15 @@ import { modelLabelWithMaker } from "@/lib/format";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { customFieldDefinitions } from "@/modules/settings/service";
 import { ImportError } from "./service";
-import { planSpecs, readSpecSheet, specUpdate, type CurrentModel, type Link, type SpecPlan } from "./specs";
+import { planSpecs, readSpecSheet, specUpdate, type CurrentModel, type Link, type ModelSpecPlan, type SpecPlan, type SpecRow } from "./specs";
 
 /** models / fields: what changed; checked: every model the sheet covered, now stamped `specsCheckedAt`. */
 export type SpecImportResult = { models: number; fields: number; checked: number };
 
 const num = (v: { toNumber(): number } | number | null) => (v === null ? null : typeof v === "number" ? v : v.toNumber());
 
-async function currentModels(ids: string[]): Promise<Map<string, CurrentModel>> {
+/** The models as they are now, in the planner's shape (also used by the spec lookup). */
+export async function currentModels(ids: string[]): Promise<Map<string, CurrentModel>> {
   const [rows, defs] = await Promise.all([prisma.model.findMany({ where: { id: { in: ids } } }), customFieldDefinitions.forEntity("model")]);
   return new Map(
     rows.map((m) => [
@@ -31,6 +32,22 @@ async function currentModels(ids: string[]): Promise<Map<string, CurrentModel>> 
       },
     ]),
   );
+}
+
+/**
+ * Writes one model's ticked changes (without `picked`, its fills) and the
+ * activity row ("Specs from <from>: filled in …"). Returns how many fields
+ * changed. Shared by the spec sheet and the spec lookup.
+ */
+export async function writeSpecRow(tx: Prisma.TransactionClient, actor: Actor, row: SpecRow, m: CurrentModel, p: ModelSpecPlan, picked: Set<string> | undefined, from: string, details: Record<string, unknown> = {}): Promise<number> {
+  const { data, changes } = specUpdate(row, m, p, picked);
+  if (!changes.length) return 0;
+  await tx.model.update({ where: { id: m.id }, data: data as Prisma.ModelUpdateInput });
+  const filled = changes.filter((c) => c.action === "fill").map((c) => c.field);
+  const replaced = changes.filter((c) => c.action === "keep").map((c) => c.field);
+  const parts = [filled.length ? `filled in ${filled.join(", ")}` : "", replaced.length ? `replaced ${replaced.join(", ")}` : ""].filter(Boolean);
+  await logActivity(actor, { entityType: "model", entityId: m.id, action: "specs_imported", summary: `Specs from ${from}: ${parts.join("; ")}`, details: { changes, ...details } }, tx);
+  return changes.length;
 }
 
 /**
@@ -62,15 +79,10 @@ export const specImport = {
         const m = current.get(row.id);
         const p = plan.models.find((x) => x.id === row.id);
         if (!m || !p) continue;
-        const { data, changes } = specUpdate(row, m, p, picked);
-        if (!changes.length) continue;
-        await tx.model.update({ where: { id: m.id }, data: data as Prisma.ModelUpdateInput });
-        const filled = changes.filter((c) => c.action === "fill").map((c) => c.field);
-        const replaced = changes.filter((c) => c.action === "keep").map((c) => c.field);
-        const parts = [filled.length ? `filled in ${filled.join(", ")}` : "", replaced.length ? `replaced ${replaced.join(", ")}` : ""].filter(Boolean);
-        await logActivity(actor, { entityType: "model", entityId: m.id, action: "specs_imported", summary: `Specs from ${fileName}: ${parts.join("; ")}`, details: { changes } }, tx);
+        const changed = await writeSpecRow(tx, actor, row, m, p, picked, fileName);
+        if (!changed) continue;
         models++;
-        fields += changes.length;
+        fields += changed;
       }
       // Every model the sheet covered counts as checked, also when nothing changed (nothing found, or the values were declined).
       await tx.model.updateMany({ where: { id: { in: [...current.keys()] } }, data: { specsCheckedAt: checkedAt } });

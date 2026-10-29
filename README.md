@@ -60,6 +60,12 @@ start, and help text under the fields that need it. The short version:
   change a whole family at once with *Edit family* on the model page
   (name, manufacturer, category, flags). Choose *serialized* (one record
   per unit) or *bulk* (counted by quantity).
+- **Look up specs** (model page, needs `GEMINI_API_KEY`): paste the
+  manufacturer's product page or datasheet PDF. The page is read (and the
+  datasheet it links to), the specs are pulled out with the words they
+  came from, and you tick what to keep, like the spec sheet import: empty
+  fields start ticked, values the model already has do not. The links are
+  added to the model.
 - **Serialized or bulk** can be switched later by an admin on the model
   page (*Convert to bulk* / *Convert to serialized*). The dialog lists
   exactly which asset tags merge, split or stay before anything changes.
@@ -645,6 +651,8 @@ docker compose --profile tunnel up -d --force-recreate app
 | `PROJECT_GEAR=on` | Brings back gear on projects: reserving gear, renting in sub-hire gear, the project quote, and starting a packing list from the reservations. Off by default; nothing is deleted while it is off. Rentals are not affected. |
 | `TWO_FACTOR_REQUIRED_ROLES` | Who must use two-factor sign-in: `admin` when unset, `admin,member`, or `none`. |
 | `MAX_UPLOAD_MB` | Largest document upload (500 by default). |
+| `GEMINI_API_KEY` | Turns on *Look up specs* on model pages. A free key from [Google AI Studio](https://aistudio.google.com) (*Get API key*). On the free tier Google may use the requests (public product pages and model names) to improve its products. |
+| `SPEC_LOOKUP_MODEL` | Another Gemini model for the lookup (default `gemini-3.8-flash`). |
 | `SOFFICE_PATH` | Where LibreOffice's `soffice` is, for turning Word plan documents into PDFs. The Docker image has it on the path; set this only when running the app outside Docker. |
 | `BACKUP_REMOTE`, `BACKUP_KEEP_DAYS` | Where backups are copied and how many days are kept (see [Backups](#backups)). |
 

@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   // Settings › Import posts the whole spreadsheet through a server action
   // (the real gear list is about 0.5 MB; Next's default limit is 1 MB).
   experimental: { serverActions: { bodySizeLimit: "25mb" } },
+  // The spec lookup reads datasheet PDFs with pdf.js on the server; loaded
+  // from node_modules as is (bundling breaks its fake worker).
+  serverExternalPackages: ["pdfjs-dist"],
   // Dev only: let phones and other machines on the local network load the
   // dev server (HMR, scripts) when testing via http(s)://<pc-ip>:3000.
   // Add more hostnames with DEV_ORIGINS="name.local,other.host".
