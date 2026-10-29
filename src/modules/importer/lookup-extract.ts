@@ -38,7 +38,7 @@ export function buildRequest(req: ExtractRequest): { instructions: string; input
     "If the documents cover several models or versions, use only the values for the requested one; skip a field when you cannot tell which value belongs to it.",
     "Convert units: weight to kg, sizes to cm (mm ÷ 10, inches × 2.54), power to W. Write numbers with a dot as the decimal point and no thousands separators.",
     "For every value, quote the short piece of the document it comes from as evidence, exactly as written there.",
-    "description: one or two plain sentences in English saying what the product is, from the documents, without marketing language; empty when unclear.",
+    'description: the key specifications the fields above do not cover, one per line as "Label: value", the ones a technician needs most first (power source or battery, output, light source or drivers, connections and control, protection rating …). Values as the documents give them, combined on one line where they belong together, e.g. "Battery: swappable 99.84 Wh LiFePO4, 40 h at mid volume / 10 h at full", "Connectivity: Bluetooth 5.0, 3.5 mm input". 4 to 10 lines, in English, no marketing language, no sentence about what the product is; empty when the documents give none.',
     "matches_model: false when the documents are about a different product than the one requested.",
   ].join("\n");
   const model = [req.model.manufacturer, req.model.name, req.model.variant].filter(Boolean).join(" ");
@@ -68,7 +68,7 @@ export function buildRequest(req: ExtractRequest): { instructions: string; input
           required: ["field", "value", "evidence"],
         },
       },
-      description: { type: "string" },
+      description: { type: "string", description: 'Key specifications not covered by the fields, one "Label: value" per line.' },
       notes: { type: "string", description: "Anything the reviewer should know, e.g. which variant the values are for; empty when nothing." },
     },
     required: ["matches_model", "product", "values", "description", "notes"],

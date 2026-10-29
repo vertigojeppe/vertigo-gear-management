@@ -77,6 +77,7 @@ describe("the extraction request and answer", () => {
   it("asks for the standard fields and the category's extra fields (not dates), with the documents", () => {
     const { instructions, input, schema } = buildRequest({ model, documents: [{ url: "https://x.example/rz990", title: "PT-RZ990", kind: "html", text: "Weight 21.7 kg" }] });
     expect(instructions).toMatch(/Never guess/);
+    expect(instructions).toMatch(/one per line as "Label: value"/);
     expect(input).toContain("Product: Panasonic PT-RZ990");
     expect(input).toContain("- x:lens: Lens mount (one of: Fixed, Interchangeable)");
     expect(input).toContain("Weight 21.7 kg");
