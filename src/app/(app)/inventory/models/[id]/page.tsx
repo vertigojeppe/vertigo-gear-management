@@ -136,7 +136,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
         <div className="flex aspect-square items-center justify-center overflow-hidden rounded-md border bg-muted text-muted-foreground">
           {detail.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={detail.thumbUrl ?? detail.photoUrl} alt={label} className="size-full object-cover" />
+            <img src={detail.thumbUrl ?? detail.photoUrl} alt={label} className="size-full object-contain" />
           ) : (
             <Package className="size-10" aria-hidden />
           )}
