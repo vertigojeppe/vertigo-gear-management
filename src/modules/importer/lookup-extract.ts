@@ -159,6 +159,9 @@ export function toSpecRow(modelId: string, x: Extraction, defs: ExtractModel["de
 
 /* Gemini ------------------------------------------------------------------ */
 
+/** Google's "overloaded / try later" answers, worth retrying. */
+const BUSY = new Set([500, 502, 503, 504]);
+
 /** The final answer text of an Interactions API response (the last model_output step). */
 export function interactionText(body: unknown): string {
   const b = body as { output_text?: unknown; steps?: { type?: string; content?: { type?: string; text?: string }[] }[] };
@@ -174,7 +177,7 @@ export function interactionText(body: unknown): string {
  * Free tier: the request may be used by Google to improve its products;
  * it only holds public product documents.
  */
-export function geminiExtractor(opts: { apiKey: string; model?: string; fetchImpl?: typeof fetch }): SpecExtractor {
+export function geminiExtractor(opts: { apiKey: string; model?: string; fetchImpl?: typeof fetch; retryDelaysMs?: number[] }): SpecExtractor {
   // 3.5 Flash read real datasheets better than 3.8 Flash at Vertigo (October 2026).
   const model = opts.model || "gemini-3.5-flash";
   const fetchImpl = opts.fetchImpl ?? fetch;
@@ -182,20 +185,27 @@ export function geminiExtractor(opts: { apiKey: string; model?: string; fetchImp
     name: `Gemini (${model})`,
     async extract(req) {
       const { instructions, input, schema } = buildRequest(req);
-      let res: Response;
-      try {
-        res = await fetchImpl("https://generativelanguage.googleapis.com/v1beta/interactions", {
-          method: "POST",
-          headers: { "content-type": "application/json", "x-goog-api-key": opts.apiKey },
-          // Low thinking: copying values out of a document needs little, and the
-          // default (medium) can take over a minute on a long datasheet.
-          body: JSON.stringify({ model, system_instruction: instructions, input, store: false, generation_config: { thinking_level: "low" }, response_format: { type: "text", mime_type: "application/json", schema } }),
-          // Under Cloudflare's 100-second limit for the whole request.
-          signal: AbortSignal.timeout(75_000),
-        });
-      } catch (e) {
-        throw new LookupError(geminiUnreachable(e));
+      // Under Cloudflare's 100-second limit for the whole request, retries included.
+      const signal = AbortSignal.timeout(75_000);
+      let res!: Response;
+      // Google answers 503 when the model is overloaded for a moment; it usually passes within seconds.
+      for (const wait of [0, ...(opts.retryDelaysMs ?? [2_000, 5_000])]) {
+        if (wait) await new Promise((r) => setTimeout(r, wait));
+        try {
+          res = await fetchImpl("https://generativelanguage.googleapis.com/v1beta/interactions", {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-goog-api-key": opts.apiKey },
+            // Low thinking: copying values out of a document needs little, and the
+            // default (medium) can take over a minute on a long datasheet.
+            body: JSON.stringify({ model, system_instruction: instructions, input, store: false, generation_config: { thinking_level: "low" }, response_format: { type: "text", mime_type: "application/json", schema } }),
+            signal,
+          });
+        } catch (e) {
+          throw new LookupError(geminiUnreachable(e));
+        }
+        if (!BUSY.has(res.status)) break;
       }
+      if (BUSY.has(res.status)) throw new LookupError(`Gemini is busy right now (${res.status}). Try again in a minute.`);
       if (res.status === 429) throw new LookupError("Gemini's free limit is used up for now. Try again later.");
       if (res.status === 400 || res.status === 401 || res.status === 403) {
         // Google wraps errors in a list: [{ "error": { "message": "API key not valid…" } }].

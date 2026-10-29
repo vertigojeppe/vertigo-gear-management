@@ -152,6 +152,24 @@ describe("Gemini", () => {
     await expect(geminiExtractor({ apiKey: "k", fetchImpl: status(400, [{ error: { code: 400, message: "API key not valid. Please pass a valid API key.", status: "INVALID_ARGUMENT" } }]) }).extract({ model, documents: [] })).rejects.toThrow("Gemini refused the request: API key not valid. Please pass a valid API key. Check GEMINI_API_KEY and SPEC_LOOKUP_MODEL.");
   });
 
+  it("tries again when Google is busy (503), and says so when it stays busy", async () => {
+    const replies = (...codes: number[]) => {
+      const calls: number[] = [];
+      const impl = (async () => {
+        const code = codes[calls.length] ?? codes[codes.length - 1];
+        calls.push(code);
+        return code === 200 ? Response.json({ output_text: JSON.stringify(answer) }) : Response.json([{ error: { message: "The model is overloaded." } }], { status: code });
+      }) as unknown as typeof fetch;
+      return { calls, impl };
+    };
+    const once = replies(503, 200);
+    expect((await geminiExtractor({ apiKey: "k", fetchImpl: once.impl, retryDelaysMs: [1, 1] }).extract({ model, documents: [] })).product).toBe("PT-RZ990");
+    expect(once.calls).toEqual([503, 200]);
+    const always = replies(503);
+    await expect(geminiExtractor({ apiKey: "k", fetchImpl: always.impl, retryDelaysMs: [1, 1] }).extract({ model, documents: [] })).rejects.toThrow("Gemini is busy right now (503). Try again in a minute.");
+    expect(always.calls).toHaveLength(3);
+  });
+
   it("says whether Gemini was slow or could not be reached at all", () => {
     expect(geminiUnreachable(new DOMException("The operation timed out.", "TimeoutError"))).toMatch(/did not answer within 75 seconds/);
     const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
