@@ -1,8 +1,11 @@
 import { createElement } from "react";
 import { Document, Page, Text, renderToBuffer } from "@react-pdf/renderer";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import sharp from "sharp";
 import { prisma } from "@/lib/db";
 import type { Actor } from "@/lib/auth/session";
+// eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
+import { files } from "@/modules/files/service";
 import { specLookup } from "../lookup";
 import type { Extraction, SpecExtractor } from "../lookup-extract";
 import { linkSource, type SpecSource } from "../lookup-source";
@@ -53,8 +56,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await prisma.activityLog.deleteMany({ where: { entityId: modelId } });
   await prisma.model.deleteMany({ where: { id: modelId } });
+  for (const a of await prisma.attachment.findMany({ where: { entityId: modelId } })) await files.removeAttachment(admin, a.id);
+  await prisma.activityLog.deleteMany({ where: { entityId: modelId } });
   await prisma.customFieldDefinition.deleteMany({ where: { id: fieldId } });
   await prisma.category.deleteMany({ where: { id: categoryId } });
 });
@@ -76,7 +80,7 @@ describe("spec lookup", () => {
   it("writes only the ticked changes, keeps the power it already had, and stamps the model as checked", async () => {
     const p = await specLookup.preview(admin, modelId, { url: "https://pro.example.com/rz990" }, { source, extractor: answer() });
     const picks = [`${modelId}.weightKg`, `${modelId}.lumen-${M}`, `${modelId}.links`];
-    expect(await specLookup.apply(admin, modelId, JSON.parse(JSON.stringify(p.row)), picks, "pro.example.com")).toEqual({ fields: 3 });
+    expect(await specLookup.apply(admin, modelId, JSON.parse(JSON.stringify(p.row)), picks, "pro.example.com")).toEqual({ fields: 3, photo: false });
     const m = await prisma.model.findUniqueOrThrow({ where: { id: modelId } });
     expect(Number(m.weightKg)).toBe(21.7);
     expect(m.powerDrawW).toBe(600);
@@ -89,6 +93,19 @@ describe("spec lookup", () => {
     // Looked up again, only the declined power is left to decide.
     const again = await specLookup.preview(admin, modelId, { url: "https://pro.example.com/rz990" }, { source, extractor: answer() });
     expect(again.plan.changes.filter((c) => c.action === "fill" || c.action === "keep").map((c) => c.field)).toEqual(["powerDrawW"]);
+  });
+
+  it("makes the chosen picture the model's photo, and refuses one that is not an image", async () => {
+    const png = await sharp({ create: { width: 200, height: 200, channels: 3, background: "#336699" } }).png().toBuffer();
+    const serve = (body: Buffer | string, type: string) => (async () => new Response(typeof body === "string" ? body : new Uint8Array(body), { headers: { "content-type": type } })) as unknown as typeof fetch;
+    const p = await specLookup.preview(admin, modelId, {}, { source, extractor: answer({ findings: [] }) });
+    await expect(specLookup.apply(admin, modelId, p.row, [], "x", { image: "http://93.184.216.34/page", fetchImpl: serve("<html>not a picture</html>", "image/png") })).rejects.toThrow(/could not be read/);
+    expect((await prisma.model.findUniqueOrThrow({ where: { id: modelId } })).defaultPhotoId).toBeNull();
+
+    expect(await specLookup.apply(admin, modelId, p.row, [], "x", { image: "http://93.184.216.34/img/rz990%20front.png?w=800", fetchImpl: serve(png, "application/octet-stream") })).toMatchObject({ photo: true });
+    const m = await prisma.model.findUniqueOrThrow({ where: { id: modelId }, include: { defaultPhoto: true } });
+    expect(m.defaultPhoto).toMatchObject({ name: "rz990 front.png", mimeType: "image/png" });
+    expect(m.defaultPhoto?.thumbKey).not.toBeNull();
   });
 
   it("says when the documents are about another product, and refuses viewers and a tampered row", async () => {

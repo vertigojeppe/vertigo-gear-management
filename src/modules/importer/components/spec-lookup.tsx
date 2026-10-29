@@ -61,7 +61,7 @@ export function SpecLookup({ modelId, modelLabel, links }: { modelId: string; mo
 
 function LookupResult({ data, modelLabel }: { data: LookupPreview; modelLabel: string }) {
   const t = useTranslations("specLookup");
-  const [saved, saveAction] = useActionState<FormState<{ fields: number }>, FormData>(applyLookedUpSpecs, {});
+  const [saved, saveAction] = useActionState<FormState<{ fields: number; photo: boolean }>, FormData>(applyLookedUpSpecs, {});
   const [picked, setPicked] = useState<Set<string>>(() => new Set(data.plan.changes.filter((c) => c.action === "fill").map((c) => pickKey(data.modelId, c.field))));
   const toggle = (key: string, on: boolean) =>
     setPicked((p) => {
@@ -83,6 +83,7 @@ function LookupResult({ data, modelLabel }: { data: LookupPreview; modelLabel: s
     return (
       <p role="status" className="rounded-md border border-green-600/40 bg-green-50 p-3 text-sm dark:bg-green-950/30">
         {t("saved", { fields: saved.data?.fields ?? 0 })}
+        {saved.data?.photo && ` ${t("photoSaved")}`}
       </p>
     );
   }
@@ -102,6 +103,25 @@ function LookupResult({ data, modelLabel }: { data: LookupPreview; modelLabel: s
         <p className="text-sm text-muted-foreground">{t("nothing")}</p>
       ) : (
         <SpecChangeTable modelId={data.modelId} modelLabel={modelLabel} changes={data.plan.changes} picked={picked} onToggle={toggle} evidence={data.evidence} />
+      )}
+      {data.images.length > 0 && (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-sm font-medium">{t("photo")}</legend>
+          <p className="text-xs text-muted-foreground">{data.hasPhoto ? t("photoReplaces") : t("photoHelp")}</p>
+          <div className="flex flex-wrap gap-2">
+            <label className="flex size-24 cursor-pointer items-center justify-center rounded-md border p-1 text-xs text-muted-foreground has-checked:ring-2 has-checked:ring-primary has-focus-visible:outline-2">
+              <input type="radio" name="image" value="" defaultChecked className="sr-only" />
+              {t("noPhoto")}
+            </label>
+            {data.images.map((src) => (
+              <label key={src} className="size-24 cursor-pointer overflow-hidden rounded-md border bg-white p-1 has-checked:ring-2 has-checked:ring-primary has-focus-visible:outline-2">
+                <input type="radio" name="image" value={src} className="sr-only" />
+                {/* eslint-disable-next-line @next/next/no-img-element -- the manufacturer's picture, shown from their site until chosen */}
+                <img src={src} alt={t("photoOption")} referrerPolicy="no-referrer" loading="lazy" className="size-full object-contain" onError={(e) => (e.currentTarget.closest("label")!.hidden = true)} />
+              </label>
+            ))}
+          </div>
+        </fieldset>
       )}
       <p className="text-xs text-muted-foreground">
         {t("readFrom")}{" "}

@@ -1539,6 +1539,12 @@
     "save": "Gem {fields, plural, one {# markeret felt} other {# markerede felter}}",
     "markChecked": "Marker som tjekket",
     "saving": "Gemmer…",
-    "saved": "{fields, plural, =0 {Markeret som tjekket; intet ændret.} one {Gemte # felt.} other {Gemte # felter.}}"
+    "saved": "{fields, plural, =0 {Markeret som tjekket; intet ændret.} one {Gemte # felt.} other {Gemte # felter.}}",
+    "photo": "Foto",
+    "photoHelp": "Vælg det billede, der viser produktet, så det bliver modellens foto.",
+    "photoReplaces": "Modellen har et foto. Vælg et billede for at erstatte det.",
+    "noPhoto": "Intet",
+    "photoOption": "Billede fra produktsiden",
+    "photoSaved": "Fotoet blev tilføjet."
   }
 }

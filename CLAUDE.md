@@ -727,6 +727,11 @@ the module.
   source and extractor (`LookupDeps`). A search-based source or another
   provider only adds an implementation; automatic lookups would call
   `specLookup` from an outbox job and apply the fills.
+  A product page also offers up to eight pictures (`productImages`:
+  Product data, og:image, then the page's own images; no marker is
+  reliable, so the reviewer picks one or none); `apply` fetches the chosen
+  one with `fetchPublic`, checks it with sharp, attaches it through
+  `files.upload` and makes it the model's default photo.
 - Spec sheets (`/settings/import/specs`, `settings.manage`): a CSV keyed
   by model `Id` (from the models export) with weight, width, height,
   depth, power, description and links; any other column whose header

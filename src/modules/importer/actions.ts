@@ -52,7 +52,7 @@ export async function lookUpSpecs(_prev: FormState<LookupPreview>, formData: For
 }
 
 /** Write the ticked findings of a lookup (planned again against the model as it is now). */
-export async function applyLookedUpSpecs(_prev: FormState<{ fields: number }>, formData: FormData): Promise<FormState<{ fields: number }>> {
+export async function applyLookedUpSpecs(_prev: FormState<{ fields: number; photo: boolean }>, formData: FormData): Promise<FormState<{ fields: number; photo: boolean }>> {
   const actor = await requirePermission("inventory.write");
   const modelId = String(formData.get("modelId") ?? "");
   try {
@@ -62,7 +62,7 @@ export async function applyLookedUpSpecs(_prev: FormState<{ fields: number }>, f
     } catch {
       /* rejected by the service */
     }
-    const result = await specLookup.apply(actor, modelId, row, formData.getAll("pick").map(String), String(formData.get("from") ?? "a lookup"));
+    const result = await specLookup.apply(actor, modelId, row, formData.getAll("pick").map(String), String(formData.get("from") ?? "a lookup"), { image: String(formData.get("image") ?? "") || undefined });
     revalidatePath(`/inventory/models/${modelId}`);
     revalidatePath("/inventory");
     return { ok: true, data: result };
