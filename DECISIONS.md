@@ -574,3 +574,21 @@ one conversion at a time with its own profile directory, so a stuck or
 parallel run never blocks the next. The price is a bigger image and a few
 seconds per upload. Without LibreOffice (dev machines, Vercel) Word files
 stay downloads and nothing else changes.
+
+## Spec lookup reads the link you give it, not a web search (October 2026)
+
+Specs for new models should come from the manufacturer without retyping
+them. The first idea was Gemini with Grounding with Google Search, so the
+lookup could find the product page itself. Google's terms for grounding
+allow showing the result only to the person who asked, next to Google's
+search suggestions, and forbid storing it or extracting it into a
+database, which is exactly what saving specs into a model is (and the
+automatic mode wanted later would be more so). Search grounding is also
+not on the free tier for Gemini 3 models, and JSON output with search is
+Gemini 3 only. So the user pastes the product page or datasheet link (often
+already on the model), the server reads it, and Gemini only turns the text
+into fields, with a JSON schema and no tools: normal use on the free tier,
+and the source is always the manufacturer. Every value comes with the
+words it was read from and goes through the spec sheet review, because the
+extraction can be wrong. The source and the extractor are separate
+interfaces, so a searching source or another provider can replace either.

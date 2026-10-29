@@ -703,6 +703,30 @@ the module.
   build a synthetic workbook in `__tests__/fixture.ts` with the same sheet
   names and column layouts; extend it when a reader changes.
 - Server actions accept 25 MB bodies (`next.config.ts`) for the upload.
+- Spec lookup (model page, `inventory.write`, on when
+  `configuredExtractor()` finds a provider key: `GEMINI_API_KEY`,
+  `SPEC_LOOKUP_MODEL`, `SPEC_LOOKUP_PROVIDER`): three swappable parts.
+  A **source** (`lookup-source.ts`, `SpecSource.gather`) turns a model
+  into documents as plain text; today `linkSource`: the pasted product
+  page or PDF via `fetchPublic` (every redirect hop checked against
+  private addresses, 15 MB, 20 s), `htmlToText` plus `embeddedText`
+  (JSON / ld+json data: script-built sites like Robe keep their specs
+  there), and the first datasheet link on the page (`datasheetLinks`:
+  datasheet / spec sheet words, then PDF manuals; never legal papers),
+  PDFs read with pdf.js (`pdfToText`, `serverExternalPackages`). An
+  **extractor** (`lookup-extract.ts`, `SpecExtractor.extract`) gets one
+  provider-neutral request (`buildRequest`: standard fields + the
+  category's extra fields as `x:<key>`, evidence per value, never guess)
+  and returns an `Extraction`; `geminiExtractor` calls the Interactions
+  API with a JSON schema, `store: false` and **no Google Search** (its
+  terms forbid storing grounded results). `toSpecRow` turns it into a
+  spec-sheet row (`foundNumber`: dot decimals, comma thousands), so
+  `specLookup.preview/apply` (`lookup.ts`) plan and write exactly like
+  the spec sheet (`planSpecs`, `writeSpecRow`, `specsCheckedAt`), with
+  the quotes shown under each value (`SpecChangeTable`). Tests pass a fake
+  source and extractor (`LookupDeps`). A search-based source or another
+  provider only adds an implementation; automatic lookups would call
+  `specLookup` from an outbox job and apply the fills.
 - Spec sheets (`/settings/import/specs`, `settings.manage`): a CSV keyed
   by model `Id` (from the models export) with weight, width, height,
   depth, power, description and links; any other column whose header

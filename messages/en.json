@@ -299,7 +299,8 @@
     "convertPinsNote": "Reservations, rental lines and draft packing lines that named a specific unit of this model now just ask for the model.",
     "convertClose": "Close",
     "convertPrintLabels": "{count, plural, one {# new asset tag needs} other {# new asset tags need}} a label: use Print labels on this page.",
-    "convertInCase": "in a case"
+    "convertInCase": "in a case",
+    "specLookupOff": "Spec lookup from manufacturer pages is off: set GEMINI_API_KEY on the server (README, Settings in .env)."
   },
   "itemStatus": {
     "in_house": "In house",
@@ -1523,5 +1524,21 @@
     "deleteConfirm": "Delete this entry? It also disappears from people's calendars.",
     "createdBy": "Made by",
     "calendarHint": "Colleagues get it in their own calendar when invitations are on, and in their \"My jobs\" subscription either way. The buttons above add it to any other calendar."
+  },
+  "specLookup": {
+    "title": "Look up specs",
+    "help": "Paste the manufacturer's product page or datasheet (PDF). It is read and the specs are pulled out for you to check before anything is saved.",
+    "url": "Product page or datasheet link",
+    "lookUp": "Look up",
+    "reading": "Reading…",
+    "fromLinks": "From the model's links:",
+    "otherProduct": "These documents seem to be about {product}, not this model. Check every value, or try another link.",
+    "nothing": "Nothing new found in these documents.",
+    "readFrom": "Read from",
+    "check": "Found by AI from the documents: check the values against the source before saving.",
+    "save": "Save {fields, plural, one {# ticked field} other {# ticked fields}}",
+    "markChecked": "Mark as checked",
+    "saving": "Saving…",
+    "saved": "{fields, plural, =0 {Marked as checked; nothing changed.} one {Saved # field.} other {Saved # fields.}}"
   }
 }

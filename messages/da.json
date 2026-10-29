@@ -299,7 +299,8 @@
     "convertPinsNote": "Reservationer, udlejningslinjer og pakkelistelinjer i kladde, der nævnte en bestemt enhed af denne model, beder nu bare om modellen.",
     "convertClose": "Luk",
     "convertPrintLabels": "{count, plural, one {# nyt asset tag skal} other {# nye asset tags skal}} have en label: brug Udskriv labels på denne side.",
-    "convertInCase": "i en kasse"
+    "convertInCase": "i en kasse",
+    "specLookupOff": "Opslag af specifikationer fra producentens sider er slået fra: sæt GEMINI_API_KEY på serveren (README, Settings in .env)."
   },
   "itemStatus": {
     "in_house": "På lager",
@@ -1523,5 +1524,21 @@
     "deleteConfirm": "Slet denne aftale? Den forsvinder også fra folks kalendere.",
     "createdBy": "Oprettet af",
     "calendarHint": "Kolleger får den i deres egen kalender, når invitationer er slået til, og i deres \"Mine jobs\"-abonnement under alle omstændigheder. Knapperne ovenfor føjer den til enhver anden kalender."
+  },
+  "specLookup": {
+    "title": "Slå specifikationer op",
+    "help": "Indsæt producentens produktside eller datablad (PDF). Den bliver læst, og specifikationerne trækkes ud, så du kan tjekke dem, før noget gemmes.",
+    "url": "Link til produktside eller datablad",
+    "lookUp": "Slå op",
+    "reading": "Læser…",
+    "fromLinks": "Fra modellens links:",
+    "otherProduct": "Dokumenterne ser ud til at handle om {product}, ikke denne model. Tjek hver værdi, eller prøv et andet link.",
+    "nothing": "Intet nyt fundet i dokumenterne.",
+    "readFrom": "Læst fra",
+    "check": "Fundet af AI i dokumenterne: tjek værdierne mod kilden, før du gemmer.",
+    "save": "Gem {fields, plural, one {# markeret felt} other {# markerede felter}}",
+    "markChecked": "Marker som tjekket",
+    "saving": "Gemmer…",
+    "saved": "{fields, plural, =0 {Markeret som tjekket; intet ændret.} one {Gemte # felt.} other {Gemte # felter.}}"
   }
 }

@@ -21,6 +21,8 @@ import { ConvertTrackingDialog } from "@/modules/inventory/components/convert-tr
 import { EditFamilyDialog } from "@/modules/inventory/components/edit-family-dialog";
 import { LabelsDialog } from "@/modules/inventory/components/labels-dialog";
 import { customFieldDefinitions } from "@/modules/settings";
+import { specLookupAvailable } from "@/modules/importer";
+import { SpecLookup } from "@/modules/importer/components/spec-lookup";
 import { modelAvailabilityView, upcomingProjects } from "@/modules/projects";
 import { PurchasesSection } from "@/modules/purchases/components/purchases-section";
 import { StatusPill } from "@/components/status-pill";
@@ -184,6 +186,12 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
           <p className="text-xs text-muted-foreground">{ts("in_house")}: {detail.byStatus.in_house ?? 0} · {t("owned")}: {detail.owned}</p>
         </div>
       </div>
+
+      {canEdit && !metres && (specLookupAvailable() ? (
+        <SpecLookup modelId={model.id} modelLabel={label} links={model.links} />
+      ) : (
+        isAdmin && <p className="text-xs text-muted-foreground">{t("specLookupOff")}</p>
+      ))}
 
       {(detail.variants.length > 0 || model.variant) && (
         <section className="flex flex-col gap-2">

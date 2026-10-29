@@ -39,6 +39,12 @@ fields) is done; the rest waits until production plans have shipped.
 
 ## Not scheduled
 
+- **Spec lookup, more automatic**: a setting that looks up specs for new
+  models with a link in the background (outbox job, fills only, marked as
+  found automatically), and a source that finds the product page itself
+  (a provider whose search terms allow storing results, e.g. a paid web
+  search API). The interfaces are in `src/modules/importer/lookup-*.ts`.
+
 - Magic-link login and password reset (needs SMTP; env vars already
   reserved in `.env.example`).
 - Google login (add provider to `src/lib/auth/index.ts`).

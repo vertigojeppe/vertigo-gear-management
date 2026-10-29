@@ -7,6 +7,7 @@ import { errorState, type FormState } from "@/lib/forms";
 import { importer } from "./service";
 import { decodeSheet, type SpecPlan } from "./specs";
 import { specImport, type SpecImportResult } from "./specs-service";
+import { specLookup, type LookupPreview } from "./lookup";
 
 export type SpecPreviewData = { text: string; fileName: string; plan: SpecPlan };
 
@@ -31,6 +32,39 @@ export async function applySpecs(_prev: FormState<SpecImportResult>, formData: F
     const picks = formData.getAll("pick").map(String);
     const result = await specImport.apply(actor, String(formData.get("sheet") ?? ""), String(formData.get("fileName") ?? "spec sheet"), picks);
     revalidatePath("/inventory", "layout");
+    return { ok: true, data: result };
+  } catch (err) {
+    const { error, fieldErrors } = errorState(err);
+    return { ok: false, error, fieldErrors };
+  }
+}
+
+/** Spec lookup on a model page: read the pasted link and plan the changes; nothing is written. */
+export async function lookUpSpecs(_prev: FormState<LookupPreview>, formData: FormData): Promise<FormState<LookupPreview>> {
+  const actor = await requirePermission("inventory.write");
+  const url = String(formData.get("url") ?? "").trim();
+  try {
+    return { ok: true, data: await specLookup.preview(actor, String(formData.get("modelId") ?? ""), { url }), values: { url } };
+  } catch (err) {
+    const { error, fieldErrors } = errorState(err);
+    return { ok: false, error, fieldErrors, values: { url } };
+  }
+}
+
+/** Write the ticked findings of a lookup (planned again against the model as it is now). */
+export async function applyLookedUpSpecs(_prev: FormState<{ fields: number }>, formData: FormData): Promise<FormState<{ fields: number }>> {
+  const actor = await requirePermission("inventory.write");
+  const modelId = String(formData.get("modelId") ?? "");
+  try {
+    let row: unknown = null;
+    try {
+      row = JSON.parse(String(formData.get("row") ?? "null"));
+    } catch {
+      /* rejected by the service */
+    }
+    const result = await specLookup.apply(actor, modelId, row, formData.getAll("pick").map(String), String(formData.get("from") ?? "a lookup"));
+    revalidatePath(`/inventory/models/${modelId}`);
+    revalidatePath("/inventory");
     return { ok: true, data: result };
   } catch (err) {
     const { error, fieldErrors } = errorState(err);
