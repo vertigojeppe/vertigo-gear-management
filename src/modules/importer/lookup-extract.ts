@@ -175,7 +175,8 @@ export function interactionText(body: unknown): string {
  * it only holds public product documents.
  */
 export function geminiExtractor(opts: { apiKey: string; model?: string; fetchImpl?: typeof fetch }): SpecExtractor {
-  const model = opts.model || "gemini-3.8-flash";
+  // 3.5 Flash read real datasheets better than 3.8 Flash at Vertigo (October 2026).
+  const model = opts.model || "gemini-3.5-flash";
   const fetchImpl = opts.fetchImpl ?? fetch;
   return {
     name: `Gemini (${model})`,

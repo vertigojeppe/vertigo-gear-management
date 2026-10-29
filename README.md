@@ -652,7 +652,7 @@ docker compose --profile tunnel up -d --force-recreate app
 | `TWO_FACTOR_REQUIRED_ROLES` | Who must use two-factor sign-in: `admin` when unset, `admin,member`, or `none`. |
 | `MAX_UPLOAD_MB` | Largest document upload (500 by default). |
 | `GEMINI_API_KEY` | Turns on *Look up specs* on model pages. A free key from [Google AI Studio](https://aistudio.google.com) (*Get API key*). On the free tier Google may use the requests (public product pages and model names) to improve its products. |
-| `SPEC_LOOKUP_MODEL` | Another Gemini model for the lookup (default `gemini-3.8-flash`). |
+| `SPEC_LOOKUP_MODEL` | Another Gemini model for the lookup (default `gemini-3.5-flash`). |
 | `SOFFICE_PATH` | Where LibreOffice's `soffice` is, for turning Word plan documents into PDFs. The Docker image has it on the path; set this only when running the app outside Docker. |
 | `BACKUP_REMOTE`, `BACKUP_KEEP_DAYS` | Where backups are copied and how many days are kept (see [Backups](#backups)). |
 
