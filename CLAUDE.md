@@ -731,7 +731,12 @@ the module.
   Product data, og:image, then the page's own images; no marker is
   reliable, so the reviewer picks one or none); `apply` fetches the chosen
   one with `fetchPublic`, checks it with sharp, attaches it through
-  `files.upload` and makes it the model's default photo.
+  `files.upload` and makes it the model's default photo. Every model
+  photo (`entityType` model, kind photo) gets its thumbnail with a plain
+  background made transparent (`cutOutBackground` in
+  `src/modules/files/cutout.ts`, pure: border colour, flood fill, soft
+  edge; busy or already transparent pictures are left alone); the
+  original file is never changed.
 - Spec sheets (`/settings/import/specs`, `settings.manage`): a CSV keyed
   by model `Id` (from the models export) with weight, width, height,
   depth, power, description and links; any other column whose header
