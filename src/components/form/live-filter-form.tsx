@@ -26,8 +26,11 @@ export function LiveFilterForm({ children, className, action, debounceMs = 300 }
   const live = useSyncExternalStore(noSubscribe, () => true, () => false);
   const formRef = useRef<HTMLFormElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** The query this form last navigated to, to tell our own navigations from Clear links and the back button. */
-  const lastQuery = useRef<string | null>(null);
+  /**
+   * The query this form last navigated to, to tell our own navigations from Clear links and the back button.
+   * Starts at the page's own query: the server already rendered those values, and syncing on hydration would wipe what was typed before it.
+   */
+  const lastQuery = useRef<string | null>(searchParams.toString());
 
   const query = () => {
     const params = new URLSearchParams();
