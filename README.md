@@ -653,8 +653,44 @@ docker compose --profile tunnel up -d --force-recreate app
 | `MAX_UPLOAD_MB` | Largest document upload (500 by default). |
 | `GEMINI_API_KEY` | Turns on *Look up specs* on model pages. A free key from [Google AI Studio](https://aistudio.google.com) (*Get API key*). On the free tier Google may use the requests (public product pages and model names) to improve its products. |
 | `SPEC_LOOKUP_MODEL` | Another Gemini model for the lookup (default `gemini-3.5-flash`). |
+| `COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml` | Gives the app the GPU for cutting the background out of model photos (see [GPU for photo backgrounds](#gpu-for-photo-backgrounds)). |
+| `BG_REMOVE_MODEL`, `BG_REMOVE_DEVICE` | Outside Docker only: the BiRefNet `.onnx` file and `cuda` or `cpu` (slow: 10 to 20 seconds a photo). The Docker image sets the model, the GPU file sets `cuda`. |
 | `SOFFICE_PATH` | Where LibreOffice's `soffice` is, for turning Word plan documents into PDFs. The Docker image has it on the path; set this only when running the app outside Docker. |
 | `BACKUP_REMOTE`, `BACKUP_KEEP_DAYS` | Where backups are copied and how many days are kept (see [Backups](#backups)). |
+
+### GPU for photo backgrounds
+
+Model photos get their background cut out in the small preview the app
+shows (the original stays as uploaded). With the server's NVIDIA card an
+AI model (BiRefNet) does it, clean even on busy backgrounds and inside
+the item; without it a simpler cutout handles plain white or grey
+backgrounds only.
+
+Once, as `admin` (needs sudo; the reboot and the Docker restart briefly
+stop the app). If Secure Boot is on, the reboot asks to enrol a key at the
+server's own screen.
+
+```bash
+sudo apt install -y nvidia-headless-580-server nvidia-utils-580-server
+sudo reboot
+nvidia-smi
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt update && sudo apt install -y nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker
+docker run --rm --gpus all ubuntu nvidia-smi
+```
+
+`nvidia-smi` should list the card both times. Then, as `deploy`, add this
+line to `/opt/vertigo-gear/.env` and update as usual:
+
+```bash
+COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml
+```
+
+The app logs `[photos] Could not load the background model` if the GPU
+is not reachable, and falls back to the simple cutout. Photos attached
+before this keep their old preview.
 
 ### Google Calendar push (optional)
 

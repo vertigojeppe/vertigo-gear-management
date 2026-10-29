@@ -1,0 +1,17 @@
+# The GPU for cutting the background out of model photos (BiRefNet on CUDA,
+# src/modules/files/background.ts). Needs the NVIDIA driver and the NVIDIA
+# Container Toolkit on the host (README: GPU for photo backgrounds). Turn it on
+# in .env, so the usual `docker compose --profile tunnel up -d --build` picks it up:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml
+# Without it the app runs as before and photos get the plain-background cutout.
+services:
+  app:
+    environment:
+      BG_REMOVE_DEVICE: cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

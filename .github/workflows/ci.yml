@@ -13,6 +13,8 @@ env:
   TWO_FACTOR_REQUIRED_ROLES: none
   # Reservations, rent-in and quotes on projects are hidden by default (src/lib/features.ts); the browser tests still cover them.
   PROJECT_GEAR: "on"
+  # CI has no GPU: skip onnxruntime's CUDA download (photo backgrounds fall back to the plain cutout).
+  ONNXRUNTIME_NODE_INSTALL: skip
 
 jobs:
   test:
