@@ -36,7 +36,7 @@ export async function AttachmentsSection({
             <li key={a.id} className="group relative overflow-hidden rounded-md border bg-muted">
               <Link href={a.url} target="_blank" rel="noreferrer">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={a.thumbUrl!} alt={a.name} className="aspect-square w-full object-cover" loading="lazy" />
+                <img src={a.thumbUrl!} alt={a.name} className="aspect-square w-full object-contain" loading="lazy" />
               </Link>
               {canEdit && (
                 <div className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
