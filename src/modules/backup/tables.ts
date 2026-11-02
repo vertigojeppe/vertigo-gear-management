@@ -10,6 +10,7 @@ export type TableDef = { name: string; delegate: string; selfRef?: string; /** P
 
 export const TABLES: TableDef[] = [
   { name: "User", delegate: "user" },
+  { name: "Todo", delegate: "todo" },
   { name: "ApiToken", delegate: "apiToken" },
   { name: "CalendarFeedToken", delegate: "calendarFeedToken" },
   { name: "Counter", delegate: "counter", idField: "key" },

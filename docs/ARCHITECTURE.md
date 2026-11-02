@@ -29,6 +29,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | contacts | Contact | `contacts`, `contactList`, `contactDetail`, `personOptions`, contact dialog; the library at `/contacts` |
 | subhire | SubHireItem, SubHireLine | `subHireItems`, `subHireLines`, `subHireCatalog`, `subHireLinesFor`, catalog page, rent-in dialog; lines feed `quoteFor` and `listDetail` |
 | purchases | Purchase | `purchases` (create/update/remove), `purchasesForModel`, `purchaseList`, purchase dialog and section, record page with attachments |
+| todos | Todo | `todos` (list/add/setDone/remove, always scoped to the actor), `TodoSection` on the dashboard; no activity rows |
 | wishlist | WishItem | `wishes` (create/update/setStatus/markBought/remove), `wishList`, wish dialog; converts through the model form |
 | files | File, Attachment | `files.*`, `AttachmentsSection` |
 | projects | Client, Project, ProjectContact, ProjectCrew, Allocation | `clients`, `projects`, `allocations`, availability engine, timeline |
@@ -144,6 +145,7 @@ erDiagram
   Contact |o--o{ Purchase : "supplier"
   Category |o--o{ WishItem : "wished in"
   Model |o--o{ WishItem : "became"
+  User ||--o{ Todo : "own to-dos"
 
   Contact {
     string kind "person | company"
@@ -168,6 +170,10 @@ erDiagram
     decimal listPrice
     decimal discountPct
     decimal netPrice "per unit, excl. VAT"
+  }
+  Todo {
+    string text
+    datetime doneAt "null while open"
   }
   WishItem {
     string name "model fields, copied on convert"

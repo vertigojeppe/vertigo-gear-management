@@ -1546,5 +1546,16 @@
     "noPhoto": "None",
     "photoOption": "Picture from the product page",
     "photoSaved": "The photo was added."
+  },
+  "todos": {
+    "title": "My to-dos",
+    "new": "New to-do",
+    "placeholder": "Write a to-do and press Enter",
+    "add": "Add",
+    "empty": "Nothing on your list. Only you can see it.",
+    "markDone": "Mark \"{text}\" done",
+    "reopen": "Reopen \"{text}\"",
+    "remove": "Delete \"{text}\"",
+    "done": "Done ({count})"
   }
 }

@@ -1546,5 +1546,16 @@
     "noPhoto": "Intet",
     "photoOption": "Billede fra produktsiden",
     "photoSaved": "Fotoet blev tilføjet."
+  },
+  "todos": {
+    "title": "Mine to-dos",
+    "new": "Ny to-do",
+    "placeholder": "Skriv en to-do og tryk Enter",
+    "add": "Tilføj",
+    "empty": "Der er intet på din liste. Kun du kan se den.",
+    "markDone": "Markér \"{text}\" som færdig",
+    "reopen": "Genåbn \"{text}\"",
+    "remove": "Slet \"{text}\"",
+    "done": "Færdige ({count})"
   }
 }

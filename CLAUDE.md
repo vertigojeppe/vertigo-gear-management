@@ -555,6 +555,17 @@ the module.
   `npm run test:backup` with `BACKUP_RESTORE_TEST=1` (a separate CI
   step), never inside the parallel `npm run test`.
 
+## Personal to-dos
+
+- `Todo` (`src/modules/todos`): one line of text per row, `doneAt` null
+  while open, cascades with its user. Private: every service call is
+  scoped by `userId: actor.id` (`updateMany` / `deleteMany`, "not found"
+  otherwise), so admins cannot read or change anyone else's list; no
+  permission beyond `requireActor`, and no `ActivityLog` rows (the log
+  is shared). Shown only as "My to-dos" under My day on the dashboard
+  (`TodoSection`, a server component with plain form actions: the add
+  box resets after a save, done ones fold into a `<details>`).
+
 ## Wish list
 
 - `WishItem` (`src/modules/wishlist`) is gear to buy: the model fields

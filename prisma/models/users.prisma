@@ -45,6 +45,7 @@ model User {
   createdCalendarEntries CalendarEntry[] @relation("CalendarEntryCreatedBy")
   apps        App[]        @relation("AppCreatedBy")
   appVersions AppVersion[] @relation("AppVersionUploadedBy")
+  todos       Todo[]
 
   @@index([role])
 }
