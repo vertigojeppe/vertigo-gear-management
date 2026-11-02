@@ -60,7 +60,8 @@ export default async function BoardPage(props: { searchParams: Promise<{ months?
             </BoardAutoScroll>
           </section>
           <aside className="min-h-0">
-            <BoardAutoScroll className="flex h-full flex-col gap-5">
+            {/* Plain blocks, not flex: flex items would shrink into each other instead of scrolling. */}
+            <BoardAutoScroll className="h-full space-y-5">
               <AgendaDay title={t("today")} day={todayAgenda.day} items={todayAgenda.items} />
               <AgendaDay title={t("tomorrow")} day={tomorrowAgenda.day} items={tomorrowAgenda.items} />
             </BoardAutoScroll>
