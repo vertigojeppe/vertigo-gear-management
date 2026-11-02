@@ -13,6 +13,8 @@ import { wishFromModel } from "@/modules/wishlist/actions";
 import { upcomingProjects } from "@/modules/projects";
 import { myDay } from "@/modules/plans";
 import { MyDaySection } from "@/modules/plans/components/my-day-section";
+import { todos } from "@/modules/todos";
+import { TodoSection } from "@/modules/todos/components/todo-section";
 import { entriesBetween } from "@/modules/agenda";
 import { entryLabel } from "@/modules/agenda/components/entry-list";
 import { addDays, dateToZonedInput, today } from "@/lib/dates";
@@ -26,7 +28,7 @@ export default async function DashboardPage() {
   const actor = await requireActor();
   const t = await getTranslations("dashboard");
   const tl = await getTranslations("locationType");
-  const [stats, activity, upcoming, overdue, mine, low, myEntries] = await Promise.all([dashboardStats(), recentActivity(15), upcomingProjects(6), overdueRentals(), myDay(actor.id), lowStock(), entriesBetween(today(), addDays(today(), 1), { userId: actor.id })]);
+  const [stats, activity, upcoming, overdue, mine, low, myEntries, myTodos] = await Promise.all([dashboardStats(), recentActivity(15), upcomingProjects(6), overdueRentals(), myDay(actor.id), lowStock(), entriesBetween(today(), addDays(today(), 1), { userId: actor.id }), todos.list(actor.id)]);
   // My meetings, time off and assignments sit among the plan rows of today and tomorrow (all-day ones first).
   const ta = await getTranslations("agenda");
   const time = (d: Date) => dateToZonedInput(d).slice(11, 16);
@@ -71,6 +73,8 @@ export default async function DashboardPage() {
       </div>
 
       <MyDaySection data={mine} canEditPlans={can(actor.role, "plans.write")} />
+
+      <TodoSection lists={myTodos} />
 
       {empty ? (
         <EmptyState

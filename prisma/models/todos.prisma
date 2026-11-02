@@ -1,0 +1,14 @@
+// todos module
+
+/// A personal to-do note. Only its owner sees it (dashboard, "My to-dos"),
+/// so nothing about it goes in the shared activity log.
+model Todo {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text      String
+  doneAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
