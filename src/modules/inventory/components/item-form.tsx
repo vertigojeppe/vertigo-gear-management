@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { ActionForm } from "@/components/form/action-form";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -12,12 +12,13 @@ import { SubmitButton } from "@/components/form/submit-button";
 import { Input } from "@/components/ui/input";
 import { DecimalInput } from "@/components/form/decimal-input";
 import { Textarea } from "@/components/ui/textarea";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { applicableDefs, type CustomFieldDef } from "@/lib/custom-fields";
 import type { FormState } from "@/lib/forms";
 import { appConfig } from "../../../../config/app.config";
 import { createItems, updateItem } from "../actions";
 import type { ItemDto } from "../service";
+import { countUpSerials } from "../serials";
 
 type ModelOption = { id: string; manufacturer: string; name: string; variant?: string | null; trackingType: string; categoryId?: string };
 type LocationOption = { id: string; name: string; depth: number };
@@ -47,6 +48,8 @@ export function ItemForm({
   const [modelId, setModelId] = useState(v("modelId", item?.modelId ?? defaultModelId));
   const [isKit, setIsKit] = useState(state.values ? state.values.isKit === "on" : Boolean(item?.isKit));
   const [count, setCount] = useState(Number(v("count", 1)) || 1);
+  const serialsRef = useRef<HTMLTextAreaElement>(null);
+  const [countUpError, setCountUpError] = useState<string>();
   const model = models.find((m) => m.id === modelId);
   const bulk = model?.trackingType === "bulk";
   const currency = appConfig.currency;
@@ -79,8 +82,22 @@ export function ItemForm({
                 <Input id="serialNumber" name="serialNumber" defaultValue={v("serialNumber", "")} />
               </Field>
             ) : (
-              <Field id="serialNumbers" label={t("serialNumbers")} optional help={t("serialNumbersHelp")} error={err.serialNumbers}>
-                <Textarea id="serialNumbers" name="serialNumbers" rows={Math.min(count, 8)} defaultValue={v("serialNumbers", "")} />
+              <Field id="serialNumbers" label={t("serialNumbers")} optional help={t("serialNumbersHelp")} error={err.serialNumbers ?? countUpError}>
+                <Textarea ref={serialsRef} id="serialNumbers" name="serialNumbers" rows={Math.min(count, 8)} defaultValue={v("serialNumbers", "")} className="max-h-72" />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="self-start"
+                  onClick={() => {
+                    const box = serialsRef.current;
+                    const filled = box && countUpSerials(box.value.split(/\r?\n/).find((l) => l.trim()) ?? "", count);
+                    setCountUpError(filled ? undefined : t("countUpNeedsNumber"));
+                    if (box && filled) box.value = filled.join("\n");
+                  }}
+                >
+                  {t("countUp", { count })}
+                </Button>
               </Field>
             )}
           </>
