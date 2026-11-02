@@ -634,9 +634,10 @@ the module.
   every minute while the page is visible (at once when it comes back) and
   touches `/api/auth/session` every half hour so the cookie never expires.
   The timeline is as tall as its rows (at most 28vh); job cards and the
-  agenda sit in `BoardAutoScroll`, which scrolls slowly through what does
-  not fit, pauses and starts over (requestAnimationFrame: only while the
-  page is visible).
+  agenda are `[data-autoscroll]` boxes that `BoardScrollSync` scrolls
+  slowly through what does not fit, in step (the fullest sets the pace,
+  the others follow by share), pausing at both ends
+  (requestAnimationFrame: only while the page is visible).
 - Its theme is its own, per screen: localStorage `boardTheme`, dark
   unless set to light. `boardThemeScript` (`theme-script.ts`, a plain
   module so the server page can call it) runs inline before paint and

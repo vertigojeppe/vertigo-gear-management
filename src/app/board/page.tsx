@@ -5,7 +5,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { can, requireActor } from "@/lib/auth/session";
 import { boardData, boardThemeScript } from "@/modules/board";
 import { AgendaDay, JobCard } from "@/modules/board/components/board-sections";
-import { BoardAutoScroll, BoardClock, BoardRefresh } from "@/modules/board/components/board-live";
+import { BoardClock, BoardRefresh, BoardScrollSync } from "@/modules/board/components/board-live";
 import { BoardThemeToggle } from "@/modules/board/components/board-theme";
 import { LongTimeline } from "@/modules/board/components/long-timeline";
 import { signOutAction } from "../(app)/actions";
@@ -36,6 +36,7 @@ export default async function BoardPage(props: { searchParams: Promise<{ months?
       <script dangerouslySetInnerHTML={{ __html: boardThemeScript(themeFromUrl) }} />
       <main className="flex h-dvh flex-col gap-5 overflow-hidden bg-background p-6 text-foreground">
         <BoardRefresh />
+        <BoardScrollSync />
         <header className="flex shrink-0 items-start justify-between gap-6">
           <div>
             <p className="text-lg text-muted-foreground">{appConfig.name}</p>
@@ -45,9 +46,9 @@ export default async function BoardPage(props: { searchParams: Promise<{ months?
         </header>
 
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          {/* What does not fit scrolls by slowly instead of hiding behind the timeline. */}
+          {/* What does not fit scrolls by slowly instead of hiding behind the timeline; both columns in step (BoardScrollSync). */}
           <section className="min-h-0" aria-label={t("jobs")}>
-            <BoardAutoScroll className="h-full">
+            <div data-autoscroll className="h-full overflow-hidden">
               {data.jobs.length === 0 ? (
                 <p className="text-xl text-muted-foreground">{t("noJobs")}</p>
               ) : (
@@ -57,14 +58,14 @@ export default async function BoardPage(props: { searchParams: Promise<{ months?
                   ))}
                 </div>
               )}
-            </BoardAutoScroll>
+            </div>
           </section>
           <aside className="min-h-0">
             {/* Plain blocks, not flex: flex items would shrink into each other instead of scrolling. */}
-            <BoardAutoScroll className="h-full space-y-5">
+            <div data-autoscroll className="h-full space-y-5 overflow-hidden">
               <AgendaDay title={t("today")} day={todayAgenda.day} items={todayAgenda.items} />
               <AgendaDay title={t("tomorrow")} day={tomorrowAgenda.day} items={tomorrowAgenda.items} />
-            </BoardAutoScroll>
+            </div>
           </aside>
         </div>
 
