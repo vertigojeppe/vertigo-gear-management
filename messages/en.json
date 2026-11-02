@@ -696,7 +696,7 @@
     "invitesStep3": "OAuth scope:",
     "invitesStep4": "Save there, then tick the box below. Until then, entries go to the shared calendar.",
     "invites": "Send calendar entries as invitations",
-    "invitesHelp": "Time off goes into the person's own calendar; meetings and assignments are sent from the calendar of whoever made them. People without a Vertigo Google account stay on the shared calendar.",
+    "invitesHelp": "Time off goes into the person's own calendar; meetings and assignments are sent from the calendar of whoever made them, with a copy in the shared calendar so everyone sees them. People without a Vertigo Google account stay on the shared calendar.",
     "invitesSaved": "Saved. Upcoming entries are being moved."
   },
   "packingStatus": {

@@ -120,13 +120,15 @@ export async function syncRental(rentalId: string, client?: GoogleCalendar, dele
   return "synced";
 }
 
-/** Where an entry's Google event lives (CalendarEntry.googleEvent). */
-export type GoogleRef = { calendarId: string; subject: string | null; eventId: string };
+/** Where an entry's Google event lives (CalendarEntry.googleEvent); `copyId`: its copy in the shared calendar. */
+export type GoogleRef = { calendarId: string; subject: string | null; eventId: string; copyId?: string | null };
 
 export function googleRef(v: unknown): GoogleRef | null {
   if (!v || typeof v !== "object") return null;
   const r = v as Record<string, unknown>;
-  return typeof r.calendarId === "string" && typeof r.eventId === "string" ? { calendarId: r.calendarId, subject: typeof r.subject === "string" ? r.subject : null, eventId: r.eventId } : null;
+  return typeof r.calendarId === "string" && typeof r.eventId === "string"
+    ? { calendarId: r.calendarId, subject: typeof r.subject === "string" ? r.subject : null, eventId: r.eventId, copyId: typeof r.copyId === "string" ? r.copyId : null }
+    : null;
 }
 
 /**
@@ -134,7 +136,8 @@ export function googleRef(v: unknown): GoogleRef | null {
  * entry-events.ts. When the target moves (invitations switched on or off,
  * another creator, another person off), the old event is removed first.
  * Someone Google will not let us act as (no delegation, not a Workspace
- * address) falls back to the shared calendar. `deletedRef`: the event of
+ * address) falls back to the shared calendar. An invited meeting's copy in
+ * the shared calendar follows the event. `deletedRef`: the event of
  * an entry that no longer exists, handed over by its last job.
  */
 export async function syncEntry(entryId: string, makeClient?: (subject?: string) => GoogleCalendar, deletedRef?: GoogleRef | null): Promise<"skipped" | "invited" | "shared" | "deleted"> {
@@ -147,6 +150,7 @@ export async function syncEntry(entryId: string, makeClient?: (subject?: string)
   });
   let old = e ? googleRef(e.googleEvent) : (deletedRef ?? null);
   const remove = async (ref: GoogleRef) => {
+    if (ref.copyId) await client().delete(cfg.calendars.projects, ref.copyId);
     try {
       await client(ref.subject ?? undefined).delete(ref.calendarId, ref.eventId, { sendUpdates: Boolean(ref.subject) });
     } catch (err) {
@@ -189,7 +193,13 @@ export async function syncEntry(entryId: string, makeClient?: (subject?: string)
     used = entryGoogle(entry, { ...opts, invites: false });
     eventId = await write(used);
   }
-  await prisma.calendarEntry.update({ where: { id: entryId }, data: { googleEvent: { calendarId: used.calendarId, subject: used.subject ?? null, eventId } } });
+  let copyId = old?.copyId ?? null;
+  if (used.copy) copyId = await client().upsert(used.copy.calendarId, copyId, used.copy.event, { sendUpdates: false });
+  else if (copyId) {
+    await client().delete(cfg.calendars.projects, copyId);
+    copyId = null;
+  }
+  await prisma.calendarEntry.update({ where: { id: entryId }, data: { googleEvent: { calendarId: used.calendarId, subject: used.subject ?? null, eventId, copyId } } });
   return used.subject ? "invited" : "shared";
 }
 

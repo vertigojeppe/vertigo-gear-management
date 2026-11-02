@@ -28,12 +28,16 @@ describe("entryGoogle", () => {
     expect(t.event.summary).toBe("Rig check");
     expect(t.event.description).toBe("Bring the laser\nJob: Melo\nPeople: Alex, Mette\nhttps://gear.example/calendar/entries/e1");
     expect(t.event.start).toEqual({ dateTime: "2030-07-01T08:00:00.000Z", timeZone: "Europe/Copenhagen" });
+    // The copy everyone sees: shared calendar, nobody invited.
+    expect(t.copy).toMatchObject({ calendarId: "shared", sendUpdates: false, event: { summary: "Rig check", location: "Vega" } });
+    expect(t.copy?.event.attendees).toBeUndefined();
   });
 
   it("puts time off in the person's own calendar, whole days, nobody invited", () => {
     const t = entryGoogle({ ...base, kind: "time_off", title: "Holiday", allDay: true, startsAt: new Date("2030-07-01T00:00:00Z"), endsAt: new Date("2030-07-05T00:00:00Z"), people: [{ name: "Mette", email: "mette@vertigo.dk" }] }, { ...opts, invites: true });
     expect(t).toMatchObject({ calendarId: "primary", subject: "mette@vertigo.dk", sendUpdates: false });
     expect(t.event.attendees).toBeUndefined();
+    expect(t.copy).toBeUndefined();
     expect(t.event.summary).toBe("Off (Holiday)");
     expect(t.event.end).toEqual({ date: "2030-07-06" });
   });

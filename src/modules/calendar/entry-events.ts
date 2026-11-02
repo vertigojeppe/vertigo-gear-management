@@ -8,8 +8,10 @@ import type { GoogleEvent } from "./google";
  * Invitations on (Settings › Calendar; needs domain-wide delegation): time
  * off goes into the person's own calendar; meetings and assignments are
  * created in the creator's calendar with the people and guests as
- * attendees, and Google emails the invitations. Invitations off, or nobody
- * to act as: the shared projects calendar, with the names in the title.
+ * attendees, and Google emails the invitations; they also get a `copy` in
+ * the shared projects calendar, so everyone sees them without an
+ * invitation. Invitations off, or nobody to act as: the shared projects
+ * calendar, with the names in the title.
  */
 export type GoogleEntry = {
   id: string;
@@ -27,7 +29,7 @@ export type GoogleEntry = {
   people: { name: string; email: string }[];
 };
 
-export type GoogleTarget = { calendarId: string; subject?: string; sendUpdates: boolean; event: GoogleEvent };
+export type GoogleTarget = { calendarId: string; subject?: string; sendUpdates: boolean; event: GoogleEvent; copy?: GoogleTarget };
 
 export function entryGoogle(e: GoogleEntry, opts: { invites: boolean; sharedCalendarId: string; appUrl: (path: string) => string }): GoogleTarget {
   const link = opts.appUrl(`/calendar/entries/${e.id}`);
@@ -39,6 +41,9 @@ export function entryGoogle(e: GoogleEntry, opts: { invites: boolean; sharedCale
   const base = { description, location: e.location ?? undefined, source: { title: "Vertigo Gear", url: link }, ...when };
   const offTitle = e.title === "Off" ? "" : ` (${e.title})`;
 
+  const summary = e.kind === "time_off" ? `Off: ${names || "?"}${offTitle}` : e.kind === "assignment" && names ? `${e.title} (${names})` : e.title;
+  const shared: GoogleTarget = { calendarId: opts.sharedCalendarId, sendUpdates: false, event: { ...base, summary } };
+
   const owner = e.kind === "time_off" ? e.people[0] : e.creator;
   if (opts.invites && owner) {
     const attendees = e.kind === "time_off" ? [] : [...new Set([...e.people.map((p) => p.email), ...e.guests].map((a) => a.toLowerCase()))].filter((a) => a !== owner.email.toLowerCase()).map((email) => ({ email }));
@@ -47,8 +52,8 @@ export function entryGoogle(e: GoogleEntry, opts: { invites: boolean; sharedCale
       subject: owner.email,
       sendUpdates: attendees.length > 0,
       event: { ...base, summary: e.kind === "time_off" ? `Off${offTitle}` : e.title, attendees: attendees.length ? attendees : undefined },
+      copy: e.kind === "time_off" ? undefined : shared,
     };
   }
-  const summary = e.kind === "time_off" ? `Off: ${names || "?"}${offTitle}` : e.kind === "assignment" && names ? `${e.title} (${names})` : e.title;
-  return { calendarId: opts.sharedCalendarId, sendUpdates: false, event: { ...base, summary } };
+  return shared;
 }
