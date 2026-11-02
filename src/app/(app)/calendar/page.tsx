@@ -27,7 +27,7 @@ export default async function CalendarPage(props: { searchParams: Promise<{ from
   const canAdd = can(actor.role, "agenda.write");
   const [data, entries, people, projects] = await Promise.all([timeline(from, to), entriesBetween(from, to), canAdd ? entryPeopleOptions() : [], canAdd ? entryProjectOptions() : []]);
   // Meetings, time off and assignments as bars of their own, in date order with the jobs and rentals.
-  const entryBars: TimelineBar[] = entries.map((e) => ({ kind: "entry", id: e.id, label: entryLabel(e, ta("off")), sub: ta(`kind_${e.kind}`), status: e.kind, from: e.from, to: e.to, href: `/calendar/entries/${e.id}` }));
+  const entryBars: TimelineBar[] = entries.map((e) => ({ kind: "entry", id: e.id, label: entryLabel(e, ta("off")), sub: ta(`kind_${e.kind}`), status: e.kind, from: e.from, to: e.to, href: `/calendar/entries/${e.id}`, people: e.kind === "time_off" ? [] : e.people.map((p) => p.name) }));
   const bars = [...data.bars, ...entryBars].sort((a, b) => a.from.localeCompare(b.from) || a.to.localeCompare(b.to));
   const conflictDays = new Set(data.conflicts.flatMap((c) => c.days.map((d) => d.day)));
   const link = (f: string, w = weeks) => `/calendar?from=${f}&weeks=${w}`;
