@@ -37,7 +37,7 @@ describe("entryGoogle", () => {
     const t = entryGoogle({ ...base, kind: "time_off", title: "Holiday", allDay: true, startsAt: new Date("2030-07-01T00:00:00Z"), endsAt: new Date("2030-07-05T00:00:00Z"), people: [{ name: "Mette", email: "mette@vertigo.dk" }] }, { ...opts, invites: true });
     expect(t).toMatchObject({ calendarId: "primary", subject: "mette@vertigo.dk", sendUpdates: false });
     expect(t.event.attendees).toBeUndefined();
-    expect(t.copy).toBeUndefined();
+    expect(t.copy).toMatchObject({ calendarId: "shared", event: { summary: "Off: Mette (Holiday)", end: { date: "2030-07-06" } } });
     expect(t.event.summary).toBe("Off (Holiday)");
     expect(t.event.end).toEqual({ date: "2030-07-06" });
   });
