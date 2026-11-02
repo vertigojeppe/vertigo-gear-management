@@ -164,6 +164,8 @@ export type TimelineBar = {
   from: DateString;
   to: DateString;
   href: string;
+  /** Who is on it: a project's crew, an entry's people. */
+  people?: string[];
 };
 
 /** Projects and rentals in a window as timeline bars (no conflict check: cheap enough for a year). */
@@ -171,7 +173,7 @@ export async function timelineBars(from: DateString, to: DateString): Promise<Ti
   const [projects, rentals] = await Promise.all([
     prisma.project.findMany({
       where: { reserveFrom: { lte: new Date(`${to}T00:00:00Z`) }, reserveTo: { gte: new Date(`${from}T00:00:00Z`) }, status: { not: "cancelled" } },
-      include: { client: { select: { name: true } } },
+      include: { client: { select: { name: true } }, crew: { select: { user: { select: { name: true } } }, orderBy: { user: { name: "asc" } } } },
       orderBy: { reserveFrom: "asc" },
     }),
     prisma.rental.findMany({
@@ -190,6 +192,7 @@ export async function timelineBars(from: DateString, to: DateString): Promise<Ti
       from: dateToString(p.reserveFrom!),
       to: dateToString(p.reserveTo!),
       href: `/projects/${p.id}`,
+      people: p.crew.map((c) => c.user.name),
     })),
     ...rentals.map((r) => ({
       kind: "rental" as const,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Users } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { cn } from "cn";
 import { addDays, daysBetween, isoWeek, isoWeekday, today, type DateString } from "@/lib/dates";
@@ -91,6 +92,7 @@ export async function Timeline({ from, to, bars, conflictDays }: { from: DateStr
         {bars.map((bar) => {
           const startIdx = Math.max(0, daysBetween(from, bar.from) - 1);
           const endIdx = Math.min(days - 1, daysBetween(from, bar.to) - 1);
+          const people = bar.people?.join(", ") ?? "";
           return (
             <div key={`${bar.kind}-${bar.id}`} className="contents">
               <div className="sticky left-0 z-10 border-b border-r bg-card p-2">
@@ -100,6 +102,12 @@ export async function Timeline({ from, to, bars, conflictDays }: { from: DateStr
                 <span className="block truncate text-[10px] text-muted-foreground">
                   {bar.kind === "rental" ? t("rentals") : bar.sub ?? ""}
                 </span>
+                {people && (
+                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground" title={people}>
+                    <Users className="size-3 shrink-0" aria-hidden />
+                    <span className="truncate">{people}</span>
+                  </span>
+                )}
               </div>
               {dayList.map((d, i) => {
                 const inBar = i >= startIdx && i <= endIdx;
@@ -109,7 +117,7 @@ export async function Timeline({ from, to, bars, conflictDays }: { from: DateStr
                       <Link
                         href={bar.href}
                         className={cn("block h-full min-h-8 py-1", barColor(bar), i === startIdx && "ml-0.5 rounded-l", i === endIdx && "mr-0.5 rounded-r")}
-                        title={`${bar.label} ${bar.from} – ${bar.to}`}
+                        title={`${bar.label} ${bar.from} – ${bar.to}${people ? `\n${people}` : ""}`}
                       >
                         {i === startIdx && <span className="sticky left-[204px] truncate px-1 text-[10px]">{bar.label}</span>}
                       </Link>
