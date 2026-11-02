@@ -21,7 +21,7 @@ export default async function CalendarPage(props: { searchParams: Promise<{ from
   const t = await getTranslations("calendar");
   const tb = await getTranslations("board");
   const weeks = Math.min(16, Math.max(2, Number(sp.weeks) || DEFAULT_WEEKS));
-  const from = /^\d{4}-\d{2}-\d{2}$/.test(sp.from ?? "") ? sp.from! : addDays(today(), -3);
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(sp.from ?? "") ? sp.from! : today();
   const to = addDays(from, weeks * 7 - 1);
   const ta = await getTranslations("agenda");
   const canAdd = can(actor.role, "agenda.write");
@@ -42,7 +42,7 @@ export default async function CalendarPage(props: { searchParams: Promise<{ from
             <Link href={link(addDays(from, -weeks * 7))} className={buttonVariants({ variant: "outline", size: "sm" })}>
               ← {t("previous")}
             </Link>
-            <Link href={link(addDays(today(), -3))} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Link href={link(today())} className={buttonVariants({ variant: "outline", size: "sm" })}>
               {t("today")}
             </Link>
             <Link href={link(addDays(from, weeks * 7))} className={buttonVariants({ variant: "outline", size: "sm" })}>

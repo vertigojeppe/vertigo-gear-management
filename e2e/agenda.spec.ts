@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const password = process.env.SEED_PASSWORD ?? "vertigo123";
 const stamp = Date.now().toString(36);
-// Dates inside the calendar's default window (it starts three days back).
+// Dates inside the calendar's default window (it starts today).
 const day = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
 
 async function signIn(page: Page, email: string) {
