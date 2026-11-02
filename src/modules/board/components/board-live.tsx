@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { isoWeek } from "@/lib/dates";
@@ -34,42 +34,39 @@ export function BoardRefresh({ everySeconds = 60 }: { everySeconds?: number }) {
 }
 
 /**
- * A box that shows everything on a screen nobody touches: when its content
- * is taller than the box, it scrolls slowly to the bottom, waits, and
- * starts again from the top. Content that fits stays still.
+ * Shows everything on a screen nobody touches: every `[data-autoscroll]`
+ * box whose content is taller than the box scrolls slowly to the bottom,
+ * waits, and starts again from the top. They move in step: the box with
+ * the most to show sets the pace, the others cover the same share of
+ * theirs, so all reach the bottom and the top together. Boxes that fit
+ * stay still.
  */
-export function BoardAutoScroll({ className, children, pxPerSecond = 25, pauseSeconds = 6 }: { className?: string; children: ReactNode; pxPerSecond?: number; pauseSeconds?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
+export function BoardScrollSync({ pxPerSecond = 25, pauseSeconds = 6 }: { pxPerSecond?: number; pauseSeconds?: number }) {
   useEffect(() => {
-    const box = ref.current;
-    if (!box) return;
     let pos = 0;
     let waitUntil = Date.now() + pauseSeconds * 1000;
     let last = performance.now();
     let frame = requestAnimationFrame(function step(now) {
       const dt = (now - last) / 1000;
       last = now;
-      const max = box.scrollHeight - box.clientHeight;
-      if (max <= 1) pos = 0;
+      const boxes = [...document.querySelectorAll<HTMLElement>("[data-autoscroll]")];
+      const longest = Math.max(0, ...boxes.map((b) => b.scrollHeight - b.clientHeight));
+      if (longest <= 1) pos = 0;
       else if (Date.now() >= waitUntil) {
-        if (pos >= max) {
+        if (pos >= longest) {
           pos = 0; // back to the top, then wait there
           waitUntil = Date.now() + pauseSeconds * 1000;
         } else {
-          pos = Math.min(max, pos + pxPerSecond * dt);
-          if (pos >= max) waitUntil = Date.now() + pauseSeconds * 1000;
+          pos = Math.min(longest, pos + pxPerSecond * dt);
+          if (pos >= longest) waitUntil = Date.now() + pauseSeconds * 1000;
         }
       }
-      box.scrollTop = pos;
+      for (const b of boxes) b.scrollTop = longest > 1 ? (pos / longest) * (b.scrollHeight - b.clientHeight) : 0;
       frame = requestAnimationFrame(step);
     });
     return () => cancelAnimationFrame(frame);
   }, [pxPerSecond, pauseSeconds]);
-  return (
-    <div ref={ref} className={`overflow-hidden ${className ?? ""}`}>
-      {children}
-    </div>
-  );
+  return null;
 }
 
 const subscribeTicks = (cb: () => void) => {
