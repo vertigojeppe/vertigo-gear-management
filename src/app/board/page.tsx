@@ -5,7 +5,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { can, requireActor } from "@/lib/auth/session";
 import { boardData, boardThemeScript } from "@/modules/board";
 import { AgendaDay, JobCard } from "@/modules/board/components/board-sections";
-import { BoardClock, BoardRefresh } from "@/modules/board/components/board-live";
+import { BoardAutoScroll, BoardClock, BoardRefresh } from "@/modules/board/components/board-live";
 import { BoardThemeToggle } from "@/modules/board/components/board-theme";
 import { LongTimeline } from "@/modules/board/components/long-timeline";
 import { signOutAction } from "../(app)/actions";
@@ -45,24 +45,30 @@ export default async function BoardPage(props: { searchParams: Promise<{ months?
         </header>
 
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <section className="min-h-0 overflow-hidden" aria-label={t("jobs")}>
-            {data.jobs.length === 0 ? (
-              <p className="text-xl text-muted-foreground">{t("noJobs")}</p>
-            ) : (
-              <div className="gap-4 md:columns-2 2xl:columns-3">
-                {data.jobs.map((job) => (
-                  <JobCard key={job.id} job={job} today={data.today} />
-                ))}
-              </div>
-            )}
+          {/* What does not fit scrolls by slowly instead of hiding behind the timeline. */}
+          <section className="min-h-0" aria-label={t("jobs")}>
+            <BoardAutoScroll className="h-full">
+              {data.jobs.length === 0 ? (
+                <p className="text-xl text-muted-foreground">{t("noJobs")}</p>
+              ) : (
+                <div className="gap-4 md:columns-2 2xl:columns-3">
+                  {data.jobs.map((job) => (
+                    <JobCard key={job.id} job={job} today={data.today} />
+                  ))}
+                </div>
+              )}
+            </BoardAutoScroll>
           </section>
-          <aside className="flex min-h-0 flex-col gap-5 overflow-hidden">
-            <AgendaDay title={t("today")} day={todayAgenda.day} items={todayAgenda.items} />
-            <AgendaDay title={t("tomorrow")} day={tomorrowAgenda.day} items={tomorrowAgenda.items} />
+          <aside className="min-h-0">
+            <BoardAutoScroll className="flex h-full flex-col gap-5">
+              <AgendaDay title={t("today")} day={todayAgenda.day} items={todayAgenda.items} />
+              <AgendaDay title={t("tomorrow")} day={tomorrowAgenda.day} items={tomorrowAgenda.items} />
+            </BoardAutoScroll>
           </aside>
         </div>
 
-        <section className="h-[28vh] shrink-0" aria-label={t("timeline", { months })}>
+        {/* As tall as its rows, at most 28% of the screen, so the cards above get the rest. */}
+        <section className="flex max-h-[28vh] shrink-0 flex-col" aria-label={t("timeline", { months })}>
           <LongTimeline from={data.timeline.from} to={data.timeline.to} bars={data.timeline.bars} />
         </section>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { isoWeek } from "@/lib/dates";
@@ -31,6 +31,45 @@ export function BoardRefresh({ everySeconds = 60 }: { everySeconds?: number }) {
     };
   }, [router, everySeconds]);
   return null;
+}
+
+/**
+ * A box that shows everything on a screen nobody touches: when its content
+ * is taller than the box, it scrolls slowly to the bottom, waits, and
+ * starts again from the top. Content that fits stays still.
+ */
+export function BoardAutoScroll({ className, children, pxPerSecond = 25, pauseSeconds = 6 }: { className?: string; children: ReactNode; pxPerSecond?: number; pauseSeconds?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = ref.current;
+    if (!box) return;
+    let pos = 0;
+    let waitUntil = Date.now() + pauseSeconds * 1000;
+    let last = performance.now();
+    let frame = requestAnimationFrame(function step(now) {
+      const dt = (now - last) / 1000;
+      last = now;
+      const max = box.scrollHeight - box.clientHeight;
+      if (max <= 1) pos = 0;
+      else if (Date.now() >= waitUntil) {
+        if (pos >= max) {
+          pos = 0; // back to the top, then wait there
+          waitUntil = Date.now() + pauseSeconds * 1000;
+        } else {
+          pos = Math.min(max, pos + pxPerSecond * dt);
+          if (pos >= max) waitUntil = Date.now() + pauseSeconds * 1000;
+        }
+      }
+      box.scrollTop = pos;
+      frame = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [pxPerSecond, pauseSeconds]);
+  return (
+    <div ref={ref} className={`overflow-hidden ${className ?? ""}`}>
+      {children}
+    </div>
+  );
 }
 
 const subscribeTicks = (cb: () => void) => {
