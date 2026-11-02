@@ -8,8 +8,8 @@ import type { GoogleEvent } from "./google";
  * Invitations on (Settings › Calendar; needs domain-wide delegation): time
  * off goes into the person's own calendar; meetings and assignments are
  * created in the creator's calendar with the people and guests as
- * attendees, and Google emails the invitations; they also get a `copy` in
- * the shared projects calendar, so everyone sees them without an
+ * attendees, and Google emails the invitations. All of them also get a
+ * `copy` in the shared projects calendar, so everyone sees them without an
  * invitation. Invitations off, or nobody to act as: the shared projects
  * calendar, with the names in the title.
  */
@@ -52,7 +52,7 @@ export function entryGoogle(e: GoogleEntry, opts: { invites: boolean; sharedCale
       subject: owner.email,
       sendUpdates: attendees.length > 0,
       event: { ...base, summary: e.kind === "time_off" ? `Off${offTitle}` : e.title, attendees: attendees.length ? attendees : undefined },
-      copy: e.kind === "time_off" ? undefined : shared,
+      copy: shared,
     };
   }
   return shared;

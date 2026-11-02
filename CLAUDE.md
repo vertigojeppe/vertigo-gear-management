@@ -612,9 +612,9 @@ the module.
   .calendarInvites`, needs domain-wide delegation for `CALENDAR_SCOPE`)
   the client acts as the person (`GoogleCalendar(account, fetch, subject)`,
   JWT `sub`): time off in the person's own calendar, meetings and
-  assignments from the creator's with attendees and `sendUpdates=all`,
-  plus a guest-less `copy` in the shared projects calendar so everyone
-  sees them (`googleEvent.copyId`, follows and goes with the event).
+  assignments from the creator's with attendees and `sendUpdates=all`;
+  every kind also gets a guest-less `copy` in the shared projects
+  calendar so everyone sees it (`googleEvent.copyId`, follows and goes with the event).
   Off, or `GoogleDelegationError` (not a Workspace address, delegation
   withdrawn): the shared projects calendar with names in the title. When
   the target changes, the old event is deleted first. Toggling queues

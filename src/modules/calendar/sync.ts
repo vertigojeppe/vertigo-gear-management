@@ -136,7 +136,7 @@ export function googleRef(v: unknown): GoogleRef | null {
  * entry-events.ts. When the target moves (invitations switched on or off,
  * another creator, another person off), the old event is removed first.
  * Someone Google will not let us act as (no delegation, not a Workspace
- * address) falls back to the shared calendar. An invited meeting's copy in
+ * address) falls back to the shared calendar. An invited entry's copy in
  * the shared calendar follows the event. `deletedRef`: the event of
  * an entry that no longer exists, handed over by its last job.
  */

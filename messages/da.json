@@ -696,7 +696,7 @@
     "invitesStep3": "OAuth-omfang:",
     "invitesStep4": "Gem der, og sæt så kryds herunder. Indtil da kommer aftaler i den fælles kalender.",
     "invites": "Send kalenderaftaler som invitationer",
-    "invitesHelp": "Fri kommer i personens egen kalender; møder og opgaver sendes fra kalenderen hos den, der oprettede dem, med en kopi i den fælles kalender, så alle kan se dem. Folk uden en Vertigo Google-konto bliver i den fælles kalender.",
+    "invitesHelp": "Fri kommer i personens egen kalender; møder og opgaver sendes fra kalenderen hos den, der oprettede dem. Alle får også en kopi i den fælles kalender, så alle kan se dem. Folk uden en Vertigo Google-konto bliver i den fælles kalender.",
     "invitesSaved": "Gemt. Kommende aftaler flyttes."
   },
   "packingStatus": {
