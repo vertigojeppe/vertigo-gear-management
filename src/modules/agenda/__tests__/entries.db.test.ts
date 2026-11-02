@@ -88,7 +88,7 @@ describe("syncEntry", () => {
     const g = new FakeGoogle();
     expect(await syncEntry(id, g.client)).toBe("shared");
     expect(g.calls).toEqual([expect.objectContaining({ subject: undefined, method: "create", calendarId: "shared", sendUpdates: false })]);
-    expect((await prisma.calendarEntry.findUniqueOrThrow({ where: { id } })).googleEvent).toEqual({ calendarId: "shared", subject: null, eventId: "evt-1" });
+    expect((await prisma.calendarEntry.findUniqueOrThrow({ where: { id } })).googleEvent).toEqual({ calendarId: "shared", subject: null, eventId: "evt-1", copyId: null });
   });
 
   it("sends from the creator's calendar with invitations on, and falls back to the shared calendar when Google refuses", async () => {
@@ -98,11 +98,21 @@ describe("syncEntry", () => {
     expect(await syncEntry(id, g.client)).toBe("invited");
     expect(g.calls[0]).toMatchObject({ subject: annEmail, calendarId: "primary", sendUpdates: true });
     expect(g.calls[0].event?.attendees).toEqual([{ email: boEmail }, { email: "venue@example.com" }]);
+    // …and a copy without guests in the shared calendar, so everyone sees it.
+    expect(g.calls[1]).toMatchObject({ subject: undefined, method: "create", calendarId: "shared", sendUpdates: false });
+    expect(g.calls[1].event?.attendees).toBeUndefined();
+    expect((await prisma.calendarEntry.findUniqueOrThrow({ where: { id } })).googleEvent).toMatchObject({ copyId: "evt-2" });
+    expect(await syncEntry(id, g.client)).toBe("invited");
+    expect(g.calls.slice(2).map((c) => [c.method, c.eventId])).toEqual([
+      ["update", "evt-1"],
+      ["update", "evt-2"],
+    ]);
 
-    // Google stops accepting Ann (delegation withdrawn): the event moves to the shared calendar.
+    // Google stops accepting Ann (delegation withdrawn): the event moves to the shared calendar, the copy goes.
     g.refuse.add(annEmail);
     expect(await syncEntry(id, g.client)).toBe("shared");
-    expect(g.calls.slice(1).map((c) => [c.subject, c.method, c.calendarId])).toEqual([
+    expect(g.calls.slice(4).map((c) => [c.subject, c.method, c.calendarId])).toEqual([
+      [undefined, "delete", "shared"],
       [annEmail, "delete", "primary"],
       [undefined, "create", "shared"],
     ]);
@@ -110,13 +120,16 @@ describe("syncEntry", () => {
 
   it("removes the Google event of a deleted entry from the reference its job carries", async () => {
     const id = await entries.create(actor, meeting(), [annId]);
-    const ref = { calendarId: "primary", subject: "ann@vertigo.dk", eventId: "evt-9" };
+    const ref = { calendarId: "primary", subject: "ann@vertigo.dk", eventId: "evt-9", copyId: "evt-10" };
     await prisma.calendarEntry.update({ where: { id }, data: { googleEvent: ref } });
     await entries.remove(actor, id);
     const job = await prisma.outbox.findFirstOrThrow({ where: { type: "calendar.sync_entry", payload: { path: ["id"], equals: id } }, orderBy: { createdAt: "desc" } });
     expect((job.payload as { eventIds?: unknown }).eventIds).toEqual(ref);
     const g = new FakeGoogle();
     expect(await syncEntry(id, g.client, ref)).toBe("deleted");
-    expect(g.calls).toEqual([{ subject: "ann@vertigo.dk", method: "delete", calendarId: "primary", eventId: "evt-9", sendUpdates: true }]);
+    expect(g.calls).toEqual([
+      { subject: undefined, method: "delete", calendarId: "shared", eventId: "evt-10", sendUpdates: undefined },
+      { subject: "ann@vertigo.dk", method: "delete", calendarId: "primary", eventId: "evt-9", sendUpdates: true },
+    ]);
   });
 });
