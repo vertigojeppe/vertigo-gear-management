@@ -1556,6 +1556,13 @@
     "markDone": "Mark \"{text}\" done",
     "reopen": "Reopen \"{text}\"",
     "remove": "Delete \"{text}\"",
-    "done": "Done ({count})"
+    "done": "Done ({count})",
+    "category": "Category",
+    "categoryPlaceholder": "Category",
+    "edit": "Edit \"{text}\"",
+    "save": "Save",
+    "cancel": "Cancel",
+    "moveUp": "Move \"{text}\" up",
+    "moveDown": "Move \"{text}\" down"
   }
 }

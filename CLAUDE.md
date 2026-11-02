@@ -565,6 +565,12 @@ the module.
   is shared). Shown only as "My to-dos" under My day on the dashboard
   (`TodoSection`, a server component with plain form actions: the add
   box resets after a save, done ones fold into a `<details>`).
+- Optional free-text `category` (suggested from the person's own through
+  a `<datalist>`): open lines group under it, none first, then A–Z
+  (`groupTodos`, pure). `position` orders lines; ↑ / ↓ (`todos.move`,
+  `moved` pure) renumber the open lines of one category, and a new or
+  re-categorised line goes last. Clicking a line's text edits text and
+  category in place (`TodoText`, the one client component).
 
 ## Wish list
 

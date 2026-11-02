@@ -7,6 +7,10 @@ model Todo {
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   text      String
+  /// Free text the list groups by; null = no heading.
+  category  String?
+  /// Order within the owner's list; ↑ / ↓ renumber one category group.
+  position  Int       @default(0)
   doneAt    DateTime?
   createdAt DateTime  @default(now())
 

@@ -1556,6 +1556,13 @@
     "markDone": "Markér \"{text}\" som færdig",
     "reopen": "Genåbn \"{text}\"",
     "remove": "Slet \"{text}\"",
-    "done": "Færdige ({count})"
+    "done": "Færdige ({count})",
+    "category": "Kategori",
+    "categoryPlaceholder": "Kategori",
+    "edit": "Redigér \"{text}\"",
+    "save": "Gem",
+    "cancel": "Annullér",
+    "moveUp": "Flyt \"{text}\" op",
+    "moveDown": "Flyt \"{text}\" ned"
   }
 }
