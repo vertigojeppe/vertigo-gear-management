@@ -24,16 +24,25 @@ export async function JobCard({ job, today }: { job: BoardJob; today: DateString
   const t = await getTranslations("board");
   const tph = await getTranslations("phase");
   const tps = await getTranslations("packingStatus");
+  const tpr = await getTranslations("projectStatus");
   const locale = (await getLocale()) === "da" ? "da-DK" : "en-GB";
   const running = job.from <= today;
+  const tba = job.status === "tba"; // not confirmed yet: marked, and the border is dashed
   const inDays = daysBetween(today, job.from) - 1;
   return (
-    <article className={cn("mb-4 break-inside-avoid rounded-lg border bg-card p-4", running && "border-green-500/60")}>
+    <article className={cn("mb-4 break-inside-avoid rounded-lg border bg-card p-4", running && "border-green-500/60", tba && "border-dashed border-amber-500/70")}>
       <div className="flex items-start justify-between gap-3">
         <h2 className="min-w-0 text-2xl font-semibold leading-tight [overflow-wrap:anywhere]">{job.name}</h2>
-        <StatusPill color={running ? "green" : inDays <= 2 ? "amber" : "gray"} className="shrink-0 text-sm">
-          {running ? t("now") : inDays === 1 ? t("tomorrow") : t("inDays", { count: inDays })}
-        </StatusPill>
+        <div className="flex shrink-0 gap-2">
+          {tba && (
+            <StatusPill color="amber" className="text-sm">
+              {tpr("tba")}
+            </StatusPill>
+          )}
+          <StatusPill color={running ? "green" : inDays <= 2 ? "amber" : "gray"} className="text-sm">
+            {running ? t("now") : inDays === 1 ? t("tomorrow") : t("inDays", { count: inDays })}
+          </StatusPill>
+        </div>
       </div>
       {(job.clientName || job.venueName) && <p className="text-lg text-muted-foreground">{[job.clientName, job.venueName].filter(Boolean).join(" · ")}</p>}
       {job.phases.length > 0 && (
