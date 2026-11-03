@@ -210,3 +210,22 @@ describe("renaming a family", () => {
     }
   });
 });
+
+describe("items.bulkEdit", () => {
+  it("sets the filled-in fields on every selected item and leaves the rest", async () => {
+    const [a, b] = await items.create(admin, { ...base, modelId, supplier: "Old" }, { count: 2 });
+    await expect(items.bulkEdit(admin, [a.id, b.id], { status: "in_repair" })).rejects.toThrow(/reason/);
+    await items.changeStatus(admin, b.id, { status: "in_repair", reason: "Fan" });
+    const result = await items.bulkEdit(admin, [a.id, b.id], { status: "in_repair", reason: "Lamp", supplier: "New", notForRental: true });
+    expect(result).toEqual({ done: 2, refused: [] });
+    const after = await prisma.item.findMany({ where: { id: { in: [a.id, b.id] } }, orderBy: { assetTag: "asc" } });
+    expect(after.map((i) => [i.status, i.supplier, i.notForRental, i.purchaseDate])).toEqual([
+      ["in_repair", "New", true, null],
+      ["in_repair", "New", true, null],
+    ]);
+    // b was already in repair: no second status change.
+    expect(await prisma.statusLog.count({ where: { itemId: b.id, reason: "Lamp" } })).toBe(0);
+    expect(await prisma.statusLog.count({ where: { itemId: a.id, reason: "Lamp" } })).toBe(1);
+    await expect(items.bulkEdit(viewer, [a.id], { supplier: "X" })).rejects.toThrow();
+  });
+});

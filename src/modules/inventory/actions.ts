@@ -8,8 +8,8 @@ import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitions } from "@/modules/settings";
 // eslint-disable-next-line no-restricted-imports -- the wishlist barrel re-exports client components; the service is all this action needs
 import { wishes } from "@/modules/wishlist/service";
-import { categoryInput, consumableCountInput, consumableReceiveInput, consumableUseInput, itemBatchInput, itemInput, lengthColorInput, locationInput, modelInput, partFitInput, statusChangeInput, familyEditInput } from "./schema";
-import { categories, items, lengthColors, locations, models, InventoryError, type BulkResult } from "./service";
+import { categoryInput, consumableCountInput, consumableReceiveInput, consumableUseInput, itemBatchInput, itemBulkInput, itemInput, lengthColorInput, locationInput, modelInput, partFitInput, statusChangeInput, familyEditInput } from "./schema";
+import { categories, items, lengthColors, locations, models, InventoryError, type BulkResult, type ItemBulkResult } from "./service";
 import { consumables, partFits } from "./consumables";
 
 function revalidateInventory() {
@@ -225,6 +225,26 @@ export async function changeItemStatus(_prev: FormState, formData: FormData): Pr
   }
   revalidateInventory();
   return { ok: true };
+}
+
+export type ItemBulkState = FormState<ItemBulkResult>;
+
+/** Item list bulk bar: ids[] + the fields to set on all of them (empty = keep). */
+export async function bulkEditItems(_prev: ItemBulkState, formData: FormData): Promise<ItemBulkState> {
+  const actor = await requirePermission("inventory.write");
+  const ids = formData.getAll("ids").map(String).filter(Boolean);
+  if (ids.length === 0) return { ok: false, error: "Select some items first." };
+  const parsed = parseForm(itemBulkInput, formData);
+  if (!parsed.ok) return parsed.state;
+  if (Object.values(parsed.data).every((v) => v === undefined)) return { ok: false, error: "Nothing to change: fill in at least one field." };
+  let result: ItemBulkResult;
+  try {
+    result = await items.bulkEdit(actor, ids, parsed.data);
+  } catch (err) {
+    return errorState(err, echoValues(formData));
+  }
+  revalidateInventory();
+  return { ok: true, data: result };
 }
 
 export async function moveItem(_prev: FormState, formData: FormData): Promise<FormState> {
