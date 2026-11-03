@@ -228,4 +228,15 @@ describe("items.bulkEdit", () => {
     expect(await prisma.statusLog.count({ where: { itemId: a.id, reason: "Lamp" } })).toBe(1);
     await expect(items.bulkEdit(viewer, [a.id], { supplier: "X" })).rejects.toThrow();
   });
+
+  it("moves items to another variant, refusing a different tracking type", async () => {
+    const other = await prisma.model.create({ data: { categoryId, manufacturer: "Test", name: `Projector ${marker}`, variant: "Long throw", trackingType: "serialized" } });
+    const [a, b] = await items.create(admin, { ...base, modelId }, { count: 2 });
+    const [bin] = await items.create(admin, { ...base, modelId: bulkModelId, quantity: 4 });
+    const result = await items.bulkEdit(admin, [a.id, b.id, bin.id], { modelId: other.id });
+    expect(result.done).toBe(2);
+    expect(result.refused.map((r) => r.id)).toEqual([bin.id]);
+    expect((await prisma.item.findMany({ where: { id: { in: [a.id, b.id, bin.id] } } })).map((i) => i.modelId).sort()).toEqual([bulkModelId, other.id, other.id].sort());
+    await expect(items.bulkEdit(admin, [a.id], { modelId: "nope" })).rejects.toThrow(/Model not found/);
+  });
 });
