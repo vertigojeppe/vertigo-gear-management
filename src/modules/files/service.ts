@@ -138,11 +138,19 @@ export const files = {
   },
 };
 
-/** Model photo thumbnail with the background cut out; the original file stays as it was. */
-async function productThumb(bytes: Buffer) {
+/**
+ * Model photo thumbnail with the background cut out and the empty border
+ * trimmed, so the product fills the frame; the original file stays as it was.
+ */
+export async function productThumb(bytes: Buffer) {
   const { data, info } = await sharp(bytes).rotate().resize({ width: THUMB_WIDTH, withoutEnlargement: true }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const cut = await removeBackground(bytes, data, info.width, info.height);
-  return sharp(cut ?? data, { raw: { width: info.width, height: info.height, channels: 4 } }).webp({ quality: 80, alphaQuality: 90 }).toBuffer();
+  const image = () => sharp(cut ?? data, { raw: { width: info.width, height: info.height, channels: 4 } });
+  try {
+    return await image().trim().resize({ width: THUMB_WIDTH, height: THUMB_WIDTH, fit: "inside" }).webp({ quality: 80, alphaQuality: 90 }).toBuffer();
+  } catch {
+    return image().webp({ quality: 80, alphaQuality: 90 }).toBuffer(); // nothing left to trim to (a blank picture)
+  }
 }
 
 function toDto(row: {

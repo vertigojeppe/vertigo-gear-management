@@ -764,7 +764,9 @@ the module.
   (`files.setModelPhoto`; `AttachmentsSection` takes `photoId`). Every model
   photo (`entityType` model, kind photo) gets its thumbnail with the
   background made transparent (`removeBackground` in
-  `src/modules/files/background.ts`); the original file is never
+  `src/modules/files/background.ts`) and the empty border trimmed
+  (`productThumb`), and thumbnails are shown whole (`object-contain`,
+  never cropped); the original file is never
   changed. With `BG_REMOVE_MODEL` + `BG_REMOVE_DEVICE` (the image ships
   BiRefNet; `docker-compose.gpu.yml` sets `cuda`) onnxruntime-node draws
   the mask (1024² planar ImageNet input, sigmoid output; pure helpers
