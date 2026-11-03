@@ -28,6 +28,13 @@ export async function uploadAttachment(_prev: FormState, formData: FormData): Pr
   return { ok: true };
 }
 
+export async function setModelPhoto(formData: FormData): Promise<void> {
+  const actor = await requirePermission("files.write");
+  const returnTo = String(formData.get("returnTo") ?? "");
+  await files.setModelPhoto(actor, String(formData.get("id")));
+  if (returnTo.startsWith("/")) revalidatePath(returnTo);
+}
+
 export async function deleteAttachment(formData: FormData): Promise<void> {
   const actor = await requirePermission("files.write");
   const returnTo = String(formData.get("returnTo") ?? "");

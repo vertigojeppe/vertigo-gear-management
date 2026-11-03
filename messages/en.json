@@ -331,7 +331,9 @@
     "manual": "Manual",
     "other": "Other",
     "deleteConfirm": "Remove this attachment?",
-    "uploadedBy": "{name}, {date}"
+    "uploadedBy": "{name}, {date}",
+    "isModelPhoto": "Model photo",
+    "useAsModelPhoto": "Use as model photo"
   },
   "scan": {
     "title": "Scan",

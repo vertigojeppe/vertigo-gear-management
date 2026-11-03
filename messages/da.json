@@ -331,7 +331,9 @@
     "manual": "Manual",
     "other": "Andet",
     "deleteConfirm": "Fjern denne vedhæftning?",
-    "uploadedBy": "{name}, {date}"
+    "uploadedBy": "{name}, {date}",
+    "isModelPhoto": "Modellens foto",
+    "useAsModelPhoto": "Brug som modellens foto"
   },
   "scan": {
     "title": "Scan",

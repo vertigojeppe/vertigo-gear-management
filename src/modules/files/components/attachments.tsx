@@ -6,6 +6,7 @@ import { formatBytes, formatDate } from "@/lib/format";
 import { files } from "../service";
 import { UploadForm } from "./upload-form";
 import { DeleteAttachmentButton } from "./delete-button";
+import { setModelPhoto } from "../actions";
 
 /** Attachment list + upload form for an entity. Server component. */
 export async function AttachmentsSection({
@@ -13,11 +14,14 @@ export async function AttachmentsSection({
   entityId,
   returnTo,
   canEdit,
+  photoId,
 }: {
   entityType: ActivityEntity;
   entityId: string;
   returnTo: string;
   canEdit: boolean;
+  /** Models only: the file that is the model's photo (undefined elsewhere, which hides the button). */
+  photoId?: string | null;
 }) {
   const t = await getTranslations("attachments");
   const rows = await files.listFor(entityType, entityId);
@@ -46,6 +50,20 @@ export async function AttachmentsSection({
               <p className="truncate px-1.5 py-1 text-[11px] text-muted-foreground" title={a.name}>
                 {t(a.kind)} · {a.name}
               </p>
+              {photoId !== undefined &&
+                (a.fileId === photoId ? (
+                  <p className="px-1.5 pb-1 text-[11px] font-medium">{t("isModelPhoto")}</p>
+                ) : (
+                  canEdit && (
+                    <form action={setModelPhoto} className="px-1.5 pb-1">
+                      <input type="hidden" name="id" value={a.id} />
+                      <input type="hidden" name="returnTo" value={returnTo} />
+                      <button type="submit" className="text-[11px] underline">
+                        {t("useAsModelPhoto")}
+                      </button>
+                    </form>
+                  )
+                ))}
             </li>
           ))}
         </ul>
