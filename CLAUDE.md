@@ -498,6 +498,9 @@ the module.
   `src/modules/plans/documents.ts`. Same name on the same plan = new
   version; old versions stay. A document may be pinned to one schedule
   entry or one task, and native formats can carry a preview image.
+  A picture's document page steps through the plan's other pictures
+  (`DocumentStepper`: buttons and ← / →, plan list order, wrapping); it
+  asks first while the viewer has unsaved markup (`data-unsaved`).
 - Uploads are chunked and resumable: `POST /api/uploads` starts an
   `UploadSession`, `PUT /api/uploads/[id]?offset=` appends in order,
   `GET` reports progress for resuming, `POST .../complete` turns the part

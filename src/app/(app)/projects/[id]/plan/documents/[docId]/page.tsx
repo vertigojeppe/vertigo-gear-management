@@ -10,6 +10,7 @@ import { officeConvertAvailable } from "@/lib/office-convert";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { documentDetail, documentsForPlan } from "@/modules/plans";
 import { DocumentUploader } from "@/modules/plans/components/document-uploader";
+import { DocumentStepper } from "@/modules/plans/components/document-stepper";
 import { DocumentViewer } from "@/modules/plans/components/document-viewer";
 import { MakePdfButton, PinDocumentForm, RemoveDocumentButton, RemoveVersionButton } from "@/modules/plans/components/document-forms";
 
@@ -36,6 +37,11 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
     const sibling = (await documentsForPlan(plan.id)).find((d) => d.latest.name.toLowerCase() === `${base}.mtl`);
     mtlUrl = sibling ? sibling.latest.url : null;
   }
+  // A picture steps through the plan's other pictures, in the plan page's order (wrapping round).
+  const pictures = kind === "image" ? (await documentsForPlan(plan.id)).filter((d) => d.kind === "image") : [];
+  const at = pictures.findIndex((d) => d.id === document.id);
+  const pictureHref = (step: number) => `/projects/${id}/plan/documents/${pictures[(at + step + pictures.length) % pictures.length].id}`;
+  const tc = await getTranslations("common");
 
   return (
     <div className="flex flex-col gap-6">
@@ -57,6 +63,8 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
           </>
         }
       />
+
+      {at >= 0 && pictures.length > 1 && <DocumentStepper prevHref={pictureHref(-1)} nextHref={pictureHref(1)} position={at + 1} total={pictures.length} labels={{ previous: tc("previous"), next: tc("next"), unsaved: t("leaveUnsavedMarkup") }} />}
 
       {version.convertible && (
         <div className="flex flex-wrap items-center gap-3 rounded-md border bg-muted/30 px-3 py-2 text-sm" data-testid="word-notice">
