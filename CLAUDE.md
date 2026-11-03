@@ -627,7 +627,7 @@ the module.
 
 - `/board` (`src/app/board/page.tsx`, outside the app shell) is the
   screen on the office wall: job cards for the next 14 days
-  (confirmed / in progress, with phases, crew and packing progress),
+  (TBA, marked and dashed, and confirmed; with phases, crew and packing progress),
   today and tomorrow (phases with call times, plan schedule, rentals out
   and back) and a long timeline at the bottom (`?months=` 1–12, default
   6; bars packed into rows by `packLanes`, from `timelineBars`, which
