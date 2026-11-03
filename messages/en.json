@@ -1047,7 +1047,13 @@
     "wordNoConverter": "A Word file. This server has no LibreOffice, so it can only be downloaded.",
     "makePdf": "Make PDF",
     "remakePdf": "Make PDF again",
-    "makingPdf": "Making PDF…"
+    "makingPdf": "Making PDF…",
+    "skpAsModel": "A SketchUp file, shown here as a 3D copy made when it was added. The .skp itself is under Download original.",
+    "skpNoModel": "A SketchUp file without a 3D copy yet, so it can only be downloaded.",
+    "skpNoConverter": "A SketchUp file. This server cannot make 3D copies, so it can only be downloaded.",
+    "makeModel": "Make 3D copy",
+    "remakeModel": "Make 3D copy again",
+    "makingModel": "Making 3D copy…"
   },
   "importer": {
     "title": "Import spreadsheet",

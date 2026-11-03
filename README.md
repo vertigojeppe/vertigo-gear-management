@@ -656,6 +656,7 @@ docker compose --profile tunnel up -d --force-recreate app
 | `COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml` | Gives the app the GPU for cutting the background out of model photos (see [GPU for photo backgrounds](#gpu-for-photo-backgrounds)). |
 | `BG_REMOVE_MODEL`, `BG_REMOVE_DEVICE` | Outside Docker only: the BiRefNet `.onnx` file and `cuda` or `cpu` (slow: 10 to 20 seconds a photo). The Docker image sets the model, the GPU file sets `cuda`. |
 | `SOFFICE_PATH` | Where LibreOffice's `soffice` is, for turning Word plan documents into PDFs. The Docker image has it on the path; set this only when running the app outside Docker. |
+| `SKP_PYTHON` | A Python with `openskp` and `pillow` (versions in `scripts/skp-requirements.txt`), for giving SketchUp plan documents a 3D copy. The Docker image sets it; outside Docker, without it, .skp files stay downloads. |
 | `BACKUP_REMOTE`, `BACKUP_KEEP_DAYS` | Where backups are copied and how many days are kept (see [Backups](#backups)). |
 
 ### GPU for photo backgrounds

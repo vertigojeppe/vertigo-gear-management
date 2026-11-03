@@ -526,6 +526,18 @@ the module.
   PDF* (`documents.makePdf`) when the server can convert. Tests pass a
   fake converter (`{ convert }`). `deleteFileIfUnused` and
   `fileIdsForPlan` know the copies.
+- SketchUp files (`fileConfig.convertToModel`: .skp, `convertsToModel`)
+  get a GLB copy the same way: `convertSkp` (`src/lib/skp-convert.ts`)
+  runs `scripts/skp-to-glb.py` with OpenSKP (MIT, pinned in
+  `scripts/skp-requirements.txt`; the image has a venv at /opt/skp,
+  `SKP_PYTHON`; one at a time, 5 min timeout), which keeps component
+  instances and wraps the scene in a 1/1000 node so the GLB is in metres
+  like the viewer expects. Stored as `PlanDocumentVersion.modelFileId`:
+  `kind` "model3d", `viewUrl` the copy, `viewName` the .glb name (the
+  viewer picks its loader by it), `url` the .skp. *Make 3D copy*
+  (`documents.makeModel`, `MakeCopyButton copy="model"`) when there is
+  none. Tests pass `{ convertModel }`. `*.skp` is git- and docker-ignored
+  (client designs).
 
 ## Pricing (Phase 6)
 

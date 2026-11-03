@@ -240,12 +240,14 @@ export async function attachUploadedFile(input: { planId: string; fileId: string
   }
 }
 
-/** Make (or remake) the PDF copy of a Word version. */
-export async function makeDocumentPdf(_prev: FormState, formData: FormData): Promise<FormState> {
+/** Make (or remake) the PDF copy of a Word version (copy=pdf) or the 3D copy of a SketchUp version (copy=model). */
+export async function makeDocumentCopy(_prev: FormState, formData: FormData): Promise<FormState> {
   const actor = await requirePermission("plans.write");
   const projectId = projectIdOf(formData);
+  const versionId = String(formData.get("versionId"));
   try {
-    await documents.makePdf(actor, String(formData.get("versionId")));
+    if (formData.get("copy") === "model") await documents.makeModel(actor, versionId);
+    else await documents.makePdf(actor, versionId);
   } catch (err) {
     return errorState(err);
   }

@@ -40,12 +40,18 @@ ENV HOSTNAME=0.0.0.0
 # poppler-utils provides pdftoppm for PDF thumbnails (Phase 4).
 # libreoffice-writer turns Word plan documents into PDFs (src/lib/office-convert.ts);
 # Carlito and Liberation stand in for Calibri, Arial and Times so layouts hold.
+# python3 runs OpenSKP, which gives SketchUp plan documents a GLB copy (src/lib/skp-convert.ts).
 # wget is for the healthcheck. The app user keeps the ids it had on Alpine (100:101),
 # so files already in the uploads volume stay writable.
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends poppler-utils libreoffice-writer fonts-crosextra-carlito fonts-liberation fonts-dejavu-core wget ca-certificates && \
+    apt-get install -y --no-install-recommends poppler-utils libreoffice-writer fonts-crosextra-carlito fonts-liberation fonts-dejavu-core python3 python3-venv wget ca-certificates && \
     rm -rf /var/lib/apt/lists/* && \
     groupadd -o -g 101 app && useradd -o -u 100 -g app -d /home/app -m -s /usr/sbin/nologin app
+
+# OpenSKP (MIT) and its pinned dependencies in their own venv.
+COPY scripts/skp-requirements.txt /tmp/skp-requirements.txt
+RUN python3 -m venv /opt/skp && /opt/skp/bin/pip install --no-cache-dir -r /tmp/skp-requirements.txt && rm /tmp/skp-requirements.txt
+ENV SKP_PYTHON=/opt/skp/bin/python
 
 # BiRefNet (MIT) cuts the background out of model photos when BG_REMOVE_DEVICE is set
 # (docker-compose.gpu.yml). About 1 GB, fetched once and cached by the build.
@@ -66,6 +72,7 @@ COPY --from=build --chown=app:app /app/prisma.config.ts ./prisma.config.ts
 COPY --from=build --chown=app:app /app/docker-entrypoint.sh ./docker-entrypoint.sh
 # First admin on a fresh server (the dev seed needs tsx and src/, which this image does not have).
 COPY --from=build --chown=app:app /app/scripts/create-admin.mjs ./scripts/create-admin.mjs
+COPY --from=build --chown=app:app /app/scripts/skp-to-glb.py ./scripts/skp-to-glb.py
 
 RUN mkdir -p /data/uploads && chown -R app:app /data && chmod +x ./docker-entrypoint.sh
 

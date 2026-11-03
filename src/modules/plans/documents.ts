@@ -3,13 +3,14 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getStorage, storageKeyFor } from "@/lib/storage";
 import { convertToPdf, type OfficeConverter } from "@/lib/office-convert";
+import { convertSkp, type SkpConverter } from "@/lib/skp-convert";
 import { logActivity } from "@/lib/activity";
 import { assertCan } from "@/lib/auth/permissions";
 import type { Actor } from "@/lib/auth/session";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { deleteFileIfUnused } from "@/modules/files/uploads";
 import { MARKUP_COLORS } from "../../../config/app.config";
-import { convertsToPdf, documentKind, type DocumentKind } from "./logic";
+import { convertsToModel, convertsToPdf, documentKind, type DocumentKind } from "./logic";
 import { PlanError } from "./service";
 
 /* Shapes ----------------------------------------------------------------- */
@@ -52,14 +53,40 @@ async function attachPdf(versionId: string, convert: OfficeConverter): Promise<b
     pdf = null;
   }
   if (!pdf || pdf.subarray(0, 5).toString() !== "%PDF-") return false;
-  const id = createId();
-  const name = `${v.file.name.replace(/\.[^.]*$/, "")}.pdf`;
-  const storageKey = storageKeyFor(id, name);
-  await storage.put(storageKey, pdf, "application/pdf");
-  await prisma.file.create({ data: { id, name, mimeType: "application/pdf", size: pdf.length, storageKey, uploaderId: v.file.uploaderId } });
+  const id = await storeCopy(v.file, pdf, ".pdf", "application/pdf");
   await prisma.planDocumentVersion.update({ where: { id: versionId }, data: { pdfFileId: id } });
   if (v.pdfFileId) await deleteFileIfUnused(v.pdfFileId);
   return true;
+}
+
+/**
+ * Makes the GLB copy of a SketchUp version and links it (replacing an older
+ * copy). False when OpenSKP is missing or cannot read the file.
+ */
+async function attachModel(versionId: string, convert: SkpConverter): Promise<boolean> {
+  const v = await prisma.planDocumentVersion.findUnique({ where: { id: versionId }, include: { file: true } });
+  if (!v || !convertsToModel(v.file.name)) return false;
+  let glb: Buffer | null;
+  try {
+    glb = await convert(await getStorage().get(v.file.storageKey));
+  } catch {
+    glb = null;
+  }
+  if (!glb || glb.subarray(0, 4).toString() !== "glTF") return false;
+  const id = await storeCopy(v.file, glb, ".glb", "model/gltf-binary");
+  await prisma.planDocumentVersion.update({ where: { id: versionId }, data: { modelFileId: id } });
+  if (v.modelFileId) await deleteFileIfUnused(v.modelFileId);
+  return true;
+}
+
+/** Store a converted copy of `original` as its own File, named like it with `ext`. */
+async function storeCopy(original: { name: string; uploaderId: string | null }, bytes: Buffer, ext: string, mimeType: string): Promise<string> {
+  const id = createId();
+  const name = `${original.name.replace(/\.[^.]*$/, "")}${ext}`;
+  const storageKey = storageKeyFor(id, name);
+  await getStorage().put(storageKey, bytes, mimeType);
+  await prisma.file.create({ data: { id, name, mimeType, size: bytes.length, storageKey, uploaderId: original.uploaderId } });
+  return id;
 }
 
 export const documents = {
@@ -68,7 +95,7 @@ export const documents = {
    * becomes a new version; the old versions stay downloadable. A Word file
    * also gets its PDF copy (`pdf` says whether that worked).
    */
-  async add(actor: Actor, planId: string, input: { fileId: string; name?: string; note?: string; scheduleEntryId?: string | null; taskId?: string | null }, opts: { convert?: OfficeConverter } = {}) {
+  async add(actor: Actor, planId: string, input: { fileId: string; name?: string; note?: string; scheduleEntryId?: string | null; taskId?: string | null }, opts: { convert?: OfficeConverter; convertModel?: SkpConverter } = {}) {
     assertCan(actor, "plans.write");
     const plan = await prisma.productionPlan.findUnique({ where: { id: planId }, include: { project: { select: { id: true, name: true } } } });
     if (!plan) throw new PlanError("Plan not found.");
@@ -88,7 +115,8 @@ export const documents = {
     });
     await logActivity(actor, { entityType: "project", entityId: plan.project.id, action: "document_added", summary: `${plan.project.name}: ${result.version.version === 1 ? "added document" : `new version ${result.version.version} of`} "${name}"` });
     const pdf = convertsToPdf(file.name) ? await attachPdf(result.version.id, opts.convert ?? convertToPdf) : null;
-    return { ...result, pdf };
+    const model = convertsToModel(file.name) ? await attachModel(result.version.id, opts.convertModel ?? convertSkp) : null;
+    return { ...result, pdf, model };
   },
 
   /** (Re)make the PDF copy of a Word version, e.g. one added before LibreOffice was there. */
@@ -100,14 +128,24 @@ export const documents = {
     if (!(await attachPdf(versionId, opts.convert ?? convertToPdf))) throw new PlanError("Could not make a PDF of this file. Download the original instead.");
   },
 
+  /** (Re)make the 3D copy of a SketchUp version, e.g. one added before the converter was there. */
+  async makeModel(actor: Actor, versionId: string, opts: { convert?: SkpConverter } = {}) {
+    assertCan(actor, "plans.write");
+    const v = await prisma.planDocumentVersion.findUnique({ where: { id: versionId }, include: { file: { select: { name: true } } } });
+    if (!v) throw new PlanError("Document not found.");
+    if (!convertsToModel(v.file.name)) throw new PlanError("Only SketchUp files get a 3D copy.");
+    if (!(await attachModel(versionId, opts.convert ?? convertSkp))) throw new PlanError("Could not read this SketchUp file. Download the original instead.");
+  },
+
   async remove(actor: Actor, documentId: string) {
     assertCan(actor, "plans.write");
     const doc = await loadDocument(documentId);
-    const versions = await prisma.planDocumentVersion.findMany({ where: { documentId }, select: { fileId: true, pdfFileId: true } });
+    const versions = await prisma.planDocumentVersion.findMany({ where: { documentId }, select: { fileId: true, pdfFileId: true, modelFileId: true } });
     await prisma.planDocument.delete({ where: { id: documentId } });
     for (const v of versions) {
       await deleteFileIfUnused(v.fileId);
       if (v.pdfFileId) await deleteFileIfUnused(v.pdfFileId);
+      if (v.modelFileId) await deleteFileIfUnused(v.modelFileId);
     }
     if (doc.previewFileId) await deleteFileIfUnused(doc.previewFileId);
     await logActivity(actor, { entityType: "project", entityId: doc.plan.project.id, action: "document_removed", summary: `${doc.plan.project.name}: removed document "${doc.name}"` });
@@ -121,6 +159,7 @@ export const documents = {
     await prisma.planDocumentVersion.delete({ where: { id: versionId } });
     await deleteFileIfUnused(v.fileId);
     if (v.pdfFileId) await deleteFileIfUnused(v.pdfFileId);
+    if (v.modelFileId) await deleteFileIfUnused(v.modelFileId);
     await logActivity(actor, { entityType: "project", entityId: v.document.plan.project.id, action: "document_version_removed", summary: `${v.document.plan.project.name}: removed version ${v.version} of "${v.document.name}"` });
   },
 
@@ -185,8 +224,14 @@ export type DocumentVersionRow = {
   /** The PDF copy of a Word file, if made. */
   pdfFileId: string | null;
   pdfUrl: string | null;
-  /** What the viewer, markup and plan PDF use: the PDF copy, else the original. */
+  /** The GLB copy of a SketchUp file, if made. */
+  modelUrl: string | null;
+  /** What the viewer, markup and plan PDF use: the PDF or 3D copy, else the original. */
   viewUrl: string;
+  /** The file name the viewer goes by (the copy's, so the 3D viewer picks the GLB loader). */
+  viewName: string;
+  /** A SketchUp file (has or could have a 3D copy). */
+  toModel: boolean;
   /** A Word file (has or could have a PDF copy). */
   convertible: boolean;
   thumbUrl: string | null;
@@ -215,18 +260,22 @@ export type DocumentRow = {
 
 const versionInclude = { file: { include: { uploader: { select: { name: true } } } }, markups: { orderBy: { page: "asc" as const } } };
 
-function toVersion(v: { id: string; version: number; fileId: string; pdfFileId: string | null; note: string | null; createdAt: Date; file: { name: string; mimeType: string; size: number; thumbKey: string | null; uploader: { name: string } | null }; markups: { page: number; shapes: unknown }[] }): DocumentVersionRow {
+function toVersion(v: { id: string; version: number; fileId: string; pdfFileId: string | null; modelFileId: string | null; note: string | null; createdAt: Date; file: { name: string; mimeType: string; size: number; thumbKey: string | null; uploader: { name: string } | null }; markups: { page: number; shapes: unknown }[] }): DocumentVersionRow {
   const pdfUrl = v.pdfFileId ? `/api/files/${v.pdfFileId}` : null;
+  const modelUrl = v.modelFileId ? `/api/files/${v.modelFileId}` : null;
   return {
     id: v.id,
     version: v.version,
-    kind: v.pdfFileId ? "pdf" : documentKind(v.file.name, v.file.mimeType),
+    kind: v.pdfFileId ? "pdf" : v.modelFileId ? "model3d" : documentKind(v.file.name, v.file.mimeType),
     fileId: v.fileId,
     url: `/api/files/${v.fileId}`,
     pdfFileId: v.pdfFileId,
     pdfUrl,
-    viewUrl: pdfUrl ?? `/api/files/${v.fileId}`,
+    modelUrl,
+    viewUrl: pdfUrl ?? modelUrl ?? `/api/files/${v.fileId}`,
+    viewName: modelUrl ? v.file.name.replace(/\.[^.]*$/, ".glb") : v.file.name,
     convertible: convertsToPdf(v.file.name),
+    toModel: convertsToModel(v.file.name),
     thumbUrl: v.file.thumbKey ? `/api/files/${v.fileId}?thumb=1` : null,
     name: v.file.name,
     mimeType: v.file.mimeType,
@@ -285,13 +334,14 @@ export async function documentDetail(documentId: string) {
 
 /** Every file a plan's share link may serve: all versions and preview images. */
 export async function fileIdsForPlan(planId: string): Promise<Set<string>> {
-  const docs = await prisma.planDocument.findMany({ where: { planId }, select: { previewFileId: true, versions: { select: { fileId: true, pdfFileId: true } } } });
+  const docs = await prisma.planDocument.findMany({ where: { planId }, select: { previewFileId: true, versions: { select: { fileId: true, pdfFileId: true, modelFileId: true } } } });
   const ids = new Set<string>();
   for (const d of docs) {
     if (d.previewFileId) ids.add(d.previewFileId);
     for (const v of d.versions) {
       ids.add(v.fileId);
       if (v.pdfFileId) ids.add(v.pdfFileId);
+      if (v.modelFileId) ids.add(v.modelFileId);
     }
   }
   return ids;

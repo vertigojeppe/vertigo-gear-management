@@ -201,3 +201,38 @@ describe("Word files", () => {
     await expect(documents.makePdf(admin, r.version.id, { convert: works })).rejects.toThrow(/Only Word files/);
   });
 });
+
+describe("SketchUp files", () => {
+  // Stands in for OpenSKP: any bytes that start like a GLB.
+  const fakeGlb = Buffer.from("glTF\x02\x00\x00\x00fake model");
+  const works = async () => fakeGlb;
+  const fails = async () => null;
+
+  it("get a 3D copy on upload that the viewer and share link use; the .skp stays the download", async () => {
+    const done = await pushFile(admin, `stage ${marker}.skp`, Buffer.from("fake sketchup"), "application/octet-stream");
+    const r = await documents.add(admin, planId, { fileId: done.fileId }, { convertModel: works });
+    expect(r.model).toBe(true);
+    const v = (await documentDetail(r.doc.id))!.versions[0];
+    expect(v).toMatchObject({ kind: "model3d", toModel: true, url: `/api/files/${done.fileId}`, viewName: `stage ${marker}.glb` });
+    expect(v.viewUrl).toBe(v.modelUrl);
+    const glb = await prisma.file.findUniqueOrThrow({ where: { id: v.modelUrl!.split("/").pop()! } });
+    expect(glb).toMatchObject({ name: `stage ${marker}.glb`, mimeType: "model/gltf-binary" });
+    expect((await fileIdsForPlan(planId)).has(glb.id)).toBe(true);
+    await documents.remove(admin, r.doc.id);
+    expect(await prisma.file.count({ where: { id: { in: [done.fileId, glb.id] } } })).toBe(0);
+  });
+
+  it("stay a download when OpenSKP cannot read them, and can be converted later", async () => {
+    const done = await pushFile(admin, `venue ${marker}.skp`, Buffer.from("broken sketchup"), "application/octet-stream");
+    const r = await documents.add(admin, planId, { fileId: done.fileId }, { convertModel: fails });
+    expect(r.model).toBe(false);
+    let v = (await documentDetail(r.doc.id))!.versions[0];
+    expect(v).toMatchObject({ kind: "native", modelUrl: null, viewUrl: v.url });
+    await expect(documents.makeModel(admin, v.id, { convert: fails })).rejects.toThrow(/Could not read/);
+    await documents.makeModel(admin, v.id, { convert: works });
+    v = (await documentDetail(r.doc.id))!.versions[0];
+    expect(v.kind).toBe("model3d");
+    await expect(documents.makeModel(admin, v.id, { convert: async () => Buffer.from("not a model") })).rejects.toThrow(/Could not read/);
+    await documents.remove(admin, r.doc.id);
+  });
+});

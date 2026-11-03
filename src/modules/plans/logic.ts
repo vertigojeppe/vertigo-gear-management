@@ -12,6 +12,12 @@ export function convertsToPdf(name: string): boolean {
   return (fileConfig.convertToPdf as readonly string[]).includes(ext);
 }
 
+/** A SketchUp file that gets a GLB copy for the 3D viewer when added to a plan. */
+export function convertsToModel(name: string): boolean {
+  const dot = name.lastIndexOf(".");
+  return dot > 0 && (fileConfig.convertToModel as readonly string[]).includes(name.slice(dot).toLowerCase());
+}
+
 /** Which viewer a document gets, by MIME type first, then extension. */
 export function documentKind(name: string, mimeType: string): DocumentKind {
   const ext = "." + (name.split(".").pop() ?? "").toLowerCase();
