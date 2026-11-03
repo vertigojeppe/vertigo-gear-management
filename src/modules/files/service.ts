@@ -71,6 +71,10 @@ export const files = {
     const att = await prisma.attachment.create({
       data: { entityType: input.entityType, entityId: input.entityId, fileId: row.id, kind: input.kind },
     });
+    // The first picture uploaded as a model photo becomes the model's photo.
+    if (input.entityType === "model" && input.kind === "photo" && thumbKey) {
+      await prisma.model.updateMany({ where: { id: input.entityId, defaultPhotoId: null }, data: { defaultPhotoId: row.id } });
+    }
     await logActivity(actor, {
       entityType: input.entityType,
       entityId: input.entityId,
@@ -107,6 +111,15 @@ export const files = {
       action: "attachment_removed",
       summary: `Removed ${att.kind} "${att.file.name}"`,
     });
+  },
+
+  /** Make a picture attached to a model that model's photo (thumbnail in lists, picture on its page). */
+  async setModelPhoto(actor: Actor, attachmentId: string) {
+    assertCan(actor, "files.write");
+    const att = await prisma.attachment.findUniqueOrThrow({ where: { id: attachmentId }, include: { file: true } });
+    if (att.entityType !== "model" || !att.file.thumbKey) throw new FileError("Only a picture attached to a model can be its photo.");
+    await prisma.model.update({ where: { id: att.entityId }, data: { defaultPhotoId: att.fileId } });
+    await logActivity(actor, { entityType: "model", entityId: att.entityId, action: "updated", summary: `Made "${att.file.name}" the model photo` });
   },
 
   /** Metadata + stream for serving. Returns null when the file is unknown. */

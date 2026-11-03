@@ -304,7 +304,7 @@ export default async function ModelPage(props: { params: Promise<{ id: string }>
 
       {can(actor.role, "inventory.finance") && <PurchasesSection modelId={model.id} canEdit={canEdit} />}
 
-      <AttachmentsSection entityType="model" entityId={model.id} returnTo={`/inventory/models/${model.id}`} canEdit={can(actor.role, "files.write")} />
+      <AttachmentsSection entityType="model" entityId={model.id} returnTo={`/inventory/models/${model.id}`} canEdit={can(actor.role, "files.write")} photoId={detail.photoId} />
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-medium">{tc("activity")}</h2>

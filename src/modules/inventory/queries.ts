@@ -227,6 +227,7 @@ export async function modelDetail(id: string) {
     categoryPath: pathNames(cats, m.categoryId),
     categoryColor: coloring?.color ?? null,
     lengthColor: lengthColorFor(m.variant, coloring, colors.lengths),
+    photoId: m.defaultPhoto?.id ?? null,
     photoUrl: m.defaultPhoto ? `/api/files/${m.defaultPhoto.id}` : null,
     thumbUrl: m.defaultPhoto?.thumbKey ? `/api/files/${m.defaultPhoto.id}?thumb=1` : null,
     items: m.items.map((i) => ({

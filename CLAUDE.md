@@ -758,7 +758,10 @@ the module.
   Product data, og:image, then the page's own images; no marker is
   reliable, so the reviewer picks one or none); `apply` fetches the chosen
   one with `fetchPublic`, checks it with sharp, attaches it through
-  `files.upload` and makes it the model's default photo. Every model
+  `files.upload` and makes it the model's default photo. A picture
+  uploaded as a photo to a model without one becomes its photo too, and
+  *Use as model photo* under Attachments switches it
+  (`files.setModelPhoto`; `AttachmentsSection` takes `photoId`). Every model
   photo (`entityType` model, kind photo) gets its thumbnail with the
   background made transparent (`removeBackground` in
   `src/modules/files/background.ts`); the original file is never
