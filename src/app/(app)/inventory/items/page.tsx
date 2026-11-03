@@ -6,17 +6,16 @@ import { EmptyState } from "@/components/empty-state";
 import { NativeSelect } from "@/components/form/native-select";
 import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
-import { StatusBadge } from "@/components/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can, requireActor } from "@/lib/auth/session";
 import { categoryOptions, itemFilters, listItems, locationOptions, modelOptions, ITEM_SORTS } from "@/modules/inventory";
 import { InventoryTabs } from "@/modules/inventory/components/inventory-tabs";
+import { ItemList } from "@/modules/inventory/components/item-list";
 import { LabelsDialog } from "@/modules/inventory/components/labels-dialog";
 import { customFieldDefinitions } from "@/modules/settings";
 import { ITEM_STATUSES } from "../../../../../config/app.config";
 import { modelLabelWithMaker } from "@/lib/format";
-import { ModelName } from "@/components/model-name";
 
 export const metadata: Metadata = { title: "Items" };
 
@@ -126,29 +125,7 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
       {result.total === 0 ? (
         <EmptyState title={t("noItems")} body={t("noItemsBody")} />
       ) : (
-        <ul className="divide-y rounded-md border text-sm">
-          {result.rows.map((i) => (
-            <li key={i.id}>
-              <Link href={`/inventory/items/${i.id}`} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50">
-                <span className="w-16 shrink-0 font-mono text-xs">{i.assetTag}</span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">
-                    {i.isKit && <span className="mr-1 rounded bg-muted px-1 text-[10px] uppercase">{t("kit")}</span>}
-                    {i.name ? `${i.name} · ` : ""}
-                    <ModelName model={i.model} />
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {i.model.trackingType === "bulk" ? `×${i.quantity}` : i.serialNumber ? `SN ${i.serialNumber}` : t("noSerial")}
-                    {" · "}
-                    {i.locationName ?? t("noLocation")}
-                    {i.parentLabel ? ` · ${t("inKit")}: ${i.parentLabel}` : ""}
-                  </span>
-                </span>
-                <StatusBadge status={i.status} />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <ItemList rows={result.rows} canEdit={canEdit} canFinance={can(actor.role, "inventory.finance")} locations={locs} />
       )}
       <Pagination page={result.page} pages={result.pages} total={result.total} params={sp} />
     </div>

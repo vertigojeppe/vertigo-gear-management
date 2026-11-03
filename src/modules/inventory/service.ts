@@ -8,7 +8,7 @@ import { nextAssetTag, normaliseAssetTag } from "@/lib/asset-tag";
 import { emitEvent } from "@/lib/events";
 import type { CustomFieldValues } from "@/lib/custom-fields";
 import { itemStatus, type ItemStatus } from "../../../config/app.config";
-import type { CategoryInput, ItemInput, LocationInput, ModelInput, StatusChangeInput, FamilyEditInput } from "./schema";
+import type { CategoryInput, ItemBulkInput, ItemInput, LocationInput, ModelInput, StatusChangeInput, FamilyEditInput } from "./schema";
 import { parseLinksText, LengthColorInput } from "./schema";
 import { validateStatusChange } from "./status";
 import { descendantIds, wouldCycle } from "./tree";
@@ -496,6 +496,7 @@ export const models = {
   },
 };
 
+export type ItemBulkResult = { done: number; refused: { id: string; label: string; summary: string }[] };
 export type BulkResult = { op: "archive" | "unarchive" | "delete"; done: number; refused: { id: string; label: string; summary: string }[] };
 
 /** Remove everything that points at a model so it can be deleted (admin force delete). Items inside its kits are set loose. */
@@ -788,6 +789,55 @@ export const items = {
       by: actor.name,
     });
     return (await items.get(id))!;
+  },
+
+  /**
+   * Edit several items at once (the item list's bulk bar). Status and
+   * location go through `changeStatus` / `move`, so reasons, the status log
+   * and kit cascades work as for one item; the other fields are written as
+   * given. Each item succeeds or is refused on its own.
+   */
+  async bulkEdit(actor: Actor, ids: string[], input: ItemBulkInput): Promise<ItemBulkResult> {
+    assertCan(actor, "inventory.write");
+    if (input.purchasePrice !== undefined) assertCan(actor, "inventory.finance");
+    const def = input.status ? itemStatus(input.status) : undefined;
+    if (def?.reasonRequired && !input.reason) throw new InventoryError("Give a reason for this status.", "reason");
+    if (input.status === "retired" && !input.retiredReason) throw new InventoryError("Say why it was retired: sold, scrapped or lost.", "retiredReason");
+    const fields = Object.fromEntries(
+      Object.entries({
+        supplier: input.supplier,
+        purchaseDate: input.purchaseDate ? new Date(input.purchaseDate + "T00:00:00Z") : undefined,
+        purchasePrice: input.purchasePrice,
+        notForRental: input.notForRental,
+      }).filter(([, v]) => v !== undefined),
+    );
+    const result: ItemBulkResult = { done: 0, refused: [] };
+    for (const id of ids) {
+      // Read each item fresh: a kit earlier in the list may already have moved its contents.
+      const item = await prisma.item.findUnique({ where: { id } });
+      if (!item) continue;
+      try {
+        if (input.status && input.status !== item.status) {
+          await items.changeStatus(actor, id, { status: input.status, reason: input.reason, retiredReason: input.retiredReason, locationId: input.locationId });
+        } else if (input.locationId !== undefined && input.locationId !== item.locationId) {
+          await items.move(actor, id, input.locationId);
+        }
+        if (Object.keys(fields).length > 0) {
+          const after = await prisma.item.update({ where: { id }, data: fields });
+          await logActivity(actor, {
+            entityType: "item",
+            entityId: id,
+            action: "updated",
+            summary: `Updated ${itemLabel(after)} (several at once)`,
+            details: diffFields(toItemDto(item) as unknown as Record<string, unknown>, toItemDto(after) as unknown as Record<string, unknown>),
+          });
+        }
+        result.done++;
+      } catch (err) {
+        result.refused.push({ id, label: itemLabel(item), summary: err instanceof Error ? err.message : String(err) });
+      }
+    }
+    return result;
   },
 
   /** Move to a location. Cascades to kit contents. */
