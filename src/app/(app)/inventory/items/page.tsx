@@ -125,7 +125,7 @@ export default async function ItemsPage(props: { searchParams: Promise<Record<st
       {result.total === 0 ? (
         <EmptyState title={t("noItems")} body={t("noItemsBody")} />
       ) : (
-        <ItemList rows={result.rows} canEdit={canEdit} canFinance={can(actor.role, "inventory.finance")} locations={locs} />
+        <ItemList rows={result.rows} canEdit={canEdit} canFinance={can(actor.role, "inventory.finance")} locations={locs} models={models} />
       )}
       <Pagination page={result.page} pages={result.pages} total={result.total} params={sp} />
     </div>

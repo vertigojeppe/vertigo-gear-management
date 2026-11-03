@@ -222,9 +222,11 @@ the module.
   those rows first. The inventory list's `FamilyList` has the bulk bar
   (archive / unarchive / delete, "delete anyway" for admins).
 - The item list (`ItemList`) has checkboxes and *Edit selected*
-  (`items.bulkEdit`, `itemBulkInput`): status (+ reason), location,
-  supplier, purchase date, purchase price (`inventory.finance`) and not
-  for rental; an empty field keeps each item's value. Status and location
+  (`items.bulkEdit`, `itemBulkInput`): variant (`modelId`, offered from
+  the selected items' families; same tracking type or that item is
+  refused), status (+ reason), location, supplier, purchase date,
+  purchase price (`inventory.finance`) and not for rental; an empty field
+  keeps each item's value. Status and location
   go through `changeStatus` / `move` per item (status log, kit cascade);
   each item is done or refused on its own (`ItemBulkResult`).
 - A **family** is every model with the same name (case-insensitive);

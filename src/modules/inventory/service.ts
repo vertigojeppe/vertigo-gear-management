@@ -811,19 +811,23 @@ export const items = {
         notForRental: input.notForRental,
       }).filter(([, v]) => v !== undefined),
     );
+    const target = input.modelId ? await prisma.model.findUnique({ where: { id: input.modelId } }) : null;
+    if (input.modelId && !target) throw new InventoryError("Model not found.", "modelId");
     const result: ItemBulkResult = { done: 0, refused: [] };
     for (const id of ids) {
       // Read each item fresh: a kit earlier in the list may already have moved its contents.
-      const item = await prisma.item.findUnique({ where: { id } });
+      const item = await prisma.item.findUnique({ where: { id }, include: { model: { select: { trackingType: true } } } });
       if (!item) continue;
       try {
+        const newModel = target && target.id !== item.modelId ? target : null;
+        if (newModel && newModel.trackingType !== item.model.trackingType) throw new InventoryError("Cannot move an item to a model with a different tracking type.", "modelId");
         if (input.status && input.status !== item.status) {
           await items.changeStatus(actor, id, { status: input.status, reason: input.reason, retiredReason: input.retiredReason, locationId: input.locationId });
         } else if (input.locationId !== undefined && input.locationId !== item.locationId) {
           await items.move(actor, id, input.locationId);
         }
-        if (Object.keys(fields).length > 0) {
-          const after = await prisma.item.update({ where: { id }, data: fields });
+        if (Object.keys(fields).length > 0 || newModel) {
+          const after = await prisma.item.update({ where: { id }, data: { ...fields, ...(newModel ? { modelId: newModel.id } : {}) } });
           await logActivity(actor, {
             entityType: "item",
             entityId: id,

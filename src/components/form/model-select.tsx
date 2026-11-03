@@ -13,7 +13,7 @@ export type ModelChoice = { id: string; manufacturer: string; name: string; vari
  * ("50 cm", "70 cm"), so 47 rod lengths read as four groups. Models
  * without siblings stay plain options.
  */
-export function ModelSelect({ models, trackingLabels, ...props }: { models: ModelChoice[]; trackingLabels?: Record<string, string> } & Omit<React.ComponentProps<"select">, "children">) {
+export function ModelSelect({ models, trackingLabels, emptyLabel = "—", ...props }: { models: ModelChoice[]; trackingLabels?: Record<string, string>; emptyLabel?: string } & Omit<React.ComponentProps<"select">, "children">) {
   const groups = useMemo(() => {
     const byFamily = new Map<string, ModelChoice[]>();
     for (const m of models) {
@@ -28,7 +28,7 @@ export function ModelSelect({ models, trackingLabels, ...props }: { models: Mode
   const suffix = (m: ModelChoice) => (trackingLabels && m.trackingType ? ` (${trackingLabels[m.trackingType] ?? m.trackingType})` : "");
   return (
     <NativeSelect {...props}>
-      <option value="">—</option>
+      <option value="">{emptyLabel}</option>
       {groups.map((g) =>
         g.models.length > 1 ? (
           <optgroup key={g.key} label={g.label}>

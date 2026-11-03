@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ActionForm } from "@/components/form/action-form";
 import { DecimalInput } from "@/components/form/decimal-input";
+import { ModelSelect, type ModelChoice } from "@/components/form/model-select";
 import { Field, FormError } from "@/components/form/field";
 import { NativeSelect } from "@/components/form/native-select";
 import { SubmitButton } from "@/components/form/submit-button";
@@ -23,11 +24,12 @@ type LocationOption = { id: string; name: string; depth: number };
 
 /**
  * The item list. With `canEdit` every row has a checkbox, and the bar on top
- * edits the selected items in one go: status, location, supplier, purchase
- * date, purchase price (finance) and not for rental; empty fields stay as
+ * edits the selected items in one go: variant (a model of the same family),
+ * status, location, supplier, purchase date, purchase price (finance) and
+ * not for rental; empty fields stay as
  * each item has them.
  */
-export function ItemList({ rows, canEdit, canFinance, locations }: { rows: ItemListRow[]; canEdit: boolean; canFinance: boolean; locations: LocationOption[] }) {
+export function ItemList({ rows, canEdit, canFinance, locations, models }: { rows: ItemListRow[]; canEdit: boolean; canFinance: boolean; locations: LocationOption[]; models: ModelChoice[] }) {
   const t = useTranslations("inventory");
   const tc = useTranslations("common");
   const ts = useTranslations("itemStatus");
@@ -48,6 +50,9 @@ export function ItemList({ rows, canEdit, canFinance, locations }: { rows: ItemL
   const err = state.fieldErrors ?? {};
   const refused = state.data?.refused ?? [];
   const def = ITEM_STATUSES.find((s) => s.key === status);
+  // Variants to switch to: every model of the families the selected items belong to.
+  const families = new Set(rows.filter((r) => selected.has(r.id)).map((r) => r.model.name.toLowerCase()));
+  const variants = models.filter((m) => families.has(m.name.toLowerCase()));
 
   return (
     <div className="flex flex-col gap-3">
@@ -116,6 +121,9 @@ export function ItemList({ rows, canEdit, canFinance, locations }: { rows: ItemL
               <input key={id} type="hidden" name="ids" value={id} />
             ))}
             <FormError message={state.error} />
+            <Field id="bulk-modelId" label={t("variant")} error={err.modelId}>
+              <ModelSelect id="bulk-modelId" name="modelId" defaultValue="" models={variants} emptyLabel={t("keepAsIs")} />
+            </Field>
             <Field id="bulk-status" label={t("status")} error={err.status}>
               <NativeSelect id="bulk-status" name="status" value={status} onChange={(e) => setStatus(e.target.value)}>
                 <option value="">{t("keepAsIs")}</option>

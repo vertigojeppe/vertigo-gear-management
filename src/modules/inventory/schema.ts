@@ -178,6 +178,8 @@ export type StatusChangeInput = z.infer<typeof statusChangeInput>;
 
 /** Edit several items at once: a field left empty keeps each item's own value. */
 export const itemBulkInput = z.object({
+  /** Another model (variant) for all of them; same tracking type only. */
+  modelId: optionalId,
   status: z.preprocess((v) => (v === "" ? undefined : v), z.enum(ITEM_STATUS_KEYS as [string, ...string[]]).optional()),
   reason: optionalText,
   retiredReason: statusChangeInput.shape.retiredReason,
