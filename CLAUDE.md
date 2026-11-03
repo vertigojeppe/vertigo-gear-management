@@ -761,7 +761,9 @@ the module.
   `files.upload` and makes it the model's default photo. A picture
   uploaded as a photo to a model without one becomes its photo too, and
   *Use as model photo* under Attachments switches it
-  (`files.setModelPhoto`; `AttachmentsSection` takes `photoId`). Every model
+  (`files.setModelPhoto`; `AttachmentsSection` takes `photoId`). Photos
+  under Attachments open in `PhotoViewer` (files/components/photo-viewer.tsx:
+  a dialog with arrows, ← / → and swipe; `PhotoButton` per picture). Every model
   photo (`entityType` model, kind photo) gets its thumbnail with the
   background made transparent (`removeBackground` in
   `src/modules/files/background.ts`) and the empty border trimmed

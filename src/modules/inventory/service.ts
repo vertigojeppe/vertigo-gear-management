@@ -373,11 +373,6 @@ export const models = {
     return toModelDto(m);
   },
 
-  async setDefaultPhoto(actor: Actor, id: string, fileId: string | null) {
-    assertCan(actor, "inventory.write");
-    await prisma.model.update({ where: { id }, data: { defaultPhotoId: fileId } });
-  },
-
   /**
    * Delete a model. Refused while anything points at it, unless an admin
    * forces it: then the reservations, rental lines, packing lines,

@@ -6,6 +6,7 @@ import { formatBytes, formatDate } from "@/lib/format";
 import { files } from "../service";
 import { UploadForm } from "./upload-form";
 import { DeleteAttachmentButton } from "./delete-button";
+import { PhotoButton, PhotoViewer } from "./photo-viewer";
 import { setModelPhoto } from "../actions";
 
 /** Attachment list + upload form for an entity. Server component. */
@@ -35,38 +36,40 @@ export async function AttachmentsSection({
       </h2>
       {rows.length === 0 && <p className="text-sm text-muted-foreground">{t("none")}</p>}
       {photos.length > 0 && (
-        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-          {photos.map((a) => (
-            <li key={a.id} className="group relative overflow-hidden rounded-md border bg-muted">
-              <Link href={a.url} target="_blank" rel="noreferrer">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={a.thumbUrl!} alt={a.name} className="aspect-square w-full object-contain" loading="lazy" />
-              </Link>
-              {canEdit && (
-                <div className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                  <DeleteAttachmentButton id={a.id} returnTo={returnTo} />
-                </div>
-              )}
-              <p className="truncate px-1.5 py-1 text-[11px] text-muted-foreground" title={a.name}>
-                {t(a.kind)} · {a.name}
-              </p>
-              {photoId !== undefined &&
-                (a.fileId === photoId ? (
-                  <p className="px-1.5 pb-1 text-[11px] font-medium">{t("isModelPhoto")}</p>
-                ) : (
-                  canEdit && (
-                    <form action={setModelPhoto} className="px-1.5 pb-1">
-                      <input type="hidden" name="id" value={a.id} />
-                      <input type="hidden" name="returnTo" value={returnTo} />
-                      <button type="submit" className="text-[11px] underline">
-                        {t("useAsModelPhoto")}
-                      </button>
-                    </form>
-                  )
-                ))}
-            </li>
-          ))}
-        </ul>
+        <PhotoViewer photos={photos.map((a) => ({ url: a.url, name: a.name }))}>
+          <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+            {photos.map((a, n) => (
+              <li key={a.id} className="group relative overflow-hidden rounded-md border bg-muted">
+                <PhotoButton index={n} label={a.name}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={a.thumbUrl!} alt="" className="aspect-square w-full object-contain" loading="lazy" />
+                </PhotoButton>
+                {canEdit && (
+                  <div className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                    <DeleteAttachmentButton id={a.id} returnTo={returnTo} />
+                  </div>
+                )}
+                <p className="truncate px-1.5 py-1 text-[11px] text-muted-foreground" title={a.name}>
+                  {t(a.kind)} · {a.name}
+                </p>
+                {photoId !== undefined &&
+                  (a.fileId === photoId ? (
+                    <p className="px-1.5 pb-1 text-[11px] font-medium">{t("isModelPhoto")}</p>
+                  ) : (
+                    canEdit && (
+                      <form action={setModelPhoto} className="px-1.5 pb-1">
+                        <input type="hidden" name="id" value={a.id} />
+                        <input type="hidden" name="returnTo" value={returnTo} />
+                        <button type="submit" className="text-[11px] underline">
+                          {t("useAsModelPhoto")}
+                        </button>
+                      </form>
+                    )
+                  ))}
+              </li>
+            ))}
+          </ul>
+        </PhotoViewer>
       )}
       {others.length > 0 && (
         <ul className="divide-y rounded-md border text-sm">
