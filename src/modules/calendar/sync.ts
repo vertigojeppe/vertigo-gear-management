@@ -3,7 +3,7 @@ import { dateToString, addDays } from "@/lib/dates";
 import { appConfig } from "../../../config/app.config";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into the outbox worker and Vitest
 import { appSettings } from "@/modules/settings/app-settings";
-import { jobEvents, type JobDates } from "./job-events";
+import { jobEvents, jobTitle, type JobDates } from "./job-events";
 import { GoogleCalendar, GoogleDelegationError, googleConfig, type GoogleEvent } from "./google";
 import { entryGoogle, type GoogleEntry, type GoogleTarget } from "./entry-events";
 import { modelLabel } from "@/lib/format";
@@ -29,6 +29,7 @@ export function projectPhaseEvents(
   p: JobDates & {
     id: string;
     name: string;
+    status?: string;
     venueName: string | null;
     venueAddress: string | null;
     client: { name: string } | null;
@@ -44,14 +45,15 @@ export function projectPhaseEvents(
     attendees: attendees.length ? attendees : undefined,
   };
   const about = `${p.client?.name ?? "No client"}${p.venueName ? ` · ${p.venueName}` : ""}`;
+  const name = jobTitle(p);
   for (const ev of jobEvents(p, opts)) {
     if (ev.allDay) {
       // End is exclusive in Google: the day after the last one.
-      out[ev.key] = { ...base, summary: p.name, description: `${about}\n${ev.lines.join("\n")}\n${appUrl(`/projects/${p.id}`)}`, start: { date: ev.firstDay }, end: { date: addDays(ev.lastDay, 1) } };
+      out[ev.key] = { ...base, summary: name, description: `${about}\n${ev.lines.join("\n")}\n${appUrl(`/projects/${p.id}`)}`, start: { date: ev.firstDay }, end: { date: addDays(ev.lastDay, 1) } };
     } else {
       out[ev.key] = {
         ...base,
-        summary: `${p.name} – ${ev.title}`,
+        summary: `${name} – ${ev.title}`,
         description: `${ev.title} · ${about}\n${appUrl(`/projects/${p.id}`)}`,
         start: { dateTime: ev.start.toISOString(), timeZone: TZ },
         end: { dateTime: ev.end.toISOString(), timeZone: TZ },
@@ -69,8 +71,8 @@ export async function syncProject(projectId: string, client?: GoogleCalendar, de
   const p = await prisma.project.findUnique({ where: { id: projectId }, include: { client: true, crew: { include: { user: true } } } });
   const ids: Record<string, string> = p ? (typeof p.googleEventIds === "object" && p.googleEventIds ? { ...(p.googleEventIds as Record<string, string>) } : {}) : { ...deletedIds };
 
-  // Deleted or cancelled or back to quote: remove everything we created.
-  if (!p || p.status === "cancelled" || p.status === "quote") {
+  // Deleted or cancelled: remove everything we created.
+  if (!p || p.status === "cancelled") {
     for (const id of Object.values(ids)) await google.delete(cfg.calendars.projects, id);
     if (p) await prisma.project.update({ where: { id: projectId }, data: { googleEventIds: {} } });
     return "deleted";
@@ -88,7 +90,7 @@ export async function syncProject(projectId: string, client?: GoogleCalendar, de
 
 /** Queue a sync for every project that is (or may still be) in Google, e.g. after the event length changed. */
 export async function queueAllProjectSyncs(): Promise<number> {
-  const projects = await prisma.project.findMany({ where: { status: { notIn: ["quote", "cancelled"] } }, select: { id: true } });
+  const projects = await prisma.project.findMany({ where: { status: { not: "cancelled" } }, select: { id: true } });
   const pending = await prisma.outbox.findMany({ where: { type: "calendar.sync_project", status: "pending" }, select: { payload: true } });
   const queued = new Set(pending.map((r) => (r.payload as { id?: string }).id));
   const rows = projects.filter((p) => !queued.has(p.id)).map((p) => ({ type: "calendar.sync_project", payload: { id: p.id, event: "calendar.resync" } }));

@@ -135,9 +135,8 @@ export type LocationType = (typeof LOCATION_TYPES)[number];
 /* ---------------------------------------------------------------------- */
 
 export const PROJECT_STATUSES = [
-  { key: "quote", label: "projectStatus.quote", color: "gray" },
+  { key: "tba", label: "projectStatus.tba", color: "amber" },
   { key: "confirmed", label: "projectStatus.confirmed", color: "blue" },
-  { key: "in_progress", label: "projectStatus.in_progress", color: "green" },
   { key: "done", label: "projectStatus.done", color: "gray" },
   { key: "cancelled", label: "projectStatus.cancelled", color: "red" },
 ] as const;

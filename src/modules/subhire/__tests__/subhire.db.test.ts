@@ -23,7 +23,7 @@ const itemIds: string[] = [];
 beforeAll(async () => {
   admin.id = (await prisma.user.findFirst({ where: { role: "admin" } }))?.id ?? "";
   ownerId = (await prisma.contact.create({ data: { kind: "company", name: `Partner ${marker}` } })).id;
-  projectId = (await prisma.project.create({ data: { name: `Sub-hire test ${marker}`, status: "quote", reserveFrom: new Date("2033-03-01T00:00:00Z"), reserveTo: new Date("2033-03-03T00:00:00Z") } })).id;
+  projectId = (await prisma.project.create({ data: { name: `Sub-hire test ${marker}`, status: "tba", reserveFrom: new Date("2033-03-01T00:00:00Z"), reserveTo: new Date("2033-03-03T00:00:00Z") } })).id;
 });
 
 afterAll(async () => {

@@ -490,9 +490,8 @@
     "display": "Kontorskærm"
   },
   "projectStatus": {
-    "quote": "Tilbud",
+    "tba": "TBA",
     "confirmed": "Bekræftet",
-    "in_progress": "I gang",
     "done": "Afsluttet",
     "cancelled": "Aflyst"
   },
@@ -583,10 +582,9 @@
     "itemsOnSite": "{count, plural, =0 {Ingen enheder på stedet} one {# enhed på stedet} other {# enheder på stedet}}",
     "setStatus": "Sæt status",
     "confirm": "Bekræft",
-    "start": "Start",
     "finish": "Afslut",
     "cancel": "Aflys projekt",
-    "reopen": "Tilbage til tilbud",
+    "reopen": "Tilbage til TBA",
     "deleteConfirm": "Slet projektet og dets reservationer? Kan ikke fortrydes.",
     "newClient": "Ny kunde",
     "editClient": "Rediger kunde",

@@ -27,7 +27,7 @@ beforeAll(async () => {
   await prisma.item.create({ data: { modelId, assetTag: `TP-${stamp}`, quantity: 10, status: "in_house" } });
   clientId = (await prisma.client.create({ data: { name: `Client ${marker}` } })).id;
   rentalId = (await prisma.rental.create({ data: { clientId, startDate: new Date("2033-03-01"), endDate: new Date("2033-03-03"), status: "reserved" } })).id;
-  projectId = (await prisma.project.create({ data: { name: `Show ${marker}`, clientId, status: "quote", reserveFrom: new Date("2033-04-01"), reserveTo: new Date("2033-04-10") } })).id;
+  projectId = (await prisma.project.create({ data: { name: `Show ${marker}`, clientId, status: "tba", reserveFrom: new Date("2033-04-01"), reserveTo: new Date("2033-04-10") } })).id;
 });
 
 afterAll(async () => {

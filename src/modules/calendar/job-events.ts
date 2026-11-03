@@ -28,6 +28,11 @@ export type JobDates = {
   returnDate: Date | null;
 };
 
+/** A job's name in calendars: a TBA job says so, since it is not confirmed yet. */
+export function jobTitle(p: { name: string; status?: string }): string {
+  return p.status === "tba" ? `TBA: ${p.name}` : p.name;
+}
+
 export type JobEvent =
   /** The banner: inclusive first and last day. */
   | { key: "job"; allDay: true; title: null; firstDay: DateString; lastDay: DateString; lines: string[] }

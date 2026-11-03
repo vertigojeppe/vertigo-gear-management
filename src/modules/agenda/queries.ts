@@ -81,5 +81,5 @@ export async function entryPeopleOptions() {
 
 /** Running and coming projects to tie an entry to. */
 export async function entryProjectOptions() {
-  return prisma.project.findMany({ where: { status: { in: ["quote", "confirmed", "in_progress"] } }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+  return prisma.project.findMany({ where: { status: { in: ["tba", "confirmed"] } }, orderBy: { name: "asc" }, select: { id: true, name: true } });
 }

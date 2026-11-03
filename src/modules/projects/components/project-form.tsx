@@ -75,7 +75,7 @@ export function ProjectForm({ project, clients, defs }: { project?: ProjectDto; 
           </div>
         </Field>
         <Field id="status" label={t("status")} error={err.status}>
-          <NativeSelect id="status" name="status" defaultValue={v("status", project?.status ?? "quote")}>
+          <NativeSelect id="status" name="status" defaultValue={v("status", project?.status ?? "tba")}>
             {PROJECT_STATUSES.map((s) => (
               <option key={s.key} value={s.key}>
                 {ts(s.key)}

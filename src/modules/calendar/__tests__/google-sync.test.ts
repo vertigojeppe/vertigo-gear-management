@@ -93,6 +93,12 @@ describe("projectPhaseEvents", () => {
     expect(events.show.location).toBe("Vega");
   });
 
+  it("marks a TBA job in every title", () => {
+    const events = projectPhaseEvents({ ...input, status: "tba" });
+    expect(events.job.summary).toBe("TBA: Show");
+    expect(events.show.summary).toBe("TBA: Show – show");
+  });
+
   it("uses the length set under Settings › Calendar", () => {
     const events = projectPhaseEvents(input, { callHours: 3.5 });
     expect(events["load_in:2030-06-02"].end).toEqual({ dateTime: "2030-06-02T09:00:00.000Z", timeZone: "Europe/Copenhagen" });

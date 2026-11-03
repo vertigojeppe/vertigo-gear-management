@@ -25,7 +25,7 @@ model Project {
   venueName    String?
   venueAddress String?
   /// Key from PROJECT_STATUSES in config/app.config.ts.
-  status       String    @default("quote")
+  status       String    @default("tba")
   /// Phase dates. Day fields are Copenhagen days stored as UTC midnight; show times are
   /// Copenhagen wall-clock stored as UTC. Prep, build-up and pack-down are continuous day
   /// ranges; build-up and pack-down carry one call time ("HH:MM") for their first day.

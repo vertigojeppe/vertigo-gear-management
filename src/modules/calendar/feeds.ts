@@ -6,7 +6,7 @@ import { appConfig } from "../../../config/app.config";
 import { formatDateTime, modelLabel } from "@/lib/format";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { appSettings } from "@/modules/settings/app-settings";
-import { jobEvents } from "./job-events";
+import { jobEvents, jobTitle } from "./job-events";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { entriesBetween } from "@/modules/agenda/queries";
 import { today } from "@/lib/dates";
@@ -60,7 +60,7 @@ export async function buildFeed(scope: FeedScope, userId: string | null): Promis
     for (const p of projects) {
       const url = appUrl(`/projects/${p.id}`);
       const where = [p.venueName, p.venueAddress].filter(Boolean).join(", ");
-      const summaryBase = `${p.name}${p.client ? ` (${p.client.name})` : ""}`;
+      const summaryBase = `${jobTitle(p)}${p.client ? ` (${p.client.name})` : ""}`;
       const me = scope === "mine" ? p.crew.find((c) => c.userId === userId) : undefined;
       // One banner per job plus timed build-up / pack-down days and the show (job-events.ts).
       for (const ev of jobEvents(p, { callHours })) {
