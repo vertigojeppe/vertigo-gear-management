@@ -130,7 +130,8 @@ function DocumentViewerInner({ kind, version, canEdit, userId, mtlUrl, previewUr
 
   if (kind === "image") {
     return (
-      <div className="flex flex-col gap-3">
+      // data-unsaved lets the picture stepper ask before leaving drawn markup behind.
+      <div className="flex flex-col gap-3" data-unsaved={Object.values(dirty).some(Boolean) || undefined}>
         {toolbar}
         <div className="relative inline-block max-w-full self-start">
           {/* eslint-disable-next-line @next/next/no-img-element */}
