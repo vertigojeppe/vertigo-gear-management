@@ -14,7 +14,7 @@ const PdfViewer = dynamic(() => import("./pdf-viewer").then((m) => m.PdfViewer),
 const ModelViewer = dynamic(() => import("./model-viewer").then((m) => m.ModelViewer), { ssr: false });
 
 /** `url` is what the viewer shows; `downloadUrl` the original when that differs (a Word file shown as its PDF copy). */
-export type ViewerVersion = { id: string; url: string; downloadUrl?: string; name: string; mimeType: string; size: number; markups: { page: number; shapes: Shape[] }[] };
+export type ViewerVersion = { id: string; url: string; downloadUrl?: string; name: string; /** The name the viewer goes by when `url` is a converted copy. */ viewName?: string; mimeType: string; size: number; markups: { page: number; shapes: Shape[] }[] };
 
 /**
  * Picks the viewer for a document version and, for images and PDFs, puts
@@ -162,7 +162,7 @@ function DocumentViewerInner({ kind, version, canEdit, userId, mtlUrl, previewUr
   }
 
   if (kind === "model3d") {
-    const ext = version.name.split(".").pop()?.toLowerCase() ?? "";
+    const ext = (version.viewName ?? version.name).split(".").pop()?.toLowerCase() ?? "";
     return (
       <ModelViewer
         url={version.url}

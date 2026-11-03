@@ -147,12 +147,17 @@ model PlanDocumentVersion {
   /// put in the plan PDF instead of the original, which stays downloadable.
   pdfFileId  String?
   pdfFile    File?        @relation("DocumentVersionPdf", fields: [pdfFileId], references: [id], onDelete: SetNull)
+  /// GLB made from a SketchUp file on upload (OpenSKP); shown in the 3D
+  /// viewer instead of the original, which stays downloadable.
+  modelFileId String?
+  modelFile   File?       @relation("DocumentVersionModel", fields: [modelFileId], references: [id], onDelete: SetNull)
   note       String?
   markups    Markup[]
   createdAt  DateTime     @default(now())
 
   @@unique([documentId, version])
   @@index([pdfFileId])
+  @@index([modelFileId])
 }
 
 /// Drawings on top of an image or a PDF page: a separate layer, never baked

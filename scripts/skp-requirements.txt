@@ -1,0 +1,8 @@
+# SketchUp to GLB (scripts/skp-to-glb.py), installed into /opt/skp by the Dockerfile.
+openskp==1.4.0
+pillow==13.0.0
+numpy==2.5.4
+trimesh==5.2.0
+shapely==2.2.0
+mapbox_earcut==2.1.0
+defusedxml==0.7.1

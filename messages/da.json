@@ -1047,7 +1047,13 @@
     "wordNoConverter": "En Word-fil. Serveren har ikke LibreOffice, så den kan kun hentes.",
     "makePdf": "Lav PDF",
     "remakePdf": "Lav PDF igen",
-    "makingPdf": "Laver PDF…"
+    "makingPdf": "Laver PDF…",
+    "skpAsModel": "En SketchUp-fil, vist her som en 3D-kopi lavet da den blev tilføjet. Selve .skp-filen ligger under Hent original.",
+    "skpNoModel": "En SketchUp-fil uden 3D-kopi endnu, så den kan kun hentes.",
+    "skpNoConverter": "En SketchUp-fil. Serveren kan ikke lave 3D-kopier, så den kan kun hentes.",
+    "makeModel": "Lav 3D-kopi",
+    "remakeModel": "Lav 3D-kopi igen",
+    "makingModel": "Laver 3D-kopi…"
   },
   "importer": {
     "title": "Importér regneark",

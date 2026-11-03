@@ -7,11 +7,12 @@ import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { can, requireActor } from "@/lib/auth/session";
 import { officeConvertAvailable } from "@/lib/office-convert";
+import { skpConvertAvailable } from "@/lib/skp-convert";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { documentDetail, documentsForPlan } from "@/modules/plans";
 import { DocumentUploader } from "@/modules/plans/components/document-uploader";
 import { DocumentViewer } from "@/modules/plans/components/document-viewer";
-import { MakePdfButton, PinDocumentForm, RemoveDocumentButton, RemoveVersionButton } from "@/modules/plans/components/document-forms";
+import { MakeCopyButton, PinDocumentForm, RemoveDocumentButton, RemoveVersionButton } from "@/modules/plans/components/document-forms";
 
 export const metadata: Metadata = { title: "Document" };
 
@@ -29,6 +30,7 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
   // A Word file is shown as its PDF copy; the original stays under Download.
   const kind = version.kind;
   const canConvert = canEdit && version.convertible && (await officeConvertAvailable());
+  const canModel = canEdit && version.toModel && (await skpConvertAvailable());
   // OBJ + MTL: a sibling document with the same base name and .mtl supplies materials.
   let mtlUrl: string | null = null;
   if (kind === "model3d" && version.name.toLowerCase().endsWith(".obj")) {
@@ -46,7 +48,7 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
         actions={
           <>
             <a href={`${version.url}?download=1`} className={buttonVariants({ variant: "outline", size: "sm" })}>
-              {version.pdfUrl ? t("downloadOriginal") : t("download")}
+              {version.pdfUrl || version.modelUrl ? t("downloadOriginal") : t("download")}
             </a>
             {version.pdfUrl && (
               <a href={`${version.pdfUrl}?download=1`} className={buttonVariants({ variant: "outline", size: "sm" })}>
@@ -61,11 +63,18 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
       {version.convertible && (
         <div className="flex flex-wrap items-center gap-3 rounded-md border bg-muted/30 px-3 py-2 text-sm" data-testid="word-notice">
           <span className="min-w-0 flex-1 text-muted-foreground">{version.pdfUrl ? t("wordAsPdf") : canConvert ? t("wordNoPdf") : t("wordNoConverter")}</span>
-          {canConvert && <MakePdfButton projectId={id} versionId={version.id} again={Boolean(version.pdfUrl)} />}
+          {canConvert && <MakeCopyButton projectId={id} versionId={version.id} copy="pdf" again={Boolean(version.pdfUrl)} />}
         </div>
       )}
 
-      <DocumentViewer kind={kind} version={{ id: version.id, url: version.viewUrl, downloadUrl: version.url, name: version.name, mimeType: version.mimeType, size: version.size, markups: version.markups }} canEdit={canEdit} userId={actor.id} mtlUrl={mtlUrl} previewUrl={document.previewUrl} />
+      {version.toModel && (
+        <div className="flex flex-wrap items-center gap-3 rounded-md border bg-muted/30 px-3 py-2 text-sm" data-testid="skp-notice">
+          <span className="min-w-0 flex-1 text-muted-foreground">{version.modelUrl ? t("skpAsModel") : canModel ? t("skpNoModel") : t("skpNoConverter")}</span>
+          {canModel && <MakeCopyButton projectId={id} versionId={version.id} copy="model" again={Boolean(version.modelUrl)} />}
+        </div>
+      )}
+
+      <DocumentViewer kind={kind} version={{ id: version.id, url: version.viewUrl, downloadUrl: version.url, name: version.name, viewName: version.viewName, mimeType: version.mimeType, size: version.size, markups: version.markups }} canEdit={canEdit} userId={actor.id} mtlUrl={mtlUrl} previewUrl={document.previewUrl} />
 
       {canEdit && (kind === "native" || kind === "other") && (
         <DocumentUploader planId={plan.id} previewFor={document.id} accept="image/*" compact />
