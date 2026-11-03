@@ -390,6 +390,9 @@ the module.
   (one per day, key `load_in:<day>`, `appSettings.callHours()` long,
   Settings › Calendar, default `CALL_HOURS`), the show timed; prep,
   return and call-less build-up days only appear in the banner.
+  Every job but a cancelled one is in the calendars; a TBA job's titles
+  start with "TBA: " (`jobTitle`). Statuses: tba → confirmed → done,
+  or cancelled (`PROJECT_STATUSES`).
   `syncProject` deletes stored event ids it no longer produces; saving
   the length queues `queueAllProjectSyncs`. The reservation window
   (`reserveFrom/To`) is derived in `deriveWindow`. Allocations that still

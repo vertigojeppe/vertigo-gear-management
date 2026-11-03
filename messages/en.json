@@ -490,9 +490,8 @@
     "display": "Office screen"
   },
   "projectStatus": {
-    "quote": "Quote",
+    "tba": "TBA",
     "confirmed": "Confirmed",
-    "in_progress": "In progress",
     "done": "Done",
     "cancelled": "Cancelled"
   },
@@ -583,10 +582,9 @@
     "itemsOnSite": "{count, plural, =0 {No items on site} one {# item on site} other {# items on site}}",
     "setStatus": "Set status",
     "confirm": "Confirm",
-    "start": "Start",
     "finish": "Mark done",
     "cancel": "Cancel project",
-    "reopen": "Back to quote",
+    "reopen": "Back to TBA",
     "deleteConfirm": "Delete this project and its reservations? This cannot be undone.",
     "newClient": "New client",
     "editClient": "Edit client",

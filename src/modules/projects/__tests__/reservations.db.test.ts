@@ -39,7 +39,7 @@ beforeAll(async () => {
   }
   clientId = (await clients.create(admin, { name: `Client ${marker}`, contactName: undefined, email: undefined, phone: undefined, address: undefined, notes: undefined })).id;
   projectId = (await projects.create(admin, projectInput)).id;
-  projectBId = (await projects.create(admin, { ...projectInput, name: `Project B ${marker}`, status: "quote" })).id;
+  projectBId = (await projects.create(admin, { ...projectInput, name: `Project B ${marker}`, status: "tba" })).id;
 });
 
 afterAll(async () => {
@@ -136,7 +136,7 @@ describe("batched availability", () => {
       expect(byModel.get(modelId)?.map((a) => a.holderId)).toEqual([projectId]);
       expect(byModel.get("no-such-model")).toEqual([]);
     } finally {
-      await prisma.project.update({ where: { id: projectBId }, data: { status: "quote" } });
+      await prisma.project.update({ where: { id: projectBId }, data: { status: "tba" } });
     }
   });
 

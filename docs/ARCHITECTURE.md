@@ -275,7 +275,7 @@ erDiagram
   Webhook ||--o{ Outbox : "deliveries (by id in payload)"
 
   Project {
-    string status "quote | confirmed | in_progress | done | cancelled"
+    string status "tba | confirmed | done | cancelled"
     datetime prepStart
     date prepEnd
     date buildStart

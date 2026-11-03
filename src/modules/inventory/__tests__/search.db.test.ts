@@ -18,7 +18,7 @@ let worklightId: string;
 beforeAll(async () => {
   categoryId = (await prisma.category.create({ data: { name: `Cat ${marker}` } })).id;
   modelId = (await prisma.model.create({ data: { categoryId, manufacturer: "Showtec", name: `Q Base ${marker}`, trackingType: "serialized" } })).id;
-  projectId = (await prisma.project.create({ data: { name: `Kulturnat ${marker}`, status: "quote", venueName: "Den Sorte Diamant" } })).id;
+  projectId = (await prisma.project.create({ data: { name: `Kulturnat ${marker}`, status: "tba", venueName: "Den Sorte Diamant" } })).id;
   worklightId = (await prisma.model.create({ data: { categoryId, manufacturer: "", name: `Worklight LED ${marker}`, trackingType: "serialized" } })).id;
 });
 

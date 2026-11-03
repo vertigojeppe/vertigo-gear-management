@@ -6,7 +6,7 @@ import { entriesBetween } from "@/modules/agenda";
 import { phaseItems, phasesOf, sortAgenda, timeOf, type AgendaItem, type BoardPhase } from "./logic";
 
 /** Jobs on the board: confirmed and running ones. Quotes are not certain yet; done and cancelled are over. */
-const ON_BOARD = ["confirmed", "in_progress"];
+const ON_BOARD = ["confirmed"];
 
 export type BoardJob = {
   id: string;

@@ -125,7 +125,7 @@ export function toProjectDto(p: ProjectRow): ProjectDto {
     clientId: p.clientId,
     venueName: p.venueName,
     venueAddress: p.venueAddress,
-    status: (PROJECT_STATUSES.find((s) => s.key === p.status)?.key ?? "quote") as ProjectStatus,
+    status: (PROJECT_STATUSES.find((s) => s.key === p.status)?.key ?? "tba") as ProjectStatus,
     prepStart: day(p.prepStart),
     prepEnd: day(p.prepEnd),
     buildStart: day(p.buildStart),
@@ -263,7 +263,7 @@ export const projects = {
     });
     const calendarRelevant = CALENDAR_FIELDS.some((f) => String(beforeDto[f]) !== String(afterDto[f]));
     if (before.status !== after.status) await projects.emitStatusEvents(before.status, after);
-    else if (calendarRelevant && after.status !== "quote") {
+    else if (calendarRelevant && after.status !== "cancelled") {
       await emitEvent("project.updated", { id, name: after.name }, { calendar: { kind: "project", id } });
     }
     return afterDto;
@@ -284,7 +284,7 @@ export const projects = {
     const cal = { calendar: { kind: "project" as const, id: p.id } };
     if (p.status === "confirmed" && fromStatus !== "confirmed") await emitEvent("project.confirmed", { id: p.id, name: p.name }, cal);
     else if (p.status === "cancelled") await emitEvent("project.cancelled", { id: p.id, name: p.name }, cal);
-    else await emitEvent("project.updated", { id: p.id, name: p.name, status: p.status }, p.status === "quote" ? {} : cal);
+    else await emitEvent("project.updated", { id: p.id, name: p.name, status: p.status }, cal);
   },
 
   async remove(actor: Actor, id: string) {
@@ -341,7 +341,7 @@ export const projects = {
     });
     await logActivity(actor, { entityType: "project", entityId: projectId, action: "crew_added", summary: `Added ${user.name} to the crew${input.role ? ` as ${input.role}` : ""}` });
     const p = await prisma.project.findUniqueOrThrow({ where: { id: projectId } });
-    if (p.status !== "quote") await emitEvent("project.updated", { id: projectId, name: p.name, crew: true }, { calendar: { kind: "project", id: projectId } });
+    if (p.status !== "cancelled") await emitEvent("project.updated", { id: projectId, name: p.name, crew: true }, { calendar: { kind: "project", id: projectId } });
     return row;
   },
   async removeCrew(actor: Actor, crewId: string) {

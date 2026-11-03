@@ -79,7 +79,7 @@ with `quantity = 3` inside the kit, drawn from the model's warehouse bin.
 ### projects
 - **Client** — company, contact person(s), email, phone, address.
 - **Project** `*` — name, clientId, venueName, venueAddress, status
-  (`quote` / `confirmed` / `in_progress` / `done` / `cancelled`), dates:
+  (`tba` / `confirmed` / `done` / `cancelled`), dates:
   prepStart/End, buildStart/End + buildCall, showStart, showEnd, packStart/End + packCall, returnDate; notes,
   externalLinks (Drive / Notion), googleEventIds JSON.
 - **ProjectContact** — projectId, name, role, phone, email.

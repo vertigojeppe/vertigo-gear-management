@@ -31,7 +31,7 @@ export const projectInput = z.object({
   clientId: optionalId,
   venueName: optionalText,
   venueAddress: optionalText,
-  status: z.enum(PROJECT_STATUS_KEYS as [string, ...string[]]).default("quote"),
+  status: z.enum(PROJECT_STATUS_KEYS as [string, ...string[]]).default("tba"),
   /** Day ranges (YYYY-MM-DD, inclusive); one end alone means a single day. */
   prepStart: optionalDate,
   prepEnd: optionalDate,
