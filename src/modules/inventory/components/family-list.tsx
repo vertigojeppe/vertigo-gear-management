@@ -230,7 +230,7 @@ function Thumb({ url }: { url: string | null }) {
     <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded bg-muted text-muted-foreground">
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" className="size-full object-cover" loading="lazy" />
+        <img src={url} alt="" className="size-full object-contain" loading="lazy" />
       ) : (
         <Package className="size-5" aria-hidden />
       )}
