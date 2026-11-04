@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth/session";
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
+import type { GuestChoice } from "./logic";
+import { guestDirectory } from "./queries";
 import { entryInput } from "./schema";
 import { entries } from "./service";
 
@@ -12,6 +14,12 @@ function refresh(projectId?: string | null) {
   revalidatePath("/dashboard");
   revalidatePath("/board");
   if (projectId) revalidatePath(`/projects/${projectId}`);
+}
+
+/** Addresses for the Guests field's suggestions, fetched once when the field is first used. */
+export async function guestSuggestions(): Promise<GuestChoice[]> {
+  await requirePermission("agenda.write");
+  return guestDirectory();
 }
 
 /** New or changed calendar entry (meeting, time off, assignment); the people come as checkboxes named "people". */

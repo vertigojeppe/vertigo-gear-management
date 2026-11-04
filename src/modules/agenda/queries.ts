@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { addDays, dateFromString, dayInZone, type DateString } from "@/lib/dates";
-import { entryDays, entryKind } from "./logic";
+import { entryDays, entryKind, type GuestChoice } from "./logic";
 import type { EntryKind } from "../../../config/app.config";
 
 export type EntryRow = {
@@ -82,4 +82,19 @@ export async function entryPeopleOptions() {
 /** Running and coming projects to tie an entry to. */
 export async function entryProjectOptions() {
   return prisma.project.findMany({ where: { status: { in: ["tba", "confirmed"] } }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+}
+
+/** What the Guests field suggests: contacts with an email address, then every guest address used before. */
+export async function guestDirectory(): Promise<GuestChoice[]> {
+  const [contacts, used] = await Promise.all([
+    prisma.contact.findMany({ where: { email: { not: null } }, select: { name: true, email: true }, orderBy: { name: "asc" } }),
+    prisma.calendarEntry.findMany({ where: { guests: { isEmpty: false } }, select: { guests: true } }),
+  ]);
+  const byEmail = new Map<string, string | null>();
+  for (const c of contacts) {
+    const email = c.email!.trim().toLowerCase();
+    if (email.includes("@") && !byEmail.has(email)) byEmail.set(email, c.name);
+  }
+  for (const e of used) for (const g of e.guests) if (!byEmail.has(g)) byEmail.set(g, null);
+  return [...byEmail].map(([email, name]) => ({ email, name }));
 }

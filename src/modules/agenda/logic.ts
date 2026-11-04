@@ -1,4 +1,5 @@
 import { addDays, dateFromString, dateToString, type DateString, zonedInputToDate } from "@/lib/dates";
+import { squash } from "@/lib/search";
 import { ENTRY_KINDS, type EntryKind } from "../../../config/app.config";
 
 /**
@@ -44,6 +45,26 @@ export function entryTitle(kind: EntryKind, title: string | undefined): string {
   if (t) return t;
   if (kind === "time_off") return "Off";
   throw new AgendaError("Give it a title.", "title");
+}
+
+export type GuestChoice = { email: string; name: string | null };
+
+/** The address being typed: everything after the last separator parseGuests knows. */
+export function typedGuest(text: string): string {
+  return text.split(/[\s,;]+/).pop() ?? "";
+}
+
+/** Suggestions for the address being typed: name or address contains it (squashed), not already in the field. */
+export function matchGuests(choices: GuestChoice[], text: string, max = 8): GuestChoice[] {
+  const q = squash(typedGuest(text));
+  if (q.length < 2) return [];
+  const taken = new Set(text.toLowerCase().split(/[\s,;]+/));
+  return choices.filter((c) => !taken.has(c.email) && (squash(c.email).includes(q) || squash(c.name).includes(q))).slice(0, max);
+}
+
+/** The field with the address being typed replaced by `email`, ready for the next one. */
+export function completeGuest(text: string, email: string): string {
+  return `${text.slice(0, text.length - typedGuest(text).length)}${email}, `;
 }
 
 /** Guests from the form: addresses separated by commas, semicolons, spaces or lines; invalid ones are reported. */

@@ -626,6 +626,11 @@ the module.
   (time off is exactly one person, default the actor), `guests` (emails).
   `logic.ts` is pure (`entryTimes`: an end before the start runs past
   midnight; `entryTitle`, `parseGuests`, `googleTemplateLink`).
+  The Guests field (`GuestsInput`) suggests addresses for the one being
+  typed (`matchGuests` / `completeGuest`, pure): contacts with an email
+  and every guest used before (`guestDirectory`), fetched once on first
+  focus through the `guestSuggestions` action. No Google lookup (the
+  People API would need extra delegation scopes).
 - Shown on: the calendar timeline (bars of kind `entry`, merged in the
   calendar page), `/calendar/entries/[id]` (edit, delete, "Add to Google
   Calendar", `/api/agenda/[id]/entry.ics`), the project page ("Meetings and
