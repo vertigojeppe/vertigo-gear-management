@@ -1,14 +1,15 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { guestSuggestions } from "../actions";
-import { completeGuest, matchGuests, type GuestChoice } from "../logic";
+import { googleGuestSuggestions, guestSuggestions } from "../actions";
+import { completeGuest, matchGuests, typedGuest, type GuestChoice } from "../logic";
 
 /**
  * The Guests field: addresses separated by commas, with suggestions for the
- * one being typed from the contact library and earlier guests. The list
- * is fetched the first time the field gets focus.
+ * one being typed from the contact library and earlier guests (fetched the
+ * first time the field gets focus), then from the person's Google contacts,
+ * mailbox and directory (asked after a pause in typing, from three letters).
  */
 export function GuestsInput({ id, name, defaultValue, placeholder }: { id: string; name: string; defaultValue: string; placeholder?: string }) {
   const listId = useId();
@@ -16,7 +17,18 @@ export function GuestsInput({ id, name, defaultValue, placeholder }: { id: strin
   const [choices, setChoices] = useState<GuestChoice[] | null>(null);
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
-  const matches = open && choices ? matchGuests(choices, text) : [];
+  const [google, setGoogle] = useState<{ q: string; list: GuestChoice[] }>({ q: "", list: [] });
+  const typed = typedGuest(text).trim();
+  useEffect(() => {
+    if (!open || typed.length < 3) return;
+    const timer = setTimeout(() => googleGuestSuggestions(typed).then((list) => setGoogle({ q: typed, list }), () => undefined), 300);
+    return () => clearTimeout(timer);
+  }, [open, typed]);
+  // The app's own suggestions first, then Google's for what is typed now (an answer for older letters is ignored).
+  const local = choices ?? [];
+  const known = new Set(local.map((c) => c.email));
+  const all = google.q === typed ? [...local, ...google.list.filter((g) => !known.has(g.email))] : local;
+  const matches = open ? matchGuests(all, text) : [];
   const pick = (email: string) => {
     setText(completeGuest(text, email));
     setActive(0);
