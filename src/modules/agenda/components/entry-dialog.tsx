@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormState } from "@/lib/forms";
 import { saveEntry } from "../actions";
+import { GuestsInput } from "./guests-input";
 import type { EntryFormValues } from "../logic";
 import { ENTRY_KINDS, type EntryKind } from "../../../../config/app.config";
 
@@ -138,7 +139,7 @@ export function EntryDialog({
                   {err.people && <p className="text-sm text-destructive">{err.people}</p>}
                 </fieldset>
                 <Field id="en-guests" label={t("guests")} optional help={t("guestsHelp")} error={err.guestsText}>
-                  <Input id="en-guests" name="guestsText" defaultValue={v("guestsText", entry?.guestsText ?? "")} placeholder="name@example.com" />
+                  <GuestsInput id="en-guests" name="guestsText" defaultValue={v("guestsText", entry?.guestsText ?? "")} placeholder="name@example.com" />
                 </Field>
                 <Field id="en-project" label={t("job")} optional error={err.projectId}>
                   <NativeSelect id="en-project" name="projectId" defaultValue={v("projectId", entry?.projectId ?? defaults.projectId ?? "")}>

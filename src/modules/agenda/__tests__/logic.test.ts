@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dateToZonedInput } from "@/lib/dates";
-import { entryFormValues, entryTimes, entryTitle, googleTemplateLink, parseGuests } from "../logic";
+import { completeGuest, entryFormValues, entryTimes, entryTitle, googleTemplateLink, matchGuests, parseGuests } from "../logic";
 
 describe("entryTimes", () => {
   it("keeps time off to whole days, first to last", () => {
@@ -49,5 +49,28 @@ describe("entryFormValues", () => {
   it("gives the edit form Copenhagen dates and times back", () => {
     const v = entryFormValues({ id: "e1", kind: "meeting", title: "Rig check", projectId: null, allDay: false, startsAt: new Date("2030-07-01T08:00:00Z"), endsAt: new Date("2030-07-01T09:30:00Z"), location: null, notes: null, guests: ["a@example.com"], people: [{ id: "u1" }] }, dateToZonedInput);
     expect(v).toMatchObject({ fromDate: "2030-07-01", startTime: "10:00", endTime: "11:30", guestsText: "a@example.com", people: ["u1"] });
+  });
+});
+
+describe("guest suggestions", () => {
+  const choices = [
+    { email: "anna@venue.dk", name: "Anna Holm" },
+    { email: "rigging@crew.dk", name: null },
+    { email: "bo@venue.dk", name: "Bo Ørsted" },
+  ];
+
+  it("matches the address being typed by name or address, leaving out the ones already there", () => {
+    expect(matchGuests(choices, "venue").map((c) => c.email)).toEqual(["anna@venue.dk", "bo@venue.dk"]);
+    expect(matchGuests(choices, "anna@venue.dk, ven").map((c) => c.email)).toEqual(["bo@venue.dk"]);
+    expect(matchGuests(choices, "x@y.dk; ørst").map((c) => c.email)).toEqual(["bo@venue.dk"]);
+    expect(matchGuests(choices, "rig").map((c) => c.email)).toEqual(["rigging@crew.dk"]);
+    expect(matchGuests(choices, "a")).toEqual([]);
+    expect(matchGuests(choices, "anna@venue.dk, ")).toEqual([]);
+  });
+
+  it("replaces only the address being typed", () => {
+    expect(completeGuest("an", "anna@venue.dk")).toBe("anna@venue.dk, ");
+    expect(completeGuest("x@y.dk, bo", "bo@venue.dk")).toBe("x@y.dk, bo@venue.dk, ");
+    expect(parseGuests(completeGuest("x@y.dk;bo", "bo@venue.dk"))).toEqual(["x@y.dk", "bo@venue.dk"]);
   });
 });
