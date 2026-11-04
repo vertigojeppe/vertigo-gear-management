@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth/session";
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import type { GuestChoice } from "./logic";
-import { guestDirectory } from "./queries";
+import { googleGuests, guestDirectory } from "./queries";
 import { entryInput } from "./schema";
 import { entries } from "./service";
 
@@ -20,6 +20,12 @@ function refresh(projectId?: string | null) {
 export async function guestSuggestions(): Promise<GuestChoice[]> {
   await requirePermission("agenda.write");
   return guestDirectory();
+}
+
+/** Guest suggestions from the signed-in person's Google contacts, mailbox and directory, while they type. */
+export async function googleGuestSuggestions(query: string): Promise<GuestChoice[]> {
+  const actor = await requirePermission("agenda.write");
+  return googleGuests(actor.id, String(query).slice(0, 100));
 }
 
 /** New or changed calendar entry (meeting, time off, assignment); the people come as checkboxes named "people". */

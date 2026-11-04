@@ -629,8 +629,14 @@ the module.
   The Guests field (`GuestsInput`) suggests addresses for the one being
   typed (`matchGuests` / `completeGuest`, pure): contacts with an email
   and every guest used before (`guestDirectory`), fetched once on first
-  focus through the `guestSuggestions` action. No Google lookup (the
-  People API would need extra delegation scopes).
+  focus through the `guestSuggestions` action. From three letters, after
+  300 ms, it also asks `googleGuestSuggestions` → `googleGuests`
+  (agenda/queries.ts): `searchGooglePeople` (calendar/google.ts) acting
+  as the person (`googleEmail || email`, token scope `PEOPLE_SCOPES`,
+  cached per scope + person) over their contacts, other contacts (one
+  empty warm-up search first) and the directory, less the app's users;
+  any failure returns [] and pauses that person for ten minutes. Local
+  suggestions come first.
 - Shown on: the calendar timeline (bars of kind `entry`, merged in the
   calendar page), `/calendar/entries/[id]` (edit, delete, "Add to Google
   Calendar", `/api/agenda/[id]/entry.ics`), the project page ("Meetings and

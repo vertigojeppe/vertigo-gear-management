@@ -754,6 +754,21 @@ attendees. Service accounts can only invite attendees when the Workspace
 admin grants domain-wide delegation; without it, events are created
 without attendees and the sync still succeeds.
 
+**Guest suggestions from Google.** The Guests field of meetings and
+assignments also suggests addresses from the signed-in person's Google
+contacts, the people they have emailed and the Workspace directory. That
+needs the People API enabled in the service account's Google Cloud
+project, and the delegation's scopes extended to:
+
+```
+https://www.googleapis.com/auth/calendar.events,https://www.googleapis.com/auth/contacts.readonly,https://www.googleapis.com/auth/contacts.other.readonly,https://www.googleapis.com/auth/directory.readonly
+```
+
+The app searches as each person (their Google email on the user profile,
+else their login email), so nobody sees anyone else's contacts. Without
+it, or for a person Google will not act as, the field still suggests the
+contact library and earlier guests.
+
 ### Background work
 
 Webhook deliveries and calendar pushes go through an outbox table that a

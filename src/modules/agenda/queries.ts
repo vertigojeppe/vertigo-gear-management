@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { addDays, dateFromString, dayInZone, type DateString } from "@/lib/dates";
+// eslint-disable-next-line no-restricted-imports -- the calendar barrel pulls server actions (next-auth) in; only the Google client is needed
+import { googleConfig, searchGooglePeople } from "@/modules/calendar/google";
 import { entryDays, entryKind, type GuestChoice } from "./logic";
 import type { EntryKind } from "../../../config/app.config";
 
@@ -97,4 +99,31 @@ export async function guestDirectory(): Promise<GuestChoice[]> {
   }
   for (const e of used) for (const g of e.guests) if (!byEmail.has(g)) byEmail.set(g, null);
   return [...byEmail].map(([email, name]) => ({ email, name }));
+}
+
+/** People Google will not let us act as (no delegation for them, not a Workspace address), until when. */
+const googleRefused = new Map<string, number>();
+
+/**
+ * Guest suggestions from Google, searched as the signed-in person: their
+ * contacts, the people they have emailed and the Workspace directory, less
+ * the app's own users (they are ticked as people). Empty when Google is not
+ * set up, the query is under three letters, or Google refuses.
+ */
+export async function googleGuests(userId: string, query: string): Promise<GuestChoice[]> {
+  const cfg = googleConfig();
+  const q = query.trim();
+  if (!cfg || q.length < 3) return [];
+  const [me, users] = await Promise.all([prisma.user.findUnique({ where: { id: userId }, select: { email: true, googleEmail: true } }), prisma.user.findMany({ select: { email: true, googleEmail: true } })]);
+  if (!me) return [];
+  const subject = me.googleEmail || me.email;
+  if ((googleRefused.get(subject) ?? 0) > Date.now()) return [];
+  const colleagues = new Set(users.flatMap((u) => [u.email, u.googleEmail ?? ""]).map((e) => e.toLowerCase()));
+  try {
+    return (await searchGooglePeople(cfg.account, subject, q)).filter((p) => !colleagues.has(p.email));
+  } catch {
+    // shortcut: any refusal (or Google being down) pauses this person's lookups for ten minutes; the local suggestions still work.
+    googleRefused.set(subject, Date.now() + 10 * 60_000);
+    return [];
+  }
 }
