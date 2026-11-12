@@ -3,6 +3,7 @@ import { appConfig } from "../../../config/app.config";
 import { categoryInput, itemBatchInput, itemFilters, itemInput, locationInput, modelFilters, modelInput, statusChangeInput, moveInput } from "@/modules/inventory";
 import { allocationInput, availabilityQuery, projectFilters, projectInput } from "@/modules/projects";
 import { rentalFilters, rentalInput } from "@/modules/rentals";
+import { entryFilters } from "@/modules/agenda";
 
 /**
  * Declarative description of the REST API, rendered as OpenAPI at
@@ -62,6 +63,8 @@ export const operations: Op[] = [
   { method: "get", path: "/rentals", tag: "Rentals", summary: "List rentals", query: rentalFilters },
   { method: "post", path: "/rentals", tag: "Rentals", summary: "Create a rental", body: rentalInput },
   { method: "get", path: "/rentals/{id}", tag: "Rentals", summary: "Rental with lines and totals", params: idParam },
+
+  { method: "get", path: "/entries", tag: "Calendar entries", summary: "Meetings, time off and assignments on the days from–to (default the next 30 days, at most a year); mine=1 for your own", query: entryFilters, responses: { 400: "to before from, or more than a year" } },
 ];
 
 function schemaJson(schema: z.ZodTypeAny) {
