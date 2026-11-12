@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { BackLink } from "./back-link";
+import { CrumbLink } from "./crumb-link";
 
 export type Crumb = { label: string; href?: string };
 
@@ -32,9 +32,7 @@ export function PageHeader({
               <span key={i} className="flex items-center gap-1">
                 {i > 0 && <ChevronRight className="size-3" aria-hidden />}
                 {c.href ? (
-                  <Link href={c.href} className="hover:underline">
-                    {c.label}
-                  </Link>
+                  <CrumbLink href={c.href}>{c.label}</CrumbLink>
                 ) : (
                   <span>{c.label}</span>
                 )}
