@@ -58,6 +58,8 @@ export const operations: Op[] = [
   { method: "post", path: "/projects", tag: "Projects", summary: "Create a project", body: projectInput.extend({ customFields: z.record(z.string(), z.unknown()).optional() }) },
   { method: "get", path: "/projects/{id}", tag: "Projects", summary: "Project with client, crew, contacts and reservations (incl. availability)", params: idParam },
   { method: "post", path: "/projects/{id}/reservations", tag: "Projects", summary: "Reserve a model for the project; 409 with conflict details unless force", params: idParam, body: allocationInput, responses: { 409: "Not enough available; body has { available, requested, shortfall, conflicts }" } },
+  { method: "get", path: "/projects/{id}/plan", tag: "Projects", summary: "The project's production plan: schedule, tasks, logistics, crew and contacts (404 when it has none)", params: idParam },
+  { method: "get", path: "/my-day", tag: "My day", summary: "Your day, as on the dashboard: schedule today and tomorrow, open tasks, projects in the next 7 days with call times, today's and tomorrow's calendar entries, open to-dos by category" },
 
   { method: "get", path: "/rentals", tag: "Rentals", summary: "List rentals", query: rentalFilters },
   { method: "post", path: "/rentals", tag: "Rentals", summary: "Create a rental", body: rentalInput },
