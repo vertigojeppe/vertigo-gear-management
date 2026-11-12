@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
+import { BackLink } from "./back-link";
 
 export type Crumb = { label: string; href?: string };
 
@@ -16,11 +17,17 @@ export function PageHeader({
   crumbs?: Crumb[];
   actions?: ReactNode;
 }) {
+  const parent = crumbs?.findLast((c) => c.href)?.href;
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
       <div className="min-w-0 flex-1">
         {crumbs && crumbs.length > 0 && (
           <nav aria-label="Breadcrumb" className="mb-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+            {parent && (
+              <span className="mr-2">
+                <BackLink href={parent} />
+              </span>
+            )}
             {crumbs.map((c, i) => (
               <span key={i} className="flex items-center gap-1">
                 {i > 0 && <ChevronRight className="size-3" aria-hidden />}

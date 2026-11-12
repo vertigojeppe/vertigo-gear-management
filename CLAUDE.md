@@ -101,6 +101,12 @@ the module.
   with a "More" sheet (`mobile-nav.tsx`). Both read `NAV_ITEMS` in
   `src/components/navigation.ts`; add a section there, not in the components.
 - Every nav item has a route. Unbuilt sections render `ComingSoon`.
+- `PageHeader` with crumbs shows "← Back" (`BackLink`): `router.back()`
+  when the page before is in the app in this tab, so a list comes back
+  with its search, filters and scroll position; otherwise a link to the
+  last crumb with an `href`. `ScrollContainer` keeps the tab's path stack
+  in sessionStorage (`nextStack` in `src/lib/nav-stack.ts`, pure) and the
+  scroll position each page was left at (saved as a link is clicked).
 - Page headings are `<h1>` so the e2e tests and screen readers can find them.
 - Nothing may make a page wider than a phone: the content box scrolls
   (overflow-y: auto), so anything too wide makes the whole page scroll
