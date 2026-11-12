@@ -35,6 +35,7 @@ export default async function UsersPage() {
                 <span className="block truncate text-xs text-muted-foreground">{u.email}</span>
               </span>
               {!u.active && <Badge variant="outline">{t("inactive")}</Badge>}
+              {u.hidden && <Badge variant="outline">{t("hiddenBadge")}</Badge>}
               <Badge variant="secondary">{tr(u.role)}</Badge>
             </Link>
           </li>

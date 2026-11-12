@@ -25,6 +25,8 @@ export type PublicUser = {
   phone: string | null;
   googleEmail: string | null;
   active: boolean;
+  /** Left out of the people pickers. */
+  hidden: boolean;
   /** Two-factor sign-in is on. */
   twoFactor: boolean;
   createdAt: Date;
@@ -38,6 +40,7 @@ function toPublic(u: {
   phone: string | null;
   googleEmail: string | null;
   active: boolean;
+  hidden: boolean;
   totpEnabledAt: Date | null;
   createdAt: Date;
 }): PublicUser {
@@ -49,6 +52,7 @@ function toPublic(u: {
     phone: u.phone,
     googleEmail: u.googleEmail,
     active: u.active,
+    hidden: u.hidden,
     twoFactor: Boolean(u.totpEnabledAt),
     createdAt: u.createdAt,
   };
@@ -90,6 +94,7 @@ export const users = {
         phone: input.phone ?? null,
         googleEmail: input.googleEmail ?? null,
         active: input.active,
+        hidden: input.hidden,
         passwordHash: await hashPassword(input.password),
       },
     });
@@ -114,6 +119,7 @@ export const users = {
         phone: input.phone ?? null,
         googleEmail: input.googleEmail ?? null,
         active: input.active,
+        hidden: input.hidden,
       },
     });
     await logActivity(actor, {
@@ -121,7 +127,7 @@ export const users = {
       entityId: u.id,
       action: "updated",
       summary: `Updated user ${u.name}`,
-      details: { role: { from: before.role, to: u.role }, active: { from: before.active, to: u.active } },
+      details: { role: { from: before.role, to: u.role }, active: { from: before.active, to: u.active }, hidden: { from: before.hidden, to: u.hidden } },
     });
     return toPublic(u);
   },

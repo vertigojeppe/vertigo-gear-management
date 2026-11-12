@@ -11,6 +11,7 @@ export const userInput = z.object({
   phone: optionalText,
   googleEmail: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().toLowerCase().email().optional()),
   active: checkbox,
+  hidden: checkbox,
 });
 export type UserInput = z.infer<typeof userInput>;
 

@@ -683,7 +683,9 @@ the module.
 - Permission `board.read` (every role). The `display` role has only that:
   the (app) layout redirects it to `/board`, the APIs refuse it, and the
   user pickers (crew, assignees, person locations) leave it out. The seed
-  has `screen@vertigo.test`.
+  has `screen@vertigo.test`. They also leave out users with `User.hidden`
+  ("Hide from people lists" on the user page: API-token and other extra
+  accounts, which keep their role and can still sign in).
 
 ## Apps
 
