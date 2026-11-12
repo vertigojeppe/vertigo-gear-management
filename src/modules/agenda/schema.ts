@@ -5,6 +5,15 @@ import { ENTRY_KINDS } from "../../../config/app.config";
 const KINDS = ENTRY_KINDS.map((k) => k.key) as ["meeting", "time_off", "assignment"];
 const optionalTime = z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().regex(/^\d{2}:\d{2}$/, "Use HH:MM.").optional());
 
+const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD.");
+
+/** GET /api/v1/entries: days from–to (inclusive, Copenhagen; default today and 30 days on, at most a year), mine=1 for the caller's own. */
+export const entryFilters = z.object({
+  from: day.optional(),
+  to: day.optional(),
+  mine: checkbox.optional(),
+});
+
 /**
  * A calendar entry from the form. The people come separately (checkboxes,
  * `formData.getAll("people")`). Time off is always whole days; the others
