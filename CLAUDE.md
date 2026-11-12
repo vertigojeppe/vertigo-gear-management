@@ -105,8 +105,11 @@ the module.
   when the page before is in the app in this tab, so a list comes back
   with its search, filters and scroll position; otherwise a link to the
   last crumb with an `href`. `ScrollContainer` keeps the tab's path stack
-  in sessionStorage (`nextStack` in `src/lib/nav-stack.ts`, pure) and the
-  scroll position each page was left at (saved as a link is clicked).
+  in sessionStorage (`nextStack` in `src/lib/nav-stack.ts`, pure; only a
+  `popstate` counts as a step back) with the scroll position and URL
+  (search) each page was left at, saved as a link is clicked. Crumbs
+  (`CrumbLink`) open their page as it was last left (`rememberedUrl`), so
+  "Inventory" keeps the search.
 - Page headings are `<h1>` so the e2e tests and screen readers can find them.
 - Nothing may make a page wider than a phone: the content box scrolls
   (overflow-y: auto), so anything too wide makes the whole page scroll
