@@ -22,6 +22,7 @@ export function UserForm({ user, isSelf }: { user?: PublicUser; isSelf?: boolean
   const v = (name: string, fallback: string | null | undefined) => (state.values && name in state.values ? state.values[name] : (fallback ?? ""));
   const err = state.fieldErrors ?? {};
   const active = state.values ? state.values.active === "on" : (user?.active ?? true);
+  const hidden = state.values ? state.values.hidden === "on" : (user?.hidden ?? false);
 
   return (
     <ActionForm action={action} className="flex max-w-lg flex-col gap-4">
@@ -61,6 +62,11 @@ export function UserForm({ user, isSelf }: { user?: PublicUser; isSelf?: boolean
         <span className="text-xs text-muted-foreground">{t("activeHelp")}</span>
       </label>
       {isSelf && <input type="hidden" name="active" value="on" />}
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="hidden" className="size-4" defaultChecked={hidden} />
+        {t("hiddenUser")}
+        <span className="text-xs text-muted-foreground">{t("hiddenUserHelp")}</span>
+      </label>
       <div className="flex gap-2">
         <SubmitButton pendingText={tc("loading")}>{user ? tc("save") : tc("create")}</SubmitButton>
         <Link href="/settings/users" className={buttonVariants({ variant: "outline" })}>

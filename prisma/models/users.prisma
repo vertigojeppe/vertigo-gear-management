@@ -11,6 +11,8 @@ model User {
   /// Google account email used when adding the user as a calendar attendee.
   googleEmail  String?
   active       Boolean  @default(true)
+  /// Left out of the people pickers (crew, assignees, entry people, gear holders): API-token and other extra accounts.
+  hidden       Boolean  @default(false)
   /// UI language ("en" | "da", appConfig.locales); null = the browser's language.
   locale       String?
   /// Two-factor sign-in (authenticator app). The TOTP secret is encrypted with a key derived

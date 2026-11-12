@@ -16,7 +16,7 @@ export async function clientOptions() {
 }
 
 export async function crewOptions() {
-  return prisma.user.findMany({ where: { active: true, role: { not: "display" } }, orderBy: { name: "asc" }, select: { id: true, name: true, role: true } });
+  return prisma.user.findMany({ where: { active: true, hidden: false, role: { not: "display" } }, orderBy: { name: "asc" }, select: { id: true, name: true, role: true } });
 }
 
 /* Projects list */

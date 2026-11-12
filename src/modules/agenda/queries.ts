@@ -78,7 +78,7 @@ export async function entryDetail(id: string): Promise<EntryRow | null> {
 
 /** People who can be on an entry: active users, not the office screen account. */
 export async function entryPeopleOptions() {
-  return prisma.user.findMany({ where: { active: true, role: { not: "display" } }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+  return prisma.user.findMany({ where: { active: true, hidden: false, role: { not: "display" } }, orderBy: { name: "asc" }, select: { id: true, name: true } });
 }
 
 /** Running and coming projects to tie an entry to. */
