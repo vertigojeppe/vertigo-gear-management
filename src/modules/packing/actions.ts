@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth/session";
 import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
-import { checkInInput, lineInput, lineUpdateInput, packingListInput, scanInput, templateInput, templateLineInput, tickInput } from "./schema";
-import { packingChecks, packingLines, packingLists, packingTemplates, shareLinks, undoCheckIn } from "./service";
+import { checkInInput, extraInput, lineInput, lineUpdateInput, packingListInput, scanInput, templateInput, templateLineInput, tickInput } from "./schema";
+import { packingChecks, packingExtras, packingLines, packingLists, packingTemplates, shareLinks, undoCheckIn } from "./service";
 
 function revalidateList(projectId: string, listId?: string) {
   revalidatePath(`/projects/${projectId}`, "layout");
@@ -149,6 +149,31 @@ export async function removeLine(formData: FormData): Promise<void> {
   const listId = String(formData.get("listId"));
   await packingLines.remove(actor, String(formData.get("lineId")));
   revalidateList(projectId, listId);
+}
+
+/* Lines for things not in the inventory */
+
+/** A plain form (the fields reset after adding); the name is required in the browser too. */
+export async function addExtra(formData: FormData): Promise<void> {
+  const actor = await requirePermission("packing.write");
+  const projectId = String(formData.get("projectId"));
+  const listId = String(formData.get("listId"));
+  const parsed = parseForm(extraInput, formData);
+  if (!parsed.ok) return;
+  await packingExtras.add(actor, listId, parsed.data);
+  revalidateList(projectId, listId);
+}
+
+export async function removeExtra(formData: FormData): Promise<void> {
+  const actor = await requirePermission("packing.write");
+  await packingExtras.remove(actor, String(formData.get("extraId")));
+  revalidateList(String(formData.get("projectId")), String(formData.get("listId")));
+}
+
+export async function setExtraPacked(formData: FormData): Promise<void> {
+  const actor = await requirePermission("packing.write");
+  await packingExtras.setPacked(actor, String(formData.get("extraId")), formData.get("packed") === "1");
+  revalidateList(String(formData.get("projectId")), String(formData.get("listId")));
 }
 
 /* Packing mode */

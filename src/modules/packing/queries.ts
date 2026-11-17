@@ -87,7 +87,7 @@ export async function listDetail(listId: string) {
   });
   if (!list) return null;
   const modelIds = [...new Set(list.lines.map((l) => l.modelId))];
-  const [cats, colors, subHireRows, stockRows, shelf] = await Promise.all([
+  const [cats, colors, subHireRows, stockRows, shelf, extraRows] = await Promise.all([
     prisma.category.findMany({ select: { id: true, name: true, parentId: true } }),
     loadColorMaps(),
     // What the project rents in: shown with the list so nothing is forgotten at the partner's door, never ticked or checked.
@@ -95,7 +95,9 @@ export async function listDetail(listId: string) {
     prisma.item.groupBy({ by: ["modelId", "status"], where: { modelId: { in: modelIds } }, _sum: { quantity: true } }),
     // While drafting: the loose units and bins in house, for picking a unit or a bin per line.
     prisma.item.findMany({ where: { modelId: { in: list.status === "draft" ? modelIds : [] }, status: "in_house", parentItemId: null }, orderBy: { assetTag: "asc" }, select: { id: true, modelId: true, assetTag: true, serialNumber: true, quantity: true, isKit: true, location: { select: { name: true } } } }),
+    prisma.packingExtra.findMany({ where: { listId }, orderBy: { createdAt: "asc" }, include: { model: { select: { manufacturer: true, name: true, variant: true } } } }),
   ]);
+  const extras: ExtraRow[] = extraRows.map((x) => ({ id: x.id, name: x.name, quantity: x.quantity, note: x.note, packed: x.packedAt !== null, modelId: x.modelId, modelLabel: x.model ? modelLabel(x.model) : null }));
   const subHire: SubHireRow[] = subHireRows.map((l) => ({
     id: l.id,
     label: modelLabel(l.item),
@@ -195,6 +197,7 @@ export async function listDetail(listId: string) {
     project: { id: list.project.id, name: list.project.name, clientName: list.project.client?.name ?? null, venueName: list.project.venueName, reserveFrom: list.project.reserveFrom, reserveTo: list.project.reserveTo },
     lines,
     subHire,
+    extras,
     progress: listProgress(lines),
     totals,
   };
@@ -207,6 +210,8 @@ export async function listTitle(listId: string): Promise<string | null> {
   const l = await prisma.packingList.findUnique({ where: { id: listId }, select: { name: true, project: { select: { name: true } } } });
   return l ? `${l.name} · ${l.project.name}` : null;
 }
+/** A line for something not in the inventory (`modelId` once it has been added). */
+export type ExtraRow = { id: string; name: string; quantity: number; note: string | null; packed: boolean; modelId: string | null; modelLabel: string | null };
 export type SubHireRow = { id: string; label: string; ownerName: string; quantity: number; note: string | null };
 
 /** Lines grouped for display. */

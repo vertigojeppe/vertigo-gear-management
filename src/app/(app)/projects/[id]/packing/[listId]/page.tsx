@@ -13,6 +13,7 @@ import { AddReservedButton, CheckOutButton, DeleteListButton, FinishCheckInButto
 import { ApplyTemplateDialog, EditLineDialog, EditListDialog, RemoveLineButton, SaveAsTemplateDialog } from "@/modules/packing/components/list-dialogs";
 import { GearPicker } from "@/modules/packing/components/gear-picker";
 import { SpareSuggestions } from "@/modules/packing/components/spare-suggestions";
+import { AddExtraForm, ExtraList } from "@/modules/packing/components/extras";
 import { PACKING_STATUSES } from "../../../../../../../config/app.config";
 import { glossary } from "@/modules/settings";
 
@@ -34,7 +35,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
   const { id, listId } = await props.params;
   const detail = await listDetail(listId);
   if (!detail || detail.project.id !== id) notFound();
-  const { list, project, lines, totals, progress, subHire } = detail;
+  const { list, project, lines, totals, progress, subHire, extras } = detail;
   const t = await getTranslations("packing");
   const tp = await getTranslations("projects");
   const ts = await getTranslations("packingStatus");
@@ -105,6 +106,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
         <>
           <GearPicker target={{ kind: "list", ...ids }} catalog={catalog} cases={caseOptions} glossaryGroups={glossaryGroups} />
           <SpareSuggestions ids={ids} rows={spares} />
+          <AddExtraForm ids={ids} />
           <div className="flex flex-wrap gap-2">
             {templates.length > 0 && <ApplyTemplateDialog ids={ids} templates={templates.map((x) => ({ id: x.id, label: `${x.name} (${x._count.lines})` }))} />}
             <AddReservedButton ids={ids} />
@@ -112,7 +114,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
         </>
       )}
 
-      {lines.length === 0 && (
+      {lines.length === 0 && extras.length === 0 && (
         <div className="rounded-lg border border-dashed p-10 text-center">
           <p className="font-medium">{t("noLines")}</p>
           <p className="text-sm text-muted-foreground">{t("noLinesBody")}</p>
@@ -120,7 +122,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
       )}
 
       {/* With the roomy layout, groups flow into columns on wide screens; a group never breaks across two. */}
-      {(lines.length > 0 || subHire.length > 0) && (
+      {(lines.length > 0 || subHire.length > 0 || extras.length > 0) && (
         <div className="gap-6 roomy:lg:columns-2 roomy:2xl:columns-3">
           {groups.map((g) => (
             <section key={g.key} className="mb-5 flex break-inside-avoid flex-col gap-1">
@@ -184,6 +186,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
               </ul>
             </section>
           )}
+          <ExtraList ids={ids} extras={extras} canTick={editable} editable={editable} canAddToInventory={can(actor.role, "inventory.write")} />
         </div>
       )}
 

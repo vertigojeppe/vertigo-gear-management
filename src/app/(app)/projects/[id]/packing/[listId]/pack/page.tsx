@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/auth/session";
 import { canPack, listDetail } from "@/modules/packing";
 import { PackMode } from "@/modules/packing/components/pack-mode";
+import { ExtraList } from "@/modules/packing/components/extras";
 
 export const metadata: Metadata = { title: "Packing" };
 
@@ -29,6 +30,7 @@ export default async function PackPage(props: { params: Promise<{ id: string; li
         }
       />
       <PackMode ids={{ projectId: id, listId }} lines={detail.lines} units={detail.progress.units} packed={detail.progress.packed} />
+      <ExtraList ids={{ projectId: id, listId }} extras={detail.extras} canTick editable={false} canAddToInventory={false} />
     </div>
   );
 }

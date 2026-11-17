@@ -25,6 +25,7 @@ export function ModelForm({
   model,
   prefill,
   wishId,
+  extraId,
   categories,
   defs,
   defaultCategoryId,
@@ -35,6 +36,8 @@ export function ModelForm({
   prefill?: Partial<ModelDto>;
   /** Set when the form converts a wish: saving marks it bought and links the model. */
   wishId?: string;
+  /** Set when the form adds a packing list's "not in the inventory" line: saving links the line to the model. */
+  extraId?: string;
   categories: Option[];
   defs: CustomFieldDef[];
   defaultCategoryId?: string;
@@ -55,6 +58,7 @@ export function ModelForm({
     <ActionForm action={action} className="flex max-w-2xl flex-col gap-6">
       {model && <input type="hidden" name="id" value={model.id} />}
       {wishId && <input type="hidden" name="wishId" value={wishId} />}
+      {extraId && <input type="hidden" name="extraId" value={extraId} />}
       <FormError message={state.error} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

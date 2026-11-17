@@ -34,7 +34,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | files | File, Attachment | `files.*`, `AttachmentsSection` |
 | projects | Client, Project, ProjectContact, ProjectCrew, Allocation | `clients`, `projects`, `allocations`, availability engine, timeline |
 | rentals | Rental, RentalLine | `rentals`, `rentalLines`, pricing, agreement PDF |
-| packing | PackingList, PackingLine, PackingCheck, PackingTemplate, ShareLink | `packingLists`, `packingLines`, `packingChecks`, `packingTemplates`, `shareLinks`, progress/totals logic, pack + check-in modes, list PDF |
+| packing | PackingList, PackingLine, PackingExtra, PackingCheck, PackingTemplate, ShareLink | `packingLists`, `packingLines`, `packingExtras`, `packingChecks`, `packingTemplates`, `shareLinks`, progress/totals logic, pack + check-in modes, list PDF |
 | plans | ProductionPlan, ScheduleEntry, PlanTask, LogisticsEntry, PlanTemplate, PlanTemplateEntry | `plans`, `schedule`, `tasks`, `logistics`, `planTemplates`, template maths, plan + day-sheet PDF, share page |
 | calendar | CalendarFeedToken, Google sync, outbox handlers | `feedTokens`, `buildFeed`, `syncProject`, `syncRental` |
 | settings | CustomFieldDefinition, Webhook, Outbox admin | `customFieldDefinitions`, `webhooks`, `outboxAdmin` |
@@ -213,6 +213,8 @@ erDiagram
 erDiagram
   Project ||--o{ PackingList : has
   PackingList ||--o{ PackingLine : contains
+  PackingList ||--o{ PackingExtra : "not in the inventory"
+  PackingExtra }o--o| Model : "added later as"
   PackingLine }o--|| Model : "of"
   PackingLine }o--o| Item : "specific unit / kit"
   PackingLine }o--o| Item : "travels in case"

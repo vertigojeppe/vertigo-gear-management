@@ -10,7 +10,7 @@ import { emitEvent } from "@/lib/events";
 import { items as inventoryItems } from "@/modules/inventory/service";
 import { type CheckOutcome, type PackingStatus } from "../../../config/app.config";
 import { canCheckIn, canCheckOut, canEditLines, canPack, lineProgress, listProgress, outcomeItemStatus } from "./logic";
-import type { CheckInInput, LineInput, LineUpdateInput, PackingListInput, TemplateInput, TemplateLineInput, TickInput } from "./schema";
+import type { CheckInInput, ExtraInput, LineInput, LineUpdateInput, PackingListInput, TemplateInput, TemplateLineInput, TickInput } from "./schema";
 import { modelLabel } from "@/lib/format";
 
 export class PackingError extends Error {
@@ -294,6 +294,44 @@ async function nextSort(listId: string) {
 /* ------------------------------------------------------------------------ */
 /* Packing (ticks) and check-in                                             */
 /* ------------------------------------------------------------------------ */
+
+/** Lines for things not in the inventory: added, edited and removed while drafting, ticked when packed. */
+export const packingExtras = {
+  async add(actor: Actor, listId: string, input: ExtraInput) {
+    assertCan(actor, "packing.write");
+    const list = await assertDraft(listId);
+    const extra = await prisma.packingExtra.create({ data: { listId, name: input.name, quantity: input.quantity, note: input.note ?? null } });
+    await logActivity(actor, { entityType: "project", entityId: list.projectId, action: "packing_line_added", summary: `${list.name}: added ${input.quantity}× ${input.name} (not in the inventory)` });
+    return extra;
+  },
+
+  async remove(actor: Actor, id: string) {
+    assertCan(actor, "packing.write");
+    const extra = await prisma.packingExtra.findUniqueOrThrow({ where: { id } });
+    const list = await assertDraft(extra.listId);
+    await prisma.packingExtra.delete({ where: { id } });
+    await logActivity(actor, { entityType: "project", entityId: list.projectId, action: "packing_line_removed", summary: `${list.name}: removed ${extra.quantity}× ${extra.name}` });
+  },
+
+  /** Packed or not; only while packing (a draft), like the other lines. */
+  async setPacked(actor: Actor, id: string, packed: boolean) {
+    assertCan(actor, "packing.write");
+    const extra = await prisma.packingExtra.findUniqueOrThrow({ where: { id } });
+    const list = await loadList(extra.listId);
+    if (!canPack(list.status as PackingStatus)) throw new PackingError("Only a list that is being packed can be ticked.");
+    return prisma.packingExtra.update({ where: { id }, data: { packedAt: packed ? new Date() : null } });
+  },
+
+  /** It has been added to the inventory as this model (from the new-model form). */
+  async linkModel(actor: Actor, id: string, modelId: string) {
+    assertCan(actor, "inventory.write");
+    return prisma.packingExtra.update({ where: { id }, data: { modelId } });
+  },
+
+  get(id: string) {
+    return prisma.packingExtra.findUnique({ where: { id } });
+  },
+};
 
 export const packingChecks = {
   /** Tick a unit (serialized) or a quantity (bulk) as packed. */

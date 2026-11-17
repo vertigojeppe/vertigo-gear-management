@@ -22,6 +22,14 @@ export const lineInput = z.object({
 });
 export type LineInput = z.infer<typeof lineInput>;
 
+/** A line for something not in the inventory. */
+export const extraInput = z.object({
+  name: z.string().trim().min(1, "Name is required.").max(120),
+  quantity: optionalNumber.transform((v) => Math.max(1, Math.round(v ?? 1))),
+  note: optionalText,
+});
+export type ExtraInput = z.infer<typeof extraInput>;
+
 export const lineUpdateInput = z.object({
   quantity: optionalNumber.transform((v) => Math.max(1, Math.round(v ?? 1))),
   note: optionalText,
