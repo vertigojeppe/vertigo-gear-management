@@ -471,6 +471,16 @@ the module.
   bin for good and a `StockMovement` linked by `packingCheckId` records
   it on the project; `undoCheckIn` deletes that row and puts the
   quantity back. `LineProgress.used` counts it as answered.
+- Lines for things not in the inventory (`PackingExtra`: name, quantity,
+  note, `packedAt`; `packingExtras` in the service): gear to add later
+  or stuff not worth tracking (wire cut to length). Added and removed
+  while drafting (`AddExtraForm`), ticked while packing on the list page
+  and in pack mode (`ExtraList`, plain forms), never checked out or in,
+  and not counted in progress or totals. Listed under "Not in the
+  inventory" on the page, PDF and share page. *Add to inventory* opens
+  `/inventory/models/new?extra=<id>` (name and note prefilled, hidden
+  `extraId`); `saveModel` calls `packingExtras.linkModel`, and the line
+  then links the model. Not in templates or list copies.
 - Lines are added with the `GearPicker` (one search box over
   `gearCatalog()`: models with stock and asset tags, kits in house, and
   what is already on the list); `filterCatalog` in `picker.ts` is pure

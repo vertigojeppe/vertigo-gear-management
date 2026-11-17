@@ -65,6 +65,7 @@ model Model {
   allocations  Allocation[]
   rentalLines  RentalLine[]
   packingLines PackingLine[]
+  packingExtras PackingExtra[]
   packingTemplateLines PackingTemplateLine[]
   wishItems    WishItem[]
   purchases    Purchase[]

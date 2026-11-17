@@ -8,6 +8,8 @@ import { echoValues, errorState, parseForm, type FormState } from "@/lib/forms";
 import { customFieldDefinitions } from "@/modules/settings";
 // eslint-disable-next-line no-restricted-imports -- the wishlist barrel re-exports client components; the service is all this action needs
 import { wishes } from "@/modules/wishlist/service";
+// eslint-disable-next-line no-restricted-imports -- the packing barrel re-exports server actions; the service is all this action needs
+import { packingExtras } from "@/modules/packing/service";
 import { categoryInput, consumableCountInput, consumableReceiveInput, consumableUseInput, itemBatchInput, itemBulkInput, itemInput, lengthColorInput, locationInput, modelInput, partFitInput, statusChangeInput, familyEditInput } from "./schema";
 import { categories, items, lengthColors, locations, models, InventoryError, type BulkResult, type ItemBulkResult } from "./service";
 import { consumables, partFits } from "./consumables";
@@ -83,6 +85,7 @@ export async function saveModel(_prev: FormState, formData: FormData): Promise<F
   const actor = await requirePermission("inventory.write");
   const id = String(formData.get("id") ?? "");
   const wishId = String(formData.get("wishId") ?? "");
+  const extraId = String(formData.get("extraId") ?? "");
   const parsed = parseForm(modelInput, formData);
   if (!parsed.ok) return parsed.state;
   const defs = await customFieldDefinitions.forEntity("model", parsed.data.categoryId);
@@ -95,6 +98,8 @@ export async function saveModel(_prev: FormState, formData: FormData): Promise<F
       modelId = (await models.create(actor, parsed.data, cf.values)).id;
       // Converting a wish: the model exists now, so the wish is bought and points at it.
       if (wishId) await wishes.markBought(actor, wishId, modelId);
+      // Adding a packing list's "not in the inventory" line: the line now points at the model.
+      if (extraId) await packingExtras.linkModel(actor, extraId, modelId);
     }
   } catch (err) {
     return errorState(err, echoValues(formData));

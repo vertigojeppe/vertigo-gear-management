@@ -45,6 +45,7 @@ export const TABLES: TableDef[] = [
   { name: "PackingTemplateLine", delegate: "packingTemplateLine" },
   { name: "PackingList", delegate: "packingList" },
   { name: "PackingLine", delegate: "packingLine" },
+  { name: "PackingExtra", delegate: "packingExtra" },
   { name: "PackingCheck", delegate: "packingCheck", selfRef: "outCheckId" },
   { name: "StockMovement", delegate: "stockMovement" },
   { name: "ShareLink", delegate: "shareLink" },

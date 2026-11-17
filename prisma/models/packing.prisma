@@ -17,6 +17,7 @@ model PackingList {
   dismissedSpares Json        @default("[]")
   notes        String?
   lines        PackingLine[]
+  extras       PackingExtra[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -120,4 +121,23 @@ model ShareLink {
   createdAt   DateTime  @default(now())
 
   @@index([targetType, targetId])
+}
+
+/// A line for something that is not in the inventory (yet): gear to add later,
+/// or stuff not worth tracking (wire cut to length, tape). Ticked when packed;
+/// never checked out or in. `modelId` is set once it has been added to the inventory.
+model PackingExtra {
+  id        String      @id @default(cuid())
+  listId    String
+  list      PackingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  name      String
+  quantity  Int         @default(1)
+  note      String?
+  packedAt  DateTime?
+  modelId   String?
+  model     Model?      @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  createdAt DateTime    @default(now())
+
+  @@index([listId])
+  @@index([modelId])
 }
