@@ -563,6 +563,26 @@ the module.
   none. Tests pass `{ convertModel }`. `*.skp` is git- and docker-ignored
   (client designs).
 
+## Setup times
+
+- `src/modules/setup`, page `/projects/setup-times` (linked from the
+  projects list; `projects.read`, changes `projects.write`). Step 1 of
+  three (steps 2 and 3 in BACKLOG.md): types, rules and remembered jobs;
+  job parts with Started/Done and a debrief, then estimates while
+  planning, come later.
+- `InstallationType` ("Projection, facade"; name unique, case-insensitive
+  check in the service) carries the crew's rule of thumb: `baseHours` +
+  `minutesPerUnit` per `unitName`, for `ruleCrew` people, any part empty,
+  plus `ruleNotes`. `ruleEstimate` (logic.ts, pure, tested) turns it into
+  hours for a unit count and crew, scaling linearly by crew.
+- `SetupRecord` is one build-up or pack-down (`SETUP_PHASES`) and how
+  long it took: `period` as remembered ("Summer 2024"), units, crew,
+  hours, `conditions` (`SETUP_CONDITIONS`, checkboxes read with
+  `getAll` in the action, not the schema), lesson; `source` "memory"
+  for now. The type page lists them next to what the rule says (amber
+  when a job took over 25 % longer). A type with records cannot be
+  deleted (Restrict). Activity rows use entity type `installation`.
+
 ## Pricing (Phase 6)
 
 - `src/modules/pricing`: `engine.ts` is pure (`factorFor`, `gearLinePrice`,
