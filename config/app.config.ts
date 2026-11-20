@@ -321,6 +321,13 @@ export type PlanPhase = (typeof PLAN_PHASES)[number];
 export const LOGISTICS_KINDS = ["vehicle", "parking", "loading", "hotel", "travel", "other"] as const;
 export type LogisticsKind = (typeof LOGISTICS_KINDS)[number];
 
+/** Setup times (src/modules/setup): which phase a record is about, where it came from, and what made it harder. */
+export const SETUP_PHASES = ["build", "pack"] as const;
+export type SetupPhase = (typeof SETUP_PHASES)[number];
+export const SETUP_SOURCES = ["memory"] as const;
+export const SETUP_CONDITIONS = ["outdoor", "weather", "long_carry", "late_access", "new_rig"] as const;
+export type SetupCondition = (typeof SETUP_CONDITIONS)[number];
+
 /** What a plan template entry becomes when applied. */
 export const PLAN_ENTRY_KINDS = ["schedule", "task", "logistics"] as const;
 export type PlanEntryKind = (typeof PLAN_ENTRY_KINDS)[number];

@@ -37,6 +37,21 @@ fields) is done; the rest waits until production plans have shipped.
 - Unify `Client` (renter) with `Contact`, or link them, so a renter is a
   contact too.
 
+## Setup times (step 1 shipped: types, rules of thumb, remembered jobs)
+
+- **Step 2, per job**: tick a job's installation types (parts) while
+  planning, suggested from the packing list; Started / Done buttons for
+  the whole build-up and pack-down under My day; a debrief when the job
+  is set to done that splits the time roughly per part (prefilled, the
+  sum checked against Started / Done), conditions and a lesson. Records
+  get `source` "debrief" and a `projectId`.
+- **Step 3, estimates**: while planning, "about N h with C people" from
+  the rules and the gear counts; the type page compares rule and real
+  jobs and says when a rule needs adjusting. Per-gear-type rules once
+  there are 20–30 jobs.
+- A CSV upload for remembered jobs, and editing a record (today: delete
+  and add again).
+
 ## Not scheduled
 
 - **Spec lookup, more automatic**: a setting that looks up specs for new

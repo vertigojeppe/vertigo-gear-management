@@ -30,6 +30,7 @@ uploads volume / R2 / MinIO         Google Calendar API (optional)
 | subhire | SubHireItem, SubHireLine | `subHireItems`, `subHireLines`, `subHireCatalog`, `subHireLinesFor`, catalog page, rent-in dialog; lines feed `quoteFor` and `listDetail` |
 | purchases | Purchase | `purchases` (create/update/remove), `purchasesForModel`, `purchaseList`, purchase dialog and section, record page with attachments |
 | todos | Todo | `todos` (list/add/update/move/setDone/remove, always scoped to the actor), `groupTodos` / `moved`, `TodoSection` on the dashboard; no activity rows |
+| setup | InstallationType, SetupRecord | `installationTypes`, `setupRecords`, `installationTypeList` / `installationTypeDetail`, `ruleEstimate`; setup-times pages under projects |
 | wishlist | WishItem | `wishes` (create/update/setStatus/markBought/remove), `wishList`, wish dialog; converts through the model form |
 | files | File, Attachment | `files.*`, `AttachmentsSection` |
 | projects | Client, Project, ProjectContact, ProjectCrew, Allocation | `clients`, `projects`, `allocations`, availability engine, timeline |

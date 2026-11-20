@@ -1,0 +1,42 @@
+// setup module: how long installations take to build and pack down
+
+/// A kind of installation we build ("Projection, facade", "Laser, outdoor"),
+/// with the crew's rule of thumb for how long it takes: base hours plus
+/// minutes per unit, for a crew of `ruleCrew`. Any part may be left empty.
+model InstallationType {
+  id             String        @id @default(cuid())
+  name           String        @unique
+  description    String?
+  baseHours      Decimal?      @db.Decimal(6, 2)
+  minutesPerUnit Decimal?      @db.Decimal(7, 2)
+  /// What a unit is ("projector", "fixture").
+  unitName       String?
+  ruleCrew       Int?
+  ruleNotes      String?
+  records        SetupRecord[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+/// One time an installation was built or packed down and how long it took.
+/// `source` "memory" = typed in from before the system; job debriefs come later.
+model SetupRecord {
+  id         String           @id @default(cuid())
+  typeId     String
+  type       InstallationType @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  /// "build" | "pack" (SETUP_PHASES)
+  phase      String           @default("build")
+  /// "memory" (SETUP_SOURCES)
+  source     String           @default("memory")
+  /// Roughly when, as people remember it ("Summer 2024").
+  period     String?
+  units      Int?
+  crew       Int?
+  hours      Decimal          @db.Decimal(6, 2)
+  /// SETUP_CONDITIONS keys.
+  conditions String[]         @default([])
+  lesson     String?
+  createdAt  DateTime         @default(now())
+
+  @@index([typeId])
+}
