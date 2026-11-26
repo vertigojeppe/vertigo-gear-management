@@ -33,6 +33,8 @@ export type ExtraInput = z.infer<typeof extraInput>;
 export const lineUpdateInput = z.object({
   quantity: optionalNumber.transform((v) => Math.max(1, Math.round(v ?? 1))),
   note: optionalText,
+  /** The list's own heading (grouping by section). */
+  section: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().max(60).optional()),
   caseItemId: optionalId,
   itemId: optionalId,
 });

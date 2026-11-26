@@ -37,7 +37,7 @@ export function NewListForm({ projectId, defaultName, templates, otherLists, has
           <NativeSelect id="nl-group" name="groupBy" defaultValue={state.values?.groupBy ?? "category"}>
             {PACKING_GROUPINGS.map((g) => (
               <option key={g} value={g}>
-                {t(g === "category" ? "groupCategory" : "groupCase")}
+                {t(g === "category" ? "groupCategory" : g === "case" ? "groupCase" : "groupSection")}
               </option>
             ))}
           </NativeSelect>

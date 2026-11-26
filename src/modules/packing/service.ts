@@ -246,7 +246,7 @@ export const packingLines = {
     }
     const updated = await prisma.packingLine.update({
       where: { id: lineId },
-      data: { quantity: line.itemId ? 1 : input.quantity, note: input.note ?? null, caseItemId: input.caseItemId ?? null, itemId: input.itemId ?? line.itemId ?? null },
+      data: { quantity: line.itemId ? 1 : input.quantity, note: input.note ?? null, section: input.section ?? null, caseItemId: input.caseItemId ?? null, itemId: input.itemId ?? line.itemId ?? null },
     });
     await logActivity(actor, { entityType: "project", entityId: list.projectId, action: "packing_line_updated", summary: `${list.name}: updated ${lineLabel({ quantity: updated.quantity, model: line.model })}` });
     return updated;

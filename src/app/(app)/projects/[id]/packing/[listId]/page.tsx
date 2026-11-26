@@ -45,6 +45,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
   const [catalog, templates, share, spares, glossaryGroups] = await Promise.all([editable ? gearCatalog({ listId }) : [], editable ? templateOptions() : [], shareLinks.current("packing_list", listId), editable ? spareSuggestions(listId) : [], editable ? glossary.groups() : []]);
   const caseOptions = lines.filter((l) => l.isKit && l.itemId).map((l) => ({ id: l.itemId!, label: l.itemName ?? l.itemTag ?? "" }));
   const groups = groupLines(lines, list.groupBy);
+  const sections = [...new Set(lines.flatMap((l) => (l.section ? [l.section] : [])))].sort((a, b) => a.localeCompare(b, "da", { numeric: true }));
 
   return (
     <div data-wide className="flex flex-col gap-6">
@@ -141,7 +142,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
                       <ColorDot color={l.lengthColor} className="ml-1.5" />
                       {l.itemName ? <span className="text-muted-foreground"> – {l.itemName}</span> : null}
                       <span className="block text-xs text-muted-foreground">
-                        {[l.note && l.note !== l.itemName ? l.note : null, l.itemTag && !l.isKit ? l.itemTag : null, l.caseLabel && !l.isKit ? `${t("case")}: ${l.caseLabel}` : null].filter(Boolean).join(" · ")}
+                        {[l.note && l.note !== l.itemName ? l.note : null, l.itemTag && !l.isKit ? l.itemTag : null, l.caseLabel && !l.isKit ? `${t("case")}: ${l.caseLabel}` : null, l.section && list.groupBy !== "section" ? `${t("section")}: ${l.section}` : null].filter(Boolean).join(" · ")}
                         {l.isKit && l.kitContents.length > 0 ? `${t("contains")}: ${l.kitContents.map((c) => `${c.quantity > 1 ? `${c.quantity}× ` : ""}${c.label}`).join(", ")}` : ""}
                       </span>
                       {list.status === "draft" && !l.isKit && l.quantity > l.inHouse && <span className="block text-xs text-amber-700 dark:text-amber-300">{t("inHouseHint", { count: l.inHouse, owned: l.owned })}</span>}
@@ -158,7 +159,7 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
                     </StatusPill>
                     {editable && (
                       <span className="flex shrink-0 items-center gap-1">
-                        <EditLineDialog ids={ids} line={l} cases={caseOptions} units={l.availableUnits} />
+                        <EditLineDialog ids={ids} line={l} cases={caseOptions} units={l.availableUnits} sections={sections} />
                         <RemoveLineButton ids={ids} lineId={l.id} />
                       </span>
                     )}

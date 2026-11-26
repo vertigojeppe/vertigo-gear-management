@@ -247,7 +247,7 @@ export const CHECK_OUTCOMES = [
 ] as const;
 export type CheckOutcome = (typeof CHECK_OUTCOMES)[number]["key"];
 
-export const PACKING_GROUPINGS = ["category", "case"] as const;
+export const PACKING_GROUPINGS = ["category", "case", "section"] as const;
 export type PackingGrouping = (typeof PACKING_GROUPINGS)[number];
 
 /* ---------------------------------------------------------------------- */

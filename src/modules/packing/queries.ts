@@ -10,7 +10,7 @@ import { stockByModel } from "@/modules/inventory/consumables";
 import { suggestSpares, type Suggestion } from "@/modules/inventory/consumables-logic";
 // eslint-disable-next-line no-restricted-imports -- the barrel pulls server actions (next-auth) into Vitest
 import { pathNames } from "@/modules/inventory/tree";
-import type { PackingStatus } from "../../../config/app.config";
+import type { PackingGrouping, PackingStatus } from "../../../config/app.config";
 import { lineProgress, listProgress, listTotals, type LineProgress } from "./logic";
 import { compareVariants } from "@/lib/variant";
 import type { CatalogEntry } from "./picker";
@@ -55,6 +55,8 @@ export type LineRow = {
   kitContents: { id: string; assetTag: string; label: string; quantity: number }[];
   caseItemId: string | null;
   caseLabel: string | null;
+  /** The list's own heading for this line, when one is set. */
+  section: string | null;
   weightKg: number | null;
   powerDrawW: number | null;
   progress: LineProgress;
@@ -170,6 +172,7 @@ export async function listDetail(listId: string) {
       kitContents: (l.item?.contents ?? []).map((c) => ({ id: c.id, assetTag: c.assetTag, label: `${modelLabel(c.model)}`, quantity: c.quantity })),
       caseItemId: l.caseItemId,
       caseLabel: l.caseItem ? (l.caseItem.name ?? l.caseItem.assetTag) : null,
+      section: l.section,
       weightKg: num(l.model.weightKg),
       powerDrawW: l.model.powerDrawW,
       progress,
@@ -193,7 +196,7 @@ export async function listDetail(listId: string) {
   );
 
   return {
-    list: { id: list.id, name: list.name, groupBy: list.groupBy as "category" | "case", status: list.status as PackingStatus, notes: list.notes, checkedOutAt: list.checkedOutAt, checkedInAt: list.checkedInAt },
+    list: { id: list.id, name: list.name, groupBy: list.groupBy as PackingGrouping, status: list.status as PackingStatus, notes: list.notes, checkedOutAt: list.checkedOutAt, checkedInAt: list.checkedInAt },
     project: { id: list.project.id, name: list.project.name, clientName: list.project.client?.name ?? null, venueName: list.project.venueName, reserveFrom: list.project.reserveFrom, reserveTo: list.project.reserveTo },
     lines,
     subHire,
@@ -215,16 +218,18 @@ export type ExtraRow = { id: string; name: string; quantity: number; note: strin
 export type SubHireRow = { id: string; label: string; ownerName: string; quantity: number; note: string | null };
 
 /** Lines grouped for display. */
-export function groupLines(lines: LineRow[], groupBy: "category" | "case"): { key: string; label: string; color: string | null; lines: LineRow[] }[] {
-  const groups = new Map<string, { key: string; label: string; color: string | null; lines: LineRow[] }>();
+/** Lines grouped for display: by top category, by case, or by the list's own sections. Groups A–Z (numbers in order), the leftover group last. */
+export function groupLines<L extends Pick<LineRow, "categoryTop" | "categoryColor" | "caseItemId" | "caseLabel" | "section">>(lines: L[], groupBy: PackingGrouping): { key: string; label: string; color: string | null; lines: L[] }[] {
+  const groups = new Map<string, { key: string; label: string; color: string | null; lines: L[] }>();
   for (const l of lines) {
-    const key = groupBy === "case" ? (l.caseItemId ?? "__loose__") : l.categoryTop || "__other__";
-    const label = groupBy === "case" ? (l.caseLabel ?? "Loose") : l.categoryTop || "Other";
+    const key = groupBy === "case" ? (l.caseItemId ?? "__loose__") : groupBy === "section" ? (l.section ? `s:${l.section.toLowerCase()}` : "__nosection__") : l.categoryTop || "__other__";
+    const label = groupBy === "case" ? (l.caseLabel ?? "Loose") : groupBy === "section" ? (l.section ?? "No section") : l.categoryTop || "Other";
     const g = groups.get(key) ?? { key, label, color: groupBy === "category" ? (l.categoryColor ?? null) : null, lines: [] };
     g.lines.push(l);
     groups.set(key, g);
   }
-  return [...groups.values()].sort((a, b) => (a.key === "__loose__" || a.key === "__other__" ? 1 : b.key === "__loose__" || b.key === "__other__" ? -1 : a.label.localeCompare(b.label)));
+  const last = (k: string) => k === "__loose__" || k === "__other__" || k === "__nosection__";
+  return [...groups.values()].sort((a, b) => (last(a.key) ? 1 : last(b.key) ? -1 : a.label.localeCompare(b.label, "da", { numeric: true })));
 }
 
 export async function listsForProject(projectId: string) {

@@ -75,11 +75,14 @@ export function EditLineDialog({
   line,
   cases,
   units,
+  sections,
 }: {
   ids: Ids;
-  line: { id: string; quantity: number; note: string | null; caseItemId: string | null; itemId: string | null; isKit: boolean; trackingType: string };
+  line: { id: string; quantity: number; note: string | null; section: string | null; caseItemId: string | null; itemId: string | null; isKit: boolean; trackingType: string };
   cases: Option[];
   units: { id: string; assetTag: string; serialNumber: string | null }[];
+  /** The sections already used on the list, suggested while typing. */
+  sections: string[];
 }) {
   const t = useTranslations("packing");
   const tc = useTranslations("common");
@@ -127,6 +130,14 @@ export function EditLineDialog({
               </NativeSelect>
             </Field>
           )}
+          <Field id="el-section" label={t("section")} optional help={t("sectionHelp")} error={err.section}>
+            <Input id="el-section" name="section" list={`el-sections-${line.id}`} maxLength={60} placeholder={t("sectionExample")} defaultValue={state.values?.section ?? line.section ?? ""} />
+            <datalist id={`el-sections-${line.id}`}>
+              {sections.map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+          </Field>
           <Field id="el-note" label={t("note")} optional error={err.note}>
             <Input id="el-note" name="note" defaultValue={state.values?.note ?? line.note ?? ""} />
           </Field>
@@ -180,7 +191,7 @@ export function EditListDialog({ ids, list }: { ids: Ids; list: { name: string; 
             <NativeSelect id="ls-group" name="groupBy" defaultValue={state.values?.groupBy ?? list.groupBy}>
               {PACKING_GROUPINGS.map((g) => (
                 <option key={g} value={g}>
-                  {t(g === "category" ? "groupCategory" : "groupCase")}
+                  {t(g === "category" ? "groupCategory" : g === "case" ? "groupCase" : "groupSection")}
                 </option>
               ))}
             </NativeSelect>
