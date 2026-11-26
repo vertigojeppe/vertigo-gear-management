@@ -21,6 +21,7 @@ export type ScheduleRow = {
   responsibleName: string | null;
   notes: string | null;
   sortOrder: number;
+  createdAt: Date;
 };
 
 export type TaskRow = {
@@ -77,6 +78,7 @@ async function shape(plan: PlanRow) {
     responsibleName: s.responsible?.name ?? null,
     notes: s.notes,
     sortOrder: s.sortOrder,
+    createdAt: s.createdAt,
   }));
   const tasks: TaskRow[] = sortTasks(
     plan.tasks.map((t) => ({

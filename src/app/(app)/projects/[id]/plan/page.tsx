@@ -11,7 +11,7 @@ import { dateFromString, dateToZonedInput, today } from "@/lib/dates";
 import { formatBytes, formatDate, formatDateTime } from "@/lib/format";
 import { Paperclip } from "lucide-react";
 import { shareLinks } from "@/modules/packing";
-import { datesLine, defaultAnchor, documentsForPlan, planDetail, planTemplateOptions } from "@/modules/plans";
+import { datesLine, defaultAnchor, documentsForPlan, nextEntrySlot, planDetail, planTemplateOptions } from "@/modules/plans";
 import { ApplyPlanTemplateDialog, CreatePlanDialog, DeletePlanButton, PlanNotesForm, PlanShareControls, SavePlanAsTemplateDialog } from "@/modules/plans/components/plan-dialogs";
 import { DocumentUploader } from "@/modules/plans/components/document-uploader";
 import { LogisticsDialog, RemoveLogisticsButton } from "@/modules/plans/components/logistics-dialogs";
@@ -55,6 +55,8 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
 
   const { plan, days, tasks, taskProgress, logistics, crew, contacts, packingLists } = detail;
   const ids = { projectId: id, planId: plan.id };
+  // A new entry starts where the one added last ends.
+  const next = nextEntrySlot(days.flatMap((d) => d.entries));
   const [share, docs] = await Promise.all([shareLinks.current("plan", plan.id), documentsForPlan(plan.id)]);
   const docsFor = (key: "scheduleEntryId" | "taskId", value: string) => docs.filter((d) => d[key] === value);
   const clip = (list: typeof docs) =>
@@ -94,7 +96,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
         <section className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-medium">{t("schedule")}</h2>
-            {canEdit && <ScheduleEntryDialog ids={ids} people={people} defaultDay={days[0]?.day ?? anchor} />}
+            {canEdit && <ScheduleEntryDialog ids={ids} people={people} defaultDay={next?.day ?? anchor} defaultTime={next?.time} />}
           </div>
           {days.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("noSchedule")}</p>

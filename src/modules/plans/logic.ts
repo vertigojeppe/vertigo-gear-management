@@ -48,6 +48,18 @@ export function endTime(startsAt: Date, durationMin: number | null | undefined):
   return timeOfDay(new Date(startsAt.getTime() + durationMin * 60_000));
 }
 
+/**
+ * Where a new schedule entry starts by default: where the entry added last
+ * ends (its start plus duration, or its start without one), as a Copenhagen
+ * day and "HH:MM", so entries typed one after another line up. Null with no entries.
+ */
+export function nextEntrySlot(entries: { startsAt: Date; durationMin: number | null; createdAt: Date }[]): { day: DateString; time: string } | null {
+  const last = entries.reduce<(typeof entries)[number] | null>((a, e) => (!a || e.createdAt > a.createdAt ? e : a), null);
+  if (!last) return null;
+  const end = new Date(last.startsAt.getTime() + (last.durationMin ?? 0) * 60_000);
+  return { day: dayInZone(end), time: timeOfDay(end) };
+}
+
 /** Schedule entries grouped by Copenhagen day, days and entries sorted. */
 export function groupByDay<T extends ScheduleLike>(entries: T[]): { day: DateString; entries: T[] }[] {
   const byDay = new Map<DateString, T[]>();

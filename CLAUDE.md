@@ -496,7 +496,8 @@ the module.
 - Schedule entries store `startsAt` as an instant; the day they belong to
   is the Copenhagen day (`dayInZone`). The form posts `date` + `time` and
   the service combines them with `zonedInputToDate`. Day sheets filter by
-  that day.
+  that day. A new entry's date and time default to where the entry added
+  last ends (`nextEntrySlot`, pure: latest `createdAt`, start + duration).
 - Tasks have a phase (`PLAN_PHASES`), optional assignee and due date, and a
   done flag; `sortTasks` orders them phase → open first → due date.
 - Templates (`PlanTemplate`, `PlanTemplateEntry`) hold entries relative to
