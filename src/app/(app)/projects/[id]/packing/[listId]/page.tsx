@@ -6,6 +6,8 @@ import { PageHeader } from "@/components/page-header";
 import { ColorBar, ColorDot } from "@/components/color-marks";
 import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { setLinesSection } from "@/modules/packing/actions";
 import { can, requireActor } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/format";
 import { canCheckIn, canEditLines, gearCatalog, groupLines, listDetail, shareLinks, templateOptions, type LineProgress, listTitle, spareSuggestions } from "@/modules/packing";
@@ -122,6 +124,26 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
         </div>
       )}
 
+      {editable && lines.length > 0 && (
+        // The line checkboxes belong to this form through their form attribute; a plain form, so it resets after a move.
+        <form id="section-form" action={setLinesSection} className="flex flex-col gap-1">
+          <input type="hidden" name="projectId" value={id} />
+          <input type="hidden" name="listId" value={listId} />
+          <p className="text-xs text-muted-foreground">{t("sectionMoveHint")}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input name="section" list="section-form-sections" maxLength={60} placeholder={t("sectionExample")} aria-label={t("section")} className="min-w-0 flex-[1_1_12rem] sm:max-w-xs" />
+            <datalist id="section-form-sections">
+              {sections.map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+            <button type="submit" className={buttonVariants({ variant: "outline" })}>
+              {t("sectionMove")}
+            </button>
+          </div>
+        </form>
+      )}
+
       {/* With the roomy layout, groups flow into columns on wide screens; a group never breaks across two. */}
       {(lines.length > 0 || subHire.length > 0 || extras.length > 0) && (
         <div className="gap-6 roomy:lg:columns-2 roomy:2xl:columns-3">
@@ -134,7 +156,10 @@ export default async function PackingListPage(props: { params: Promise<{ id: str
               <ul className="divide-y rounded-md border text-sm">
                 {g.lines.map((l) => (
                   <li key={l.id} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
-                    <span className="w-10 shrink-0 font-medium">{l.quantity}×</span>
+                    <span className={`flex shrink-0 items-center gap-2 font-medium ${editable ? "sm:w-16" : "w-10"}`}>
+                      {editable && <input type="checkbox" name="lineId" value={l.id} form="section-form" aria-label={`${t("selectLine")}: ${l.modelLabel}`} className="size-4" />}
+                      {l.quantity}×
+                    </span>
                     <span className="min-w-0 flex-1">
                       <Link href={`/inventory/models/${l.modelId}`} className="hover:underline">
                         {l.modelLabel}

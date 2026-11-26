@@ -151,6 +151,17 @@ export async function removeLine(formData: FormData): Promise<void> {
   revalidateList(projectId, listId);
 }
 
+/** The ticked lines (`lineId`, several) go under the typed section; an empty one takes them out of theirs. */
+export async function setLinesSection(formData: FormData): Promise<void> {
+  const actor = await requirePermission("packing.write");
+  const projectId = String(formData.get("projectId"));
+  const listId = String(formData.get("listId"));
+  const lineIds = formData.getAll("lineId").map(String);
+  if (lineIds.length === 0) return;
+  await packingLines.setSection(actor, listId, lineIds, String(formData.get("section") ?? "").trim().slice(0, 60) || null);
+  revalidateList(projectId, listId);
+}
+
 /* Lines for things not in the inventory */
 
 /** A plain form (the fields reset after adding); the name is required in the browser too. */
