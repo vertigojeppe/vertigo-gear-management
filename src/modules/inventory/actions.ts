@@ -196,6 +196,10 @@ export async function createItems(_prev: FormState, formData: FormData): Promise
   } catch (err) {
     return errorState(err, echoValues(formData));
   }
+  // A packing list's "not in the inventory" line made into this model moves into that list's gear.
+  // The units exist by now, so a failure here must not look like the save failed.
+  await packingExtras.moveToGear(actor, input.modelId).catch((err) => console.error("moveToGear", err));
+  revalidatePath("/projects", "layout");
   revalidateInventory();
   if (created.length === 1) redirect(`/inventory/items/${created[0].id}`);
   redirect(`/inventory/models/${input.modelId}`);

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import type { Actor } from "@/lib/auth/session";
-import { packingExtras, packingLists } from "../service";
+import { packingExtras, packingLines, packingLists } from "../service";
 import { listDetail } from "../queries";
 
 /**
@@ -30,6 +30,7 @@ afterAll(async () => {
   await prisma.packingList.deleteMany({ where: { projectId } });
   await prisma.location.deleteMany({ where: { projectId } });
   await prisma.project.delete({ where: { id: projectId } });
+  await prisma.item.deleteMany({ where: { modelId } });
   await prisma.model.delete({ where: { id: modelId } });
   await prisma.category.delete({ where: { id: categoryId } });
   await prisma.activityLog.deleteMany({ where: { summary: { contains: marker } } });
@@ -60,5 +61,29 @@ describe("packing list lines not in the inventory", () => {
     await packingExtras.linkModel(admin, wire.id, modelId);
     detail = (await listDetail(listId))!;
     expect(detail.extras).toEqual([expect.objectContaining({ id: wire.id, modelId, modelLabel: `Wire ${marker}`, packed: true })]);
+  });
+
+  it("moves into a draft list's gear once the model has stock, as much as fits", async () => {
+    const draft = (await packingLists.create(admin, projectId, { name: `Draft ${marker}`, groupBy: "section", notes: undefined, source: "empty", sourceId: undefined })).id;
+    const x = await packingExtras.add(admin, draft, { name: `Wire ${marker}`, quantity: 3, note: "cut to length" });
+    await packingExtras.linkModel(admin, x.id, modelId);
+    await packingExtras.moveToGear(admin, modelId); // no stock yet: stays
+    expect((await listDetail(draft))!.extras).toHaveLength(1);
+
+    await prisma.item.create({ data: { modelId, assetTag: `T${Date.now()}`, quantity: 2, status: "in_house" } });
+    await packingExtras.moveToGear(admin, modelId);
+    let detail = (await listDetail(draft))!;
+    expect(detail.lines.map((l) => [l.quantity, l.note])).toEqual([[2, "cut to length"]]);
+    expect(detail.extras.map((e) => e.quantity)).toEqual([1]);
+    // The checked-out list's extra from the first test is left alone.
+    expect((await listDetail(listId))!.extras).toHaveLength(1);
+
+    // Several lines into one section at once, and out again.
+    expect(await packingLines.setSection(admin, draft, detail.lines.map((l) => l.id), "Truck 2")).toBe(1);
+    detail = (await listDetail(draft))!;
+    expect(detail.lines[0].section).toBe("Truck 2");
+    await packingLines.setSection(admin, draft, [detail.lines[0].id], null);
+    expect((await listDetail(draft))!.lines[0].section).toBeNull();
+    await expect(packingLines.setSection(admin, listId, [detail.lines[0].id], "X")).rejects.toThrow(/draft/);
   });
 });

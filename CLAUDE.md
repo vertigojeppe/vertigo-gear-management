@@ -465,7 +465,10 @@ the module.
   and case (`PACKING_GROUPINGS`; `groupLines`: A–Z with numbers in order,
   case-insensitive, "No section" last). Shown as "Section: …" on the line
   under the other groupings. Not kept in templates or list copies, and
-  extras ("Not in the inventory") have no section.
+  extras ("Not in the inventory") have no section. Several at once: each
+  draft line has a checkbox tied by `form="section-form"` to the plain
+  form above the groups (`setLinesSection` → `packingLines.setSection`;
+  an empty section takes them out of theirs).
 - Templates (`PackingTemplate`) hold model lines only, no units or kits.
 - Spare suggestions: `spareSuggestions(listId)` applies the `PartFit`
   rules to the models on a draft list (`suggestSpares`, pure; in-house
@@ -487,7 +490,10 @@ the module.
   inventory" on the page, PDF and share page. *Add to inventory* opens
   `/inventory/models/new?extra=<id>` (name and note prefilled, hidden
   `extraId`); `saveModel` calls `packingExtras.linkModel`, and the line
-  then links the model. Not in templates or list copies.
+  then links the model. When units are added to that model (`createItems`),
+  `packingExtras.moveToGear` turns the linked extras on draft lists into
+  ordinary lines, as many as the stock allows (the rest stays an extra).
+  Not in templates or list copies.
 - Lines are added with the `GearPicker` (one search box over
   `gearCatalog()`: models with stock and asset tags, kits in house, and
   what is already on the list); `filterCatalog` in `picker.ts` is pure

@@ -252,6 +252,15 @@ export const packingLines = {
     return updated;
   },
 
+  /** Put several lines of a draft list under one section, or (null) take them out of theirs. */
+  async setSection(actor: Actor, listId: string, lineIds: string[], section: string | null) {
+    assertCan(actor, "packing.write");
+    const list = await assertDraft(listId);
+    const { count } = await prisma.packingLine.updateMany({ where: { listId, id: { in: lineIds } }, data: { section } });
+    if (count) await logActivity(actor, { entityType: "project", entityId: list.projectId, action: "packing_line_updated", summary: `${list.name}: ${count} lines ${section ? `put in section "${section}"` : "taken out of their section"}` });
+    return count;
+  },
+
   async remove(actor: Actor, lineId: string) {
     assertCan(actor, "packing.write");
     const line = await prisma.packingLine.findUniqueOrThrow({ where: { id: lineId }, include: { model: true } });
@@ -326,6 +335,26 @@ export const packingExtras = {
   async linkModel(actor: Actor, id: string, modelId: string) {
     assertCan(actor, "inventory.write");
     return prisma.packingExtra.update({ where: { id }, data: { modelId } });
+  },
+
+  /**
+   * The model these lines were added to the inventory as has units now: they
+   * move into the gear of their draft lists, as many as the stock allows
+   * (what does not fit yet stays here).
+   */
+  async moveToGear(actor: Actor, modelId: string) {
+    assertCan(actor, "packing.write");
+    const extras = await prisma.packingExtra.findMany({ where: { modelId, list: { status: "draft" } }, orderBy: { createdAt: "asc" } });
+    if (extras.length === 0) return;
+    const { owned } = await modelStock(modelId);
+    for (const x of extras) {
+      const already = await prisma.packingLine.aggregate({ where: { listId: x.listId, modelId, itemId: null }, _sum: { quantity: true } });
+      const qty = Math.min(x.quantity, owned - (already._sum.quantity ?? 0));
+      if (qty <= 0) continue;
+      await packingLines.add(actor, x.listId, { modelId, quantity: qty, note: x.note ?? undefined, caseItemId: undefined });
+      if (qty === x.quantity) await prisma.packingExtra.delete({ where: { id: x.id } });
+      else await prisma.packingExtra.update({ where: { id: x.id }, data: { quantity: x.quantity - qty } });
+    }
   },
 
   get(id: string) {
