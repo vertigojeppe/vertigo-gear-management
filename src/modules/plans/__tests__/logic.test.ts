@@ -1,7 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { zonedInputToDate } from "@/lib/dates";
 import { formatDateTime } from "@/lib/format";
-import { datesLine, dayOffset, defaultAnchor, defaultModelUnit, endTime, formatDistance, groupByDay, materialiseTemplate, sortTasks, taskProgress, templateFromPlan, timeOfDay } from "../logic";
+import { datesLine, dayOffset, defaultAnchor, defaultModelUnit, endTime, formatDistance, groupByDay, materialiseTemplate, nextEntrySlot, sortTasks, taskProgress, templateFromPlan, timeOfDay } from "../logic";
+
+describe("nextEntrySlot", () => {
+  const at = (s: string) => zonedInputToDate(s);
+  it("starts where the entry added last ends, not the latest in time", () => {
+    const entries = [
+      { startsAt: at("2026-06-02T18:00"), durationMin: 60, createdAt: new Date(1) },
+      { startsAt: at("2026-06-01T09:00"), durationMin: 90, createdAt: new Date(2) },
+    ];
+    expect(nextEntrySlot(entries)).toEqual({ day: "2026-06-01", time: "10:30" });
+  });
+  it("uses the start without a duration, rolls past midnight, and gives null with no entries", () => {
+    expect(nextEntrySlot([{ startsAt: at("2026-06-01T14:15"), durationMin: null, createdAt: new Date(1) }])).toEqual({ day: "2026-06-01", time: "14:15" });
+    expect(nextEntrySlot([{ startsAt: at("2026-06-01T23:30"), durationMin: 60, createdAt: new Date(1) }])).toEqual({ day: "2026-06-02", time: "00:30" });
+    expect(nextEntrySlot([])).toBeNull();
+  });
+});
 
 const entries = [
   { kind: "schedule", dayOffset: -1, time: "08:00", durationMin: 120, title: "Load truck", location: "Warehouse", phase: null, logisticsKind: null, notes: null, sortOrder: 0 },

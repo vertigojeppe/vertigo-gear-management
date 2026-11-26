@@ -19,7 +19,8 @@ type Ids = { projectId: string; planId: string };
 type Person = { id: string; name: string };
 export type ScheduleEntryForm = { id: string; day: string; time: string; durationMin: number | null; title: string; location: string | null; responsibleId: string | null; notes: string | null };
 
-export function ScheduleEntryDialog({ ids, entry, people, defaultDay }: { ids: Ids; entry?: ScheduleEntryForm; people: Person[]; defaultDay: string }) {
+/** `defaultDay` / `defaultTime` start a new entry (the plan page passes where the last added entry ends). */
+export function ScheduleEntryDialog({ ids, entry, people, defaultDay, defaultTime = "09:00" }: { ids: Ids; entry?: ScheduleEntryForm; people: Person[]; defaultDay: string; defaultTime?: string }) {
   const t = useTranslations("plans");
   const tc = useTranslations("common");
   const [state, action] = useActionState<FormState, FormData>(saveScheduleEntry, {});
@@ -49,7 +50,7 @@ export function ScheduleEntryDialog({ ids, entry, people, defaultDay }: { ids: I
                 <Input id="se-date" name="date" type="date" defaultValue={v("date", entry?.day ?? defaultDay)} required />
               </Field>
               <Field id="se-time" label={t("time")} error={err.time}>
-                <Input id="se-time" name="time" type="time" defaultValue={v("time", entry?.time ?? "09:00")} required />
+                <Input id="se-time" name="time" type="time" defaultValue={v("time", entry?.time ?? defaultTime)} required />
               </Field>
               <Field id="se-dur" label={t("durationMin")} optional error={err.durationMin}>
                 <Input id="se-dur" name="durationMin" type="number" min="0" step="15" defaultValue={v("durationMin", entry?.durationMin)} />
