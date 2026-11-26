@@ -459,6 +459,13 @@ the module.
   `/share/packing/[token]` and `?share=<token>` on the PDF route are the
   Phase 3 consumers. Public pages live under `src/app/share/` outside the
   app shell, and `proxy.ts` lets `/share/` through without a session.
+- Sections: a line may carry the list's own heading (`PackingLine.section`,
+  free text set in `EditLineDialog`, with the list's other sections in a
+  `<datalist>`), and a list can be grouped by `section` besides category
+  and case (`PACKING_GROUPINGS`; `groupLines`: A–Z with numbers in order,
+  case-insensitive, "No section" last). Shown as "Section: …" on the line
+  under the other groupings. Not kept in templates or list copies, and
+  extras ("Not in the inventory") have no section.
 - Templates (`PackingTemplate`) hold model lines only, no units or kits.
 - Spare suggestions: `spareSuggestions(listId)` applies the `PartFit`
   rules to the models on a draft list (`suggestSpares`, pure; in-house

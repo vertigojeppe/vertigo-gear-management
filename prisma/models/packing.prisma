@@ -38,6 +38,8 @@ model PackingLine {
   caseItemId String?
   caseItem   Item?          @relation("PackingLineCase", fields: [caseItemId], references: [id], onDelete: SetNull)
   note       String?
+  /// The list's own heading this line sits under when the list is grouped by section ("Stage left").
+  section    String?
   sortOrder  Int            @default(0)
   checks     PackingCheck[]
   createdAt  DateTime       @default(now())
